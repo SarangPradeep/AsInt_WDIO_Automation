@@ -142,4 +142,4 @@ We are pitting Java with Selenium vs JS/TS with WDIO for autmating all test type
   </tr>
 </table>
 
-*PS: Only BTP and Edge applications will be GH Actions*
+*PS: Only BTP and Edge applications will be on GH Actions*
