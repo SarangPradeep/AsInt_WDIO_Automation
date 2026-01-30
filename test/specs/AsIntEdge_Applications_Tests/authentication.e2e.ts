@@ -33,7 +33,7 @@ describe('AsInt Edge Application - Login and Logout Functional Tests', () => {
         
         // Verify successful login
         const isLoginSuccessful = await asintEdgeLoginPage.verifySuccessfulLogin();
-        expect(isLoginSuccessful).toBe(false);
+        expect(isLoginSuccessful).toBe(true);
     });
 
     

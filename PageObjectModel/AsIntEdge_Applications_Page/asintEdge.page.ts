@@ -7,7 +7,7 @@ class AsIntEdgeLoginPage {
     // Logo and Welcome text
     private readonly logoSelector = 'img.logo[alt="AsInt logo"]';
     private readonly welcomeTextSelector = 'h2.welcome-text';
-    
+    private readonly dashboardWelcomeTextSelector = 'h3.welcome-text-launchpad';
     // Email and Password inputs
     private readonly emailInputSelector = 'input[placeholder="Enter your email"]';
     private readonly passwordInputSelector = 'input[placeholder="Enter your password"]';
@@ -19,7 +19,7 @@ class AsIntEdgeLoginPage {
     private readonly rememberMeCheckboxSelector = '#autoSizingCheck2';
     
     // Sign in buttons
-    private readonly signInButtonSelector = 'button.btn.btn-primary';
+    private readonly signInButtonSelector = 'button.btn.btn-primary:not(:disabled)';
     private readonly microsoftSignInButtonSelector = 'button.btn.btn-outline-primary';
     
     // Error message selectors
@@ -103,8 +103,29 @@ class AsIntEdgeLoginPage {
     
     // Click the Sign In button
     async clickSignInButton(): Promise<void> {
-        const signInButton = await $(this.signInButtonSelector);
-        await signInButton.click();
+        try {
+            const signInButton = await $(this.signInButtonSelector);
+            // Wait for button to be clickable
+            await signInButton.waitForClickable({ timeout: 5000 });
+            // Scroll to button if needed
+            await signInButton.scrollIntoView();
+            // Click the button
+            await signInButton.click();
+        } catch (error) {
+            console.error('Error clicking sign in button:', error);
+            // Try alternative approach - JavaScript click
+            try {
+                await browser.execute((selector) => {
+                    const button = document.querySelector(selector) as HTMLButtonElement;
+                    if (button) {
+                        button.click();
+                    }
+                }, this.signInButtonSelector);
+            } catch (jsClickError) {
+                console.error('JavaScript click also failed:', jsClickError);
+                throw new Error(`Failed to click Sign In button. Original error: ${error}`);
+            }
+        }
     }
     
     // Click the Sign In with Microsoft button
@@ -116,7 +137,7 @@ class AsIntEdgeLoginPage {
     // Perform complete login flow
     async login(email: string, password: string, rememberMe: boolean = false): Promise<void> {
         await this.navigateToLoginPage();
-        await browser.pause(1000); // Wait for page to fully load
+        await browser.pause(1500); // Wait for page to fully load
         
         await this.enterEmail(email);
         await browser.pause(500);
@@ -128,15 +149,20 @@ class AsIntEdgeLoginPage {
             await this.setRememberMe(true);
         }
         
+        // Wait a bit more to ensure form is ready
+        await browser.pause(500);
+        
         await this.clickSignInButton();
     }
     
     // Verify successful login by checking the launchpad welcome message
     async verifySuccessfulLogin(): Promise<boolean> {
         try {
-            const launchpadWelcome = await $(this.welcomeTextSelector);
+            const launchpadWelcome = await $(this.dashboardWelcomeTextSelector);
             await launchpadWelcome.waitForDisplayed({ timeout: 1000 });
             const text = await launchpadWelcome.getText();
+            console.log(launchpadWelcome);
+            console.log(text);
             
             return text.includes('Welcome') && text.includes('what would you like to do today?');
         } catch (error) {
