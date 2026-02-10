@@ -1,6 +1,8 @@
 # AsInt QA Automation Tool Selection Proof-of-concept
 
-We are pitting Java with Selenium vs JS/TS with WDIO for autmating all test types for each of our applications.
+We are pitting Java with **Selenium** vs JS/TS with **WDIO** for autmating all test types for each of our applications.
+
+Mobile Applications will be tested using the flutter **integration_tests** package.
 
 ## Target Test Types
  - Functional Tests
@@ -32,66 +34,61 @@ We are pitting Java with Selenium vs JS/TS with WDIO for autmating all test type
 <table>
   <col>
   <colgroup span="4"></colgroup>
-  <colgroup span="4"></colgroup>
   <tr>
     <th rowspan="2">Test Type</th>
-    <th colspan="4" scope="colgroup">Selenium</th>
-    <th colspan="4" scope="colgroup">WDIO</th>
+    <th colspan="3" scope="colgroup">Selenium</th>
+    <th colspan="3" scope="colgroup">WDIO</th>
+    <th colspan="1" scope="colgroup">integration_tests</th>
   </tr>
   <tr>
     <th scope="col">BTP</th>
     <th scope="col">Edge</th>
-    <th scope="col">Mobile</th>
     <th scope="col">Excel Add-In</th>
     <th scope="col">BTP</th>
     <th scope="col">Edge</th>
-    <th scope="col">Mobile</th>
     <th scope="col">Excel Add-In</th>
+    <th scope="col">Mobile</th>
   </tr>
   <tr>
     <th scope="row">Functional Tests</th>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
     <td style="color: green;">✓</td>
     <td style="color: green;">✓</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: yellow;">!</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
   </tr>
   <tr>
     <th scope="row">Regression Tests</th>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
   </tr>
   <tr>
     <th scope="row">Environmental Tests</th>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
     <td>N/A</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
     <td>N/A</td>
+    <td style="color: yellow;">!</td>
     <!-- <td style="color: red;">✗</td> -->
   </tr>
   <tr>
     <th scope="row">Negative Tests</th>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
     <td style="color: green;">✓</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
   </tr>
 </table>
 
@@ -114,30 +111,30 @@ We are pitting Java with Selenium vs JS/TS with WDIO for autmating all test type
   </tr>
   <tr>
     <th scope="row">Functional Tests</th>
+    <td style="color: green;">✓</td>
     <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: green;">✓</td>
     <td>-</td>
   </tr>
   <tr>
     <th scope="row">Regression Tests</th>
+    <td style="color: green;">✓</td>
     <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: green;">✓</td>
     <td>-</td>
   </tr>
   <tr>
     <th scope="row">Environmental Tests</th>
+    <td style="color: green;">✓</td>
     <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: green;">✓</td>
     <td>-</td>
   </tr>
   <tr>
     <th scope="row">Negative Tests</th>
+    <td style="color: green;">✓</td>
     <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td style="color: green;">✓</td>
     <td>-</td>
   </tr>
 </table>
