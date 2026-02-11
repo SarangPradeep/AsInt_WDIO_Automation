@@ -43,6 +43,22 @@ class AsIntEdgeLoginPage {
     }
 
     
+    /** Wait for login page to be ready (use instead of fixed pause after navigate). */
+    async waitForLoginPageLoaded(timeoutMs: number = 10000): Promise<void> {
+        const logoElement = await $(this.logoSelector);
+        await logoElement.waitForDisplayed({ timeout: timeoutMs });
+        const welcomeText = await $(this.welcomeTextSelector);
+        await welcomeText.waitForDisplayed({ timeout: timeoutMs });
+    }
+
+    /** Wait for redirect back to login page (e.g. after sign out). */
+    async waitForLoginPageAfterRedirect(timeoutMs: number = 10000): Promise<void> {
+        await browser.waitUntil(
+            async () => await this.verifyLoginPageLoaded(),
+            { timeout: timeoutMs, timeoutMsg: 'Did not redirect to login page' }
+        );
+    }
+
     // Verify that the login page is loaded correctly
     async verifyLoginPageLoaded(): Promise<boolean> {
         try {
@@ -137,20 +153,21 @@ class AsIntEdgeLoginPage {
     // Perform complete login flow
     async login(email: string, password: string, rememberMe: boolean = false): Promise<void> {
         await this.navigateToLoginPage();
-        await browser.pause(1500); // Wait for page to fully load
+        const emailInput = await $(this.emailInputSelector);
+        await emailInput.waitForDisplayed({ timeout: 10000 });
         
         await this.enterEmail(email);
-        await browser.pause(500);
+        // await browser.pause(500);
         
         await this.enterPassword(password);
-        await browser.pause(500);
+        // await browser.pause(500);
         
         if (rememberMe) {
             await this.setRememberMe(true);
         }
         
         // Wait a bit more to ensure form is ready
-        await browser.pause(500);
+        // await browser.pause(500);
         
         await this.clickSignInButton();
     }
@@ -159,7 +176,7 @@ class AsIntEdgeLoginPage {
     async verifySuccessfulLogin(): Promise<boolean> {
         try {
             const launchpadWelcome = await $(this.dashboardWelcomeTextSelector);
-            await launchpadWelcome.waitForDisplayed({ timeout: 1000 });
+            await launchpadWelcome.waitForDisplayed({ timeout: 15000 });
             const text = await launchpadWelcome.getText();
             console.log(launchpadWelcome);
             console.log(text);
@@ -184,16 +201,28 @@ class AsIntEdgeLoginPage {
     }
     
     
+    /** Wait for login error message to appear (use after submitting invalid credentials). */
+    async waitForErrorMessageDisplayed(timeoutMs: number = 4000): Promise<void> {
+        await browser.waitUntil(
+            async () => await this.isErrorMessageDisplayed(),
+            {
+                timeout: timeoutMs,
+                interval: 200,
+                timeoutMsg: 'Error message did not appear'
+            }
+        );
+    }
+
     // Check if any error message is displayed on the page
     async isErrorMessageDisplayed(): Promise<boolean> {
         try {
             // Check for common error message patterns
             const errorSelectors = [
-                'text="Firebase: Error (auth/invalid-credential)"',
-                'text="Invalid credentials"',
-                'text="Email or password is incorrect"',
-                'text="Invalid email or password"',
-                'text="Login failed"',
+                '//*[contains(normalize-space(.),"Firebase: Error (auth/invalid-credential)")]',
+                '//*[contains(normalize-space(.),"Invalid credentials")]',
+                '//*[contains(normalize-space(.),"Email or password is incorrect")]',
+                '//*[contains(normalize-space(.),"Invalid email or password")]',
+                '//*[contains(normalize-space(.),"Login failed")]',
                 '[role="alert"]',
                 '.error-message',
                 '.alert-danger',
@@ -223,10 +252,10 @@ class AsIntEdgeLoginPage {
         try {
             // Try multiple selectors to find error message
             const errorSelectors = [
-                'text="Firebase: Error (auth/invalid-credential)"',
-                'text="Invalid credentials"',
-                'text="Email or password is incorrect"',
-                'text="Invalid email or password"',
+                '//*[contains(normalize-space(.),"Firebase: Error (auth/invalid-credential)")]',
+                '//*[contains(normalize-space(.),"Invalid credentials")]',
+                '//*[contains(normalize-space(.),"Email or password is incorrect")]',
+                '//*[contains(normalize-space(.),"Invalid email or password")]',
                 '.error-message',
                 '.alert-danger',
                 '[role="alert"]'
