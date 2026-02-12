@@ -21,7 +21,7 @@ export const config: WebdriverIO.Config = {
     // Specify Test Files
     // ==================
     specs: [
-        // './test/specs/AsintEdge_Applications_Tests/**/*.ts',
+        './test/specs/AsintEdge_Applications_Tests/**/*.ts',
         // Running all tests in this directory
         './test/specs/BTP_Applications_Tests/**/*.ts',
         // './test/specs/BTP_Applications_Tests/Negative_tests/fixedAIPNegative.e2e.ts'
