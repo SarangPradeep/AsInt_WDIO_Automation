@@ -13,6 +13,13 @@ export const config: WebdriverIO.Config = {
     specs: [
         // Running all tests in this directory
         './test/specs/BTP_Applications_Tests/**/*.ts'
+        // './test/specs/BTP_Applications_Tests/Negative_tests/fixedAIPNegative.e2e.ts'
+        // './test/specs/BTP_Applications_Tests/Functional_tests/fixedAIP.e2e.ts'
+        // './test/specs/BTP_Applications_Tests/Functional_tests/btpLogin.e2e.ts'
+        // './test/specs/BTP_Applications_Tests/Negative_tests/btpLoginNegative.e2e.ts'
+        //  './test/specs/BTP_Applications_Tests/Functional_tests/Home.e2e.ts'
+        // './test/specs/BTP_Applications_Tests/Regression_tests/assetInspectionRegretionTest.e2e.ts'
+    
     ],
     exclude: [],
 
@@ -25,30 +32,30 @@ export const config: WebdriverIO.Config = {
     maxInstances: 3,
 
     capabilities: [
+    //     {
+    //     browserName: 'chrome',
+    //     // 'goog:chromeOptions': {
+    //     //     args: [
+    //     //         '--headless=new',
+    //     //         '--disable-gpu',
+    //     //         '--window-size=1920,1080',
+    //     //         '--no-sandbox',
+    //     //         '--disable-dev-shm-usage'
+    //     //     ]
+    //     // }
+    // },
         {
-        browserName: 'chrome',
-        // 'goog:chromeOptions': {
-        //     args: [
-        //         '--headless=new',
-        //         '--disable-gpu',
-        //         '--window-size=1920,1080',
-        //         '--no-sandbox',
-        //         '--disable-dev-shm-usage'
-        //     ]
-        // }
-    },
-        // {
-        //     browserName: 'MicrosoftEdge',
-        //     'ms:edgeOptions': {
-        //         args: [
-        //             '--headless=new',
-        //             '--disable-gpu',
-        //             '--window-size=1920,1080',
-        //             '--no-sandbox',
-        //             '--disable-dev-shm-usage'
-        //         ]
-        //     }
-        // }
+            browserName: 'MicrosoftEdge',
+            'ms:edgeOptions': {
+                args: [
+                    '--headless=new',
+                    '--disable-gpu',
+                    '--window-size=1920,1080',
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage'
+                ]
+            }
+        }
     ],
 
     //

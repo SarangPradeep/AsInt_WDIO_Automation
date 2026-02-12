@@ -1,7 +1,7 @@
 // home.e2e.ts
 import { browser } from '@wdio/globals';
-import HomePage from '../../../PageObjectModel/BTP_Applications_Page/Home.page';
-import BtpLoginPage from '../../../PageObjectModel/BTP_Applications_Page/btpLogin.page';
+import HomePage from '../../../../PageObjectModel/BTP_Applications_Page/Home.page';
+import BtpLoginPage from '../../../../PageObjectModel/BTP_Applications_Page/btpLogin.page';
 
 describe('Home Page | Tile Load Validation', () => {
 
