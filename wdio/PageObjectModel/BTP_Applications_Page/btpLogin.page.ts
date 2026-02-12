@@ -13,7 +13,14 @@ class BtpLoginPage {
     private get homeTile() { return $('//a[contains(@aria-label,"Asset Inspection")]'); }
     private get loginError() { return $('//div[contains(@class,"sapMMessage")]'); }
 
-
+    public async waitForSAPPopupAndClose(timeoutInSeconds = 30): Promise<void> {
+        const popUpCloseBtn = $("//button[@title='Close Lightbox']");
+        try {
+            if (await popUpCloseBtn.waitForDisplayed({ timeout: timeoutInSeconds * 1000 })) {
+                await popUpCloseBtn.click();
+            }
+        } catch {}
+    }
     //  ACTIONS
 
     async open(appUrl: string): Promise<void> {
@@ -39,6 +46,7 @@ class BtpLoginPage {
     //   VERIFICATIONS
 
     async isLoginSuccessful(): Promise<boolean> {
+        await this.waitForSAPPopupAndClose()
         try {
             await this.homeTile.waitForDisplayed({ timeout: 30000 });
             return true;

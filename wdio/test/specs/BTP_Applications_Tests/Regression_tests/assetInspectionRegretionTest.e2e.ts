@@ -42,18 +42,22 @@ describe('Fixed AIP – Asset Inspection Regression', () => {
         await AIRegressionTestPage.searchAndOpenInspection(EQUIPMENT_ID);
     });
 
-    it('should create finding, convert to recommendation and delete inspection (E2E)', async function () {
-        this.timeout(300000);
-
-        // ⚠️ This method already:
-        // - creates finding
-        // - converts to recommendation
-        // - revisits inspection
-        // - deletes inspection
+    it('should create a finding', async function () {
+        this.timeout(100000);
         await AIRegressionTestPage.openFindingsTab();
-        await AIRegressionTestPage.createFinding(EQUIPMENT_ID);
-
-        await AIRegressionTestPage.waitForBusyIndicatorToDisappear(120);
+        await AIRegressionTestPage.createFinding(EQUIPMENT_ID); // Remove the extra calls from inside this method
+    });
+ 
+    it('should convert finding to recommendation', async function () {
+        this.timeout(100000);
+        await AIRegressionTestPage.openFindingsFromAssetInspectionHome();
+        await AIRegressionTestPage.selectCreatedFindingCheckbox();
+        await AIRegressionTestPage.convertFindingToRecommendation(EQUIPMENT_ID);
+    });
+ 
+    it('should clean up and delete the inspection', async function () {
+        await AIRegressionTestPage.revisitCreatedInspection(EQUIPMENT_ID);
+        await AIRegressionTestPage.deleteInspection();
     });
 
 });
