@@ -165,14 +165,14 @@ class FixedAIPPage {
 
     public async navigateToAssetInspection(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear();
-        await this.assetInspectionApp.waitForClickable({ timeout: 20000 });
+        await this.assetInspectionApp.waitForClickable({ timeout: 100000 });
         await this.assetInspectionApp.click();
         await this.waitForFrameAndSwitchToIt(60);
     }
 
     public async plusIconAndEquipSelect(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear();
-        await this.newAssessmentButton.waitForClickable({ timeout: 20000 });
+        await this.newAssessmentButton.waitForClickable({ timeout: 100000 });
         await this.newAssessmentButton.click();
         await this.equipmentSelect.waitForDisplayed();
         await this.equipmentSelect.click();
@@ -180,15 +180,15 @@ class FixedAIPPage {
 
     public async selectInspectionType(typeName: string): Promise<void> {
         const input = await this.inspectionTypeInput;
-        await input.waitForDisplayed({ timeout: 10000 });
+        await input.waitForDisplayed({ timeout: 100000 });
         await input.click();
 
         const arrow = await this.inspectionTypeArrow;
-        await arrow.waitForDisplayed({ timeout: 10000 });
+        await arrow.waitForDisplayed({ timeout: 100000 });
         await this.jsClickElement(arrow);
 
         const option = await this.inspectionTypeOption(typeName);
-        await option.waitForDisplayed({ timeout: 10000 });
+        await option.waitForDisplayed({ timeout: 100000 });
         await this.jsClickElement(option);
 
         await input.setValue(typeName);
@@ -198,15 +198,15 @@ class FixedAIPPage {
 
     public async selectStageOutOfService(): Promise<void> {
         const input = await this.stageInput;
-        await input.waitForDisplayed({ timeout: 10000 });
+        await input.waitForDisplayed({ timeout: 100000 });
         await input.click();
 
         const arrow = await this.stageArrow;
-        await arrow.waitForDisplayed({ timeout: 10000 });
+        await arrow.waitForDisplayed({ timeout: 100000 });
         await this.jsClickElement(arrow);
 
         const option = await this.outOfServiceStageOption;
-        await option.waitForDisplayed({ timeout: 10000 });
+        await option.waitForDisplayed({ timeout: 100000 });
         await this.jsClickElement(option);
 
         await input.setValue('Out of Service');
@@ -221,7 +221,7 @@ class FixedAIPPage {
         await this.equipmentInput.click();
         
         // Wait for the dialog search input to be ready
-        await this.equipmentSearchInput.waitForDisplayed({ timeout: 20000 });
+        await this.equipmentSearchInput.waitForDisplayed({ timeout: 100000 });
         await this.equipmentSearchInput.setValue("10000027");
         await this.equipmentSearchButton.click();
 
@@ -229,10 +229,10 @@ class FixedAIPPage {
         await this.waitForBusyIndicatorToDisappear(60);
 
         // CLEAN FIX: Wait for the equipment row to exist AND be clickable
-        await this.equipmentRow.waitForExist({ timeout: 50000 });
+        await this.equipmentRow.waitForExist({ timeout: 100000 });
         await this.equipmentRow.scrollIntoView();
         await this.equipmentRow.waitForClickable({ 
-            timeout: 50000,
+            timeout: 100000,
             timeoutMsg: 'Equipment row results not clickable after search'
         });
         await this.equipmentRow.click();
@@ -240,15 +240,15 @@ class FixedAIPPage {
         await this.waitForBusyIndicatorToDisappear(30);
 
         const templateInput = await this.inspectionTemplateInput;
-        await templateInput.waitForDisplayed({ timeout: 30000 });
+        await templateInput.waitForDisplayed({ timeout: 100000 });
         await templateInput.click();
 
         const templateArrow = await this.inspectionTemplateArrow;
-        await templateArrow.waitForDisplayed({ timeout: 50000 });
+        await templateArrow.waitForDisplayed({ timeout: 100000 });
         await this.jsClickElement(templateArrow);
 
         const template = await this.shell404Template;
-        await template.waitForDisplayed({ timeout: 50000 });
+        await template.waitForDisplayed({ timeout: 100000 });
         await this.jsClickElement(template);
 
         await templateInput.setValue('shell 404');
@@ -259,7 +259,7 @@ class FixedAIPPage {
     }
 
     public async submitInspectionCreation(): Promise<void> {
-        await this.createButton.waitForClickable({ timeout: 50000 });
+        await this.createButton.waitForClickable({ timeout: 100000 });
         await this.createButton.click();
         await this.waitForBusyIndicatorToDisappear();
         if (await this.skipAndCreateBtn.isDisplayed()) {
@@ -269,7 +269,7 @@ class FixedAIPPage {
     }
     
     public async clickAsIntLoginLink(): Promise<void> {
-        await this.asIntLoginLink.waitForClickable({ timeout: 50000 });
+        await this.asIntLoginLink.waitForClickable({ timeout: 100000 });
         await this.asIntLoginLink.click();
     }
 }

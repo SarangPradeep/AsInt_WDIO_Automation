@@ -2,7 +2,7 @@ import asintEdgeLoginPage from '../../../PageObjectModel/AsIntEdge_Applications_
 import asintEdgeDashboardPage from '../../../PageObjectModel/AsIntEdge_Applications_Page/dashboard.page';
 
 
-describe('FUNCTIONAL TEST: AsInt Edge Application - Login and Logout Functional Tests', () => {
+describe('FUNCTIONAL AND NEGATIVE TEST : Login and Logout Functional Tests', () => {
     
     const testEmail: string = process.env.ASINT_EDGE_TEST_EMAIL!;
     const testPassword: string = process.env.ASINT_EDGE_TEST_PASSWORD!;
