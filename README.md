@@ -1,6 +1,8 @@
 # AsInt QA Automation Tool Selection Proof-of-concept
 
-We are pitting Java with Selenium vs JS/TS with WDIO for autmating all test types for each of our applications.
+We are pitting Java with **Selenium** vs JS/TS with **WDIO** for autmating all test types for each of our applications.
+
+Mobile Applications will be tested using the flutter **integration_tests** package.
 
 ## Target Test Types
  - Functional Tests
@@ -24,4 +26,117 @@ We are pitting Java with Selenium vs JS/TS with WDIO for autmating all test type
  - **Mobile Applications**, written in Flutter to support both Android and iOS.
    - Example: IntelliSuite target the inspection functions.
  - **Excel Add-In Applications**, written in SAP UI5 running as a Javascript based Excel Add-In.
-   - Example: Data Conduit 
+   - Example: Data Conduit
+
+## Progress Sheet
+
+### Test Type Progress
+<table>
+  <col>
+  <colgroup span="4"></colgroup>
+  <tr>
+    <th rowspan="2">Test Type</th>
+    <th colspan="3" scope="colgroup">Selenium</th>
+    <th colspan="3" scope="colgroup">WDIO</th>
+    <th colspan="1" scope="colgroup">integration_tests</th>
+  </tr>
+  <tr>
+    <th scope="col">BTP</th>
+    <th scope="col">Edge</th>
+    <th scope="col">Excel Add-In</th>
+    <th scope="col">BTP</th>
+    <th scope="col">Edge</th>
+    <th scope="col">Excel Add-In</th>
+    <th scope="col">Mobile</th>
+  </tr>
+  <tr>
+    <th scope="row">Functional Tests</th>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
+  </tr>
+  <tr>
+    <th scope="row">Regression Tests</th>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
+  </tr>
+  <tr>
+    <th scope="row">Environmental Tests</th>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td>N/A</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td>N/A</td>
+    <td style="color: yellow;">!</td>
+    <!-- <td style="color: red;">✗</td> -->
+  </tr>
+  <tr>
+    <th scope="row">Negative Tests</th>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: green;">✓</td>
+    <td style="color: yellow;">!</td>
+  </tr>
+</table>
+
+### Automation Progress
+
+<table>
+  <col>
+  <colgroup span="2"></colgroup>
+  <colgroup span="2"></colgroup>
+  <tr>
+    <th rowspan="2">Test Type</th>
+    <th colspan="2" scope="colgroup">Selenium</th>
+    <th colspan="2" scope="colgroup">WDIO</th>
+  </tr>
+  <tr>
+    <th scope="col">Headless Mode</th>
+    <th scope="col">GH Actions</th>
+    <th scope="col">Headless Mode</th>
+    <th scope="col">GH Actions</th>
+  </tr>
+  <tr>
+    <th scope="row">Functional Tests</th>
+    <td style="color: green;">✓</td>
+    <td>-</td>
+    <td style="color: green;">✓</td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <th scope="row">Regression Tests</th>
+    <td style="color: green;">✓</td>
+    <td>-</td>
+    <td style="color: green;">✓</td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <th scope="row">Environmental Tests</th>
+    <td style="color: green;">✓</td>
+    <td>-</td>
+    <td style="color: green;">✓</td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <th scope="row">Negative Tests</th>
+    <td style="color: green;">✓</td>
+    <td>-</td>
+    <td style="color: green;">✓</td>
+    <td>-</td>
+  </tr>
+</table>
+
+*PS: Only BTP and Edge applications will be on GH Actions*

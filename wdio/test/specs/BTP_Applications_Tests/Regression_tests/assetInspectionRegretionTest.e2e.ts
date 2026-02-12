@@ -1,5 +1,4 @@
-import FixedAIPPage from '../../../PageObjectModel/BTP_Applications_Page/AIRegressionTest.page';
-
+import AIRegressionTestPage from '../../../../PageObjectModel/BTP_Applications_Page/assetInspectionRegressionTest.page';
 describe('Fixed AIP – Asset Inspection Regression', () => {
 
     const USERNAME = 'krishna.pala@asint.net';
@@ -10,7 +9,7 @@ describe('Fixed AIP – Asset Inspection Regression', () => {
     before(async () => {
         await browser.deleteAllCookies();
         await browser.url(APP_URL);
-        await FixedAIPPage.clickAsIntLoginLink();
+        await AIRegressionTestPage.clickAsIntLoginLink();
 
         await $('#j_username').setValue(USERNAME);
         await $('#logOnFormSubmit').click();
@@ -18,8 +17,8 @@ describe('Fixed AIP – Asset Inspection Regression', () => {
         await $('#logOnFormSubmit').click();
 
         await browser.pause(8000);
-        await FixedAIPPage.waitForSAPPopupAndClose(30);
-        await FixedAIPPage.waitForBusyIndicatorToDisappear(90);
+        await AIRegressionTestPage.waitForSAPPopupAndClose(30);
+        await AIRegressionTestPage.waitForBusyIndicatorToDisappear(90);
     });
 
     /* =========================
@@ -27,20 +26,20 @@ describe('Fixed AIP – Asset Inspection Regression', () => {
     ========================== */
 
     it('should open Asset Inspection application', async () => {
-        await FixedAIPPage.navigateToAssetInspection();
+        await AIRegressionTestPage.navigateToAssetInspection();
     });
 
     it('should create a new inspection', async function () {
-        this.timeout(180000);
-        await FixedAIPPage.plusIconAndEquipSelect();
-        await FixedAIPPage.createInspection();
-        await FixedAIPPage.submitInspectionCreation();
+        // this.timeout(180000);
+        await AIRegressionTestPage.plusIconAndEquipSelect();
+        await AIRegressionTestPage.createInspection();
+        await AIRegressionTestPage.submitInspectionCreation();
     });
 
     it('should reopen Asset Inspection and open created inspection', async function () {
         this.timeout(120000);
-        await FixedAIPPage.reOpenAssetInspection();
-        await FixedAIPPage.searchAndOpenInspection(EQUIPMENT_ID);
+        await AIRegressionTestPage.reOpenAssetInspection();
+        await AIRegressionTestPage.searchAndOpenInspection(EQUIPMENT_ID);
     });
 
     it('should create finding, convert to recommendation and delete inspection (E2E)', async function () {
@@ -51,10 +50,10 @@ describe('Fixed AIP – Asset Inspection Regression', () => {
         // - converts to recommendation
         // - revisits inspection
         // - deletes inspection
-        await FixedAIPPage.openFindingsTab();
-        await FixedAIPPage.createFinding(EQUIPMENT_ID);
+        await AIRegressionTestPage.openFindingsTab();
+        await AIRegressionTestPage.createFinding(EQUIPMENT_ID);
 
-        await FixedAIPPage.waitForBusyIndicatorToDisappear(120);
+        await AIRegressionTestPage.waitForBusyIndicatorToDisappear(120);
     });
 
 });

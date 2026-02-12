@@ -1,6 +1,5 @@
 import { ChainablePromiseElement } from 'webdriverio';
-
-/**
+import { browser, $, $$ } from '@wdio/globals';/**
  * Page Object Model for the Fixed AIP Application within the SAP UI.
  */
 class FixedAIPPage {

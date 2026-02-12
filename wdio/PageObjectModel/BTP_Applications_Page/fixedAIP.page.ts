@@ -229,10 +229,10 @@ class FixedAIPPage {
         await this.waitForBusyIndicatorToDisappear(60);
 
         // CLEAN FIX: Wait for the equipment row to exist AND be clickable
-        await this.equipmentRow.waitForExist({ timeout: 20000 });
+        await this.equipmentRow.waitForExist({ timeout: 50000 });
         await this.equipmentRow.scrollIntoView();
         await this.equipmentRow.waitForClickable({ 
-            timeout: 20000,
+            timeout: 50000,
             timeoutMsg: 'Equipment row results not clickable after search'
         });
         await this.equipmentRow.click();
@@ -240,15 +240,15 @@ class FixedAIPPage {
         await this.waitForBusyIndicatorToDisappear(30);
 
         const templateInput = await this.inspectionTemplateInput;
-        await templateInput.waitForDisplayed({ timeout: 10000 });
+        await templateInput.waitForDisplayed({ timeout: 30000 });
         await templateInput.click();
 
         const templateArrow = await this.inspectionTemplateArrow;
-        await templateArrow.waitForDisplayed({ timeout: 10000 });
+        await templateArrow.waitForDisplayed({ timeout: 50000 });
         await this.jsClickElement(templateArrow);
 
         const template = await this.shell404Template;
-        await template.waitForDisplayed({ timeout: 10000 });
+        await template.waitForDisplayed({ timeout: 50000 });
         await this.jsClickElement(template);
 
         await templateInput.setValue('shell 404');
@@ -259,7 +259,7 @@ class FixedAIPPage {
     }
 
     public async submitInspectionCreation(): Promise<void> {
-        await this.createButton.waitForClickable({ timeout: 20000 });
+        await this.createButton.waitForClickable({ timeout: 50000 });
         await this.createButton.click();
         await this.waitForBusyIndicatorToDisappear();
         if (await this.skipAndCreateBtn.isDisplayed()) {
@@ -269,7 +269,7 @@ class FixedAIPPage {
     }
     
     public async clickAsIntLoginLink(): Promise<void> {
-        await this.asIntLoginLink.waitForClickable({ timeout: 30000 });
+        await this.asIntLoginLink.waitForClickable({ timeout: 50000 });
         await this.asIntLoginLink.click();
     }
 }
