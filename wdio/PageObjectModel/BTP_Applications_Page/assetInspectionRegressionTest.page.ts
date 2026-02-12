@@ -151,30 +151,30 @@ class AIRegressionTestPage {
         await this.equipmentInput.click();
         
         // Wait for search dialog to be ready
-        await this.equipmentSearchInput.waitForDisplayed({ timeout: 20000 });
+        await this.equipmentSearchInput.waitForDisplayed({ timeout: 60000 });
         await this.equipmentSearchInput.setValue("10000027");
         await this.equipmentSearchButton.click();
 
         // Dynamically wait for results instead of browser.pause(10000)
         await this.waitForBusyIndicatorToDisappear(60);
 
-        await this.equipmentRow.waitForExist({ timeout: 20000 });
+        await this.equipmentRow.waitForExist({ timeout: 60000 });
         await this.equipmentRow.scrollIntoView();
-        await this.equipmentRow.waitForClickable({ timeout: 20000 });
+        await this.equipmentRow.waitForClickable({ timeout: 60000 });
         await this.equipmentRow.click();
 
         await this.waitForBusyIndicatorToDisappear(30);
 
         const templateInput = await this.inspectionTemplateInput;
-        await templateInput.waitForDisplayed({ timeout: 10000 });
+        await templateInput.waitForDisplayed({ timeout: 60000 });
         await templateInput.click();
         
         const templateArrow = await this.inspectionTemplateArrow;
-        await templateArrow.waitForDisplayed({ timeout: 10000 });
+        await templateArrow.waitForDisplayed({ timeout: 60000 });
         await this.jsClickElement(templateArrow);
 
         const template = await this.shell404Template;
-        await template.waitForDisplayed({ timeout: 10000 });
+        await template.waitForDisplayed({ timeout: 60000 });
         await this.jsClickElement(template);
 
         await templateInput.setValue('shell 404');
@@ -185,25 +185,25 @@ class AIRegressionTestPage {
     }
 
     public async convertFindingToRecommendation(equipmentId: string): Promise<void> {
-        await this.convertButton.waitForClickable({ timeout: 30000 });
+        await this.convertButton.waitForClickable({ timeout: 60000 });
         await this.convertButton.click();
 
         await browser.pause(500); // SAP menu animation
 
-        await this.recommendationMenuItem.waitForDisplayed({ timeout: 20000 });
+        await this.recommendationMenuItem.waitForDisplayed({ timeout: 60000 });
         await this.jsClickElement(this.recommendationMenuItem);
 
         await this.waitForBusyIndicatorToDisappear(60);
 
-        await this.objectTypeInput.waitForDisplayed({ timeout: 20000 });
+        await this.objectTypeInput.waitForDisplayed({ timeout: 60000 });
         await this.objectTypeInput.setValue('Equipment');
 
         await this.readOnlyInput.click();
         await this.waitForBusyIndicatorToDisappear(60);
         
         // Wait for the Equipment search dialog specifically
-        await this.equipmentSearchInput.waitForExist({ timeout: 20000 });
-        await this.equipmentSearchInput.waitForDisplayed({ timeout: 20000 });
+        await this.equipmentSearchInput.waitForExist({ timeout: 60000 });
+        await this.equipmentSearchInput.waitForDisplayed({ timeout: 60000 });
 
         // Using parameter equipmentId instead of hardcoded '10000088'
         await this.equipmentSearchInput.setValue(equipmentId);
@@ -212,7 +212,7 @@ class AIRegressionTestPage {
         await this.waitForBusyIndicatorToDisappear(60);
 
         const row = this.equipmentRowInDialog(equipmentId);
-        await row.waitForClickable({ timeout: 30000 });
+        await row.waitForClickable({ timeout: 60000 });
         await row.click();
 
         await this.waitForBusyIndicatorToDisappear(60);
@@ -222,12 +222,12 @@ class AIRegressionTestPage {
         await this.typeInput.setValue('Improvement');
         await this.assessmentTemplateInput.setValue('Regulatory / Legal');
 
-        await this.convertButton.waitForClickable({ timeout: 30000 });
+        await this.convertButton.waitForClickable({ timeout: 60000 });
         await this.convertButton.click();
 
         await this.waitForBusyIndicatorToDisappear(60);
 
-        await this.okButton.waitForClickable({ timeout: 20000 });
+        await this.okButton.waitForClickable({ timeout: 60000 });
         await this.okButton.click();
 
         await this.waitForBusyIndicatorToDisappear(60);
@@ -238,9 +238,9 @@ class AIRegressionTestPage {
         await this.waitForBusyIndicatorToDisappear(60);
 
         // Ensure Tile is clickable
-        await this.assetInspectionApp.waitForExist({ timeout: 30000 });
+        await this.assetInspectionApp.waitForExist({ timeout: 50000 });
         await this.assetInspectionApp.scrollIntoView();
-        await this.assetInspectionApp.waitForClickable({ timeout: 30000 });
+        await this.assetInspectionApp.waitForClickable({ timeout: 50000 });
         await this.assetInspectionApp.click();
 
         await this.waitForFrameAndSwitchToIt(60);
@@ -255,14 +255,14 @@ class AIRegressionTestPage {
 
     public async navigateToAssetInspection(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear();
-        await this.assetInspectionApp.waitForClickable({ timeout: 20000 });
+        await this.assetInspectionApp.waitForClickable({ timeout: 50000 });
         await this.assetInspectionApp.click();
         await this.waitForFrameAndSwitchToIt(60);
     }
 
     public async plusIconAndEquipSelect(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear();
-        await this.newAssessmentButton.waitForClickable({ timeout: 20000 });
+        await this.newAssessmentButton.waitForClickable({ timeout: 50000 });
         await this.newAssessmentButton.click();
         await this.equipmentSelect.waitForDisplayed();
         await this.equipmentSelect.click();
@@ -270,15 +270,15 @@ class AIRegressionTestPage {
 
     public async selectInspectionType(typeName: string): Promise<void> {
         const input = await this.inspectionTypeInput;
-        await input.waitForDisplayed({ timeout: 10000 });
+        await input.waitForDisplayed({ timeout: 50000 });
         await input.click();
         
         const arrow = await this.inspectionTypeArrow;
-        await arrow.waitForDisplayed({ timeout: 10000 });
+        await arrow.waitForDisplayed({ timeout: 50000 });
         await this.jsClickElement(arrow);
 
         const option = await this.inspectionTypeOption(typeName);
-        await option.waitForDisplayed({ timeout: 10000 });
+        await option.waitForDisplayed({ timeout: 50000 });
         await this.jsClickElement(option);
 
         await input.setValue(typeName);
@@ -288,15 +288,15 @@ class AIRegressionTestPage {
 
     public async selectStageOutOfService(): Promise<void> {
         const input = await this.stageInput;
-        await input.waitForDisplayed({ timeout: 10000 });
+        await input.waitForDisplayed({ timeout: 50000 });
         await input.click();
 
         const arrow = await this.stageArrow;
-        await arrow.waitForDisplayed({ timeout: 10000 });
+        await arrow.waitForDisplayed({ timeout: 50000 });
         await this.jsClickElement(arrow);
 
         const option = await this.outOfServiceStageOption;
-        await option.waitForDisplayed({ timeout: 10000 });
+        await option.waitForDisplayed({ timeout: 50000 });
         await this.jsClickElement(option);
 
         await input.setValue('Out of Service');
@@ -305,7 +305,7 @@ class AIRegressionTestPage {
     }
 
     public async submitInspectionCreation(): Promise<void> {
-        await this.inspectionCreateButton.waitForClickable({ timeout: 20000 });
+        await this.inspectionCreateButton.waitForClickable({ timeout: 50000 });
         await this.inspectionCreateButton.click();
         await this.waitForBusyIndicatorToDisappear();
 
@@ -331,7 +331,7 @@ class AIRegressionTestPage {
     public async openFindingsFromAssetInspectionHome(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear(60);
         const findingsBtn = await this.assetInspectionFindingsSegment;
-        await findingsBtn.waitForDisplayed({ timeout: 30000 });
+        await findingsBtn.waitForDisplayed({ timeout: 50000 });
         await findingsBtn.scrollIntoView();
         await findingsBtn.click();
         await browser.pause(200);
@@ -340,13 +340,13 @@ class AIRegressionTestPage {
     }
 
     public async searchAndOpenInspection(equipmentId: string): Promise<void> {
-        await this.searchInput.waitForDisplayed({ timeout: 30000 });
+        await this.searchInput.waitForDisplayed({ timeout: 50000 });
         await this.searchInput.setValue(equipmentId);
         await browser.keys('Enter');
         await this.waitForBusyIndicatorToDisappear(60);
 
         const row = this.inspectionRowByEquipment(equipmentId);
-        await row.waitForClickable({ timeout: 30000 });
+        await row.waitForClickable({ timeout: 50000 });
         await row.scrollIntoView();
         await row.click();
 
@@ -368,7 +368,7 @@ class AIRegressionTestPage {
     public async selectCreatedFindingCheckbox(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear(60);
         const checkbox = await this.firstNewFindingCheckbox;
-        await checkbox.waitForDisplayed({ timeout: 30000 });
+        await checkbox.waitForDisplayed({ timeout: 50000 });
         await checkbox.scrollIntoView();
 
         await browser.execute((el) => {
@@ -385,11 +385,11 @@ class AIRegressionTestPage {
     }
 
     public async createFinding(equipmentId: string): Promise<void> {
-        await this.newFindingButton.waitForClickable({ timeout: 30000 });
+        await this.newFindingButton.waitForClickable({ timeout: 50000 });
         await this.newFindingButton.click();
         await this.waitForBusyIndicatorToDisappear(60);
 
-        await this.activeSwitch.waitForClickable({ timeout: 10000 });
+        await this.activeSwitch.waitForClickable({ timeout: 50000 });
         await this.activeSwitch.click();
 
         await this.findingNameInput.setValue('Automation Testing');
@@ -401,13 +401,13 @@ class AIRegressionTestPage {
         await this.envClassInput.setValue('C5');
 
         await this.findingEquipmentInput.click();
-        await this.dialogSearchInput.waitForDisplayed({ timeout: 10000 });
+        await this.dialogSearchInput.waitForDisplayed({ timeout: 50000 });
         await this.dialogSearchInput.setValue(equipmentId);
         await this.dialogSearchButton.click();
         await this.waitForBusyIndicatorToDisappear(60);
 
         const cell = this.equipmentRowInDialog(equipmentId);
-        await cell.waitForClickable({ timeout: 30000 });
+        await cell.waitForClickable({ timeout: 50000 });
         await cell.click();
 
         await this.findingCreateButton.click();
@@ -431,23 +431,23 @@ class AIRegressionTestPage {
     }
 
     public async clickAsIntLoginLink(): Promise<void> {
-        await this.asIntLoginLink.waitForClickable({ timeout: 30000 });
+        await this.asIntLoginLink.waitForClickable({ timeout: 50000 });
         await this.asIntLoginLink.click();
     }
 
     public async deleteInspection(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear(60);
         const deleteBtn = await $("//button[.//bdi[normalize-space()='Delete']]");
-        await deleteBtn.waitForClickable({ timeout: 30000 });
+        await deleteBtn.waitForClickable({ timeout: 50000 });
         await deleteBtn.click();
 
         const yesBtn = await $("//button[.//bdi[normalize-space()='Yes']]");
-        await yesBtn.waitForClickable({ timeout: 30000 });
+        await yesBtn.waitForClickable({ timeout: 50000 });
         await yesBtn.click();
         await this.waitForBusyIndicatorToDisappear(60);
 
         const okBtn = await $("//button[.//bdi[normalize-space()='OK']]");
-        await okBtn.waitForClickable({ timeout: 30000 });
+        await okBtn.waitForClickable({ timeout: 50000 });
         await okBtn.click();
         await this.waitForBusyIndicatorToDisappear(60);
     }

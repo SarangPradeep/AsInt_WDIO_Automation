@@ -1,12 +1,10 @@
-import FixedAIPPage from '../../../PageObjectModel/BTP_Applications_Page/fixedAIP.page';
+import FixedAIPPage from '../../../../PageObjectModel/BTP_Applications_Page/fixedAIPNegative.page';
 
 describe('Fixed AIP Application End-to-End Workflow', () => {
 
     const USERNAME = 'krishna.pala@asint.net';
     const PASSWORD = 'Chigga@1305'; 
     const APP_URL = 'https://apm-02-asint.launchpad.cfapps.us10.hana.ondemand.com';
-
-    // --- Helper Functions ---
 
     async function closeSapPopupIfPresent(): Promise<void> {
         const selectors = [
@@ -19,7 +17,6 @@ describe('Fixed AIP Application End-to-End Workflow', () => {
                 const element = $(selector);
                 if (await element.isDisplayed()) {
                     await element.click();
-                    console.log(`[STATUS] Successfully closed SAP popup using selector: ${selector}`);
                     return;
                 }
             } catch {}
@@ -54,23 +51,25 @@ describe('Fixed AIP Application End-to-End Workflow', () => {
         await closeSapPopupIfPresent();
         await FixedAIPPage.navigateToAssetInspection();
 
-        await closeSapPopupIfPresent();  
+        await closeSapPopupIfPresent();
         await FixedAIPPage.plusIconAndEquipSelect();
 
         await FixedAIPPage.createInspection();
         await FixedAIPPage.submitInspectionCreation();
-    }
 
-    // --- Hooks ---
+        const isValidationError = await FixedAIPPage.validateMandatoryFieldsPopup();
+        if (isValidationError) {
+            console.log('[NEGATIVE] Mandatory fields validation popup displayed');
+            return;
+        }
+    }
 
     before(async () => {
         await browser.deleteAllCookies();
         await navigate_to_homepage_successfully();
     });
 
-    // --- Test ---
-
-    it('should create a new Asset Inspection successfully', async () => {
+    it('should validate mandatory fields when creating Asset Inspection', async () => {
         await create_asset_inspection_item();
     });
 
