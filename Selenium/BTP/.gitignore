@@ -1,0 +1,77 @@
+# ==============================
+# Build and dependencies
+# ==============================
+target/
+dependency-reduced-pom.xml
+
+# Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
+# ==============================
+# IDE configurations
+# ==============================
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# ==============================
+# OS-specific files
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Logs, temp & swap files
+# ==============================
+*.log
+*.tmp
+*.swp
+
+# ==============================
+# Test reports (generated)
+# ==============================
+# TestNG reports
+test-output/
+# Don’t ignore *all* HTML/XML globally, only inside reports folders
+test-output/**/*.html
+test-output/**/*.xml
+
+# JUnit, Surefire & Failsafe
+surefire-reports/
+failsafe-reports/
+
+# Allure reports
+allure-results/
+allure-report/
+
+# Extent reports
+extent-report/
+reports/
+
+# Catch-all for any reports folder at any level
+**/reports/
+**/report/
+
+# ==============================
+# Selenium / WebDriver artifacts
+# ==============================
+screenshots/
+videos/
+
+# ==============================
+# Local config (keep tracked!)
+# ==============================
+# Don’t ignore config.properties so it can be versioned
+# If you want a private one, create config.local.properties and ignore it:
+test/resources/config/config.local.properties
