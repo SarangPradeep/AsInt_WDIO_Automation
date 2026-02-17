@@ -1,0 +1,86 @@
+name: Selenium Suite Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select Environment"
+        required: true
+        type: choice
+        options:
+          - BTP
+          - GCP
+
+      suiteType:
+        description: "Select Test Suite"
+        required: true
+        type: choice
+        options:
+          - Functional
+          - Negative
+          - Regression
+
+      browser:
+        description: "Select Browser"
+        required: true
+        type: choice
+        options:
+          - chrome
+          - edge
+          - both
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        browser: ${{ github.event.inputs.browser == 'both' && fromJson('["chrome","edge"]') || fromJson(format('["{0}"]', github.event.inputs.browser)) }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      - name: Set Environment Variables
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "BTP" ]; then
+            echo "WORK_DIR=Selenium/BTP" >> $GITHUB_ENV
+            BASE_PATH="src/test/resources/testrunners/"
+            if [ "${{ github.event.inputs.suiteType }}" == "Functional" ]; then
+              FILE="assetInspectionFunctionalRunnerFile.xml"
+            elif [ "${{ github.event.inputs.suiteType }}" == "Negative" ]; then
+              FILE="assetInspectionNegativeRunnerFile.xml"
+            else
+              FILE="assetInspectionRegressionRunnerFile.xml"
+            fi
+          else
+            echo "WORK_DIR=Selenium/GCP" >> $GITHUB_ENV
+            BASE_PATH="src/test/resources/testrunners/"
+            if [ "${{ github.event.inputs.suiteType }}" == "Functional" ]; then
+              FILE="gcpFunctionalRunnerFile.xml"
+            elif [ "${{ github.event.inputs.suiteType }}" == "Negative" ]; then
+              FILE="gcpNegativeRunnerFile.xml"
+            else
+              FILE="gcpRegressionRunnerFile.xml"
+            fi
+          fi
+
+          echo "SUITE_PATH=${BASE_PATH}${FILE}" >> $GITHUB_ENV
+
+      - name: Run Selected TestNG Suite
+        working-directory: ${{ env.WORK_DIR }}
+        run: mvn clean test \
+             -Dsurefire.suiteXmlFiles=$SUITE_PATH \
+             -Dbrowser=${{ matrix.browser }}
