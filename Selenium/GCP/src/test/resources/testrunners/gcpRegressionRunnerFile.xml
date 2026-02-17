@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
-<suite name="GCP Regression Test– Multi Browser Parallel"
-	parallel="tests"
-	thread-count="2"
+<suite name="GCP Regression Test"
+	parallel="false"
 	verbose="1"
 	configfailurepolicy="continue">
 
@@ -11,15 +9,9 @@
 		<listener class-name="com.qa.gcp.listeners.TestAllureListener" />
 	</listeners>
 
-	<test name="GCP Regression Test - Chrome">
-		<parameter name="browser" value="chrome" />
-		<classes>
-			<class name="com.qa.gcp.tests.RegressionGCPTest" />
-		</classes>
-	</test>
-
-	<test name="GCP Regression Test - Edge">
-		<parameter name="browser" value="edge" />
+	<test name="GCP Regression Test">
+		<!-- Browser injected from CI using -Dbrowser -->
+		<parameter name="browser" value="${browser}" />
 		<classes>
 			<class name="com.qa.gcp.tests.RegressionGCPTest" />
 		</classes>
