@@ -35,7 +35,7 @@ public class EquipmentCreationPage {
 	private By deleteSuccBtn = By
 			.xpath("//span[text()='Equipment Deleted Successfully!']/following::bdi[text()='OK'][1]");
 	private By negEquipCheck = By
-			.xpath("//section[.='Mandatory Field(s) are Missing!']/following-sibling::footer//bdi[text()='OK']");
+			.xpath("//bdi[text()='OK']");
 
 	public EquipmentCreationPage(WebDriver driver) {
 		this.driver = driver;

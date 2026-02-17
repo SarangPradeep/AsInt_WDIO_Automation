@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Asset Inspection Functional test– Multi Browser Parallel" parallel="tests"
+	thread-count="2" verbose="1" configfailurepolicy="continue"> <!-- CHROME -->
+
+	<listeners>
+		<listener class-name="com.qa.flp.listeners.TestAllureListener"></listener>
+
+	</listeners>
+	<test name="Asset Inspection - Chrome">
+		<parameter name="browser" value="chrome" />
+		<classes>
+			<class name="com.qa.flp.tests.FunctionalTest" />
+		</classes>
+	</test> <!--
+	EDGE -->
+	<test name="Asset Inspection - edge">
+		<parameter name="browser" value="edge" />
+		<classes>
+			<class name="com.qa.flp.tests.FunctionalTest" />
+		</classes>
+	</test>
+</suite>
