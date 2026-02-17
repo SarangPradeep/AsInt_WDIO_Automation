@@ -52,35 +52,31 @@ jobs:
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2
 
-      - name: Set Environment Variables
+      - name: Set Environment and Suite
         run: |
           if [ "${{ github.event.inputs.environment }}" == "BTP" ]; then
             echo "WORK_DIR=Selenium/BTP" >> $GITHUB_ENV
-            BASE_PATH="src/test/resources/testrunners/"
             if [ "${{ github.event.inputs.suiteType }}" == "Functional" ]; then
-              FILE="assetInspectionFunctionalRunnerFile.xml"
+              echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionFunctionalRunnerFile.xml" >> $GITHUB_ENV
             elif [ "${{ github.event.inputs.suiteType }}" == "Negative" ]; then
-              FILE="assetInspectionNegativeRunnerFile.xml"
+              echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionNegativeRunnerFile.xml" >> $GITHUB_ENV
             else
-              FILE="assetInspectionRegressionRunnerFile.xml"
+              echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionRegressionRunnerFile.xml" >> $GITHUB_ENV
             fi
           else
             echo "WORK_DIR=Selenium/GCP" >> $GITHUB_ENV
-            BASE_PATH="src/test/resources/testrunners/"
             if [ "${{ github.event.inputs.suiteType }}" == "Functional" ]; then
-              FILE="gcpFunctionalRunnerFile.xml"
+              echo "SUITE_PATH=src/test/resources/testrunners/gcpFunctionalRunnerFile.xml" >> $GITHUB_ENV
             elif [ "${{ github.event.inputs.suiteType }}" == "Negative" ]; then
-              FILE="gcpNegativeRunnerFile.xml"
+              echo "SUITE_PATH=src/test/resources/testrunners/gcpNegativeRunnerFile.xml" >> $GITHUB_ENV
             else
-              FILE="gcpRegressionRunnerFile.xml"
+              echo "SUITE_PATH=src/test/resources/testrunners/gcpRegressionRunnerFile.xml" >> $GITHUB_ENV
             fi
           fi
 
-          echo "SUITE_PATH=${BASE_PATH}${FILE}" >> $GITHUB_ENV
-
       - name: Run Selected TestNG Suite
         working-directory: ${{ env.WORK_DIR }}
-        run: mvn clean test \
-             -Dsurefire.suiteXmlFiles=$SUITE_PATH \
-             -Dbrowser=${{ matrix.browser }}
+        run: mvn clean test -Dsurefire.suiteXmlFiles=${{ env.SUITE_PATH }} -Dbrowser=${{ matrix.browser }}
