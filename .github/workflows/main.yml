@@ -75,36 +75,39 @@ jobs:
             ${{ env.WORK_DIR }}/target/surefire-reports
             
   merge-allure:
+    if: always()
     name: Generate Combined Allure Report
     runs-on: ubuntu-latest
     needs: run-tests
 
     steps:
-      - name: Download all Allure artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: all-results
+    - name: Download Allure artifacts only
+      uses: actions/download-artifact@v4
+      with:
+        pattern: allure-results-*
+        path: all-results
+        merge-multiple: true
 
-      - name: Merge Allure results
-        run: |
-          mkdir merged-results
-          find all-results -type f -name "*.json" -exec cp {} merged-results/ \;
+    - name: Merge Allure results
+      run: |
+        mkdir merged-results
+        cp -r all-results/* merged-results/
 
-      - name: Install Allure
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip
-          wget https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
-          unzip allure-2.29.0.zip
-          sudo mv allure-2.29.0 /opt/allure
-          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+    - name: Install Allure
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y unzip
+        wget https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
+        unzip allure-2.29.0.zip
+        sudo mv allure-2.29.0 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
-      - name: Generate Combined Allure Report
-        run: |
-          allure generate merged-results --clean -o merged-allure-report
+    - name: Generate Combined Allure Report
+      run: |
+        allure generate merged-results --clean -o merged-allure-report
 
-      - name: Upload Combined Allure HTML
-        uses: actions/upload-artifact@v4
-        with:
-          name: Combined-Allure-Report
-          path: merged-allure-report
+    - name: Upload Combined Allure HTML
+      uses: actions/upload-artifact@v4
+      with:
+        name: Combined-Allure-Report
+        path: merged-allure-report
