@@ -2,40 +2,16 @@ name: Selenium Suite Runner
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Select Environment"
-        required: true
-        type: choice
-        options:
-          - BTP
-          - GCP
-
-      suiteType:
-        description: "Select Test Suite"
-        required: true
-        type: choice
-        options:
-          - Functional
-          - Negative
-          - Regression
-
-      browser:
-        description: "Select Browser"
-        required: true
-        type: choice
-        options:
-          - chrome
-          - edge
-          - both
-
 jobs:
   run-tests:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        browser: ${{ github.event.inputs.browser == 'both' && fromJson('["chrome","edge"]') || fromJson(format('["{0}"]', github.event.inputs.browser)) }}
+        envirnment: [GCP, BTP]
+        suiteType: [Functional, Regression, Negative]
+        browser: [chrome]
 
     steps:
       - name: Checkout Repository
@@ -55,22 +31,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2
 
-      - name: Set Environment and Suite
+      - name: Set Environment and Suite Path
         run: |
-          if [ "${{ github.event.inputs.environment }}" == "BTP" ]; then
+          if [ "${{ matrix.environment }}" == "BTP" ]; then
             echo "WORK_DIR=Selenium/BTP" >> $GITHUB_ENV
-            if [ "${{ github.event.inputs.suiteType }}" == "Functional" ]; then
+            if [ "${{ matrix.suiteType }}" == "Functional" ]; then
               echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionFunctionalRunnerFile.xml" >> $GITHUB_ENV
-            elif [ "${{ github.event.inputs.suiteType }}" == "Negative" ]; then
+            elif [ "${{ matrix.suiteType }}" == "Negative" ]; then
               echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionNegativeRunnerFile.xml" >> $GITHUB_ENV
             else
               echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionRegressionRunnerFile.xml" >> $GITHUB_ENV
             fi
           else
             echo "WORK_DIR=Selenium/GCP" >> $GITHUB_ENV
-            if [ "${{ github.event.inputs.suiteType }}" == "Functional" ]; then
+            if [ "${{ matrix.suiteType }}" == "Functional" ]; then
               echo "SUITE_PATH=src/test/resources/testrunners/gcpFunctionalRunnerFile.xml" >> $GITHUB_ENV
-            elif [ "${{ github.event.inputs.suiteType }}" == "Negative" ]; then
+            elif [ "${{ matrix.suiteType }}" == "Negative" ]; then
               echo "SUITE_PATH=src/test/resources/testrunners/gcpNegativeRunnerFile.xml" >> $GITHUB_ENV
             else
               echo "SUITE_PATH=src/test/resources/testrunners/gcpRegressionRunnerFile.xml" >> $GITHUB_ENV
@@ -80,3 +56,19 @@ jobs:
       - name: Run Selected TestNG Suite
         working-directory: ${{ env.WORK_DIR }}
         run: mvn clean test -Dsurefire.suiteXmlFiles=${{ env.SUITE_PATH }} -Dbrowser=${{ matrix.browser }}
+
+      - name: Upload Allure Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-${{ matrix.environment }}-${{ matrix.suiteType }}
+          path: ${{ env.WORK_DIR }}/target/allure-results
+
+      - name: Upload TestNG Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testng-${{ matrix.environment }}-${{ matrix.suiteType }}
+          path: |
+            ${{ env.WORK_DIR }}/test-output
+            ${{ env.WORK_DIR }}/target/surefire-reports
