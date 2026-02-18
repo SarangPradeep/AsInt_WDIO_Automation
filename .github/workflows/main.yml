@@ -61,14 +61,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-${{ matrix.environment }}-${{ matrix.suiteType }}
+          name: allure-${{ matrix.environment }}-${{ matrix.suiteType }}-${{ matrix.browser }}
           path: ${{ env.WORK_DIR }}/target/allure-results
 
       - name: Upload TestNG Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: testng-${{ matrix.environment }}-${{ matrix.suiteType }}
+          name: testng-${{ matrix.environment }}-${{ matrix.suiteType }}-${{ matrix.browser }}
           path: |
             ${{ env.WORK_DIR }}/test-output
             ${{ env.WORK_DIR }}/target/surefire-reports
