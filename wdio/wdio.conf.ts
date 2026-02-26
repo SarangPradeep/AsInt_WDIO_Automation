@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv'
 import allureReporter from '@wdio/allure-reporter';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -21,9 +21,11 @@ export const config: WebdriverIO.Config = {
     // Specify Test Files
     // ==================
     specs: [
-        './test/specs/AsintEdge_Applications_Tests/**/*.ts',
+       // './test/specs/AsintEdge_Applications_Tests/Functional/*.ts'
+        './test/specs/AsintEdge_Applications_Tests/**/*.ts'
+        //'./test/specs/AsintEdge_Applications_Tests/**/*.ts',
         // Running all tests in this directory
-        './test/specs/BTP_Applications_Tests/**/*.ts',
+        //'./test/specs/BTP_Applications_Tests/**/*.ts',
         // './test/specs/BTP_Applications_Tests/Negative_tests/fixedAIPNegative.e2e.ts'
         // './test/specs/BTP_Applications_Tests/Functional_tests/fixedAIP.e2e.ts'
         // './test/specs/BTP_Applications_Tests/Functional_tests/btpLogin.e2e.ts'
@@ -43,12 +45,12 @@ export const config: WebdriverIO.Config = {
     maxInstances: 3,
 
     capabilities: [
-        {
-                browserName: 'MicrosoftEdge',
-                'ms:edgeOptions': {
-                    args: isHeadless ? ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1920,1080'] : []
-                }
-            },
+        // {
+        //         browserName: 'MicrosoftEdge',
+        //         'ms:edgeOptions': {
+        //             args: isHeadless ? ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1920,1080'] : []
+        //         }
+        //     },
             {
                 browserName: 'chrome',
                 'goog:chromeOptions': {
@@ -164,12 +166,19 @@ export const config: WebdriverIO.Config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {object}         browser      instance of created browser/device session
      */
-    before: function (capabilities) {
+
+    
+    before: async function (capabilities) {
         // Add browser information to Allure report
         const browserName = (capabilities as any).browserName || 'unknown';
         // Add browser as feature tag for grouping in Allure
         allureReporter.addFeature(`Browser: ${browserName}`);
+        if (!isHeadless) {
+        await browser.maximizeWindow();
+    };
     },
+
+    
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {string} commandName hook command name
@@ -234,6 +243,7 @@ export const config: WebdriverIO.Config = {
         }
     },
 
+    
 
     /**
      * Hook that gets executed after the suite has ended

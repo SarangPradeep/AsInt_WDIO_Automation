@@ -9,7 +9,8 @@ class AsIntEdgeDashboardPage {
     readonly profileButtonSelector = 'i.fa-user-circle.navbar-avatar-icon';
     readonly dropdownMenuSelector = 'div.navbar-dropdown-menu';
     private readonly userNameInDropdownSelector = 'div.dropdown-item.user-name';
-    private readonly signOutButtonSelector = 'div.dropdown-item.sign-out';
+    private readonly signOutButtonSelector = '//i[@title="User Menu"]';
+    private readonly signOutButton = '//div[text()=" Sign Out "]';
     
 
     // Dashboard applications selectors
@@ -70,6 +71,8 @@ class AsIntEdgeDashboardPage {
     async clickSignOut(): Promise<void> {
         const signOutButton = await $(this.signOutButtonSelector);
         await signOutButton.click();
+        const signOut = await $(this.signOutButton);
+        await signOut.click();
     }
     
     // Verify if Administrator application is present on dashboard
