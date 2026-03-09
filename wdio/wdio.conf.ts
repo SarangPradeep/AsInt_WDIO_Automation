@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv'
 import allureReporter from '@wdio/allure-reporter';
 import * as fs from 'fs';
 import * as path from 'path';
+import { loginToSAP } from './utils/login.helper';
 dotenv.config();
 
 
@@ -22,16 +23,8 @@ export const config: WebdriverIO.Config = {
     // ==================
     specs: [
        // './test/specs/AsintEdge_Applications_Tests/Functional/*.ts'
-        './test/specs/AsintEdge_Applications_Tests/**/*.ts'
-        //'./test/specs/AsintEdge_Applications_Tests/**/*.ts',
-        // Running all tests in this directory
-        //'./test/specs/BTP_Applications_Tests/**/*.ts',
-        // './test/specs/BTP_Applications_Tests/Negative_tests/fixedAIPNegative.e2e.ts'
-        // './test/specs/BTP_Applications_Tests/Functional_tests/fixedAIP.e2e.ts'
-        // './test/specs/BTP_Applications_Tests/Functional_tests/btpLogin.e2e.ts'
-        // './test/specs/BTP_Applications_Tests/Negative_tests/btpLoginNegative.e2e.ts'
-        //   './test/specs/BTP_Applications_Tests/Functional_tests/Home.e2e.ts'
-        // './test/specs/BTP_Applications_Tests/Regression_tests/assetInspectionRegretionTest.e2e.ts'
+       // './test/specs/AsintEdge_Applications_Tests/**/*.ts',
+        './test/specs/BTP_Applications_Tests/**/FunctionalLocation.e2e.ts'
     
     ],
     exclude: [],
@@ -190,7 +183,9 @@ export const config: WebdriverIO.Config = {
      * Hook that gets executed before the suite starts
      * @param {object} suite suite details
      */
-    beforeSuite: function (suite) {
+    beforeSuite: async function (suite) {
+        console.log(`Starting suite: ${suite.title}`);
+        await loginToSAP();
         const browserName = (browser.capabilities as any).browserName || 'unknown';
         // Add browser name to suite title for clear identification
         suite.title = `[${browserName}] ${suite.title}`;
