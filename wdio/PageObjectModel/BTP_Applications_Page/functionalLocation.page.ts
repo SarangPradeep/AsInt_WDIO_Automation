@@ -14,7 +14,7 @@ class functionalLocation {
     }
 
     private get iFrame() { 
-        return $('iframe[data-help-id="application-idms-manage"]'); 
+        return $('iframe[data-help-id="application-functionallocation-manage"]'); 
     } 
 
     private readonly busyIndicatorSelector = ".sapUiLocalBusyIndicator"; 
@@ -93,6 +93,10 @@ class functionalLocation {
         return $("//a[contains(@aria-label, 'Asset Inspection')]"); 
     }
 
+    private get functionalLocationApp() { 
+        return $("//a[contains(@aria-label, 'Functional Location')]"); 
+    }
+
     private get descriptionInput() { 
         return $("//label[.//bdi[text()='Description']]/following::input"); 
     }
@@ -117,8 +121,44 @@ class functionalLocation {
         );
     }
 
-    private get newAssessmentButton() { 
-        return $("//button[@title='New Assessment']"); 
+    private get newFunctionalLocButton() { 
+        return $("//span[text()='Add']/ancestor::button"); 
+    }
+
+    private get newFunctionalLocName() { 
+        return $("//bdi[text()='Functional Location Name']/ancestor::div[1]/following::input[1]"); 
+    }
+
+    private get shortDescName() { 
+        return $("//bdi[text()='Short Description']/ancestor::div[1]/following::input[1]"); 
+    }
+
+    private get selectParentAsset() { 
+        return $("//bdi[text()='Parent Asset']/ancestor::div[1]/following::input[1]"); 
+    }
+
+    private get selectFuncLocBox() { 
+        return $("//span[text()='Select Functional Location']"); 
+    }
+
+    private get selectFuncLocText() { 
+        return $("//span[text()='Select Functional Location']/ancestor::header/following::input[1]"); 
+    }
+
+    private get selectFuncLocSearch() { 
+        return $("//span[text()='Select Functional Location']/ancestor::header/following::div[7]"); 
+    }
+
+    private get selectFuncLoc() { 
+        return $("//td/span[normalize-space()='FL0603']/ancestor::tr"); 
+    }
+
+    private get createFuncLocButton() { 
+        return $("//bdi[text()='Create']"); 
+    }
+
+    private get succCrtMsg() { 
+        return $("//span[text()='Functional Location created successfully']"); 
     }
 
     private get equipmentSelect() { 
@@ -152,7 +192,6 @@ class functionalLocation {
     public async waitForFrameAndSwitchToIt(timeoutInSeconds = 30): Promise<void> {
         const frame = await this.iFrame;
         await frame.waitForExist({ timeout: timeoutInSeconds * 1000 });
-        await browser.switchFrame(null);
         await browser.switchFrame(frame);
     }
 
@@ -163,19 +202,24 @@ class functionalLocation {
 
     //   ACTIONS
 
-    public async navigateToAssetInspection(): Promise<void> {
+    public async navigateToFunctionalLocation(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear();
-        await this.assetInspectionApp.waitForClickable({ timeout: 100000 });
-        await this.assetInspectionApp.click();
-        await this.waitForFrameAndSwitchToIt(60);
+        await this.functionalLocationApp.waitForClickable({ timeout: 100000 });
+        await this.functionalLocationApp.click();
+        await this.waitForBusyIndicatorToDisappear();
     }
 
-    public async plusIconAndEquipSelect(): Promise<void> {
+    public async plusIconAndFuncLocSelect(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear();
-        await this.newAssessmentButton.waitForClickable({ timeout: 100000 });
-        await this.newAssessmentButton.click();
-        await this.equipmentSelect.waitForDisplayed();
-        await this.equipmentSelect.click();
+        await this.newFunctionalLocButton.waitForClickable({ timeout: 100000 });
+        await this.newFunctionalLocButton.click();
+    }
+
+    public async funcLocSuccCreation(): Promise<void> {
+        await this.waitForBusyIndicatorToDisappear();
+        await this.succCrtMsg.waitForClickable({ timeout: 100000 });
+        await this.succCrtMsg.isDisplayed();
+        console.log("Functional Location created successfully");
     }
 
     async closeSapPopupIfPresent(): Promise<void> {
@@ -198,13 +242,13 @@ class functionalLocation {
 
     public async create_functional_location(): Promise<void> {
         await this.closeSapPopupIfPresent();
-        await this.navigateToAssetInspection();
-
+        await this.navigateToFunctionalLocation();
         await this.closeSapPopupIfPresent();  
-        await this.plusIconAndEquipSelect();
-
-        await this.createInspection();
-        await this.submitInspectionCreation();
+        await this.waitForBusyIndicatorToDisappear();
+        await this.waitForFrameAndSwitchToIt();
+        await this.closeSapPopupIfPresent(); 
+        await this.plusIconAndFuncLocSelect();
+        await this.createFunctionalLocation();
     }
 
     public async selectInspectionType(typeName: string): Promise<void> {
@@ -243,48 +287,25 @@ class functionalLocation {
         await this.waitForBusyIndicatorToDisappear();
     }
 
-    public async createInspection(): Promise<void> {
+    private generateRandomFuncName(): string {
+        console.log(`FUNC-${Math.floor(Math.random() * 10000)}`);
+    return `FUNC-${Math.floor(Math.random() * 10000)}`;
+    }
+
+    public async createFunctionalLocation(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear();
-        await this.descriptionInput.setValue("PUMPS");
-
-        await this.equipmentInput.click();
-        
-        // Wait for the dialog search input to be ready
-        await this.equipmentSearchInput.waitForDisplayed({ timeout: 100000 });
-        await this.equipmentSearchInput.setValue("10000027");
-        await this.equipmentSearchButton.click();
-
-        // CLEAN FIX: Wait for the busy indicator to finish loading results
-        await this.waitForBusyIndicatorToDisappear(60);
-
-        // CLEAN FIX: Wait for the equipment row to exist AND be clickable
-        await this.equipmentRow.waitForExist({ timeout: 100000 });
-        await this.equipmentRow.scrollIntoView();
-        await this.equipmentRow.waitForClickable({ 
-            timeout: 100000,
-            timeoutMsg: 'Equipment row results not clickable after search'
-        });
-        await this.equipmentRow.click();
-
-        await this.waitForBusyIndicatorToDisappear(30);
-
-        const templateInput = await this.inspectionTemplateInput;
-        await templateInput.waitForDisplayed({ timeout: 100000 });
-        await templateInput.click();
-
-        const templateArrow = await this.inspectionTemplateArrow;
-        await templateArrow.waitForDisplayed({ timeout: 100000 });
-        await this.jsClickElement(templateArrow);
-
-        const template = await this.shell404Template;
-        await template.waitForDisplayed({ timeout: 100000 });
-        await this.jsClickElement(template);
-
-        await templateInput.setValue('shell 404');
-        await browser.keys(['Enter']);
-
-        await this.selectInspectionType('Vibration Analysis');
-        await this.selectStageOutOfService();
+        await this.newFunctionalLocName.setValue(this.generateRandomFuncName());
+        await this.shortDescName.setValue("Testing123");
+        await this.selectParentAsset.click();
+        await this.selectFuncLocBox.isDisplayed();
+        await this.selectFuncLocText.setValue("FL0603");
+        await this.selectFuncLocSearch.click();
+        await this.waitForBusyIndicatorToDisappear();
+        await this.selectFuncLoc.waitForClickable({ timeout: 30000 });
+        await this.selectFuncLoc.isDisplayed();
+        await this.selectFuncLoc.click();
+        await this.createFuncLocButton.click();
+        await this.funcLocSuccCreation();
     }
 
     public async submitInspectionCreation(): Promise<void> {
