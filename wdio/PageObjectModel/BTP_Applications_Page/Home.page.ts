@@ -7,12 +7,29 @@ class HomePage {
        SELECTORS
     ========================== */
 
-    private readonly tilesContainer =
-        'ul.sapUshellTilesContainer-sortable';
+    private readonly tilesContainer ='ul.sapUshellTilesContainer-sortable';
 
-    private readonly tileSelector =
-        'ul.sapUshellTilesContainer-sortable li a.sapMGT';
+    private readonly tileSelector ='ul.sapUshellTilesContainer-sortable li a.sapMGT';
 
+    // EQUIPMENT APP
+    get homeIcon() { return $('//div[contains(@class, "sapUshellAppTitle")]//span[text()="Home"]');}
+    get equipmentTile() { return $('//*[contains(text(),"Equip")]'); }
+
+    async verifyOnHomePage(): Promise<boolean> {
+        try {
+            await this.homeIcon.waitForDisplayed({ timeout: 30000 });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    
+    async clickEquipmentTile(): Promise<void> {
+        await this.equipmentTile.waitForDisplayed({ timeout: 30000 });
+        await this.equipmentTile.scrollIntoView();
+        await this.equipmentTile.click();
+    }
+    
     /* =========================
        PAGE LOAD
     ========================== */
