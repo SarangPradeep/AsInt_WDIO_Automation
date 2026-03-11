@@ -1,4 +1,4 @@
-import functionalLocation from '../PageObjectModel/BTP_Applications_Page/functionalLocation.page';
+import functionalLocation from '../PageObjectModel/BTP_Applications_Page/functionalLocation.listview.page';
 
 export async function loginToSAP(): Promise<void> {
 
