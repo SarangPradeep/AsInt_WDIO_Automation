@@ -1,4 +1,4 @@
-import functionalLocationListView from '../../../../PageObjectModel/BTP_Applications_Page/functionalLocation.listview.page';
+import functionalLocationListView from '../../../../PageObjectModel/BTP_Applications_Page/Functional Location/functionalLocation.listview.page';
 
 describe('Functional Location test', () => {
     // --- Test ---
