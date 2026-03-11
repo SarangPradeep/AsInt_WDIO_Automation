@@ -1,4 +1,4 @@
-import functionalLocation from '../PageObjectModel/BTP_Applications_Page/functionalLocation.page';
+import functionalLocationListView from '../PageObjectModel/BTP_Applications_Page/functionalLocation.listview.page';
 
 export async function loginToSAP(): Promise<void> {
 
@@ -8,7 +8,7 @@ export async function loginToSAP(): Promise<void> {
 
     await browser.url(APP_URL);
 
-    await functionalLocation.clickAsIntLoginLink();
+    await functionalLocationListView.clickAsIntLoginLink();
 
     const emailInput = await $('#j_username');
     await emailInput.waitForDisplayed({ timeout: 15000 });
@@ -25,6 +25,6 @@ export async function loginToSAP(): Promise<void> {
 
     await browser.pause(8000);
 
-    await functionalLocation.waitForSAPPopupAndClose(30);
-    await functionalLocation.waitForBusyIndicatorToDisappear(90);
+    await functionalLocationListView.waitForSAPPopupAndClose(30);
+    await functionalLocationListView.waitForBusyIndicatorToDisappear(90);
 }
