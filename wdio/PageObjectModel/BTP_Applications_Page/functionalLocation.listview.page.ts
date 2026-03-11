@@ -3,7 +3,7 @@ import { ChainablePromiseElement } from 'webdriverio';
 /**
  * Page Object Model for the Fixed AIP Application within the SAP UI.
  */
-class functionalLocation {
+class functionalLocationListView {
 
     /* =========================
         LOCATORS
@@ -157,13 +157,36 @@ class functionalLocation {
         return $("//bdi[text()='Create']"); 
     }
 
-    private get succCrtMsg() { 
+    private get succCrtMsg() {  
         return $("//span[text()='Functional Location created successfully']"); 
     }
 
-    private get equipmentSelect() { 
+    private get succOKbtn() {  
+        return $("//bdi[text()='OK']"); 
+    }
+
+    private get funcLocSearch() {  
+        return $("//input[@type='search' and @placeholder='Search' and not(@aria-haspopup)]"); 
+    }
+
+    private get funcLocSearchBtn() {  
+        return $("//input[@type='search' and @placeholder='Search' and not(@aria-haspopup)]//following-sibling::div[2]"); 
+    }
+
+    private funcLocSearched(funLocName: string) {  
+    return $(`//span[text()='${funLocName}']/ancestor::td`);
+    }
+
+    private get funLocGeneralInfoTab() {  
+        return $("//bdi[text()='General Information']"); 
+    }
+
+    private get equipmentSelect() {  
         return $("//div[text()='Equipment']/ancestor::li"); 
     }
+
+    private functionalLocName!: string;
+    private parentFunctionalLoc: string = "FL0603";
 
     //   UTILITY FUNCTIONS
 
@@ -220,6 +243,7 @@ class functionalLocation {
         await this.succCrtMsg.waitForClickable({ timeout: 100000 });
         await this.succCrtMsg.isDisplayed();
         console.log("Functional Location created successfully");
+        await this.succOKbtn.click();
     }
 
     async closeSapPopupIfPresent(): Promise<void> {
@@ -249,6 +273,16 @@ class functionalLocation {
         await this.closeSapPopupIfPresent(); 
         await this.plusIconAndFuncLocSelect();
         await this.createFunctionalLocation();
+    }
+
+    public async searchFunctionalLocation(): Promise<void> {
+    await this.waitForBusyIndicatorToDisappear();
+    await this.funcLocSearch.setValue(this.functionalLocName);
+    await this.funcLocSearchBtn.click();
+    await this.waitForBusyIndicatorToDisappear();
+    await this.funcLocSearched(this.functionalLocName).click();
+    await this.waitForBusyIndicatorToDisappear();
+    await this.funLocGeneralInfoTab.isDisplayed();
     }
 
     public async selectInspectionType(typeName: string): Promise<void> {
@@ -294,11 +328,12 @@ class functionalLocation {
 
     public async createFunctionalLocation(): Promise<void> {
         await this.waitForBusyIndicatorToDisappear();
-        await this.newFunctionalLocName.setValue(this.generateRandomFuncName());
+        this.functionalLocName = this.generateRandomFuncName();
+        await this.newFunctionalLocName.setValue(this.functionalLocName);
         await this.shortDescName.setValue("Testing123");
         await this.selectParentAsset.click();
         await this.selectFuncLocBox.isDisplayed();
-        await this.selectFuncLocText.setValue("FL0603");
+        await this.selectFuncLocText.setValue(this.parentFunctionalLoc);
         await this.selectFuncLocSearch.click();
         await this.waitForBusyIndicatorToDisappear();
         await this.selectFuncLoc.waitForClickable({ timeout: 30000 });
@@ -324,4 +359,4 @@ class functionalLocation {
     }
 }
 
-export default new functionalLocation();
+export default new functionalLocationListView();
