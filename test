@@ -1,0 +1,42 @@
+[33mf4135fd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Updated main.yml
+[33m618fcb8[m Updated main.yml
+[33m4dff40f[m Updated main.yml
+[33m608a3e6[m Updated main.yml
+[33maf89d8f[m Updated main.yml for allure reports
+[33m3597a81[m Updated main.yml for allure reports
+[33m1abfaea[m Changes done in runner files
+[33m8d045f8[m Merge pull request #15 from AsIntDevOps/dev-Selenium
+[33m39617d2[m[33m ([m[1;31morigin/dev-Selenium[m[33m)[m Changes done in runner files
+[33m8dc7c10[m Update main.yml
+[33m2c2b0bf[m Create main.yml
+[33m7c6663e[m Merge pull request #14 from AsIntDevOps/dev-Selenium
+[33m3c20317[m Updated Selenium framework changes and added new runner files
+[33md153348[m Updated Selenium framework changes and added new runner files
+[33m025b6e7[m Merge pull request #13 from AsIntDevOps/dev
+[33m15ba99e[m[33m ([m[1;31morigin/dev[m[33m)[m Merge pull request #12 from AsIntDevOps/AsintEdge_and_BTP
+[33md82289b[m[33m ([m[1;31morigin/AsintEdge_and_BTP[m[33m)[m uncommit edge application
+[33m93eadb5[m AsintEdge and BTP merged
+[33m235ea84[m Merge pull request #11 from AsIntDevOps/dev-Selenium
+[33m2ece7ce[m Pushing combine code of BTP GCP and Data Conduit
+[33mbd76439[m Merge pull request #10 from AsIntDevOps/dev
+[33m0938cb6[m Merge pull request #9 from AsIntDevOps/BTP_FINAL
+[33mbdaf4c8[m final btp scripts
+[33mf53deb3[m Merge pull request #8 from AsIntDevOps/dev
+[33m6bd03e3[m Merge pull request #7 from AsIntDevOps/dataConduit_branch
+[33m40db252[m[33m ([m[1;31morigin/dataConduit_branch[m[33m)[m feat: Add end-to-end tests for Excel UI5 integration and utility functions
+[33m970a9f1[m Merge pull request #6 from AsIntDevOps/dev
+[33ma981222[m Created three folders
+[33mc3fa23d[m Merge pull request #5 from AsIntDevOps/dev
+[33m9b4afe2[m App Docs: Update Progress Sheet.
+[33m13df5ad[m Merge pull request #4 from AsIntDevOps/AsintEdge
+[33m5c2897c[m[33m ([m[1;31morigin/AsintEdge[m[33m)[m Enhance AsIntEdgeLoginPage with dynamic wait methods and improve error handling; add AsIntEdgeDashboardPage with navigation and application verification tests
+[33m2824162[m Merge pull request #3 from AsIntDevOps/dev
+[33maacdcca[m Merge pull request #2 from AsIntDevOps/BTP_APPLICATION
+[33m4136cdc[m[33m ([m[1;31morigin/BTP_APPLICATION[m[33m)[m BTP_Tescases_ADDED
+[33mcfd121e[m Merge pull request #1 from AsIntDevOps/AsintEdge
+[33m4d25ea9[m Update AsIntEdgeLoginPage with enhanced button click handling and adjust login test expectation
+[33m8e0ebdd[m[33m ([m[1;31morigin/BTPApplication[m[33m)[m App Docs: README Typo Fix.
+[33m89465d8[m App Doc: Add progress trackers in README.
+[33m0c6e469[m Add AsIntEdgeLoginPage class and authentication tests
+[33m54b4f4c[m Basic Strcture of WDIO
+[33mcba017d[m App: Added a README with basic guidance.
