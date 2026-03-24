@@ -252,6 +252,15 @@ class functionalLocationDetailView {
     private get funLocRiskSumTab() {  
         return $("//bdi[text()='Risk Summary']"); 
     }
+    private get funLocMainSerTab() {  
+        return $("//bdi[text()='Maintenance and Service']"); 
+    }
+    private get funLocAttach() {  
+        return $("//bdi[text()='Attachments']"); 
+    }
+    private get funLocChngHist() {  
+        return $("//bdi[text()='Change History']"); 
+    }
     private get editStrucInfo() {
         return $("//bdi[text()='Edit']");
     }
@@ -338,6 +347,21 @@ class functionalLocationDetailView {
     }
     private get recommend() {
         return $("//div[text()='Recommendations']/following::span[1]");
+    }
+    private get maintainNoti() {
+        return $("//div[text()='Maintenance Notification']/following::span[1]");
+    }
+    private get maintainOrder() {
+        return $("//div[text()='Maintenance Order']/following::span[1]");
+    }
+    private get maintainPlan() {
+        return $("//div[text()='Maintenance Plan']/following::span[1]");
+    }
+    private get recomWrk() {
+        return $("//div[text()='Recommendation Workbench']/following::span[1]");
+    }
+    private get maintaintask() {
+        return $("//div[text()='Maintenance Tasks']/following::span[5]");
     }
     private get assetStrategyRBI() {
         return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]");
@@ -757,7 +781,111 @@ class functionalLocationDetailView {
     }
 
     public async verifyMainAndSum() {
+        console.log("Navigating to Maintenance and Service Tab");
+        await utils.clickWithWait(this.funLocMainSerTab);
+        await this.funLocMainSerTab.waitForDisplayed({ timeout: 30000 });
+        console.log("Navigated to Maintenance and Service successfully");
+
+        const maintainNoti = await this.maintainNoti.getText();
+        const mn = await utils.getAssignedValue(maintainNoti);
+        console.log("Assigned Maintenance Notification : "+mn);
+
+        const maintainOrder = await this.maintainOrder.getText();
+        const mo = await utils.getAssignedValue(maintainOrder);
+        console.log("Assigned Maintenance Order: "+mo);
+
+        const maintainPlan = await this.maintainPlan.getText();
+        const mp = await utils.getAssignedValue(maintainPlan);
+        console.log("Assigned Maintenance Plan: "+mp);
+
+        const recomWrk = await this.recomWrk.getText();
+        const rw = await utils.getAssignedValue(recomWrk);
+        console.log("Assigned reocmmendatios: "+rw);
+
+        const maintaintask = await this.maintaintask.getText();
+        const mt = await utils.getAssignedValue(maintaintask);
+        console.log("Assigned Maintenance Task: "+mt);
 
     }
+
+    public async verifyAttachment() {
+        console.log("Navigating to Attachment tab");
+        await utils.clickWithWait(this.funLocAttach);
+        await this.funLocAttach.waitForDisplayed({ timeout: 30000 });
+        console.log("Navigated to Attachment tab successfully");
+
+    
+    }
+
+    public async verifyChangeHistory() {
+        //editing header infor for change history check
+        console.log("Editing header's Information for change history check");
+        // click edit
+        await utils.clickWithWait(this.funLocEditHeader);
+        // set description
+        await utils.setValueWithWait(
+            this.funLocDescEditHeader,
+            await utils.generateRandomFuncDescName()
+        );
+        // capture entered description dynamically
+        const enteredDesc = await this.funLocDescEditHeader.getValue();
+        // open category dropdown
+        await utils.clickWithWait(this.funLocCategoryEditHeader);
+        await this.funLocCategory.waitForDisplayed({ timeout: 30000 });
+        await this.funLocCtgChoose.scrollIntoView();
+        // select category dynamically
+        let selectedCategory = "";
+        const sElem = $("//span[text()='S']/ancestor::tr//td[2]//*[name()='circle'][2]/ancestor::div[@aria-checked='false']");
+        if (await sElem.isExisting()) {
+            await utils.clickWithWait(sElem);
+            selectedCategory = "S";
+        } else {
+            const mElem = $("//span[text()='M']/ancestor::tr//td[2]//*[name()='circle'][2]");
+            await utils.clickWithWait(mElem);
+            selectedCategory = "M";
+        }
+        // save category + header
+        await utils.clickWithWait(this.funLocCtgSave);
+        await utils.clickWithWait(this.funLocheaderSave);
+        // wait for success
+        await this.funLocHdSaveSucc.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.funLocHdOkBtn);
+        console.log("Header edited successfully");
+
+        // ================= CHANGE HISTORY =================
+        console.log("Navigating to Change History tab");
+
+        await utils.clickWithWait(this.funLocChngHist);
+        await this.funLocChngHist.waitForDisplayed({ timeout: 30000 });
+        console.log("Navigated to Change History tab successfully");
+        // get latest change history entry
+        const latestCngHst = await $("(//ul/li//div[2]/div/span)[1]");
+        await latestCngHst.waitForDisplayed();
+        // get full text
+        const text = await latestCngHst.getText();
+        console.log("Change History Text:\n", text);
+
+        // ================= VALIDATION =================
+
+        // split lines
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+        // extract required lines
+        const categoryLine = lines.find(l => l.toLowerCase().includes('category'));
+        const descLine = lines.find(l => l.toLowerCase().includes('description'));
+
+        if (!categoryLine || !categoryLine.includes(selectedCategory)) {
+            throw new Error(
+                `Category mismatch. Expected: ${selectedCategory}, Found: ${categoryLine}`
+            );
+        }
+
+        if (!descLine || !descLine.includes(enteredDesc)) {
+            throw new Error(
+                `Description mismatch. Expected: ${enteredDesc}, Found: ${descLine}`
+            );
+        }
+        console.log("Change history validation passed successfully");
+            }
 }
 export default new functionalLocationDetailView();

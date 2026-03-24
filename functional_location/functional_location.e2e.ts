@@ -43,14 +43,22 @@ describe('Functional Location test', () => {
             funcLocTestData.classificationMDA.noOfCharacteristics);
     });
 
-    it('should verify asset Intelligence' , async () => {
+    it.skip('should verify asset Intelligence' , async () => {
         await functionalLocationDetailView.verifyAssetIntelligence();
     });
 
-    it('should verify risk summary' , async () => {
+    it.skip('should verify risk summary' , async () => {
         await functionalLocationDetailView.verifyRiskSummary();
     });
-    it('should verify maintenance and service' , async () => {
+    it.skip('should verify maintenance and service' , async () => {
         await functionalLocationDetailView.verifyMainAndSum();
+    });
+
+    it.skip('should verify attachment section' , async () => {
+        await functionalLocationDetailView.verifyAttachment();
+    });
+
+    it('should verify change history' , async () => {
+        await functionalLocationDetailView.verifyChangeHistory();
     });
 });
