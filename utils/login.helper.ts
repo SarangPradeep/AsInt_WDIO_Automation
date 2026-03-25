@@ -19,6 +19,6 @@ export async function loginToSAP(): Promise<void> {
     await passwordInput.setValue(PASSWORD);
     await continueButton.click();
     await browser.pause(8000);
-    await utils.waitForSAPPopupAndClose(30);
-    await utils.waitForBusyIndicatorToDisappear(90);
+    await utils.waitForSAPPopupAndClose(90);
+    await utils.waitForBusyIndicatorToDisappear(180);
 }

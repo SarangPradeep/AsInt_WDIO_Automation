@@ -9,6 +9,9 @@ class Utils {
     private get funLocIframe() {
         return $('iframe[data-help-id="application-functionallocation-manage"]');
     }
+    private get CMLIframe() {
+        return $('iframe[data-help-id="application-cml-manage"]');
+    }
 
     async funLocFrameSwitch(): Promise<void> {
         console.log("--------------------------------------------- Before Switch ---------------------------------------------");
@@ -18,6 +21,24 @@ class Utils {
 
         await this.funLocIframe.waitForExist({ timeout: 20000 });
         await browser.switchFrame(this.funLocIframe);
+
+        console.log("--------------------------------------------- After Switch ---------------------------------------------");
+
+        const internalTitle = await browser.execute(() => document.title);
+        console.log("Internal Document Title:", internalTitle);
+
+        const btnCount = await $$('button').length;
+        console.log("Buttons found in current context:", btnCount);
+    }
+
+    async CMLFrameSwitch(): Promise<void> {
+        console.log("--------------------------------------------- Before Switch ---------------------------------------------");
+        console.log("URL:", await browser.getUrl());
+
+        await browser.switchFrame(null);
+
+        await this.CMLIframe.waitForExist({ timeout: 20000 });
+        await browser.switchFrame(this.CMLIframe);
 
         console.log("--------------------------------------------- After Switch ---------------------------------------------");
 

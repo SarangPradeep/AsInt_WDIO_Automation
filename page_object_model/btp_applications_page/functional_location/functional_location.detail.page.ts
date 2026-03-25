@@ -381,6 +381,9 @@ class functionalLocationDetailView {
     private get funLocTemp() {
         return $("//div[text()='Functional Location Templates']/following::span[1]");
     }
+    private get noOfCML() {
+        return $("(//h2//span)[2]");
+    }// //(//span[text()='CML Summary']/following::h2/span)[1]
 
     public async verifyHeader(): Promise<void> {
         console.log("Verifying Functional Location name");
@@ -554,6 +557,7 @@ class functionalLocationDetailView {
     public async assignEquipment(noOfEquipments: number) {
         await utils.clickWithWait(this.compInfoAsgn);
         await utils.clickWithWait(this.compInfoEqAsgn);
+        await utils.funLocFrameSwitch();
         await utils.selectCheckboxes(noOfEquipments);
         await utils.clickWithWait(this.compInfoEqCnf);
         await utils.clickWithWait(this.yesBtn);
@@ -886,6 +890,82 @@ class functionalLocationDetailView {
             );
         }
         console.log("Change history validation passed successfully");
+    }
+
+    public async verifyCML()
+    {
+        console.log("Verifying CML section");
+        // store parent tab
+        const parentTab = await browser.getWindowHandle();
+
+        // get tabs
+        const oldHandles = await browser.getWindowHandles();
+
+        // click
+        await utils.clickWithWait($('//bdi[text()="CML"]'));
+
+        // wait for new tab
+        await browser.waitUntil(
+            async () => (await browser.getWindowHandles()).length > oldHandles.length,
+            { timeout: 10000 }
+        );
+
+        // switch tab
+        const newHandles = await browser.getWindowHandles();
+        const newTab = newHandles.find(h => !oldHandles.includes(h));
+
+        await browser.switchToWindow(newTab!);
+
+        // wait load
+        await browser.waitUntil(
+            async () => (await browser.execute(() => document.readyState)) === 'complete'
+        );
+
+        // SAP wait
+        await utils.waitForBusyIndicatorToDisappear();
+
+        // iframe
+        const frame = await $('//iframe');
+        await frame.waitForExist({ timeout: 20000 });
+        await browser.switchFrame(frame);
+
+        console.log("✅ Switched to CML iframe");
+        const cmlElem = await this.noOfCML;
+        await cmlElem.waitForDisplayed({ timeout: 20000 });
+
+        //wait until value is NOT 0
+        await browser.waitUntil(
+            async () => {
+                let text = await cmlElem.getText();
+                if (!text) text = await cmlElem.getAttribute("innerText");
+
+                console.log("Waiting CML text:", text);
+
+                const value = await utils.getAssignedValue(text);
+                return value > 0; // 👈 key fix
+            },
+            {
+                timeout: 20000,
+                interval: 1000,
+                timeoutMsg: "❌ CML value did not update from 0"
             }
+        );
+
+        let cmlText = await cmlElem.getText();
+        if (!cmlText) {
+            cmlText = await cmlElem.getAttribute("innerText");
+        }
+
+        console.log("FINAL CML TEXT:", cmlText);
+
+        const CML = await utils.getAssignedValue(cmlText);
+
+        console.log("✅ Assigned CMLs:", CML);
+
+        // cleanup
+        await browser.closeWindow();
+        await browser.switchToWindow(parentTab);
+        console.log("Returned to parent tab");
+    }
 }
 export default new functionalLocationDetailView();

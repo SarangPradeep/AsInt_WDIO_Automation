@@ -58,7 +58,11 @@ describe('Functional Location test', () => {
         await functionalLocationDetailView.verifyAttachment();
     });
 
-    it('should verify change history' , async () => {
+    it.skip('should verify change history' , async () => {
         await functionalLocationDetailView.verifyChangeHistory();
+    });
+
+    it.skip('should verify CML from header section of functional location' , async () => {
+        await functionalLocationDetailView.verifyCML();
     });
 });

@@ -50,6 +50,12 @@ class functionalLocationListView {
     private get oKbtn() {  
         return $("//bdi[text()='Ok']"); 
     }
+    private get oKbtn2() {  
+        return $("//bdi[text()='OK']"); 
+    }
+    private get search() {  
+        return $("//input[@type='search' and not(@title) and not(@aria-haspopup) and not(@aria-labelledby)]"); 
+    }
     private funcLocSearched() {  
     return $("(//tr[@role='row']//span[@title='Navigation'])[1]");
     }
@@ -76,7 +82,7 @@ class functionalLocationListView {
         await utils.waitForBusyIndicatorToDisappear();
         await this.succCrtMsg.waitForDisplayed({ timeout: 100000 });
         console.log("Functional Location created successfully");
-        await utils.clickWithWait(this.oKbtn);
+        await utils.clickWithWait(this.oKbtn2);
     }
 
     public async naviagteFunctionalLocationListView(): Promise<void> {
@@ -121,13 +127,18 @@ class functionalLocationListView {
 
     public async navigateFunctionalLocation(): Promise<void> {
 
-        await utils.waitForSAPPopupAndClose();
-        await this.navigateToFunctionalLocation();
-        await utils.waitForSAPPopupAndClose();  
+        await this.navigateToFunctionalLocation(); 
         await utils.waitForBusyIndicatorToDisappear();
         await utils.funLocFrameSwitch();
-        await utils.waitForSAPPopupAndClose();
 
+
+        // //search newly create functional location
+        // await utils.clickWithWait(this.search,1000);
+        // await utils.setValueWithWait(this.search,"FLOC 2",1000);
+        // await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
+        // await browser.pause(2000);
+
+        //navigating to functional location detail View
         console.log("Navigating to Detail view page of Functional Location");
         await utils.waitForBusyIndicatorToDisappear();
         const nav = this.funcLocSearched();
