@@ -1,5 +1,5 @@
 import { $$, browser } from '@wdio/globals';
-
+import * as path from 'path';
 class Utils {
 
     private get equipmentIframe() {
@@ -47,6 +47,22 @@ class Utils {
 
         const btnCount = await $$('button').length;
         console.log("Buttons found in current context:", btnCount);
+    }
+
+    async uploadDocument(fileName: string): Promise<void> {
+
+        // Absolute path of file
+        const filePath = path.join(process.cwd(), 'test_data/btp_applications/', fileName);
+
+        // Upload file to browser temp storage
+        const remoteFilePath = await browser.uploadFile(filePath);
+
+        // Select file input (type="file")
+        const fileInput = await $('//input[@type="file"]');
+
+        // Set file
+        await fileInput.waitForExist();
+        await fileInput.setValue(remoteFilePath);
     }
 
     async switchIframe(): Promise<void> {
@@ -228,6 +244,24 @@ class Utils {
             }
         }
     }
+
+    async selectCheckboxesForPhase(noOfPhases: number): Promise<void> {
+        for (let i = 0; i <= noOfPhases; i++) {
+            const expectedRow = i ;
+            let resultCell = await $(`//li[@aria-posinset="${expectedRow}"]//div[@aria-checked='false']`);
+
+            if (!(await resultCell.isExisting())) {
+                resultCell = await $(`//li[@aria-posinset="${expectedRow +1 }"]//div[@aria-checked='false']`);
+            }
+
+            if (await resultCell.isExisting()) {
+                await resultCell.waitForClickable({ timeout: 20000 });
+                await resultCell.click();
+            }
+        }
+    }
+
+    
 
     async generateUniqueName(base: string): Promise<string> {
         const timestamp = new Date().getTime();

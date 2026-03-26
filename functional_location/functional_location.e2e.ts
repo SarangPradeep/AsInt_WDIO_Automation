@@ -55,7 +55,14 @@ describe('Functional Location test', () => {
     });
 
     it.skip('should verify attachment section' , async () => {
-        await functionalLocationDetailView.verifyAttachment();
+        await functionalLocationDetailView.gotoAttachmentsTabAndAssignAttachment();
+        await functionalLocationDetailView.addDocument();
+        await functionalLocationDetailView.addLink();
+
+    });
+
+    it.skip('should delete the assigned attachment and verify', async () => {
+        await functionalLocationDetailView.deleteAttachmentAndVerify();
     });
 
     it.skip('should verify change history' , async () => {

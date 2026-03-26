@@ -339,6 +339,7 @@ class functionalLocationDetailView {
     private get riskAndCriticality() {
         return $("//div[text()='Risk and Criticality']/following::span[1]");
     }
+    private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]]'); }
     private get assetInsp() {
         return $("//div[text()='Asset Inspection']/following::span[1]");
     }
@@ -812,13 +813,94 @@ class functionalLocationDetailView {
 
     }
 
-    public async verifyAttachment() {
+    public async addDocument() {
         console.log("Navigating to Attachment tab");
         await utils.clickWithWait(this.funLocAttach);
         await this.funLocAttach.waitForDisplayed({ timeout: 30000 });
         console.log("Navigated to Attachment tab successfully");
 
-    
+        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+        await utils.clickWithWait(addLinkBtn);
+        await browser.pause(2000);
+        await utils.funLocFrameSwitch();
+        const documentOption = await $('//li[contains(.,"Add Document")]');
+        await utils.clickWithWait(documentOption);
+        await browser.pause(2000);
+        await utils.uploadDocument('vessel-1.png');
+        await browser.pause(9000);
+        await utils.clickWithWait($('//label[.//bdi[text()="Category"]]//following::span[contains(@id,"arrow")][1]'));
+        await utils.clickWithWait($('//li[@role="option"][1]'));
+        await utils.clickWithWait($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'));
+        await utils.clickWithWait($('//li[@role="option"][1]//div[@role="checkbox"]'));
+        await utils.clickWithWait($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'));
+        await utils.clickWithWait($('//label[.//bdi[text()="Language"]]//following::span[contains(@id,"arrow")][1]'));
+        await utils.clickWithWait($('//span[text()="English"]/ancestor::li'));
+        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(10000);
+    }
+
+    async addLink() {
+        console.log("Navigating to Attachment tab");
+        await utils.clickWithWait(this.funLocAttach);
+        await this.funLocAttach.waitForDisplayed({ timeout: 30000 });
+        console.log("Navigated to Attachment tab successfully");
+        
+        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+        await utils.clickWithWait(addLinkBtn);
+        await browser.pause(2000);
+        await utils.funLocFrameSwitch();
+        const link = await $('//li[contains(.,"Add Link")]');
+        await utils.clickWithWait(link);
+        await browser.pause(2000);
+
+        // Display Name
+        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
+        await displayNameInput.waitForDisplayed();
+        await displayNameInput.setValue("Test Link");
+
+        // Link
+        const linkInput = await $(`//label[.//bdi[text()='Link']]//following::input[1]`);
+        await linkInput.setValue("https://testlink.com");
+
+        // Phase (MultiComboBox)
+        if (true) {
+            const phaseInput = await $(`//label[.//bdi[text()='Phase']]//following::span[@role='button'][1]`);
+            await phaseInput.click();
+         //   await phaseInput.setValue(data.phase);
+
+            const option = await $(`//li[@aria-posinset='1']//div[@aria-checked='false']`);
+            await option.waitForDisplayed();
+            await option.click();
+        }
+
+        // Category (ComboBox)
+        if (true) {
+            const categoryInput = await $(`//label[.//bdi[text()='Category']]//following::span[@role='button'][1]`);
+            await categoryInput.click();
+        //    await categoryInput.setValue(data.category);
+
+            const option = await $(`(//ul[@aria-multiselectable='false']//li[@aria-posinset='2'])[1]`);
+            await option.waitForDisplayed();
+            await option.click();
+        }
+
+        // Language (ComboBox)
+        if (true) {
+            const languageInput = await $(`//label[.//bdi[text()='Language']]//following::span[@role='button'][1]`);
+            await languageInput.click();
+        //    await languageInput.setValue(data.language);
+
+            const option = await $(`(//ul[@aria-multiselectable='false']//li[@aria-posinset='2'])[2]`);
+            await option.waitForDisplayed();
+            await option.click();
+        }
+        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await browser.pause(2000);
     }
 
     public async verifyChangeHistory() {
@@ -966,6 +1048,32 @@ class functionalLocationDetailView {
         await browser.closeWindow();
         await browser.switchToWindow(parentTab);
         console.log("Returned to parent tab");
+    }
+
+     async gotoAttachmentsTabAndAssignAttachment() {
+        await browser.pause(4000);
+        await utils.funLocFrameSwitch();
+        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
+        await this.attachmentsSection.click();
+        // Click on "Add Attachment" button
+        const addAttachmentBtn = await $('//button[.//bdi[text()="Assign"]]');
+        await utils.clickWithWait(addAttachmentBtn);
+        await browser.pause(2000);
+        await utils.selectCheckboxes(2);
+        await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'));
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+    }
+
+    async deleteAttachmentAndVerify() {
+        const firstAttachmentCheckbox = await $('(//table//tr[@role="row"]//div[@role="checkbox"])[1]');
+        await firstAttachmentCheckbox.waitForClickable({ timeout: 20000 });
+        await firstAttachmentCheckbox.click();
+
+        await utils.clickWithWait($('//button[.//bdi[text()="Assign"]]/following::bdi[1]'));
+        await utils.clickWithWait($('//button[.//bdi[text()="Yes"]]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await browser.pause(2000);
     }
 }
 export default new functionalLocationDetailView();

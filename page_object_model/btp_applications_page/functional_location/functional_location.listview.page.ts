@@ -127,16 +127,16 @@ class functionalLocationListView {
 
     public async navigateFunctionalLocation(): Promise<void> {
 
-        await this.navigateToFunctionalLocation(); 
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.funLocFrameSwitch();
+        // await this.navigateToFunctionalLocation(); 
+        // await utils.waitForBusyIndicatorToDisappear();
+        // await utils.funLocFrameSwitch();
 
 
-        // //search newly create functional location
-        // await utils.clickWithWait(this.search,1000);
-        // await utils.setValueWithWait(this.search,"FLOC 2",1000);
-        // await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
-        // await browser.pause(2000);
+        //search newly create functional location
+        await utils.clickWithWait(this.search,1000);
+        await utils.setValueWithWait(this.search,"FLOC 2",1000);
+        await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
+        await browser.pause(2000);
 
         //navigating to functional location detail View
         console.log("Navigating to Detail view page of Functional Location");
