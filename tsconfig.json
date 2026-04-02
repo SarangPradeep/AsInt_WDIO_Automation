@@ -1,0 +1,36 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "module": "ESNext",
+        "target": "es2022",
+        "lib": [
+            "es2022",
+            "dom"
+        ],
+        "types": [
+            "node",
+            "mocha",
+            "@wdio/globals/types",
+            "expect-webdriverio"
+        ],
+        "baseUrl": ".", 
+        "paths": {
+            "@pages/*": ["PageObjectModel/*"]
+        },
+        "skipLibCheck": true,
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true
+    },
+    "include": [
+        "equipment",
+        "page_object_model",
+        "configuration",
+        "wdio.conf.ts"
+    ]
+}
