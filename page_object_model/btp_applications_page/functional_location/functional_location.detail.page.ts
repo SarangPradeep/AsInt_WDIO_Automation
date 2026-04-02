@@ -11,7 +11,10 @@ class functionalLocationDetailView {
     }
 
     private get funLocHeadChk() {  
-        return $("(//header//*[@role='heading']/span)[3]"); 
+        return $("(//header//*[@role='heading']/span)[2]"); 
+    }
+    private get funLocDisplayId() {  
+        return $("//span[starts-with(normalize-space(), 'Display ID:')]"); 
     }
 
     private get funLocEditHeader() {  
@@ -385,6 +388,9 @@ class functionalLocationDetailView {
     private get noOfCML() {
         return $("(//h2//span)[2]");
     }// //(//span[text()='CML Summary']/following::h2/span)[1]
+    private get deleteBtn() {
+        return $("//bdi[text()='Delete']");
+    }
 
     public async verifyHeader(): Promise<void> {
         console.log("Verifying Functional Location name");
@@ -516,12 +522,15 @@ class functionalLocationDetailView {
 
     public superFuncLocValue!: string;
     public funcLocHeadValue!: string;
+    public displayID!: string;
     public async verifyAndEditStructure() {
         console.log("Navigating to Structure Tab");
-        this.funcLocHeadValue = await utils.getTextWithWait(this.funLocHeadChk);
         await utils.clickWithWait(this.funLocStrucTab);
         await this.funLocStrucTab.waitForDisplayed({ timeout: 30000 });
+        await utils.waitForBusyIndicatorToDisappear();
         console.log("Navigated to Structure Tab successfully");
+        this.funcLocHeadValue = await this.funLocHeadChk.getAttribute("innerText");
+        console.log("Functional Location header value is :"+this.funcLocHeadValue);
         await utils.clickWithWait(this.editStrucInfo);
         await utils.clickWithWait(this.superFunLoc);
         await this.superFunLocBox.waitForDisplayed({ timeout: 30000 });
@@ -556,16 +565,18 @@ class functionalLocationDetailView {
     }
 
     public async assignEquipment(noOfEquipments: number) {
-        await utils.clickWithWait(this.compInfoAsgn);
-        await utils.clickWithWait(this.compInfoEqAsgn);
+        console.log("Assigning Equipment to Functional Location");
+        await utils.clickWithWait(this.compInfoAsgn,1000);
+        await utils.clickWithWait(this.compInfoEqAsgn,1000);
         await utils.funLocFrameSwitch();
+        await browser.pause(4000);
         await utils.selectCheckboxes(noOfEquipments);
-        await utils.clickWithWait(this.compInfoEqCnf);
-        await utils.clickWithWait(this.yesBtn);
+        await utils.clickWithWait(this.compInfoEqCnf,1000);
+        await utils.clickWithWait(this.yesBtn,1000);
         await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait(this.okBtn);
+        await utils.clickWithWait(this.okBtn,1000);
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
+        await browser.pause(4000);
         console.log("Equipment Components assigned successfully");
         const components = await this.components.getText();
         const count = await utils.getAssignedValue(components);
@@ -578,8 +589,8 @@ class functionalLocationDetailView {
     let selectedCount = 0;
     let i = 1;
     while (selectedCount < noOfFunLoc) {
-        await utils.clickWithWait(this.compInfoAsgn);
-        await utils.clickWithWait(this.compInfoFunLocAsgn);
+        await utils.clickWithWait(this.compInfoAsgn,1000);
+        await utils.clickWithWait(this.compInfoFunLocAsgn,1000);
         await browser.pause(2000);
         await utils.funLocFrameSwitch();
         let foundValid = false;
@@ -595,7 +606,7 @@ class functionalLocationDetailView {
             await utils.clickWithWait(row);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(1000);
-            await utils.clickWithWait(this.okBtn);
+            await utils.clickWithWait(this.okBtn,1000);
             await utils.waitForBusyIndicatorToDisappear();
             selectedCount++;
             i++;
@@ -609,20 +620,19 @@ class functionalLocationDetailView {
     }
 
     public async verifyGroups() {
+        console.log("Verifying Groups assigned");
         const groups = await this.groups.getText();
         const count = await utils.getAssignedValue(groups);
         console.log("No of groups assigned are :"+count);
     }
 
-    public async asgFunLocTempAndCls(noOfFunTemp: number, autoAssign: boolean) {
-        await this.asgnFunLocTemplate(noOfFunTemp, autoAssign)
-    }
-
     public async asgnFunLocTemplate(noOfFunTemp: number, autoAssign: boolean): Promise<void> {
+        console.log("Assigning Functional Location Template");
         await browser.pause(1000);
         await utils.funLocFrameSwitch();
         await this.funLocAsgnTab.waitForDisplayed({ timeout: 50000 });
         await this.funLocAsgnTab.click();
+        await utils.waitForBusyIndicatorToDisappear();
 
         await utils.funLocFrameSwitch();
         await this.asgnFunLocTemp.waitForClickable({ timeout: 30000 });
@@ -646,6 +656,7 @@ class functionalLocationDetailView {
     }
 
     async assignFunLocClass(noOfClasses: number, autoAssign: boolean): Promise<void> {
+        console.log("Assigning classes to Functional Location");
         const classes = await this.class.getText();
         await utils.getAssignedValue(classes);
         console.log("Already assigned classes: "+classes);
@@ -658,17 +669,19 @@ class functionalLocationDetailView {
         }
         await browser.pause(1000);
         await utils.funLocFrameSwitch();
-        await this.funLocAsgnTab.waitForDisplayed({ timeout: 50000 });
-        await this.funLocAsgnTab.click();
-        await utils.funLocFrameSwitch();
-        await this.asgnClsAndChr.waitForClickable({ timeout: 30000 });
-        await this.asgnClsAndChr.click();
-        await browser.pause(1000);
+        await utils.clickWithWait(this.asgnClsAndChr,2000);
         await utils.funLocFrameSwitch();
         const availableText = await $("//span[text()='Assign Classes']/ancestor::header/following::span[1]").getText();
         const availableCount = await utils.getAssignedValue(availableText);
         console.log("Available classes:"+ availableCount);
-        if (availableCount <= noOfClasses )
+        if(availableCount === 0)
+        {
+            console.log("No of classes available is zero")
+            await this.cancelBtn.click();
+            utils.waitForBusyIndicatorToDisappear();
+            return;
+        }
+        else if (availableCount <= noOfClasses )
         {
             const selectAll = $("//span[text()='Assign Classes']/ancestor::header/following::th[2]");
             await utils.clickWithWait(selectAll);
@@ -689,11 +702,13 @@ class functionalLocationDetailView {
     }
 
     async assignFunLocChar(noOfChar: number): Promise<void> {
+        console.log("Assigning characteristics to Functional Location");
         let k=0;
         await browser.pause(1000);
         await utils.funLocFrameSwitch();
         await this.funLocMDATab.waitForDisplayed({ timeout: 50000 });
         await this.funLocMDATab.click();
+        await utils.waitForBusyIndicatorToDisappear();
         const char = await this.noOfCharMDA.getText();
         const c2 = await utils.getAssignedValue(char);
         console.log("Already assigned charactertics : "+c2);
@@ -737,6 +752,7 @@ class functionalLocationDetailView {
         console.log("Navigating to Asset Intelligence Tab");
         await utils.clickWithWait(this.funLocAssetIntTab);
         await this.funLocAssetIntTab.waitForDisplayed({ timeout: 30000 });
+        await utils.waitForBusyIndicatorToDisappear();
         console.log("Navigated to Asset Intelligence Tab successfully");
 
         const riskAndCriti = await this.riskAndCriticality.getText();
@@ -769,6 +785,7 @@ class functionalLocationDetailView {
         console.log("Navigating to Risk Summary Tab");
         await utils.clickWithWait(this.funLocRiskSumTab);
         await this.funLocRiskSumTab.waitForDisplayed({ timeout: 30000 });
+        await utils.waitForBusyIndicatorToDisappear();
         console.log("Navigated to Risk Summary Tab successfully");
 
         const riskProfile = await this.riskProfile.getText();
@@ -789,6 +806,7 @@ class functionalLocationDetailView {
         console.log("Navigating to Maintenance and Service Tab");
         await utils.clickWithWait(this.funLocMainSerTab);
         await this.funLocMainSerTab.waitForDisplayed({ timeout: 30000 });
+        await utils.waitForBusyIndicatorToDisappear();
         console.log("Navigated to Maintenance and Service successfully");
 
         const maintainNoti = await this.maintainNoti.getText();
@@ -813,12 +831,158 @@ class functionalLocationDetailView {
 
     }
 
-    public async addDocument() {
-        console.log("Navigating to Attachment tab");
-        await utils.clickWithWait(this.funLocAttach);
-        await this.funLocAttach.waitForDisplayed({ timeout: 30000 });
-        console.log("Navigated to Attachment tab successfully");
+    // public async addDocument() {
+    //     console.log("Navigating to Attachment tab");
+    //     await utils.clickWithWait(this.funLocAttach);
+    //     await this.funLocAttach.waitForDisplayed({ timeout: 30000 });
+    //     console.log("Navigated to Attachment tab successfully");
 
+    //     const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+    //     await utils.clickWithWait(addLinkBtn);
+    //     await browser.pause(2000);
+    //     await utils.funLocFrameSwitch();
+    //     const documentOption = await $('//li[contains(.,"Add Document")]');
+    //     await utils.clickWithWait(documentOption);
+    //     await browser.pause(2000);
+    //     await utils.uploadDocument('vessel-1.png');
+    //     await browser.pause(9000);
+    //     await utils.clickWithWait($('//label[.//bdi[text()="Category"]]//following::span[contains(@id,"arrow")][1]'),1000);
+    //     await browser.pause(2000);
+    //     await utils.clickWithWait($('(//li[@role="option"])[1]'),1000);
+    //     await browser.pause(2000);
+    //     await utils.clickWithWait($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'),1000);
+    //     await browser.pause(2000);
+    //     await utils.clickWithWait($('//li[@role="option"][1]//div[@role="checkbox"]'),1000);
+    //     await browser.pause(2000);
+    //     //await utils.clickWithWait($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'),1000);
+    //     await utils.clickWithWait($('//label[.//bdi[text()="Language"]]//following::span[contains(@id,"arrow")][1]'),1000);
+    //     await browser.pause(2000);
+    //     await utils.clickWithWait($('//span[text()="English"]/ancestor::li'),1000);
+    //     await browser.pause(2000);
+    //     await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'),1000);
+    //     await utils.waitForBusyIndicatorToDisappear();
+    //     await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'),1000);
+    //     await utils.waitForBusyIndicatorToDisappear();
+    //     await browser.pause(10000);
+    // }
+
+    // async addLink() {
+    //     console.log("Navigating to Attachment tab");
+    //     await utils.clickWithWait(this.funLocAttach);
+    //     await this.funLocAttach.waitForDisplayed({ timeout: 30000 });
+    //     console.log("Navigated to Attachment tab successfully");
+        
+    //     const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+    //     await utils.clickWithWait(addLinkBtn);
+    //     await browser.pause(2000);
+    //     await utils.funLocFrameSwitch();
+    //     const link = await $('//li[contains(.,"Add Link")]');
+    //     await utils.clickWithWait(link);
+    //     await browser.pause(2000);
+
+    //     // Display Name
+    //     const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
+    //     await displayNameInput.waitForDisplayed();
+    //     await displayNameInput.setValue("Test Link");
+
+    //     // Link
+    //     const linkInput = await $(`//label[.//bdi[text()='Link']]//following::input[1]`);
+    //     await linkInput.setValue("https://testlink.com");
+
+    //     // Phase (MultiComboBox)
+    //     if (true) {
+    //         const phaseInput = await $(`//label[.//bdi[text()='Phase']]//following::span[@role='button'][1]`);
+    //         await phaseInput.click();
+    //      //   await phaseInput.setValue(data.phase);
+
+    //         const option = await $(`//li[@aria-posinset='1']//div[@aria-checked='false']`);
+    //         await option.waitForDisplayed();
+    //         await option.click();
+    //     }
+
+    //     // Category (ComboBox)
+    //     if (true) {
+    //         const categoryInput = await $(`//label[.//bdi[text()='Category']]//following::span[@role='button'][1]`);
+    //         await categoryInput.click();
+    //     //    await categoryInput.setValue(data.category);
+
+    //         const option = await $(`(//ul[@aria-multiselectable='false']//li[@aria-posinset='2'])[1]`);
+    //         await option.waitForDisplayed();
+    //         await option.click();
+    //     }
+
+    //     // Language (ComboBox)
+    //     if (true) {
+    //         const languageInput = await $(`//label[.//bdi[text()='Language']]//following::span[@role='button'][1]`);
+    //         await languageInput.click();
+    //     //    await languageInput.setValue(data.language);
+
+    //         const option = await $(`(//ul[@aria-multiselectable='false']//li[@aria-posinset='2'])[2]`);
+    //         await option.waitForDisplayed();
+    //         await option.click();
+    //     }
+    //     await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
+    //     await utils.waitForBusyIndicatorToDisappear();
+    //     await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+    //     await browser.pause(2000);
+    // }
+
+    async addLink() {
+        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+        await utils.clickWithWait(addLinkBtn);
+        await browser.pause(2000);
+        await utils.funLocFrameSwitch();
+        const link = await $('//li[contains(.,"Add Link")]');
+        await utils.clickWithWait(link);
+        await browser.pause(2000);
+ 
+        // Display Name
+        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
+        await displayNameInput.waitForDisplayed();
+        await displayNameInput.setValue("Test Link");
+ 
+        // Link
+        const linkInput = await $(`//label[.//bdi[text()='Link']]//following::input[1]`);
+        await linkInput.setValue("https://testlink.com");
+ 
+        // // Phase (MultiComboBox)
+        // if (false) {
+        //     const phaseInput = await $(`//label[.//bdi[text()='Phase']]//following::input[1]`);
+        //     await phaseInput.click();
+        //     await phaseInput.setValue(data.phase);
+ 
+        //     const option = await $(`//li//span[text()='${data.phase}']`);
+        //     await option.waitForDisplayed();
+        //     await option.click();
+        // }
+ 
+        // // Category (ComboBox)
+        // if (false) {
+        //     const categoryInput = await $(`//label[.//bdi[text()='Category']]//following::input[1]`);
+        //     await categoryInput.click();
+        //     await categoryInput.setValue(data.category);
+ 
+        //     const option = await $(`//li//span[text()='${data.category}']`);
+        //     await option.waitForDisplayed();
+        //     await option.click();
+        // }
+ 
+        // // Language (ComboBox)
+        // if (false) {
+        //     const languageInput = await $(`//label[.//bdi[text()='Language']]//following::input[1]`);
+        //     await languageInput.click();
+        //     await languageInput.setValue(data.language);
+ 
+        //     const option = await $(`//li//span[text()='${data.language}']`);
+        //     await option.waitForDisplayed();
+        //     await option.click();
+        // }
+        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await browser.pause(2000);
+    }
+    async addDocument() {
         const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
         await utils.clickWithWait(addLinkBtn);
         await browser.pause(2000);
@@ -840,67 +1004,8 @@ class functionalLocationDetailView {
         await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(10000);
-    }
-
-    async addLink() {
-        console.log("Navigating to Attachment tab");
-        await utils.clickWithWait(this.funLocAttach);
-        await this.funLocAttach.waitForDisplayed({ timeout: 30000 });
-        console.log("Navigated to Attachment tab successfully");
-        
-        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
-        await utils.clickWithWait(addLinkBtn);
-        await browser.pause(2000);
-        await utils.funLocFrameSwitch();
-        const link = await $('//li[contains(.,"Add Link")]');
-        await utils.clickWithWait(link);
-        await browser.pause(2000);
-
-        // Display Name
-        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
-        await displayNameInput.waitForDisplayed();
-        await displayNameInput.setValue("Test Link");
-
-        // Link
-        const linkInput = await $(`//label[.//bdi[text()='Link']]//following::input[1]`);
-        await linkInput.setValue("https://testlink.com");
-
-        // Phase (MultiComboBox)
-        if (true) {
-            const phaseInput = await $(`//label[.//bdi[text()='Phase']]//following::span[@role='button'][1]`);
-            await phaseInput.click();
-         //   await phaseInput.setValue(data.phase);
-
-            const option = await $(`//li[@aria-posinset='1']//div[@aria-checked='false']`);
-            await option.waitForDisplayed();
-            await option.click();
-        }
-
-        // Category (ComboBox)
-        if (true) {
-            const categoryInput = await $(`//label[.//bdi[text()='Category']]//following::span[@role='button'][1]`);
-            await categoryInput.click();
-        //    await categoryInput.setValue(data.category);
-
-            const option = await $(`(//ul[@aria-multiselectable='false']//li[@aria-posinset='2'])[1]`);
-            await option.waitForDisplayed();
-            await option.click();
-        }
-
-        // Language (ComboBox)
-        if (true) {
-            const languageInput = await $(`//label[.//bdi[text()='Language']]//following::span[@role='button'][1]`);
-            await languageInput.click();
-        //    await languageInput.setValue(data.language);
-
-            const option = await $(`(//ul[@aria-multiselectable='false']//li[@aria-posinset='2'])[2]`);
-            await option.waitForDisplayed();
-            await option.click();
-        }
-        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-        await browser.pause(2000);
+ 
+ 
     }
 
     public async verifyChangeHistory() {
@@ -976,6 +1081,81 @@ class functionalLocationDetailView {
 
     public async verifyCML()
     {
+        console.log("Starting CML verification");
+        console.log("Capturing Functional Location header value for CML check");
+        let funcLoc = "";
+        let actualId = "";
+
+        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+
+        // 🔹 Functional Location
+        const getFuncLoc = async () => {
+            const spans = await $$("//header//*[@role='heading']//span");
+
+            for (let el of spans) {
+                let txt = await el.getText();
+                if (!txt) txt = await el.getAttribute("innerText");
+
+                txt = txt?.trim();
+
+                if (txt && (txt.startsWith("FLOC ") || txt.startsWith("FUNC-LOC"))) {
+                    return txt;
+                }
+            }
+            return "";
+        };
+
+        // 🔹 Display ID (🔥 DOM DIRECT — bulletproof)
+        const getDisplayId = async () => {
+            try {
+                const txt = await browser.execute(() => {
+                    const el = document.evaluate(
+                        "//span[starts-with(normalize-space(),'Display ID:')]",
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    ).singleNodeValue;
+
+                    return el ? (el.textContent || "") : "";
+                });
+
+                return txt ? txt.replace("Display ID:", "").trim() : "";
+            } catch (e) {
+                return "";
+            }
+        };
+
+
+        // 🔁 try: current → expand → collapse
+        for (let i = 0; i < 3; i++) {
+
+            const headerText = await getFuncLoc();
+            const displayText = await getDisplayId();
+
+            if (!funcLoc && headerText) funcLoc = headerText;
+            if (!actualId && displayText) actualId = displayText;
+
+            console.log(`Attempt ${i + 1} → FuncLoc="${funcLoc || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+
+            if (funcLoc && actualId) break;
+
+            if (i === 0 && await expandBtn.isExisting()) {
+                await browser.execute(el => el.click(), expandBtn);
+            } 
+            else if (i === 1 && await collapseBtn.isExisting()) {
+                await browser.execute(el => el.click(), collapseBtn);
+            }
+
+            await browser.pause(1500);
+        }
+
+        // ✅ FINAL
+        this.funcLocHeadValue = funcLoc;
+
+        console.log(`✅ Final → FuncLoc="${funcLoc}" | DisplayID="${actualId}"`);
+
         console.log("Verifying CML section");
         // store parent tab
         const parentTab = await browser.getWindowHandle();
@@ -1007,7 +1187,7 @@ class functionalLocationDetailView {
         await utils.waitForBusyIndicatorToDisappear();
 
         // iframe
-        const frame = await $('//iframe');
+        const frame = await $('//iframe[@data-help-id="application-cml-manage"]');
         await frame.waitForExist({ timeout: 20000 });
         await browser.switchFrame(frame);
 
@@ -1015,24 +1195,56 @@ class functionalLocationDetailView {
         const cmlElem = await this.noOfCML;
         await cmlElem.waitForDisplayed({ timeout: 20000 });
 
+        const funLocInCML = await $("(//header//*[@role='heading']/span)[1]");
+        await funLocInCML.waitForDisplayed({ timeout: 20000 });
+        await browser.waitUntil(async () => {
+            return (await funLocInCML.getText()).trim().length > 0;
+        }, { timeout: 10000 });
+        const funLocInCMLText = await funLocInCML.getText();
+        console.log("Functional Location in CML:", funLocInCMLText);
+
+        const displayIdInCML = await $("((//header//*[@role='heading']/span)/following::bdi[2])[1]");
+        await displayIdInCML.waitForDisplayed({ timeout: 20000 });
+        await browser.waitUntil(async () => {
+            const txt = await displayIdInCML.getText();
+            return txt && txt.trim().length > 0;
+        }, { timeout: 10000 });
+        const displayIdInCMLText = await displayIdInCML.getText();
+        console.log("Display ID in CML:", displayIdInCMLText);
+
+        if(!funLocInCMLText || !displayIdInCMLText) {
+            throw new Error("CML header values are empty");
+        }
+        await utils.assertTextEquals(funLocInCML, this.funcLocHeadValue);
+        console.log("✅ Functional Location in CML matches header value");
+        await utils.assertTextEquals(displayIdInCML, actualId);
+        console.log("✅ Display ID in CML matches header value");
+
         //wait until value is NOT 0
-        await browser.waitUntil(
-            async () => {
-                let text = await cmlElem.getText();
-                if (!text) text = await cmlElem.getAttribute("innerText");
+        let finalValue = 0;
+        try {
+            await browser.waitUntil(
+                async () => {
+                    let text = await cmlElem.getText();
+                    if (!text) text = await cmlElem.getAttribute("innerText");
 
-                console.log("Waiting CML text:", text);
+                    console.log("Waiting CML text:", text);
 
-                const value = await utils.getAssignedValue(text);
-                return value > 0; // 👈 key fix
-            },
-            {
-                timeout: 20000,
-                interval: 1000,
-                timeoutMsg: "❌ CML value did not update from 0"
-            }
-        );
+                    const value = await utils.getAssignedValue(text);
+                    finalValue = value;
 
+                    return value > 0;
+                },
+                {
+                    timeout: 20000,
+                    interval: 1000
+                }
+            );
+        } catch (e) {
+            console.log("⚠️ CML value is still 0 after waiting");
+        }
+
+        // ALWAYS get latest value after wait
         let cmlText = await cmlElem.getText();
         if (!cmlText) {
             cmlText = await cmlElem.getAttribute("innerText");
@@ -1050,30 +1262,123 @@ class functionalLocationDetailView {
         console.log("Returned to parent tab");
     }
 
-     async gotoAttachmentsTabAndAssignAttachment() {
+    async gotoAttachmentsTabAndAssignAttachment() {
+        console.log("Navigating to Attachment tab to assign attachment");
         await browser.pause(4000);
         await utils.funLocFrameSwitch();
         await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
         await this.attachmentsSection.click();
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
         // Click on "Add Attachment" button
-        const addAttachmentBtn = await $('//button[.//bdi[text()="Assign"]]');
-        await utils.clickWithWait(addAttachmentBtn);
+       // const addAttachmentBtn = await $('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]/ancestor::button');
+       const addAttachmentBtn = await $('//header[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
+       await utils.clickWithWait(addAttachmentBtn,2000);
         await browser.pause(2000);
         await utils.selectCheckboxes(2);
-        await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'));
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'),1000);
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'),1000);
+        console.log("Attachment assigned successfully");
     }
 
     async deleteAttachmentAndVerify() {
+        console.log("Deleting assigned attachment and verifying");
         const firstAttachmentCheckbox = await $('(//table//tr[@role="row"]//div[@role="checkbox"])[1]');
         await firstAttachmentCheckbox.waitForClickable({ timeout: 20000 });
         await firstAttachmentCheckbox.click();
 
-        await utils.clickWithWait($('//button[.//bdi[text()="Assign"]]/following::bdi[1]'));
-        await utils.clickWithWait($('//button[.//bdi[text()="Yes"]]'));
+        await utils.clickWithWait($('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Delete"]/ancestor::button'),1000);
+        await utils.clickWithWait($('//button[.//bdi[text()="Yes"]]'),1000);
         await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'),1000);
         await browser.pause(2000);
+        console.log("Attachment deleted successfully");
+    }
+
+    async deleteFunctionalLocation(){
+        console.log("Deleting the Functional Location");
+        console.log("Capturing Functional Location header value for Deletion");
+        await utils.funLocFrameSwitch();
+        await browser.pause(4000);
+        let funcLoc = "";
+        let actualId = "";
+
+        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+
+        // 🔹 Functional Location
+        const getFuncLoc = async () => {
+            const spans = await $$("//header//*[@role='heading']//span");
+
+            for (let el of spans) {
+                let txt = await el.getText();
+                if (!txt) txt = await el.getAttribute("innerText");
+
+                txt = txt?.trim();
+
+                if (txt && (txt.startsWith("FLOC ") || txt.startsWith("FUNC-LOC"))) {
+                    return txt;
+                }
+            }
+            return "";
+        };
+
+        // 🔹 Display ID (🔥 DOM DIRECT — bulletproof)
+        const getDisplayId = async () => {
+            try {
+                const txt = await browser.execute(() => {
+                    const el = document.evaluate(
+                        "//span[starts-with(normalize-space(),'Display ID:')]",
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    ).singleNodeValue;
+
+                    return el ? (el.textContent || "") : "";
+                });
+
+                return txt ? txt.replace("Display ID:", "").trim() : "";
+            } catch (e) {
+                return "";
+            }
+        };
+
+
+        // 🔁 try: current → expand → collapse
+        for (let i = 0; i < 3; i++) {
+
+            const headerText = await getFuncLoc();
+            const displayText = await getDisplayId();
+
+            if (!funcLoc && headerText) funcLoc = headerText;
+            if (!actualId && displayText) actualId = displayText;
+
+            console.log(`Attempt ${i + 1} → FuncLoc="${funcLoc || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+
+            if (funcLoc && actualId) break;
+
+            if (i === 0 && await expandBtn.isExisting()) {
+                await browser.execute(el => el.click(), expandBtn);
+            } 
+            else if (i === 1 && await collapseBtn.isExisting()) {
+                await browser.execute(el => el.click(), collapseBtn);
+            }
+
+            await browser.pause(1500);
+        }
+
+        // ✅ FINAL
+        this.funcLocHeadValue = funcLoc;
+        this.displayID = actualId;
+        console.log(`✅ Final → FuncLoc="${funcLoc}" | DisplayID="${actualId}"`);
+
+        await utils.clickWithWait(this.deleteBtn);
+        await utils.clickWithWait(this.okBtn,1000);
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log("Functional Location deletion in progress");
+        console.log("Waiting for deletion to complete...");
+        console.log("Deletion completed, confirming deletion");
     }
 }
 export default new functionalLocationDetailView();

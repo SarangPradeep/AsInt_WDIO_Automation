@@ -1,35 +1,59 @@
 import functionalLocationListView from '../page_object_model/btp_applications_page/functional_location/functional_location.listview.page';
 import functionalLocationDetailView from '../page_object_model/btp_applications_page/functional_location/functional_location.detail.page';
 import {funcLocTestData} from '../test_data/btp_applications/functional_location.data';
+import utils from '../utils/utils';
 describe('Functional Location test', () => {
     // --- Test ---
 
-    it.skip('should create a new functional location', async () => {
-        await functionalLocationListView.naviagteFunctionalLocationListView();
-        await functionalLocationListView.createFunctionalLocation(2);
+    it('should navigate to functional location list view', async () => {
+        await functionalLocationListView.navigateFunctionalLocationListView();
+    });
+
+    it('should add and verify all the adapt filters', async () => {
+        await utils.addAllAdaptFilter();
+        await utils.resetAllAdaptFilter();
+    });
+
+    it('should verify fields in list view using setting option', async () => {
+        await utils.verifyFieldsInListView();
+        await utils.resetFieldsInListView();
+     });
+
+     it('should verify show hierarchy option in list View', async () => {
+        await utils.verifyShowHierarchy();
+     });
+
+     it('should verify Analytic chart option in list View', async () => {
+        await utils.verifyAnalyticsChart();
+     });
+
+    it('should create a new functional location', async () => {
+ //       await functionalLocationListView.navigateFunctionalLocationListView();
+        await functionalLocationListView.createFunctionalLocation
+        (funcLocTestData.createMandatory.funLocTemp);
     });
 
     it('should navigate to newly created functional location' , async () => {
         await functionalLocationListView.navigateFunctionalLocation();
     });
 
-    it.skip('should verify and edit header information' , async () => {
+    it('should verify and edit header information' , async () => {
         await functionalLocationDetailView.verifyHeader();
         await functionalLocationDetailView.editHeader();
     });
 
-    it.skip('should verify and edit general information tab' , async () => {
+    it('should verify and edit general information tab' , async () => {
         await functionalLocationDetailView.verifyAndEditGeneralInfo();
     });
 
-    it.skip('should verify and edit structure tab' , async () => {
+    it('should verify and edit structure tab' , async () => {
         await functionalLocationDetailView.verifyAndEditStructure();
         await functionalLocationDetailView.assignEquipment(2);
         await functionalLocationDetailView.assignFuncLoc(2);
         await functionalLocationDetailView.verifyGroups();
     });
 
-    it.skip('should assign functional location template and classes and characterstics in assignments' , async () => {
+    it('should assign functional location template and classes and characterstics in assignments' , async () => {
         await functionalLocationDetailView.asgnFunLocTemplate(
             funcLocTestData.assignmentEdit.noOfFunLocTempToAssign,
             funcLocTestData.assignmentEdit.isAutoAssignClass);
@@ -38,38 +62,44 @@ describe('Functional Location test', () => {
             funcLocTestData.assignmentEdit.isAutoAssignClass);
     });
 
-    it.skip('Should verify classification and MDA tab' , async () => {
+    it('Should verify classification and MDA tab' , async () => {
         await functionalLocationDetailView.assignFunLocChar(
             funcLocTestData.classificationMDA.noOfCharacteristics);
     });
 
-    it.skip('should verify asset Intelligence' , async () => {
+    it('should verify asset Intelligence' , async () => {
         await functionalLocationDetailView.verifyAssetIntelligence();
     });
 
-    it.skip('should verify risk summary' , async () => {
+    it('should verify risk summary' , async () => {
         await functionalLocationDetailView.verifyRiskSummary();
     });
-    it.skip('should verify maintenance and service' , async () => {
+    it('should verify maintenance and service' , async () => {
         await functionalLocationDetailView.verifyMainAndSum();
     });
 
-    it.skip('should verify attachment section' , async () => {
-        await functionalLocationDetailView.gotoAttachmentsTabAndAssignAttachment();
-        await functionalLocationDetailView.addDocument();
-        await functionalLocationDetailView.addLink();
+    // it('should verify attachment section' , async () => {
+    //     await functionalLocationDetailView.gotoAttachmentsTabAndAssignAttachment();
+    //     await functionalLocationDetailView.addDocument();
+    //     await functionalLocationDetailView.addLink();
 
-    });
+    // });
 
-    it.skip('should delete the assigned attachment and verify', async () => {
-        await functionalLocationDetailView.deleteAttachmentAndVerify();
-    });
+    // it('should delete the assigned attachment and verify', async () => {
+    //     await functionalLocationDetailView.deleteAttachmentAndVerify();
+    // });
 
-    it.skip('should verify change history' , async () => {
+    it('should verify change history' , async () => {
         await functionalLocationDetailView.verifyChangeHistory();
     });
 
-    it.skip('should verify CML from header section of functional location' , async () => {
+    it('should verify CML from header section of functional location' , async () => {
         await functionalLocationDetailView.verifyCML();
     });
+
+    it('should delete the created functional location and verify', async () => {
+        await functionalLocationDetailView.deleteFunctionalLocation();
+        await functionalLocationListView.verifyDeletionOfFunctionalLocation();
+    });
+     
 });

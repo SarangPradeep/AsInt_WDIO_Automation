@@ -1,4 +1,5 @@
 import { promises } from "node:dns";
+import utils from "utils/utils";
 import { waitForDisplayed } from "webdriverio/build/commands/element";
 
 class EquipmentListviewPage {
@@ -27,7 +28,7 @@ class EquipmentListviewPage {
     //  methods
     async switchIframe(): Promise<void> {
 
-        console.log("--- Before Switch ---");
+        console.log("--------------------------------------------- Before Switch ---------------------------------------------");
         console.log("URL:", await browser.getUrl());
 
         await browser.switchFrame(null);
@@ -35,7 +36,7 @@ class EquipmentListviewPage {
         await this.equipmentIframe.waitForExist({ timeout: 20000 });
         await browser.switchFrame(this.equipmentIframe);
 
-        console.log("--- After Switch ---");
+        console.log("--------------------------------------------- After Switch ---------------------------------------------");
 
         const internalTitle = await browser.execute(() => document.title);
         console.log("Internal Document Title:", internalTitle);
@@ -82,8 +83,22 @@ class EquipmentListviewPage {
         await browser.pause(2000);
 
         // dynamic selector inside method
+        const compSearchBox = await $(`//div[@role="dialog"]//input[@placeholder="Search"]`);
+        await utils.clickWithWait(compSearchBox);
+
+        await browser.keys(['Control', 'a']);
+        await browser.keys('Backspace');
+        await compSearchBox.setValue(equipmentTemplate);
+        await browser.keys("Enter");
+        await browser.pause(3000);
+
         const template = await $(`//span[text()="${equipmentTemplate}"]/ancestor::tr//div[@role="checkbox"]`);
+        const templateExists = await template.isExisting();
+        if (!templateExists) {
+            throw new Error(`No row found for equipment template: ${equipmentTemplate}`);
+        }
         await template.waitForDisplayed({ timeout: 30000 });
+        await template.waitForClickable({ timeout: 30000 });
         await template.click();
 
         await this.confirmBtn.click();
@@ -93,7 +108,7 @@ class EquipmentListviewPage {
         await browser.pause(2000);
 
         // dynamic selector inside method
-        const parentEquipment = await $(`//span[text()="${parentAsset}"]`);
+        const parentEquipment = await $(`(//tr[@role="row"])[2]`);
         await parentEquipment.waitForDisplayed({ timeout: 30000 });
         await parentEquipment.click();
 
@@ -106,11 +121,23 @@ class EquipmentListviewPage {
         await this.equipmentIcon.waitForClickable({ timeout: 30000 });
     }
     async clickOnEquipmentInList(name: string) { 
-        const equipment = $(`//span[text()="${name}"]/ancestor::tr`);
-            await equipment.waitForDisplayed({ timeout: 50000 });
-            await equipment.waitForClickable({ timeout: 50000 });
-            return equipment.click();   
+        await this.switchIframe();
+        const compSearchBox = await $('input[placeholder="Search"]');
+        await compSearchBox.waitForDisplayed({ timeout: 20000 });
+        await compSearchBox.click();
+
+        await browser.keys(['Control', 'a']);
+        await browser.keys('Backspace');
+        await compSearchBox.setValue(name);
+        await browser.keys("Enter");
+        await browser.pause(3000);
+
+        const equipment = await $(`//td[contains(@data-sap-ui-column,'name')]//span[normalize-space()="${name}"]`);
+        await equipment.waitForDisplayed({ timeout: 50000 });
+        await equipment.waitForClickable({ timeout: 50000 });
+        return equipment.click();
     }
+    
 }
 
 

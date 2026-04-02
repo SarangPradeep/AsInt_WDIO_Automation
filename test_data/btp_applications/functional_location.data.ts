@@ -1,9 +1,6 @@
 export const funcLocTestData = {
     createMandatory: {
-        equipmentName: '1000109-Test',
-        description: 'This is a test equipment created by automation script',
-        equipmentTemplate: 'Test for Equipment',
-        parentAsset: '10000112'
+        funLocTemp : 2
     },
     generalInfoEdit: {
         objectType:'Tank',
@@ -44,7 +41,7 @@ export const funcLocTestData = {
         compInfoFunLoc: '',
     },
     assignmentEdit :{
-        noOfFunLocTempToAssign : 2,
+        noOfFunLocTempToAssign : 3,
         noOfFunctionalClassesToAssign : 2,
         isAutoAssignClass: false
     },

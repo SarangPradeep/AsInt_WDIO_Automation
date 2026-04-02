@@ -9,14 +9,13 @@
         ],
         "types": [
             "node",
+            "mocha",
             "@wdio/globals/types",
-            "expect-webdriverio",
-            "@wdio/mocha-framework",
-            "@wdio/visual-service"
+            "expect-webdriverio"
         ],
         "baseUrl": ".", 
         "paths": {
-            "@pages/*": ["page_object_model/*"]
+            "@pages/*": ["PageObjectModel/*"]
         },
         "skipLibCheck": true,
         "noEmit": true,
@@ -29,8 +28,9 @@
         "noFallthroughCasesInSwitch": true
     },
     "include": [
-        "test",
+        "equipment",
         "page_object_model",
+        "configuration",
         "wdio.conf.ts"
     ]
 }
