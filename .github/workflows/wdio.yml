@@ -1,113 +1,42 @@
-name: Selenium Suite Runner
+name: Run WDIO Tests
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
-  run-tests:
+  wdio:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: [GCP, BTP]
-        suiteType: [Functional, Regression, Negative]
-        browser: [chrome]
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          distribution: temurin
-          java-version: '17'
+          node-version: 20
+          cache: npm
 
-      - name: Cache Maven Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-m2
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Set Environment and Suite Path
+      - name: Install Chrome dependencies
         run: |
-          if [ "${{ matrix.environment }}" == "BTP" ]; then
-            echo "WORK_DIR=Selenium/BTP" >> $GITHUB_ENV
-            if [ "${{ matrix.suiteType }}" == "Functional" ]; then
-              echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionFunctionalRunnerFile.xml" >> $GITHUB_ENV
-            elif [ "${{ matrix.suiteType }}" == "Negative" ]; then
-              echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionNegativeRunnerFile.xml" >> $GITHUB_ENV
-            else
-              echo "SUITE_PATH=src/test/resources/testrunners/assetInspectionRegressionRunnerFile.xml" >> $GITHUB_ENV
-            fi
-          else
-            echo "WORK_DIR=Selenium/GCP" >> $GITHUB_ENV
-            if [ "${{ matrix.suiteType }}" == "Functional" ]; then
-              echo "SUITE_PATH=src/test/resources/testrunners/gcpFunctionalRunnerFile.xml" >> $GITHUB_ENV
-            elif [ "${{ matrix.suiteType }}" == "Negative" ]; then
-              echo "SUITE_PATH=src/test/resources/testrunners/gcpNegativeRunnerFile.xml" >> $GITHUB_ENV
-            else
-              echo "SUITE_PATH=src/test/resources/testrunners/gcpRegressionRunnerFile.xml" >> $GITHUB_ENV
-            fi
-          fi
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-0 \
+            libgbm-dev \
+            libnotify-dev \
+            libnss3 \
+            libxss1 \
+            libasound2 \
+            libxtst6 \
+            xvfb
 
-      - name: Run Selected TestNG Suite
-        working-directory: ${{ env.WORK_DIR }}
-        run: mvn clean test -Dsurefire.suiteXmlFiles=${{ env.SUITE_PATH }} -Dbrowser=${{ matrix.browser }}
-
-      # Upload raw Allure results (for merge job)
-      - name: Upload Allure Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results-${{ matrix.environment }}-${{ matrix.suiteType }}-${{ matrix.browser }}
-          path: ${{ env.WORK_DIR }}/target/allure-results
-
-      - name: Upload TestNG Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: testng-${{ matrix.environment }}-${{ matrix.suiteType }}-${{ matrix.browser }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            ${{ env.WORK_DIR }}/test-output
-            ${{ env.WORK_DIR }}/target/surefire-reports
-            
-  merge-allure:
-    if: always()
-    name: Generate Combined Allure Report
-    runs-on: ubuntu-latest
-    needs: run-tests
-
-    steps:
-    - name: Download Allure artifacts only
-      uses: actions/download-artifact@v4
-      with:
-        pattern: allure-results-*
-        path: all-results
-        merge-multiple: true
-
-    - name: Merge Allure results
-      run: |
-        mkdir merged-results
-        cp -r all-results/* merged-results/
-
-    - name: Install Allure
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y unzip
-        wget https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-2.29.0.zip
-        unzip allure-2.29.0.zip
-        sudo mv allure-2.29.0 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
-
-    - name: Generate Combined Allure Report
-      run: |
-        allure generate merged-results --clean -o merged-allure-report
-
-    - name: Upload Combined Allure HTML
-      uses: actions/upload-artifact@v4
-      with:
-        name: Combined-Allure-Report
-        path: merged-allure-report
+      - name: Run WDIO tests
+        env:
+          CI: true
+        run: npm test
