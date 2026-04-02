@@ -32,8 +32,9 @@ jobs:
             libnotify-dev \
             libnss3 \
             libxss1 \
-            libasound2 \
+            libasound2t64 \
             libxtst6 \
+            xdg-utils \
             xvfb
 
       - name: Run WDIO tests
