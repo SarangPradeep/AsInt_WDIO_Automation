@@ -17,6 +17,7 @@
     "webdriver-manager": "^12.1.9"
   },
   "scripts": {
+    "test": "wdio run ./wdio.conf.ts",
     "wdio": "wdio run wdio.conf.ts",
     "wdio:headless": "wdio run ./wdio.conf.ts --headless",
     "wdio:logs": "wdio run ./wdio.conf.ts 2>&1 | findstr /V \"INFO @wdio\" > clean-test.log",

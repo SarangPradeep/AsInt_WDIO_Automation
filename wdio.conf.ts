@@ -70,7 +70,8 @@ export const config: WebdriverIO.Config = {
     connectionRetryTimeout: 180000,
     connectionRetryCount: 3,
 
-    services: [],
+    services: ['chromedriver'],
+    automationProtocol: 'webdriver',
 
     framework: 'mocha',
     reporters:[
