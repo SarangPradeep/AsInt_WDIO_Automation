@@ -58,7 +58,7 @@ class Utils {
         );
         await headerToolbar.waitForExist({ timeout: 30000 });
         await headerToolbar.waitForDisplayed({ timeout: 30000 });
-        console.log("✅ Object Page header ready");
+        console.log("Object Page header ready");
     }
 
     async switchIframe(): Promise<void> {
@@ -81,14 +81,12 @@ class Utils {
         if (actualText.trim() !== expectedText.trim()) {
             throw new Error(`Text assertion failed. Expected: "${expectedText}", Actual: "${actualText}"`);
         } else {    
-            console.log(`✅ Text assertion passed. Text: "${actualText}"`);
+            console.log(`Text assertion passed. Text: "${actualText}"`);
         }
     }
 
     async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 30000): Promise<void> {
         const el = await element;
-
-        // 1️⃣ wait for element ready
         await el.waitForExist({ timeout });
         await el.waitForDisplayed({ timeout });
 
@@ -108,7 +106,7 @@ class Utils {
             if (delayAfter) await browser.pause(delayAfter);
             return;
         } catch (err) {
-            console.log(`⚠️ Normal click failed → ${el.selector}`);
+            console.log(`Normal click failed → ${el.selector}`);
         }
 
         // ========== TRY 2 : scroll + retry ==========
@@ -120,7 +118,7 @@ class Utils {
             if (delayAfter) await browser.pause(delayAfter);
             return;
         } catch (err) {
-            console.log(`⚠️ Retry click failed → ${el.selector}`);
+            console.log(`Retry click failed → ${el.selector}`);
         }
 
         // ========== TRY 3 : JS click ==========
@@ -132,7 +130,7 @@ class Utils {
             if (delayAfter) await browser.pause(delayAfter);
             return;
         } catch (err) {
-            console.log(`⚠️ JS click failed → ${el.selector}`);
+            console.log(`JS click failed → ${el.selector}`);
         }
 
         // ========== TRY 4 : real mouse action click ==========
@@ -149,7 +147,7 @@ class Utils {
             if (delayAfter) await browser.pause(delayAfter);
             return;
         } catch (err) {
-            throw new Error(`❌ All click strategies failed for: ${el.selector}`);
+            throw new Error(`All click strategies failed for: ${el.selector}`);
         }
     }
 
@@ -287,7 +285,7 @@ class Utils {
                 for (const listbox of listboxes) {
                     try {
                         if (await listbox.isDisplayed()) {
-                            const options = await listbox.$$('.//li[@role="option"]'); // ⭐ fixed
+                            const options = await listbox.$$('.//li[@role="option"]'); 
                             if (await options.length > 0) return true;
                         }
                     } catch {}
@@ -354,7 +352,7 @@ class Utils {
     }
 
     async openDropdown(dropdownArrow: ReturnType<typeof $>) {
-        const arrow = await dropdownArrow; // ⭐ resolve chainable element
+        const arrow = await dropdownArrow; 
 
         await arrow.waitForExist({ timeout: 10000 });
 
@@ -436,7 +434,7 @@ class Utils {
         }
 
         if (!isAdaptFilterClickable) {
-            console.log("➡️ Settings not clickable → trying Back");
+            console.log("Settings not clickable → trying Back");
             await browser.switchFrame(null);
             const back = await this.backBtn;
 
@@ -444,12 +442,12 @@ class Utils {
                 try {
                     await this.clickWithWait(back);
                     await this.waitForBusyIndicatorToDisappear();
-                    console.log("✅ Clicked Back");
+                    console.log("Clicked Back");
                 } catch {
-                    console.log("⚠️ Back present but not clickable → skipping");
+                    console.log("Back present but not clickable → skipping");
                 }
             } else {
-                console.log("⚠️ Back button not present → skipping");
+                console.log("Back button not present → skipping");
             }
         }
         await browser.switchFrame(null);
@@ -461,7 +459,7 @@ class Utils {
         await this.adaptFilter.waitForClickable({ timeout: 10000 });
         await this.adaptFilter.click();
 
-        console.log("✅ Adapt Filters opened");
+        console.log("Adapt Filters opened");
 
         await browser.pause(10000);
         while (true) {
@@ -508,10 +506,10 @@ class Utils {
         const missingFilters: string[] = [];
         for (const expected of expectedFilters) {
             if (!actualFilters.includes(expected)) {
-                console.error(`❌ Missing filter: ${expected}`);
+                console.error(`Missing filter: ${expected}`);
                 missingFilters.push(expected);
             } else {
-                console.log(`✅ Found filter: ${expected}`);
+                console.log(`Found filter: ${expected}`);
             }
         }
         if (missingFilters.length > 0) {
@@ -540,13 +538,13 @@ class Utils {
         if (remainingFilters.length > 0) {
             throw new Error(`Reset failed: Filters still present: ${remainingFilters.join(', ')}`);
         }
-        console.log('✅ All filters successfully reset');
+        console.log('All filters successfully reset');
     }
 
     public async verifyFieldsInListView(): Promise<void> {
         const settings = await this.settingsBtn;
         this.waitForBusyIndicatorToDisappear();
-        console.log("🔍 Checking if Settings is available on current page");
+        console.log("Checking if Settings is available on current page");
         let isSettingsClickable = false;
         try {
             await settings.waitForClickable({ timeout: 30000 });
@@ -555,19 +553,19 @@ class Utils {
             isSettingsClickable = false;
         }
         if (!isSettingsClickable) {
-            console.log("➡️ Settings not clickable → trying Back");
+            console.log("Settings not clickable → trying Back");
             await browser.switchFrame(null);
             const back = await this.backBtn;
             if (await back.isExisting()) {
                 try {
                     await this.clickWithWait(back);
                     await this.waitForBusyIndicatorToDisappear();
-                    console.log("✅ Clicked Back");
+                    console.log("Clicked Back");
                 } catch {
-                    console.log("⚠️ Back present but not clickable → skipping");
+                    console.log("Back present but not clickable → skipping");
                 }
             } else {
-                console.log("⚠️ Back button not present → skipping");
+                console.log("Back button not present → skipping");
             }
         }
         await browser.switchFrame(null);
@@ -578,7 +576,7 @@ class Utils {
         }
         await settings.waitForClickable({ timeout: 10000 });
         await settings.click();
-        console.log("✅ Settings opened");
+        console.log("Settings opened");
         await browser.pause(2000); 
         const allTextElems = await $$("//td[@role='gridcell']//bdi");
         const availableTexts: string[] = [];
@@ -588,7 +586,7 @@ class Utils {
                 availableTexts.push(text.trim());
             }
         }
-        console.log("✅ Available fields:", availableTexts);
+        console.log("Available fields:", availableTexts);
         const selectedFields: string[] = [];
         const rows = await $$("//tr[@role='row']");
         for (const row of rows) {
@@ -611,9 +609,9 @@ class Utils {
             }
         }
 
-        console.log("✅ Final selected fields (including pre-selected):", selectedFields);
+        console.log("Final selected fields (including pre-selected):", selectedFields);
         await this.clickWithWait($("//bdi[text()='OK']"));
-        console.log("✅ Clicked OK");
+        console.log("Clicked OK");
         await this.waitForBusyIndicatorToDisappear();
         for (const field of selectedFields) {
             let found = false;
@@ -623,7 +621,7 @@ class Utils {
                 if (!text) text = await el.getAttribute("innerText");
                 const safeText = (text || "").trim();
                 if (safeText === field) {
-                    console.log(`✅ Found in HEADER: ${field}`);
+                    console.log(`Found in HEADER: ${field}`);
                     found = true;
                     break;
                 }
@@ -635,16 +633,16 @@ class Utils {
                 if (!text) text = await el.getAttribute("innerText");
                 const safeText = (text || "").trim();
                 if (safeText === field) {
-                    console.log(`✅ Found in ROW: ${field}`);
+                    console.log(`Found in ROW: ${field}`);
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                throw new Error(`❌ Field NOT found on screen: ${field}`);
+                throw new Error(`Field NOT found on screen: ${field}`);
             }
         }
-        console.log("🎉 All selected fields verified successfully");
+        console.log("All selected fields verified successfully");
     }
 
     async resetFieldsInListView(): Promise<void> {
@@ -652,7 +650,7 @@ class Utils {
         await this.waitForBusyIndicatorToDisappear();
         await settings.waitForClickable({ timeout: 10000 });
         await settings.click();
-        console.log("✅ Settings opened");
+        console.log("Settings opened");
         const resetBtn = await $('//bdi[text()="Reset"]');
         let selectedFields: string[] = [];
         if (await resetBtn.isExisting() && await resetBtn.isEnabled()) {
@@ -662,7 +660,7 @@ class Utils {
             await this.clickWithWait(OkWrnBtn);
             await this.waitForBusyIndicatorToDisappear();
             await browser.pause(5000); // wait for fields to update after reset
-            console.log("✅ Reset confirmed, capturing checked fields");
+            console.log("Reset confirmed, capturing checked fields");
             const fieldElems = await $$(
             "(//div[@role='checkbox' and @aria-checked='true']/ancestor::tr//td[@role='gridcell']//bdi)[position() <= 12]"
             );
@@ -674,19 +672,19 @@ class Utils {
                     selectedFields.push(safeText);
                 }
             }
-            console.log("✅ Fields after reset:", selectedFields);
+            console.log("Fields after reset:", selectedFields);
             if (selectedFields.length < 8 || selectedFields.length > 12) {
-                throw new Error(`❌ Wrong number of reset fields: ${selectedFields.length}`);
+                throw new Error(`Wrong number of reset fields: ${selectedFields.length}`);
             }
             if (selectedFields.length < 8 || selectedFields.length > 12) {
-                throw new Error(`❌ Wrong number of reset fields: ${selectedFields.length}`);
+                throw new Error(`Wrong number of reset fields: ${selectedFields.length}`);
             }
             await this.clickWithWait($('//button//bdi[text()="OK"]'));
             await this.waitForBusyIndicatorToDisappear();
-            console.log("✅ Popup closed");
+            console.log("Popup closed");
         } else 
         {
-            console.log("⚠️ Reset not available → skipping");
+            console.log("Reset not available → skipping");
             await this.clickWithWait($('//button//bdi[text()="OK"]'));
             return;
         }
@@ -709,23 +707,23 @@ class Utils {
         console.log("DEBUG selectedFields length:", selectedFields.length);
         for (const field of selectedFields) {
             if (headerTexts.includes(field)) {
-                console.log(`✅ Found in HEADER: ${field}`);
+                console.log(`Found in HEADER: ${field}`);
                 continue;
             }
             if (rowTexts.includes(field)) {
-                console.log(`✅ Found in ROW: ${field}`);
+                console.log(`Found in ROW: ${field}`);
                 continue;
             }
-            console.log(`❌ NOT FOUND: ${field}`);
-            throw new Error(`❌ Field NOT found on screen: ${field}`);
+            console.log(`NOT FOUND: ${field}`);
+            throw new Error(`Field NOT found on screen: ${field}`);
         }
-        console.log("🎉 All reset fields verified successfully");
+        console.log("All reset fields verified successfully");
     }
 
     public async verifyShowHierarchy(): Promise<void> {
         await this.clickWithWait(this.showHierarchyBtn);
         await browser.pause(5000); // wait for hierarchy to show   
-        console.log("✅ Show Hierarchy clicked and hierarchy displayed");
+        console.log("Show Hierarchy clicked and hierarchy displayed");
         console.log("Some of the below entries are present"); 
 
         const entries = await browser.execute(() => {
@@ -738,10 +736,10 @@ class Utils {
         console.log("Entries:", entries);
 
         if (entries.length === 0) {
-        throw new Error("❌ No hierarchy entries found after clicking Show Hierarchy");
+        throw new Error("No hierarchy entries found after clicking Show Hierarchy");
         }
 
-        console.log("✅ Hierarchy entries found successfully");
+        console.log("Hierarchy entries found successfully");
         console.log("Closing hierarchy view");
         await this.clickWithWait(this.closeHierarchyBtn);
         await browser.pause(3000);
@@ -750,14 +748,14 @@ class Utils {
     public async verifyAnalyticsChart(): Promise<void> {
         console.log("Attempting to open Analytics Chart");
         await this.clickWithWait(this.showAnalyticChartBtn);
-        console.log("✅ Analytics chart is displayed");
+        console.log("Analytics chart is displayed");
 
         const charts = await $$("//span[text()='Analytics']/following::section//div//div[@aria-level='2']//div//div")
         if (await charts.length === 0) {
-            throw new Error("❌ No charts found in Analytics Chart view");
+            throw new Error("No charts found in Analytics Chart view");
         }
         else {
-            console.log(`✅ Found ${charts.length} chart(s) in Analytics Chart view`);
+            console.log(`Found ${charts.length} chart(s) in Analytics Chart view`);
             console.log("Analytics Chart entries:");
             for (const chart of charts) {
                 let text = await chart.getText();

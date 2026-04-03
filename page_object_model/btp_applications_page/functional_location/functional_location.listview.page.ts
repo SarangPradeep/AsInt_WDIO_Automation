@@ -75,15 +75,15 @@ class functionalLocationListView {
     }
 
     public async navigateFunctionalLocationListView(): Promise<void> {
-        console.log("➡️ Navigating to Functional Location List View");
+        console.log("Navigating to Functional Location List View");
         await this.navigateToFunctionalLocation(); 
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.funLocIframe);
-        console.log("✅ Navigated to Functional Location List View");
+        console.log("Navigated to Functional Location List View");
     }
 
     public async createFunctionalLocation(assignCount: number = 0): Promise<void> {
-        console.log("📍 Creating of Functional Location started");
+        console.log("Creating of Functional Location started");
         await this.plusIconAndFuncLocSelect();
         await utils.waitForBusyIndicatorToDisappear();
         this.functionalLocName = await utils.generateRandomFuncName();
@@ -107,19 +107,19 @@ class functionalLocationListView {
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait(this.createFuncLocButton, 2000);
         await this.funcLocSuccCreation();
-        console.log("✅Functional Location created");
+        console.log("Functional Location created");
     }
 
     public async navigateFunctionalLocation(): Promise<void> {
 
-        console.log("⌛ Searching for created Functional Location in the list view and navigating to detail view");
+        console.log("Searching for created Functional Location in the list view and navigating to detail view");
         await utils.clickWithWait(this.search,1000);
         await utils.setValueWithWait(this.search,this.functionalLocName,1000);
         await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
         await browser.pause(2000);
-        console.log(`✅ Searched for Functional Location with name: ${this.functionalLocName}`);
+        console.log(`Searched for Functional Location with name: ${this.functionalLocName}`);
 
-        console.log("⌛ Navigating to Detail view page of Functional Location");
+        console.log("Navigating to Detail view page of Functional Location");
         await utils.waitForBusyIndicatorToDisappear();
         const nav = this.funcLocSearched();
         await utils.clickWithWait(nav);
@@ -130,11 +130,11 @@ class functionalLocationListView {
         await browser.execute((element) => {element.scrollIntoView({ block: 'center' });}, el);
         await browser.pause(2000);
         await browser.execute((element) => {element.click();}, el);
-        console.log("✅ Navigated to Detail View page successfully");
+        console.log("Navigated to Detail View page successfully");
     }
 
     async verifyDeletionOfFunctionalLocation() {
-        console.log("⌛ Verifying deletion of Functional Location");
+        console.log("Verifying deletion of Functional Location");
 
         await utils.waitForBusyIndicatorToDisappear();
         await browser.waitUntil(
@@ -177,7 +177,7 @@ class functionalLocationListView {
         }, { timeout: 30000 });
 
         if (!searchBox) {
-            throw new Error("❌ Visible search box not found");
+            throw new Error("Visible search box not found");
         }
         console.log("Visible search box found, searching for deleted Functional Location");
         await browser.execute((el, value) => {
@@ -203,10 +203,10 @@ class functionalLocationListView {
         }, {
             timeout: 20000,
             interval: 500,
-            timeoutMsg: "❌ Go button not found"
+            timeoutMsg: "Go button not found"
         });
         if (!goBtn) {
-            throw new Error("❌ Go button not found");
+            throw new Error("Go button not found");
         }
 
         console.log("Clicking Go button to search for Functional Location");
@@ -214,7 +214,7 @@ class functionalLocationListView {
         await goBtn.waitForClickable({ timeout: 10000 });
         await goBtn.click();
 
-        console.log("⏳ Waiting for table to refresh after search...");
+        console.log("Waiting for table to refresh after search...");
         const noDataCell = '//td[text()="No data"]';
         const tableRows = '//table//tr[contains(@class,"sapMListTblRow")]';
 
@@ -232,9 +232,9 @@ class functionalLocationListView {
         const isFuncLocPresent = await $(noDataCell).isExisting();
 
         if (!isFuncLocPresent) {
-            throw new Error("❌ Functional Location still exists after deletion");
+            throw new Error("Functional Location still exists after deletion");
         } else {
-            console.log("✅ Functional Location deletion verified successfully");
+            console.log("Functional Location deletion verified successfully");
         }
     }
 }
