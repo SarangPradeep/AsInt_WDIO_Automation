@@ -205,27 +205,59 @@ class functionalLocationListView {
             return null;
         };
 
-        let goBtn;
+        let goBtn: any;
 
+        // wait until visible GO button is found
         await browser.waitUntil(async () => {
-            goBtn = await getVisibleGo();
+            goBtn = await getVisibleGo();   // should return Element | null
             return goBtn !== null;
-        }, { timeout: 20000 });
+        }, {
+            timeout: 20000,
+            interval: 500,
+            timeoutMsg: "❌ Go button not found"
+        });
 
+        // safety check
         if (!goBtn) {
             throw new Error("❌ Go button not found");
         }
-        console.log("Clicking Go button to search for Functional Location");
-        await browser.execute(el => el.click(), goBtn);
 
-        await browser.pause(8000);
+        console.log("Clicking Go button to search for Functional Location");
+
+        // wait + click
+        await goBtn.waitForDisplayed({ timeout: 10000 });
+        await goBtn.waitForClickable({ timeout: 10000 });
+        await goBtn.click();
+
+        console.log("⏳ Waiting for table to refresh after search...");
+
+        const noDataCell = '//td[text()="No data"]';
+        const tableRows = '//table//tr[contains(@class,"sapMListTblRow")]';
+
+        await browser.waitUntil(async () => {
+            const noDataExists = await $(noDataCell).isExisting();
+            const rowsExist = await $$(tableRows).length > 0;
+            return noDataExists || rowsExist;
+        }, {
+            timeout: 20000,
+            interval: 500,
+            timeoutMsg: "Search results never loaded"
+        });
+
+        // if (!isFuncLocPresent) {
+        //     throw new Error("Functional Location still exists after deletion");
+        // } else {
+        //     console.log("Functional Location deletion verified successfully");
+        // }
+
         console.log("Checking if Functional Location is present in the list after deletion");
-        const isFuncLocPresent = await $('//td[text()="No data"]').isExisting();
+
+        const isFuncLocPresent = await $(noDataCell).isExisting();
 
         if (!isFuncLocPresent) {
             throw new Error("Functional Location still exists after deletion");
         } else {
-            console.log("Functional Location deletion verified successfully");
+            console.log("✅ Functional Location deletion verified successfully");
         }
     }
 }
