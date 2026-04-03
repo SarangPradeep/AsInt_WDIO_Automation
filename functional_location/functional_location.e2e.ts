@@ -28,7 +28,6 @@ describe('Functional Location test', () => {
      });
 
     it('should create a new functional location', async () => {
- //       await functionalLocationListView.navigateFunctionalLocationListView();
         await functionalLocationListView.createFunctionalLocation
         (funcLocTestData.createMandatory.funLocTemp);
     });
@@ -78,16 +77,13 @@ describe('Functional Location test', () => {
         await functionalLocationDetailView.verifyMainAndSum();
     });
 
-    // it('should verify attachment section' , async () => {
-    //     await functionalLocationDetailView.gotoAttachmentsTabAndAssignAttachment();
-    //     await functionalLocationDetailView.addDocument();
-    //     await functionalLocationDetailView.addLink();
+    it('should verify attachment section' , async () => {
+        await functionalLocationDetailView.gotoAttachmentsTabAndAssignAttachment();
+//        await functionalLocationDetailView.addDocument();
+//        await functionalLocationDetailView.addLink();
+//        await functionalLocationDetailView.deleteAttachmentAndVerify();
 
-    // });
-
-    // it('should delete the assigned attachment and verify', async () => {
-    //     await functionalLocationDetailView.deleteAttachmentAndVerify();
-    // });
+    });
 
     it('should verify change history' , async () => {
         await functionalLocationDetailView.verifyChangeHistory();

@@ -2,6 +2,7 @@ import { $$, browser } from '@wdio/globals';
 import * as console from 'console';
 import { utils } from 'mocha';
 import * as path from 'path';
+import type { ChainablePromiseElement } from 'webdriverio';
 class Utils {
 
     private get equipmentIframe() {
@@ -116,22 +117,90 @@ class Utils {
         }
     }
 
-    async clickWithWait(element: any, delayAfter = 0, timeout = 30000): Promise<void> {
+    // async clickWithWait(element: any, delayAfter = 0, timeout = 30000): Promise<void> {
+    //     const el = await element;
+    //     await el.waitForDisplayed({ timeout });
+    //     await el.scrollIntoView();
+    //     await el.waitForClickable({
+    //         timeout,
+    //         timeoutMsg: `Not clickable: ${el.selector}`
+    //     });
+    //     try {
+    //         await el.click();
+    //     } catch {
+    //         await browser.pause(1000);
+    //         await el.scrollIntoView();
+    //         await el.click();
+    //     }
+    //     if (delayAfter > 0) await browser.pause(delayAfter);
+    // }
+
+    async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 30000): Promise<void> {
         const el = await element;
+
+        // 1️⃣ wait for element ready
+        await el.waitForExist({ timeout });
         await el.waitForDisplayed({ timeout });
-        await el.scrollIntoView();
+
+        // small buffer for animations (important for UI5)
+        await browser.pause(200);
+
+        await this.scrollIntoViewIfNeeded(el);
+
         await el.waitForClickable({
             timeout,
-            timeoutMsg: `Not clickable: ${el.selector}`
+            timeoutMsg: `Element not clickable: ${el.selector}`
         });
+
+        // ========== TRY 1 : normal click ==========
         try {
             await el.click();
-        } catch {
-            await browser.pause(1000);
-            await el.scrollIntoView();
-            await el.click();
+            if (delayAfter) await browser.pause(delayAfter);
+            return;
+        } catch (err) {
+            console.log(`⚠️ Normal click failed → ${el.selector}`);
         }
-        if (delayAfter > 0) await browser.pause(delayAfter);
+
+        // ========== TRY 2 : scroll + retry ==========
+        try {
+            await browser.pause(500);
+            await this.scrollIntoViewIfNeeded(el);
+            await browser.pause(300);
+            await el.click();
+            if (delayAfter) await browser.pause(delayAfter);
+            return;
+        } catch (err) {
+            console.log(`⚠️ Retry click failed → ${el.selector}`);
+        }
+
+        // ========== TRY 3 : JS click ==========
+        try {
+            await browser.execute(
+                (element: HTMLElement) => element.click(),
+                el
+            );
+            if (delayAfter) await browser.pause(delayAfter);
+            return;
+        } catch (err) {
+            console.log(`⚠️ JS click failed → ${el.selector}`);
+        }
+
+        // ========== TRY 4 : real mouse action click ==========
+        try {
+            await el.moveTo();
+            await browser.pause(200);
+
+            await browser.action('pointer')
+                .move({ origin: el })
+                .down()
+                .up()
+                .perform();
+
+            if (delayAfter) await browser.pause(delayAfter);
+            return;
+        } catch (err) {
+            throw new Error(`❌ All click strategies failed for: ${el.selector}`);
+        }
     }
 
     async setValueWithWait(element: any, value: string, delayAfter = 0, timeout = 30000): Promise<void> {
@@ -255,12 +324,108 @@ class Utils {
         await browser.execute((e: HTMLElement) => e.click(), el);
     }
 
-    // async selectCheckboxes(noOfItems: number) {
-    //     for (let i = 1; i <= noOfItems; i++) {
-    //         const checkbox = $(`(//tr[@role='row'])[${i * 2}]//div[@role='checkbox']`);
-    //         await this.clickWithWait(checkbox, 500);
-    //     }
-    // }
+    async waitForDropdownOpen(timeout = 10000): Promise<WebdriverIO.Element> {
+        const dropdownXpaths = [
+        '//ul[@role="listbox" and not(contains(@style,"display: none"))]',
+        '//div[contains(@class,"sapUiPopup")]//ul[@role="listbox"]'
+        ];
+
+        await browser.waitUntil(async () => {
+            for (const xpath of dropdownXpaths) {
+                const listboxes = await browser.$$(xpath);
+
+                for (const listbox of listboxes) {
+                    try {
+                        if (await listbox.isDisplayed()) {
+                            const options = await listbox.$$('.//li[@role="option"]'); // ⭐ fixed
+                            if (await options.length > 0) return true;
+                        }
+                    } catch {}
+                }
+            }
+            return false;
+        }, {
+            timeout,
+            timeoutMsg: 'No visible dropdown listbox with options found'
+        });
+
+        // return the ACTIVE listbox element
+        for (const xpath of dropdownXpaths) {
+            const listboxes = await browser.$$(xpath);
+
+            for (const listbox of listboxes) {
+                try {
+                    if (await listbox.isDisplayed()) {
+                        const options = await listbox.$$('.//li[@role="option"]');
+                        if (await options.length > 0) {
+                            return listbox;
+                        }
+                    }
+                } catch {}
+            }
+        }
+
+        throw new Error('Dropdown opened but no usable listbox found');
+    }
+
+    async scrollIntoViewIfNeeded(element: WebdriverIO.Element) {
+        await browser.execute((el: HTMLElement) => {
+
+            function findScrollableParent(node: HTMLElement | null): HTMLElement {
+                while (node) {
+                    const style = window.getComputedStyle(node);
+                    const overflowY = style.overflowY;
+                    const overflow = style.overflow;
+
+                    if (
+                        overflowY === 'auto' || overflowY === 'scroll' ||
+                        overflow === 'auto' || overflow === 'scroll'
+                    ) {
+                        return node;
+                    }
+
+                    node = node.parentElement;
+                }
+                return document.body as HTMLElement;
+            }
+
+            const scrollParent = findScrollableParent(el);
+            scrollParent.scrollTop = el.offsetTop - 200;
+            el.scrollIntoView({ block: 'center' });
+
+        }, element);
+    }
+
+    async waitForAnyUI5OptionActive() {
+        await browser.waitUntil(async () => {
+            const activeItems = await $$('li[role="option"].sapMLIBActive');
+            return await activeItems.length > 0;
+        }, { timeout: 15000, timeoutMsg: 'No active dropdown options found' });
+    }
+
+    async openDropdown(dropdownArrow: ReturnType<typeof $>) {
+        const arrow = await dropdownArrow; // ⭐ resolve chainable element
+
+        await arrow.waitForExist({ timeout: 10000 });
+
+        await browser.execute(el => {
+            el.scrollIntoView({ block: 'center', inline: 'center' });
+        }, arrow);
+
+        await browser.pause(300);
+
+        await arrow.moveTo();
+        await browser.pause(200);
+
+        try {
+            await arrow.click();
+        } catch {}
+
+        // JS fallback click (SAP UI5 fix)
+        await browser.execute(el => el.click(), arrow);
+
+        await browser.pause(500);
+    }
 
     async selectCheckboxes(noOfEquipment: number): Promise<void> {
         console.log(`Selecting checkboxes...`);
