@@ -378,10 +378,13 @@ class functionalLocationDetailView {
         return $("(//h2//span)[2]");
     }
     private get deleteBtn() {
-        return $("//bdi[text()='Delete']");
+        return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Delete']]");
     }
     private get attachSuccMsg() {
         return $("//span[text()='Success']");
+    }
+    private get funLocIframe() {
+        return $('iframe[data-help-id="application-functionallocation-manage"]');
     }
     
     public superFuncLocValue!: string;
@@ -389,17 +392,17 @@ class functionalLocationDetailView {
     public displayID!: string;
 
     public async verifyHeader(): Promise<void> {
-        console.log("Verifying Functional Location name");
+        console.log("⌛ Verifying Functional Location name");
         await this.funLocHeader.isDisplayed();
         const funHeader = await this.funLocHeader.getText();
         console.log(funHeader);
         const funLocName = functionalLocationListView.functionalLocName;
         await expect(funHeader).toEqual(funLocName);
-        console.log("Functional Location name matches header's name");
+        console.log("✅ Functional Location name matches header's name");
     }
 
     public async editHeader(): Promise<void> {
-        console.log("Editing header's Information");
+        console.log("⌛ Editing header's Information");
         await utils.clickWithWait(this.funLocEditHeader);
         await utils.setValueWithWait(this.funLocDescEditHeader,funcLocTestData.headerInfoEdit.funLocDesc);
         await utils.clickWithWait(this.funLocCategoryEditHeader);
@@ -410,12 +413,11 @@ class functionalLocationDetailView {
         await utils.clickWithWait(this.funLocheaderSave);
         await this.funLocHdSaveSucc.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.funLocHdOkBtn);
-        console.log("Header edited successfully");
-
+        console.log("✅ Header edited successfully");
     }
 
     public async verifyAndEditGeneralInfo() {
-        console.log("Verifying and editing General Information");
+        console.log("⌛ Verifying and editing General Information");
         await utils.clickWithWait(this.editGenInfo);
         await utils.clickWithWait(this.objectType);
         await this.selectObjGrpBox.waitForDisplayed({ timeout: 90000 });
@@ -513,26 +515,25 @@ class functionalLocationDetailView {
         await utils.clickWithWait(this.infoSave,1000);
         await this.infoSuccUpdate.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.infoUpdateOK);
-        console.log("General Information Edited and verifed");
+        console.log("✅ General Information Edited and verified");
     }
 
     public async verifyAndEditStructure() {
-        console.log("Navigating to Structure Tab");
+        console.log("⌛ Navigating to Structure Tab");
         await utils.clickWithWait(this.funLocStrucTab);
         await this.funLocStrucTab.waitForDisplayed({ timeout: 30000 });
         await utils.waitForBusyIndicatorToDisappear();
-        console.log("Navigated to Structure Tab successfully");
-        this.funcLocHeadValue = await this.funLocHeadChk.getAttribute("innerText");
-        console.log("Functional Location header value is :"+this.funcLocHeadValue);
+        console.log("✅ Navigated to Structure Tab successfully");
+        const { funcLoc } = await this.getFinalIDs();
+        this.funcLocHeadValue = funcLoc;
+        console.log("Functional Location header value is : " + this.funcLocHeadValue);
         await utils.clickWithWait(this.editStrucInfo);
         await utils.clickWithWait(this.superFunLoc);
         await this.superFunLocBox.waitForDisplayed({ timeout: 30000 });
         await browser.pause(8000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
 
         this.superFuncLocValue = await utils.getTextWithWait(this.superFunLocSelect);
-
-        //await utils.clickWithWait(this.superFunLocSelect);
         let i = 2;
         while (true) {
             const row = $(`(//tr[@role='row'])[${i}]//td[2]//span`);
@@ -542,7 +543,7 @@ class functionalLocationDetailView {
                 i++;
                 continue;
             }
-            this.superFuncLocValue = text; // store selected value
+            this.superFuncLocValue = text;
             await utils.clickWithWait(row);
             break;
         }
@@ -554,14 +555,14 @@ class functionalLocationDetailView {
         await this.infoSuccUpdate.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.infoUpdateOK);
         await utils.waitForBusyIndicatorToDisappear();
-        console.log("Structuring saved successfully");
+        console.log("✅ Structuring saved successfully");
     }
 
     public async assignEquipment(noOfEquipments: number) {
-        console.log("Assigning Equipment to Functional Location");
+        console.log("⌛ Assigning Equipment to Functional Location");
         await utils.clickWithWait(this.compInfoAsgn,1000);
         await utils.clickWithWait(this.compInfoEqAsgn,1000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await browser.pause(4000);
         await utils.selectCheckboxes(noOfEquipments);
         await utils.clickWithWait(this.compInfoEqCnf,1000);
@@ -570,14 +571,14 @@ class functionalLocationDetailView {
         await utils.clickWithWait(this.okBtn,1000);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(4000);
-        console.log("Equipment Components assigned successfully");
+        console.log("✅ Equipment Components assigned successfully");
         const components = await this.components.getText();
         const count = await utils.getAssignedValue(components);
         console.log("No of Components assigned are :"+count);
     }
 
     public async assignFuncLoc(noOfFunLoc: number) {
-    console.log("Assigning Functional Location");
+    console.log("⌛ Assigning Functional Location");
     if (noOfFunLoc === 0) return;
     let selectedCount = 0;
     let i = 1;
@@ -585,7 +586,7 @@ class functionalLocationDetailView {
         await utils.clickWithWait(this.compInfoAsgn,1000);
         await utils.clickWithWait(this.compInfoFunLocAsgn,1000);
         await browser.pause(2000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         let foundValid = false;
         while (!foundValid) {
             const row = $(`(//tr[@role='row'])[${i + 1}]//td[2]//span`);
@@ -606,28 +607,28 @@ class functionalLocationDetailView {
             foundValid = true;
             }
         }
-        console.log("Funtional Location assigned");
+        console.log("✅ Functional Location assigned");
         const components = await this.components.getText();
         const count = await utils.getAssignedValue(components);
-        console.log("No of Components assigned are :"+count);
+        console.log("✅ No of Components assigned are :"+count);
     }
 
     public async verifyGroups() {
-        console.log("Verifying Groups assigned");
+        console.log("⌛ Verifying Groups assigned");
         const groups = await this.groups.getText();
         const count = await utils.getAssignedValue(groups);
-        console.log("No of groups assigned are :"+count);
+        console.log("✅ No of groups assigned are :"+count);
     }
 
     public async asgnFunLocTemplate(noOfFunTemp: number, autoAssign: boolean): Promise<void> {
-        console.log("Assigning Functional Location Template");
+        console.log("⌛ Assigning Functional Location Template");
         await browser.pause(1000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await this.funLocAsgnTab.waitForDisplayed({ timeout: 50000 });
         await this.funLocAsgnTab.click();
         await utils.waitForBusyIndicatorToDisappear();
 
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await this.asgnFunLocTemp.waitForClickable({ timeout: 30000 });
         await this.asgnFunLocTemp.click();
         await browser.pause(1000);
@@ -638,18 +639,19 @@ class functionalLocationDetailView {
             await checkBox.waitForClickable({ timeout: 30000 });
             await checkBox.click();
         }
-        await utils.funLocFrameSwitch(); 
+ 
+        await utils.switchToIframe(this.funLocIframe);
         await utils.clickWithWait(this.okBtn2);
         await browser.pause(1000);
         await utils.clickWithWait(this.okBtn);
         await utils.waitForBusyIndicatorToDisappear();
         const funLocTemp = await this.funLocTemp.getText();
         const count = await utils.getAssignedValue(funLocTemp);
-        console.log("No of Functional Location Template assigned are :"+count);
+        console.log("✅ No of Functional Location Template assigned are :"+count);
     }
 
     async assignFunLocClass(noOfClasses: number, autoAssign: boolean): Promise<void> {
-        console.log("Assigning classes to Functional Location");
+        console.log("⌛ Assigning classes to Functional Location");
         const classes = await this.class.getText();
         await utils.getAssignedValue(classes);
         console.log("Already assigned classes: "+classes);
@@ -661,9 +663,9 @@ class functionalLocationDetailView {
             return;
         }
         await browser.pause(1000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await utils.clickWithWait(this.asgnClsAndChr,2000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         const availableText = await $("//span[text()='Assign Classes']/ancestor::header/following::span[1]").getText();
         const availableCount = await utils.getAssignedValue(availableText);
         console.log("Available classes:"+ availableCount);
@@ -695,10 +697,10 @@ class functionalLocationDetailView {
     }
 
     async assignFunLocChar(noOfChar: number): Promise<void> {
-        console.log("Assigning characteristics to Functional Location");
+        console.log("⌛ Assigning characteristics to Functional Location");
         let k=0;
         await browser.pause(1000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await this.funLocMDATab.waitForDisplayed({ timeout: 50000 });
         await this.funLocMDATab.click();
         await utils.waitForBusyIndicatorToDisappear();
@@ -706,14 +708,14 @@ class functionalLocationDetailView {
         const c2 = await utils.getAssignedValue(char);
         console.log("Already assigned charactertics : "+c2);
         await browser.pause(1000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await this.funLocMDATab.waitForDisplayed({ timeout: 50000 });
         await this.funLocMDATab.click();
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await this.asgnChrMDA.waitForClickable({ timeout: 30000 });
         await this.asgnChrMDA.click();
         await browser.pause(1000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         const availableChar = await this.noOfClassMDA.getText();
         const availableCharCount = await utils.getAssignedValue(availableChar);
         console.log("Available characteritics:"+ availableCharCount);
@@ -738,96 +740,96 @@ class functionalLocationDetailView {
         }
         const updatedChar = await this.noOfCharMDA.getText();
         const uc = await utils.getAssignedValue(updatedChar);
-        console.log("Assigned charactertics : "+uc);
+        console.log("✅ Assigned charactertics : "+uc);
     }
 
     public async verifyAssetIntelligence() {
-        console.log("Navigating to Asset Intelligence Tab");
+        console.log("⌛ Navigating to Asset Intelligence Tab");
         await utils.clickWithWait(this.funLocAssetIntTab);
         await this.funLocAssetIntTab.waitForDisplayed({ timeout: 30000 });
         await utils.waitForBusyIndicatorToDisappear();
-        console.log("Navigated to Asset Intelligence Tab successfully");
+        console.log("✅ Navigated to Asset Intelligence Tab successfully");
 
         const riskAndCriti = await this.riskAndCriticality.getText();
         const r1 = await utils.getAssignedValue(riskAndCriti);
-        console.log("Assigned risk and criticality : "+r1);
+        console.log("✅ Assigned risk and criticality : "+r1);
 
         const assetStraRBI = await this.assetStrategyRBI.getText();
         const as1 = await utils.getAssignedValue(assetStraRBI);
-        console.log("Assigned asset strategy RBI : "+as1);
+        console.log("✅ Assigned asset strategy RBI : "+as1);
 
         const assetStraRCM = await this.assetStrategyRCM.getText();
         const as2 = await utils.getAssignedValue(assetStraRCM);
-        console.log("Assigned asset strategy RCM: "+as2);
+        console.log("✅ Assigned asset strategy RCM: "+as2);
 
         const astInsp = await this.assetInsp.getText();
         const ai1 = await utils.getAssignedValue(astInsp);
-        console.log("Assigned asset Inspection : "+ai1);
+        console.log("✅ Assigned asset Inspection : "+ai1);
 
         const finding = await this.findings.getText();
         const f = await utils.getAssignedValue(finding);
-        console.log("Assigned findings : "+f);
+        console.log("✅ Assigned findings : "+f);
 
         const recommendations = await this.recommend.getText();
         const r = await utils.getAssignedValue(recommendations);
-        console.log("Assigned recommendations : "+r);
+        console.log("✅ Assigned recommendations : "+r);
 
     }
 
     public async verifyRiskSummary() {
-        console.log("Navigating to Risk Summary Tab");
+        console.log("⌛ Navigating to Risk Summary Tab");
         await utils.clickWithWait(this.funLocRiskSumTab);
         await this.funLocRiskSumTab.waitForDisplayed({ timeout: 30000 });
         await utils.waitForBusyIndicatorToDisappear();
-        console.log("Navigated to Risk Summary Tab successfully");
+        console.log("✅Navigated to Risk Summary Tab successfully");
 
         const riskProfile = await this.riskProfile.getText();
         const rp = await utils.getAssignedValue(riskProfile);
-        console.log("Assigned risk profile : "+rp);
+        console.log(" ✅ Assigned risk profile : "+rp);
 
         const component = await this.component.getText();
         const c = await utils.getAssignedValue(component);
-        console.log("Assigned component: "+c);
+        console.log(" ✅ Assigned component: "+c);
 
         const recommendation = await this.recommendation.getText();
         const recom = await utils.getAssignedValue(recommendation);
-        console.log("Assigned reocmmendatios: "+recom);
+        console.log(" ✅ Assigned recommendations: "+recom);
 
     }
 
     public async verifyMainAndSum() {
-        console.log("Navigating to Maintenance and Service Tab");
+        console.log("⌛ Navigating to Maintenance and Service Tab");
         await utils.clickWithWait(this.funLocMainSerTab);
         await this.funLocMainSerTab.waitForDisplayed({ timeout: 30000 });
         await utils.waitForBusyIndicatorToDisappear();
-        console.log("Navigated to Maintenance and Service successfully");
+        console.log("✅ Navigated to Maintenance and Service successfully");
 
         const maintainNoti = await this.maintainNoti.getText();
         const mn = await utils.getAssignedValue(maintainNoti);
-        console.log("Assigned Maintenance Notification : "+mn);
+        console.log(" ✅ Assigned Maintenance Notification : "+mn);
 
         const maintainOrder = await this.maintainOrder.getText();
         const mo = await utils.getAssignedValue(maintainOrder);
-        console.log("Assigned Maintenance Order: "+mo);
+        console.log(" ✅ Assigned Maintenance Order: "+mo);
 
         const maintainPlan = await this.maintainPlan.getText();
         const mp = await utils.getAssignedValue(maintainPlan);
-        console.log("Assigned Maintenance Plan: "+mp);
+        console.log(" ✅ Assigned Maintenance Plan: "+mp);
 
         const recomWrk = await this.recomWrk.getText();
         const rw = await utils.getAssignedValue(recomWrk);
-        console.log("Assigned reocmmendatios: "+rw);
+        console.log(" ✅ Assigned recommendations: "+rw);
 
         const maintaintask = await this.maintaintask.getText();
         const mt = await utils.getAssignedValue(maintaintask);
-        console.log("Assigned Maintenance Task: "+mt);
+        console.log(" ✅ Assigned Maintenance Task: "+mt);
     }
 
     async addDocument() {
         const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
         await utils.clickWithWait(addLinkBtn,1000);
         await browser.pause(2000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         const documentOption = await $('//li[contains(.,"Add Document")]');
         await utils.clickWithWait(documentOption);
         await browser.pause(2000);
@@ -874,7 +876,7 @@ class functionalLocationDetailView {
         const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
         await utils.clickWithWait(addLinkBtn);
         await browser.pause(2000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         const link = await $('//li[contains(.,"Add Link")]');
         await utils.clickWithWait(link);
         await browser.pause(2000);
@@ -911,9 +913,9 @@ class functionalLocationDetailView {
     }
 
     async gotoAttachmentsTabAndAssignAttachment() {
-        console.log("Navigating to Attachment tab to assign attachment");
+        console.log("⌛ Navigating to Attachment tab to assign attachment");
         await browser.pause(4000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
         await this.attachmentsSection.click();
         await utils.waitForBusyIndicatorToDisappear();
@@ -937,13 +939,13 @@ class functionalLocationDetailView {
 
         console.log("✅ Document assign success message displayed");
         await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'),1000);
-        console.log("Attachment assigned successfully");
+        console.log("✅ Attachment assigned successfully");
     }
 
     async deleteAttachmentAndVerify() {
-        console.log("Deleting assigned attachment and verifying");
+        console.log("⌛ Deleting assigned attachment and verifying");
         await browser.pause(8000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await browser.pause(8000);
         const attachmentCheckbox = await $('(//table//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"])[1]');
         await attachmentCheckbox.waitForDisplayed({ timeout: 20000 });
@@ -963,12 +965,11 @@ class functionalLocationDetailView {
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'),1000);
         await browser.pause(2000);
-        console.log("Attachment deleted successfully");
+        console.log("✅ Attachment deleted successfully");
     }
 
     public async verifyChangeHistory() {
-        //editing header infor for change history check
-        console.log("Editing header's Information for change history check");
+        console.log("⌛ Editing header's Information for change history check");
         await utils.clickWithWait(this.funLocEditHeader);
         await utils.setValueWithWait(
             this.funLocDescEditHeader,
@@ -1020,20 +1021,13 @@ class functionalLocationDetailView {
                 `Description mismatch. Expected: ${enteredDesc}, Found: ${descLine}`
             );
         }
-        console.log("Change history validation passed successfully");
+        console.log("✅ Change history validation passed successfully");
     }
 
-    public async verifyCML()
-    {
-        console.log("Starting CML verification");
-        console.log("Capturing Functional Location header value for CML check");
-        let funcLoc = "";
-        let actualId = "";
-        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
-        const getFuncLoc = async () => {
-            const xpath = "//header//*[@role='heading']//span";
-
+    public async getFuncLocId() {
+        const xpath = "//header//*[@role='heading']//span";
+        let found = false;
+        try {
             await browser.waitUntil(async () => {
                 const els = await $$(xpath);
                 if (!els.length) return false;
@@ -1042,49 +1036,59 @@ class functionalLocationDetailView {
                     let txt = await el.getText();
                     if (!txt) txt = await el.getAttribute("innerText");
                     txt = txt?.trim();
-                    if (txt && (txt.startsWith("FLOC ") || txt.startsWith("FUNC-LOC"))) {
+
+                    if (txt && (txt.startsWith("AUTOMATION-FLOC ") || txt.startsWith("AUTOMATION-FUNC-LOC"))) {
+                        found = true;
                         return true;
                     }
                 }
                 return false;
             }, {
-                timeout: 7000,
-                interval: 500,
-                timeoutMsg: "FuncLoc never appeared in header"
+                timeout: 4000,   // shorter wait per attempt
+                interval: 500
             });
 
-            const spans = await $$(xpath);
-            for (let el of spans) {
-                let txt = await el.getText();
-                if (!txt) txt = await el.getAttribute("innerText");
-                txt = txt?.trim();
-                if (txt && (txt.startsWith("FLOC ") || txt.startsWith("FUNC-LOC"))) {
-                    return txt;
-                }
-            }
+        } catch (e) {
+            console.log("⚠️ FuncLoc not visible in this attempt");
+        }
 
+        if (!found) return "";
+        const spans = await $$(xpath);
+        for (let el of spans) {
+            let txt = await el.getText();
+            if (!txt) txt = await el.getAttribute("innerText");
+            txt = txt?.trim();
+
+            if (txt && (txt.startsWith("AUTOMATION-FLOC ") || txt.startsWith("AUTOMATION-FUNC-LOC"))) {
+                return txt;
+            }
+        }
+        return "";
+    }
+
+    public async getDisplayId() {
+        try {
+            const txt = await browser.execute(() => {
+                const el = document.evaluate(
+                    "//span[starts-with(normalize-space(),'Display ID:')]",
+                    document,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null
+                ).singleNodeValue;
+                return el ? (el.textContent || "") : "";
+            });
+            return txt ? txt.replace("Display ID:", "").trim() : "";
+        } catch (e) {
             return "";
-        };
+        }
+    }
 
-        const getDisplayId = async () => {
-            try {
-                const txt = await browser.execute(() => {
-                    const el = document.evaluate(
-                        "//span[starts-with(normalize-space(),'Display ID:')]",
-                        document,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null
-                    ).singleNodeValue;
-                    return el ? (el.textContent || "") : "";
-                });
-                return txt ? txt.replace("Display ID:", "").trim() : "";
-            } catch (e) {
-                return "";
-            }
-        };
-
-
+    public async getFinalIDs() {
+        let funcLoc = "";
+        let actualId = "";
+        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
         for (let i = 0; i < 3; i++) {
             if (i === 0 && await expandBtn.isDisplayed()) {
                 await expandBtn.waitForClickable({ timeout: 5000 });
@@ -1094,23 +1098,25 @@ class functionalLocationDetailView {
                 await collapseBtn.waitForClickable({ timeout: 5000 });
                 await collapseBtn.click();
             }
-
             await browser.pause(500); // small buffer before waitUntil kicks in
-
-            const headerText = await getFuncLoc();
-            const displayText = await getDisplayId();
-
+            const headerText = await this.getFuncLocId();
+            const displayText = await this.getDisplayId();
             if (!funcLoc && headerText) funcLoc = headerText;
             if (!actualId && displayText) actualId = displayText;
-
-            console.log(`Attempt ${i + 1} → FuncLoc="${funcLoc || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
-
+            console.log(`🔁 Attempt ${i + 1} → FuncLoc="${funcLoc || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
             if (funcLoc && actualId) break;
         }
+        return { funcLoc, actualId };
+    }
 
+    public async verifyCML()
+    {
+        console.log("⌛ Starting CML verification");
+        console.log("⌛ Capturing Functional Location header value for CML check");
+        const { funcLoc, actualId } = await this.getFinalIDs();
         this.funcLocHeadValue = funcLoc;
         console.log(`✅ Final → FuncLoc="${funcLoc}" | DisplayID="${actualId}"`);
-        console.log("Verifying CML section");
+        console.log("⌛ Verifying CML section");
         const parentTab = await browser.getWindowHandle();
         const oldHandles = await browser.getWindowHandles();
         await utils.clickWithWait($('//bdi[text()="CML"]'));
@@ -1124,12 +1130,10 @@ class functionalLocationDetailView {
         await browser.waitUntil(
             async () => (await browser.execute(() => document.readyState)) === 'complete'
         );
-
         await utils.waitForBusyIndicatorToDisappear();
         const frame = await $('//iframe[@data-help-id="application-cml-manage"]');
         await frame.waitForExist({ timeout: 20000 });
-        await browser.switchFrame(frame);
-
+        await utils.switchToIframe(frame);
         console.log("✅ Switched to CML iframe");
         const cmlElem = await this.noOfCML;
         await cmlElem.waitForDisplayed({ timeout: 20000 });
@@ -1154,16 +1158,15 @@ class functionalLocationDetailView {
         await utils.assertTextEquals(funLocInCML, this.funcLocHeadValue);
         console.log("✅ Functional Location in CML matches header value");
         await utils.assertTextEquals(displayIdInCML, actualId);
-        console.log("✅ Display ID in CML matches header value");
-
         let finalValue = 0;
+        let lastSeenText = "";
         try {
             await browser.waitUntil(
                 async () => {
                     let text = await cmlElem.getText();
                     if (!text) text = await cmlElem.getAttribute("innerText");
 
-                    console.log("Waiting CML text:", text);
+                    lastSeenText = text;
 
                     const value = await utils.getAssignedValue(text);
                     finalValue = value;
@@ -1175,102 +1178,46 @@ class functionalLocationDetailView {
                     interval: 1000
                 }
             );
+            console.log(`✅ SUCCESS → CML value became ${finalValue}`);
         } catch (e) {
-            console.log("⚠️ CML value is still 0 after waiting");
+            console.log(`⚠️ WARNING → CML value is still 0 after waiting`);
+            console.log(`🏁 FINAL → CML TEXT: ${lastSeenText}`);
         }
-
         let cmlText = await cmlElem.getText();
         if (!cmlText) {
             cmlText = await cmlElem.getAttribute("innerText");
         }
-
         console.log("FINAL CML TEXT:", cmlText);
         const CML = await utils.getAssignedValue(cmlText);
         console.log("✅ Assigned CMLs:", CML);
-        console.log("CML verification completed successfully");
+        console.log("✅ CML verification completed successfully");
         await browser.closeWindow();
         await browser.switchToWindow(parentTab);
-        console.log("Returned to parent tab");
+        console.log("✅ Returned to parent tab");
     }
 
     async deleteFunctionalLocation(){
-        console.log("Deleting the Functional Location");
-        console.log("Capturing Functional Location header value for Deletion");
-        await utils.funLocFrameSwitch();
+        console.log("⌛ Deleting the Functional Location");
+        console.log("⌛ Capturing Functional Location header value for Deletion");
+        await utils.switchToIframe(this.funLocIframe);
         await browser.pause(4000);
-        let funcLoc = "";
-        let actualId = "";
-
-        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
-        const getFuncLoc = async () => {
-            const spans = await $$("//header//*[@role='heading']//span");
-            for (let el of spans) {
-                let txt = await el.getText();
-                if (!txt) txt = await el.getAttribute("innerText");
-
-                txt = txt?.trim();
-
-                if (txt && (txt.startsWith("FLOC ") || txt.startsWith("FUNC-LOC"))) {
-                    return txt;
-                }
-            }
-            return "";
-        };
-
-        const getDisplayId = async () => {
-            try {
-                const txt = await browser.execute(() => {
-                    const el = document.evaluate(
-                        "//span[starts-with(normalize-space(),'Display ID:')]",
-                        document,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null
-                    ).singleNodeValue;
-
-                    return el ? (el.textContent || "") : "";
-                });
-
-                return txt ? txt.replace("Display ID:", "").trim() : "";
-            } catch (e) {
-                return "";
-            }
-        };
-
-        for (let i = 0; i < 3; i++) {
-
-            const headerText = await getFuncLoc();
-            const displayText = await getDisplayId();
-
-            if (!funcLoc && headerText) funcLoc = headerText;
-            if (!actualId && displayText) actualId = displayText;
-
-            console.log(`Attempt ${i + 1} → FuncLoc="${funcLoc || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
-
-            if (funcLoc && actualId) break;
-
-            if (i === 0 && await expandBtn.isExisting()) {
-                await browser.execute(el => el.click(), expandBtn);
-            } 
-            else if (i === 1 && await collapseBtn.isExisting()) {
-                await browser.execute(el => el.click(), collapseBtn);
-            }
-
-            await browser.pause(1500);
-        }
-
+        const { funcLoc, actualId } = await this.getFinalIDs();
         this.funcLocHeadValue = funcLoc;
-        this.displayID = actualId;
         console.log(`✅ Final → FuncLoc="${funcLoc}" | DisplayID="${actualId}"`);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
+        console.log("⌛ Waiting for UI5 view to finish rendering...");
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.waitForObjectPageHeader();
         await browser.pause(5000);
+        await this.deleteBtn.waitForExist({ timeout: 30000 });
+        await this.deleteBtn.waitForDisplayed({ timeout: 30000 });
+        console.log("⌛ Clicking Delete...");
         await utils.clickWithWait(this.deleteBtn,3000);
         await utils.clickWithWait(this.okBtn,3000);
         await utils.waitForBusyIndicatorToDisappear();
-        console.log("Functional Location deletion in progress");
-        console.log("Waiting for deletion to complete...");
-        console.log("Deletion completed, confirming deletion");
+        console.log("⌛ Functional Location deletion in progress");
+        console.log("⌛ Waiting for deletion to complete...");
+        console.log("✅ Deletion completed, confirming deletion");
     }
 }
 export default new functionalLocationDetailView();
