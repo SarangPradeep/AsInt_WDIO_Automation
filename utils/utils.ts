@@ -35,73 +35,41 @@ class Utils {
         return $("//button[@title='Close']"); 
     }
 
-
-    async funLocFrameSwitch(): Promise<void> {
-        console.log("--------------------------------------------- Before Switch ---------------------------------------------");
-        console.log("URL:", await browser.getUrl());
-
+    async switchToIframe(frameElement: any): Promise<void> {
+        console.log("---- Switching to iframe ----");
         await browser.switchFrame(null);
-
-        await this.funLocIframe.waitForExist({ timeout: 20000 });
-        await browser.switchFrame(this.funLocIframe);
-
-        console.log("--------------------------------------------- After Switch ---------------------------------------------");
-
-        const internalTitle = await browser.execute(() => document.title);
-        console.log("Internal Document Title:", internalTitle);
-
-        const btnCount = await $$('button').length;
-        console.log("Buttons found in current context:", btnCount);
-    }
-
-    async CMLFrameSwitch(): Promise<void> {
-        console.log("--------------------------------------------- Before Switch ---------------------------------------------");
-        console.log("URL:", await browser.getUrl());
-
-        await browser.switchFrame(null);
-
-        await this.CMLIframe.waitForExist({ timeout: 20000 });
-        await browser.switchFrame(this.CMLIframe);
-
-        console.log("--------------------------------------------- After Switch ---------------------------------------------");
-
-        const internalTitle = await browser.execute(() => document.title);
-        console.log("Internal Document Title:", internalTitle);
-
-        const btnCount = await $$('button').length;
-        console.log("Buttons found in current context:", btnCount);
+        await frameElement.waitForExist({ timeout: 20000 });
+        await frameElement.waitForDisplayed({ timeout: 20000 });
+        await browser.switchFrame(frameElement);
+        console.log("---- Switched successfully ----");
     }
 
     async uploadDocument(fileName: string): Promise<void> {
-
-        // Absolute path of file
         const filePath = path.join(process.cwd(), 'test_data/btp_applications/', fileName);
-
-        // Upload file to browser temp storage
         const remoteFilePath = await browser.uploadFile(filePath);
-
-        // Select file input (type="file")
         const fileInput = await $('//input[@type="file"]');
-
-        // Set file
         await fileInput.waitForExist();
         await fileInput.setValue(remoteFilePath);
+    }
+
+    async waitForObjectPageHeader(): Promise<void> {
+        const headerToolbar = await $(
+            "//*[contains(@class,'sapUxAPObjectPageLayout')]//header"
+        );
+        await headerToolbar.waitForExist({ timeout: 30000 });
+        await headerToolbar.waitForDisplayed({ timeout: 30000 });
+        console.log("✅ Object Page header ready");
     }
 
     async switchIframe(): Promise<void> {
         console.log("--------------------------------------------- Before Switch ---------------------------------------------");
         console.log("URL:", await browser.getUrl());
-
         await browser.switchFrame(null);
-
         await this.equipmentIframe.waitForExist({ timeout: 20000 });
         await browser.switchFrame(this.equipmentIframe);
-
         console.log("--------------------------------------------- After Switch ---------------------------------------------");
-
         const internalTitle = await browser.execute(() => document.title);
         console.log("Internal Document Title:", internalTitle);
-
         const btnCount = await $$('button').length;
         console.log("Buttons found in current context:", btnCount);
     }
@@ -116,24 +84,6 @@ class Utils {
             console.log(`✅ Text assertion passed. Text: "${actualText}"`);
         }
     }
-
-    // async clickWithWait(element: any, delayAfter = 0, timeout = 30000): Promise<void> {
-    //     const el = await element;
-    //     await el.waitForDisplayed({ timeout });
-    //     await el.scrollIntoView();
-    //     await el.waitForClickable({
-    //         timeout,
-    //         timeoutMsg: `Not clickable: ${el.selector}`
-    //     });
-    //     try {
-    //         await el.click();
-    //     } catch {
-    //         await browser.pause(1000);
-    //         await el.scrollIntoView();
-    //         await el.click();
-    //     }
-    //     if (delayAfter > 0) await browser.pause(delayAfter);
-    // }
 
     async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 30000): Promise<void> {
         const el = await element;
@@ -235,13 +185,13 @@ class Utils {
     }
 
     async generateRandomFuncName(): Promise<string> {
-        console.log(`FUNC-LOC-${Math.floor(Math.random() * 10000)}`);
-    return `FUNC-LOC-${Math.floor(Math.random() * 10000)}`;
+        console.log(`AUTOMATION-FUNC-LOC-${Math.floor(Math.random() * 10000)}`);
+    return `AUTOMATION-FUNC-LOC-${Math.floor(Math.random() * 10000)}`;
     }
 
     async generateRandomFuncDescName(): Promise<string> {
-        console.log(`FUNC-LOC-DESC-${Math.floor(Math.random() * 10000)}`);
-    return `FUNC-LOC-DESC-${Math.floor(Math.random() * 10000)}`;
+        console.log(`AUTOMATION-FUNC-LOC-DESC-${Math.floor(Math.random() * 10000)}`);
+    return `AUTOMATION-FUNC-LOC-DESC-${Math.floor(Math.random() * 10000)}`;
     }
 
     async setValueWithDelay(element: any, value: string) {
@@ -461,8 +411,6 @@ class Utils {
         }
     }
 
-    
-
     async generateUniqueName(base: string): Promise<string> {
         const timestamp = new Date().getTime();
         return `${base}_${timestamp}`;
@@ -474,16 +422,12 @@ class Utils {
     }
 
       private get adaptFilter() {
-       // return $('//bdi[text()="Adapt Filters"]'); //input[@placeholder='Search']/following::bdi[contains(text(),'Adapt Filters')]
         return $("//input[@placeholder='Search']/following::bdi[contains(text(),'Adapt Filters')]");
     }
 
     async addAllAdaptFilter(): Promise<void> {
 
-
-        // STEP 1: check if settings is really usable
         let isAdaptFilterClickable = false;
-
         try {
             await this.adaptFilter.waitForClickable({ timeout: 30000 });
             isAdaptFilterClickable = true;
@@ -491,7 +435,6 @@ class Utils {
             isAdaptFilterClickable = false;
         }
 
-        // STEP 2: if NOT clickable → try going back (but safely)
         if (!isAdaptFilterClickable) {
             console.log("➡️ Settings not clickable → trying Back");
             await browser.switchFrame(null);
@@ -500,8 +443,6 @@ class Utils {
             if (await back.isExisting()) {
                 try {
                     await this.clickWithWait(back);
-                    // await back.waitForClickable({ timeout: 5000 });
-                    // await back.click();
                     await this.waitForBusyIndicatorToDisappear();
                     console.log("✅ Clicked Back");
                 } catch {
@@ -511,27 +452,18 @@ class Utils {
                 console.log("⚠️ Back button not present → skipping");
             }
         }
-
         await browser.switchFrame(null);
         if(await this.funLocIframe.isExisting()) {
-            await this.funLocFrameSwitch();
+            await this.switchToIframe(this.funLocIframe);
         } else if (await this.equipmentIframe.isExisting()) {
-            await this.switchIframe();
+            await this.switchToIframe(this.equipmentIframe);
         }
-        // STEP 3: now open settings (must work now)
         await this.adaptFilter.waitForClickable({ timeout: 10000 });
         await this.adaptFilter.click();
 
         console.log("✅ Adapt Filters opened");
 
-
-
-
-
-
-        await browser.pause(8000);
-        // await this.clickWithWait(this.adaptFilter);
-        await browser.pause(3000);
+        await browser.pause(10000);
         while (true) {
             const checkboxes = await $$(
                 `//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"]`
@@ -550,18 +482,14 @@ class Utils {
                 await browser.execute(el => el.click(), checkbox);
             }
         }
-
-        
         const filterNames = await $$('//tr[@role="row"]//bdi');
         const expectedFilters: string[] = [];
-
         for (const el of filterNames) {
             const text = await el.getText();
             if (text.trim()) {
                 expectedFilters.push(text.trim());
             }
         }
-
         console.log('Expected Filters:', expectedFilters);
 
          await this.clickWithWait($('//button//bdi[text()="OK"]'));
@@ -576,11 +504,8 @@ class Utils {
                 actualFilters.push(text.trim());
             }
         }
-
         console.log('Actual Filters:', actualFilters);
-
         const missingFilters: string[] = [];
-
         for (const expected of expectedFilters) {
             if (!actualFilters.includes(expected)) {
                 console.error(`❌ Missing filter: ${expected}`);
@@ -589,7 +514,6 @@ class Utils {
                 console.log(`✅ Found filter: ${expected}`);
             }
         }
-
         if (missingFilters.length > 0) {
             throw new Error(`Missing filters: ${missingFilters.join(', ')}`);
         }
@@ -603,8 +527,6 @@ class Utils {
         await this.clickWithWait($('(//button[.//bdi[text()="OK"]])[last()]'));
         await this.clickWithWait($('//button//bdi[text()="OK"]'));
         await browser.pause(5000);
-
-        // Verify that all filters are reset
         const actualFiltersElements = await $$('//label//bdi');
         const remainingFilters: string[] = [];
 
@@ -618,37 +540,27 @@ class Utils {
         if (remainingFilters.length > 0) {
             throw new Error(`Reset failed: Filters still present: ${remainingFilters.join(', ')}`);
         }
-
         console.log('✅ All filters successfully reset');
     }
-
 
     public async verifyFieldsInListView(): Promise<void> {
         const settings = await this.settingsBtn;
         this.waitForBusyIndicatorToDisappear();
         console.log("🔍 Checking if Settings is available on current page");
-
-        // STEP 1: check if settings is really usable
         let isSettingsClickable = false;
-
         try {
             await settings.waitForClickable({ timeout: 30000 });
             isSettingsClickable = true;
         } catch {
             isSettingsClickable = false;
         }
-
-        // STEP 2: if NOT clickable → try going back (but safely)
         if (!isSettingsClickable) {
             console.log("➡️ Settings not clickable → trying Back");
             await browser.switchFrame(null);
             const back = await this.backBtn;
-
             if (await back.isExisting()) {
                 try {
                     await this.clickWithWait(back);
-                    // await back.waitForClickable({ timeout: 5000 });
-                    // await back.click();
                     await this.waitForBusyIndicatorToDisappear();
                     console.log("✅ Clicked Back");
                 } catch {
@@ -658,60 +570,39 @@ class Utils {
                 console.log("⚠️ Back button not present → skipping");
             }
         }
-
         await browser.switchFrame(null);
         if(await this.funLocIframe.isExisting()) {
-            await this.funLocFrameSwitch();
+            await this.switchToIframe(this.funLocIframe);
         } else if (await this.equipmentIframe.isExisting()) {
-            await this.switchIframe();
+            await this.switchToIframe(this.equipmentIframe);
         }
-        // STEP 3: now open settings (must work now)
         await settings.waitForClickable({ timeout: 10000 });
         await settings.click();
-
         console.log("✅ Settings opened");
-
-        // wait for popup/table
-        await browser.pause(2000); // replace with better wait if needed
-
-        // ================= GET ALL TEXT VALUES =================
+        await browser.pause(2000); 
         const allTextElems = await $$("//td[@role='gridcell']//bdi");
-
         const availableTexts: string[] = [];
-
         for (const el of allTextElems) {
             const text = await el.getText();
             if (text.trim()) {
                 availableTexts.push(text.trim());
             }
         }
-
         console.log("✅ Available fields:", availableTexts);
-
-        // ================= STORE SELECTED FIELDS BEFORE OK =================
         const selectedFields: string[] = [];
-
         const rows = await $$("//tr[@role='row']");
-
         for (const row of rows) {
             const checkbox = await row.$(".//div[@role='checkbox']");
             const textElem = await row.$(".//td[@role='gridcell']//bdi");
-
             if (!(await checkbox.isExisting())) continue;
-
             let text = await textElem.getText();
             if (!text) text = await textElem.getAttribute("innerText");
-
             const isChecked = await checkbox.getAttribute("aria-checked");
-
-            // ✅ STORE if already checked OR will be checked
             if (isChecked === "true") {
                 if (text && text.trim()) {
                     selectedFields.push(text.trim());
                 }
             }
-
-            // ✅ SELECT if unchecked
             if (isChecked === "false") {
                 if (text && text.trim()) {
                     selectedFields.push(text.trim()); // include newly selected also
@@ -721,131 +612,84 @@ class Utils {
         }
 
         console.log("✅ Final selected fields (including pre-selected):", selectedFields);
-
-
-        // ================= CLICK OK =================
         await this.clickWithWait($("//bdi[text()='OK']"));
         console.log("✅ Clicked OK");
-
         await this.waitForBusyIndicatorToDisappear();
-
-
-            // ================= VERIFICATION =================
         for (const field of selectedFields) {
-
             let found = false;
-
-            // 🔹 HEADER CHECK
             const headerElems = await $$("//th//span");
-
             for (const el of headerElems) {
                 let text = await el.getText();
                 if (!text) text = await el.getAttribute("innerText");
-
                 const safeText = (text || "").trim();
-
                 if (safeText === field) {
                     console.log(`✅ Found in HEADER: ${field}`);
                     found = true;
                     break;
                 }
             }
-
             if (found) continue;
-
-            // 🔹 ROW CHECK
             const rowElems = await $$("//tbody//tr[2]//span[1][normalize-space()][not(normalize-space()='Yes')]");
-
             for (const el of rowElems) {
                 let text = await el.getText();
                 if (!text) text = await el.getAttribute("innerText");
-
                 const safeText = (text || "").trim();
-
                 if (safeText === field) {
                     console.log(`✅ Found in ROW: ${field}`);
                     found = true;
                     break;
                 }
             }
-
-            // ❌ FAIL
             if (!found) {
                 throw new Error(`❌ Field NOT found on screen: ${field}`);
             }
         }
-
         console.log("🎉 All selected fields verified successfully");
     }
 
     async resetFieldsInListView(): Promise<void> {
-
         const settings = await this.settingsBtn;
-
         await this.waitForBusyIndicatorToDisappear();
         await settings.waitForClickable({ timeout: 10000 });
         await settings.click();
-
         console.log("✅ Settings opened");
-
         const resetBtn = await $('//bdi[text()="Reset"]');
         let selectedFields: string[] = [];
-
-        // ================= RESET FLOW =================
         if (await resetBtn.isExisting() && await resetBtn.isEnabled()) {
-
             await this.clickWithWait(resetBtn);
             await this.waitForBusyIndicatorToDisappear();
-
             const OkWrnBtn = await $('//span[text()="Warning"]//following::bdi[text()="OK"]');
             await this.clickWithWait(OkWrnBtn);
             await this.waitForBusyIndicatorToDisappear();
             await browser.pause(5000); // wait for fields to update after reset
-
             console.log("✅ Reset confirmed, capturing checked fields");
-
             const fieldElems = await $$(
             "(//div[@role='checkbox' and @aria-checked='true']/ancestor::tr//td[@role='gridcell']//bdi)[position() <= 12]"
             );
-
             for (const el of fieldElems) {
                 let text = await el.getText();
                 if (!text) text = await el.getAttribute("innerText");
-
                 const safeText = (text || "").trim();
-
                 if (safeText && !selectedFields.includes(safeText)) {
                     selectedFields.push(safeText);
                 }
             }
-
             console.log("✅ Fields after reset:", selectedFields);
-
-            // strict check
             if (selectedFields.length < 8 || selectedFields.length > 12) {
                 throw new Error(`❌ Wrong number of reset fields: ${selectedFields.length}`);
             }
-
-            // strict check
             if (selectedFields.length < 8 || selectedFields.length > 12) {
                 throw new Error(`❌ Wrong number of reset fields: ${selectedFields.length}`);
             }
-
             await this.clickWithWait($('//button//bdi[text()="OK"]'));
             await this.waitForBusyIndicatorToDisappear();
-
             console.log("✅ Popup closed");
         } else 
         {
             console.log("⚠️ Reset not available → skipping");
-
             await this.clickWithWait($('//button//bdi[text()="OK"]'));
             return;
         }
-
-        // ================= VERIFICATION =================
-
-        // 🔹 FETCH HEADERS ONCE
         const headerTexts: string[] = [];
         for (const el of await $$("//th//span")) {
             let text = await el.getText();
@@ -854,8 +698,6 @@ class Utils {
             const safeText = (text || "").trim();
             if (safeText) headerTexts.push(safeText);
         }
-
-        // 🔹 FETCH ROW VALUES ONCE
         const rowTexts: string[] = [];
         for (const el of await $$("//tbody//tr[2]//span[1][normalize-space()][not(normalize-space()='Yes')]")) {
             let text = await el.getText();
@@ -864,26 +706,19 @@ class Utils {
             const safeText = (text || "").trim();
             if (safeText) rowTexts.push(safeText);
         }
-
         console.log("DEBUG selectedFields length:", selectedFields.length);
-
-        // 🔹 VERIFY
         for (const field of selectedFields) {
-
             if (headerTexts.includes(field)) {
                 console.log(`✅ Found in HEADER: ${field}`);
                 continue;
             }
-
             if (rowTexts.includes(field)) {
                 console.log(`✅ Found in ROW: ${field}`);
                 continue;
             }
-
             console.log(`❌ NOT FOUND: ${field}`);
             throw new Error(`❌ Field NOT found on screen: ${field}`);
         }
-
         console.log("🎉 All reset fields verified successfully");
     }
 

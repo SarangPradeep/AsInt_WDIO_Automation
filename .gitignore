@@ -1,2 +1,7 @@
 target/
 test-output/
+allure-results/
+allure-report/
+node_modules/
+logs/
+README.md

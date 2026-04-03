@@ -46,9 +46,11 @@ class functionalLocationListView {
     private funcLocSearched() {  
     return $("(//tr[@role='row']//span[@title='Navigation'])[1]");
     }
-
     private get funLocGeneralInfoTab() {  
         return $("//bdi[text()='General Information']/ancestor::button"); 
+    }
+    private get funLocIframe() {
+        return $('iframe[data-help-id="application-functionallocation-manage"]');
     }
     public functionalLocName!: string;
     public functionalLocDescName!: string;
@@ -73,20 +75,19 @@ class functionalLocationListView {
     }
 
     public async navigateFunctionalLocationListView(): Promise<void> {
+        console.log("➡️ Navigating to Functional Location List View");
         await this.navigateToFunctionalLocation(); 
         await utils.waitForBusyIndicatorToDisappear();
-        await utils.funLocFrameSwitch();
-        console.log("Navigated to Functional Location List View");
+        await utils.switchToIframe(this.funLocIframe);
+        console.log("✅ Navigated to Functional Location List View");
     }
 
     public async createFunctionalLocation(assignCount: number = 0): Promise<void> {
-        console.log("Creating of Functional Location started");
+        console.log("📍 Creating of Functional Location started");
         await this.plusIconAndFuncLocSelect();
-        
         await utils.waitForBusyIndicatorToDisappear();
         this.functionalLocName = await utils.generateRandomFuncName();
         await utils.setValueWithWait(this.newFunctionalLocName, this.functionalLocName);
-
         this.functionalLocDescName = await utils.generateRandomFuncDescName();
         await utils.setValueWithWait(this.shortDescName, this.functionalLocDescName);
 
@@ -100,54 +101,49 @@ class functionalLocationListView {
         await utils.clickWithWait(this.selectParentAsset);
         await this.selectFuncLocBox.waitForDisplayed({ timeout: 30000 });
         await browser.pause(8000);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         await utils.clickWithWait(this.selectParentFuncLoc);
         await browser.pause(8000);
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait(this.createFuncLocButton, 2000);
         await this.funcLocSuccCreation();
-        console.log("Functional Location created");
+        console.log("✅Functional Location created");
     }
 
     public async navigateFunctionalLocation(): Promise<void> {
 
-        //search newly create functional location
+        console.log("⌛ Searching for created Functional Location in the list view and navigating to detail view");
         await utils.clickWithWait(this.search,1000);
         await utils.setValueWithWait(this.search,this.functionalLocName,1000);
         await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
         await browser.pause(2000);
+        console.log(`✅ Searched for Functional Location with name: ${this.functionalLocName}`);
 
-        //navigating to functional location detail View
-        console.log("Navigating to Detail view page of Functional Location");
+        console.log("⌛ Navigating to Detail view page of Functional Location");
         await utils.waitForBusyIndicatorToDisappear();
         const nav = this.funcLocSearched();
         await utils.clickWithWait(nav);
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.switchFrame(null);
-        await utils.funLocFrameSwitch();
+        await utils.switchToIframe(this.funLocIframe);
         const el = await this.funLocGeneralInfoTab;
         await el.waitForExist({ timeout: 90000 });
         await browser.execute((element) => {element.scrollIntoView({ block: 'center' });}, el);
         await browser.pause(2000);
         await browser.execute((element) => {element.click();}, el);
-        console.log("Navigated to Detail View page successfully");
+        console.log("✅ Navigated to Detail View page successfully");
     }
 
     async verifyDeletionOfFunctionalLocation() {
-        console.log("Verifying deletion of Functional Location");
+        console.log("⌛ Verifying deletion of Functional Location");
 
         await utils.waitForBusyIndicatorToDisappear();
-
-        // wait for page ready
         await browser.waitUntil(
             async () => (await browser.execute(() => document.readyState)) === "complete",
             { timeout: 20000 }
         );
 
-        // 🔥 switch to correct iframe dynamically
         await browser.waitUntil(async () => {
         const frames = await $$("//iframe");
-
         for (const frame of frames) {
             try {
                 await browser.switchFrame(frame);
@@ -156,7 +152,6 @@ class functionalLocationListView {
                 if (await search.isExisting()) {
                     return true; // correct frame
                 }
-
                 await browser.switchFrame(null);
             } catch (e) {
                 await browser.switchFrame(null);
@@ -165,7 +160,6 @@ class functionalLocationListView {
         return false;
         }, { timeout: 30000 });
 
-        // 🔥 get visible search box only
         const getVisibleSearch = async () => {
             const elements = await $$("//input[@type='search']");
             for (const el of elements) {
@@ -177,7 +171,6 @@ class functionalLocationListView {
         };
 
         let searchBox;
-
         await browser.waitUntil(async () => {
             searchBox = await getVisibleSearch();
             return searchBox !== null;
@@ -187,14 +180,12 @@ class functionalLocationListView {
             throw new Error("❌ Visible search box not found");
         }
         console.log("Visible search box found, searching for deleted Functional Location");
-        // 🔥 set value via JS (TS safe)
         await browser.execute((el, value) => {
             const input = el as unknown as HTMLInputElement;
             input.value = value as string;
             input.dispatchEvent(new Event('input', { bubbles: true }));
         }, searchBox, functionalLocationDetailView.displayID);
         console.log(`Searched for Functional Location with Display ID: ${functionalLocationDetailView.displayID}`);
-        // 🔥 click Go (visible one)
         const getVisibleGo = async () => {
             const buttons = await $$("//bdi[text()='Go']");
             for (const btn of buttons) {
@@ -206,8 +197,6 @@ class functionalLocationListView {
         };
 
         let goBtn: any;
-
-        // wait until visible GO button is found
         await browser.waitUntil(async () => {
             goBtn = await getVisibleGo();   // should return Element | null
             return goBtn !== null;
@@ -216,21 +205,16 @@ class functionalLocationListView {
             interval: 500,
             timeoutMsg: "❌ Go button not found"
         });
-
-        // safety check
         if (!goBtn) {
             throw new Error("❌ Go button not found");
         }
 
         console.log("Clicking Go button to search for Functional Location");
-
-        // wait + click
         await goBtn.waitForDisplayed({ timeout: 10000 });
         await goBtn.waitForClickable({ timeout: 10000 });
         await goBtn.click();
 
         console.log("⏳ Waiting for table to refresh after search...");
-
         const noDataCell = '//td[text()="No data"]';
         const tableRows = '//table//tr[contains(@class,"sapMListTblRow")]';
 
@@ -244,18 +228,11 @@ class functionalLocationListView {
             timeoutMsg: "Search results never loaded"
         });
 
-        // if (!isFuncLocPresent) {
-        //     throw new Error("Functional Location still exists after deletion");
-        // } else {
-        //     console.log("Functional Location deletion verified successfully");
-        // }
-
         console.log("Checking if Functional Location is present in the list after deletion");
-
         const isFuncLocPresent = await $(noDataCell).isExisting();
 
         if (!isFuncLocPresent) {
-            throw new Error("Functional Location still exists after deletion");
+            throw new Error("❌ Functional Location still exists after deletion");
         } else {
             console.log("✅ Functional Location deletion verified successfully");
         }
