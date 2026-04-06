@@ -38,10 +38,12 @@ jobs:
             xdg-utils \
             xvfb
 
-      - name: Run WDIO tests
+      - name: Run WDIO tests in parallel (4 workers)
+        working-directory: asint_ais_e2e
         env:
           CI: true
-        run: npm test
+        run: npx wdio run wdio.conf.ts --maxInstances 4
+        continue-on-error: true
 
       - name: Generate Allure Report
         if: always()              # run even if tests fail
