@@ -22,9 +22,11 @@ export const config: WebdriverIO.Config = {
     // Specify Test Files
     // ==================
     specs: [
-       // './test/specs/AsintEdge_Applications_Tests/Functional/*.ts'
-       // './test/specs/AsintEdge_Applications_Tests/**/*.ts',
-        './functional_location/functional_location.e2e.ts'
+
+        './functional_location/functional_location.e2e.ts',
+        './equipment/equipment.e2e.ts',
+        './configuration/**/*.e2e.ts',
+        './safety_group/safety.e2e.ts'
     
     ],
     exclude: [],

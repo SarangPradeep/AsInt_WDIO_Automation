@@ -1,6 +1,7 @@
 import { promises } from "node:dns";
 import utils from "utils/utils";
 import { waitForDisplayed } from "webdriverio/build/commands/element";
+import equipmentDetailPage from "./equipment.detail.page";
 
 class EquipmentListviewPage {
 
@@ -71,13 +72,13 @@ class EquipmentListviewPage {
 
         await this.createEquipmentBtn.waitForClickable({ timeout: 50000 });
         await this.createEquipmentBtn.click();
-
+        await browser.pause(2000);
         await this.equipmentNameInput.waitForDisplayed({ timeout: 30000 });
         await this.equipmentNameInput.setValue(equipmentName);
-
+        await browser.pause(2000);
         await this.equipmentDescInput.waitForDisplayed({ timeout: 30000 });
         await this.equipmentDescInput.setValue(description);
-
+        await browser.pause(2000);
         await this.equipmentTemplateInput.click();
 
         await browser.pause(2000);
@@ -136,6 +137,102 @@ class EquipmentListviewPage {
         await equipment.waitForDisplayed({ timeout: 50000 });
         await equipment.waitForClickable({ timeout: 50000 });
         return equipment.click();
+    }
+    
+    async verifyDeletionOfEquipment() {
+        console.log("Verifying deletion of Equipment");
+ 
+        await utils.waitForBusyIndicatorToDisappear();
+ 
+        // wait for page ready
+        await browser.waitUntil(
+            async () => (await browser.execute(() => document.readyState)) === "complete",
+            { timeout: 20000 }
+        );
+ 
+        // 🔥 switch to correct iframe dynamically
+        await browser.waitUntil(async () => {
+        const frames = await $$("//iframe");
+ 
+        for (const frame of frames) {
+            try {
+                await browser.switchFrame(frame);
+ 
+                const search = await $("//input[@type='search']");
+                if (await search.isExisting()) {
+                    return true; // correct frame
+                }
+ 
+                await browser.switchFrame(null);
+            } catch (e) {
+                await browser.switchFrame(null);
+            }
+        }
+        return false;
+        }, { timeout: 30000 });
+ 
+        // 🔥 get visible search box only
+        const getVisibleSearch = async () => {
+            const elements = await $$("//input[@type='search']");
+            for (const el of elements) {
+                if (await el.isDisplayed()) {
+                    return el;
+                }
+            }
+            return null;
+        };
+ 
+        let searchBox;
+ 
+        await browser.waitUntil(async () => {
+            searchBox = await getVisibleSearch();
+            return searchBox !== null;
+        }, { timeout: 30000 });
+ 
+        if (!searchBox) {
+            throw new Error("❌ Visible search box not found");
+        }
+        console.log("Visible search box found, searching for deleted Equipment");
+        // 🔥 set value via JS (TS safe)
+        await browser.execute((el, value) => {
+            const input = el as unknown as HTMLInputElement;
+            input.value = value as string;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }, searchBox, equipmentDetailPage.displayID);
+        console.log(`Searched for Equipment with Display ID: ${equipmentDetailPage.displayID}`);
+        // 🔥 click Go (visible one)
+        const getVisibleGo = async () => {
+            const buttons = await $$("//bdi[text()='Go']");
+            for (const btn of buttons) {
+                if (await btn.isDisplayed()) {
+                    return btn;
+                }
+            }
+            return null;
+        };
+ 
+        let goBtn;
+ 
+        await browser.waitUntil(async () => {
+            goBtn = await getVisibleGo();
+            return goBtn !== null;
+        }, { timeout: 20000 });
+ 
+        if (!goBtn) {
+            throw new Error("❌ Go button not found");
+        }
+        console.log("Clicking Go button to search for Equipment");
+        await browser.execute(el => el.click(), goBtn);
+ 
+        await browser.pause(8000);
+        console.log("Checking if Equipment is present in the list after deletion");
+        const isEquipmentPresent = await $('//td[text()="No data"]').isExisting();
+ 
+        if (!isEquipmentPresent) {
+            throw new Error("Equipment still exists after deletion");
+        } else {
+            console.log("Equipment deletion verified successfully");
+        }
     }
     
 }

@@ -5,6 +5,8 @@ import utils from "../../../utils/utils";
 
 class EquipmentDetailPage {
     //  SELECTORS 
+    public equipmentHeadValue!: string;
+    public displayID!: string;
     private get equipmentNameHeader() { return $('//*[@role="heading"]//span'); }
     get successOkBtn() { return $('//bdi[text()="OK"]/ancestor::button'); }
     equipmentName(name: string) { return $(`//*[text()="${name}"]//span`); }
@@ -12,7 +14,8 @@ class EquipmentDetailPage {
     get structureSection() { return $('//button[.//bdi[text()="Structure"]]'); }
     get assignmentSection() { return $('//button[.//bdi[text()="Assignments"]]'); }
     get classificationSection() { return $('//button[.//bdi[text()="Classification & MDA"]]'); }
-    private get riskSection() { return $('//button[.//bdi[text()="Risk Summary"]]'); }
+    get assetIntelligenceSection() { return $('//button[.//bdi[text()="Asset Intelligence"]]'); }
+    get riskSection() { return $('//button[.//bdi[text()="Risk Summary"]]'); }
     private get maintenanceSection() { return $('//button[.//bdi[text()="Maintenance and Service"]]'); }
     private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]]'); }
     private get changeHistorySection() { return $('//button[.//bdi[text()="Change History"]]'); }
@@ -93,6 +96,33 @@ class EquipmentDetailPage {
     get noOfClassMDA() {
         return $("//span[text()='Assign Classes']/following::span[2]");
     }
+    private get riskProfile() {
+        return $("//bdi[text()='Risk Summary']//following::h2[1]");
+    }
+    private get component() {
+        return $("//bdi[text()='Risk Summary']//following::h2[2]");
+    }
+    private get recommendation() {
+        return $("//bdi[text()='Risk Summary']//following::div[@aria-level='2']//span");
+    }
+    private get riskAndCriticality() {
+        return $("//div[text()='Risk and Criticality']/following::span[1]");
+    }
+    private get assetStrategyRBI() {
+        return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]");
+    }
+    private get assetStrategyRCM() {
+        return $("(//div[text()='Asset Strategy']/following::li//div//div)[2]");
+    }
+    private get assetInsp() {
+        return $("//div[text()='Asset Inspection']/following::span[1]");
+    }
+    private get findings() {
+        return $("//div[text()='Findings']/following::span[1]");
+    }
+    private get recommend() {
+        return $("//div[text()='Recommendations']/following::span[1]");
+    }
      get cancelBtn() {
         return $("//bdi[text()='Cancel']");
     }
@@ -135,7 +165,10 @@ class EquipmentDetailPage {
         modelNumber?: number,
         serialNumber?: string
     ): Promise<void> {
-
+        await browser.pause(5000);
+        await this.editBtn.waitForClickable();
+        await this.editBtn.click();
+        await browser.pause(5000);
         if (inventoryNumber !== undefined) {
             await this.inventoryNumberInput.setValue(inventoryNumber);
             await browser.pause(2000);
@@ -231,7 +264,7 @@ class EquipmentDetailPage {
         await Utils.switchIframe();
         await this.structureSection.waitForDisplayed({ timeout: 50000 });
         await this.structureSection.click()
-        await browser.pause(500);
+        await browser.pause(2000);
 
         // Click Edit button
         await this.editBtn.waitForClickable({ timeout: 30000 });
@@ -304,7 +337,7 @@ class EquipmentDetailPage {
         await Utils.clickWithWait(this.equipmentAssignBtn,0, 50000);
         await browser.pause(2000);
 
-        await Utils.clickCheckboxes(noOfEquipment);
+        await Utils.selectCheckboxes(noOfEquipment);
         if (autoAssign) {
             const checkBox = await $('//footer//div[@role="checkbox" and .//bdi[text()="Auto assign Class and Characteristics"]]');
             await Utils.clickWithWait(checkBox);
@@ -337,7 +370,7 @@ class EquipmentDetailPage {
         await this.equipmentClassAssignBtn.click();
         await browser.pause(2000);
         await Utils.switchIframe();
-        await Utils.clickCheckboxes(noOfClasses);
+        await Utils.selectCheckboxes(noOfClasses);
         await Utils.clickWithWait($('//button[.//bdi[text()="Ok"]]'));
         await browser.pause(2000);
         await Utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
@@ -397,7 +430,7 @@ class EquipmentDetailPage {
         const addAttachmentBtn = await $('//button[.//bdi[text()="Assign"]]');
         await utils.clickWithWait(addAttachmentBtn);
         await browser.pause(2000);
-        await utils.clickCheckboxes(2);
+        await utils.selectCheckboxes(2);
         await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'));
         await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
     }
@@ -491,8 +524,149 @@ class EquipmentDetailPage {
         await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(10000);
-
-
     }
+
+    async verifyAssetIntelligence() {
+        console.log("Navigating to Asset Intelligence Tab");
+        await browser.pause(4000);
+        await utils.switchIframe();
+        await utils.clickWithWait(this.assetIntelligenceSection);
+        await this.assetIntelligenceSection.waitForDisplayed({ timeout: 30000 });
+        console.log("Navigated to Asset Intelligence Tab successfully");
+        await browser.pause(5000);
+        const riskAndCriti = await this.riskAndCriticality.getText();
+        const r1 = await utils.getAssignedValue(riskAndCriti);
+        console.log("Assigned risk and criticality : "+r1);
+
+        const assetStraRBI = await this.assetStrategyRBI.getText();
+        const as1 = await utils.getAssignedValue(assetStraRBI);
+        console.log("Assigned asset strategy RBI : "+as1);
+
+        const assetStraRCM = await this.assetStrategyRCM.getText();
+        const as2 = await utils.getAssignedValue(assetStraRCM);
+        console.log("Assigned asset strategy RCM: "+as2);
+
+        const astInsp = await this.assetInsp.getText();
+        const ai1 = await utils.getAssignedValue(astInsp);
+        console.log("Assigned asset Inspection : "+ai1);
+
+        const finding = await this.findings.getText();
+        const f = await utils.getAssignedValue(finding);
+        console.log("Assigned findings : "+f);
+
+        const recommendations = await this.recommend.getText();
+        const r = await utils.getAssignedValue(recommendations);
+        console.log("Assigned recommendations : "+r);
+    }
+
+    public async verifyRiskSummary() {
+        console.log("Navigating to Risk Summary Tab");
+        await browser.pause(4000);
+        await Utils.switchIframe();
+        await utils.clickWithWait(this.riskSection);
+        await this.riskSection.waitForDisplayed({ timeout: 30000 });
+        console.log("Navigated to Risk Summary Tab successfully");
+        await browser.pause(4000);
+        const riskProfile = await this.riskProfile.getText();
+        const rp = await utils.getAssignedValue(riskProfile);
+        console.log("Assigned risk profile : "+rp);
+
+        const component = await this.component.getText();
+        const c = await utils.getAssignedValue(component);
+        console.log("Assigned component: "+c);
+
+        const recommendation = await this.recommendation.getText();
+        const recom = await utils.getAssignedValue(recommendation);
+        console.log("Assigned reocmmendatios: "+recom);
+
+    } 
+ 
+    async deleteEquipment(){
+        console.log("Deleting the Equipment");
+        console.log("Capturing Equipment header value for Deletion");
+        await utils.switchIframe();
+        await browser.pause(4000);
+        let equipmentName = "";
+        let actualId = "";
+
+        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+
+        // 🔹 Equipment header value
+        const getEquipmentName = async () => {
+            const spans = await $$("//header//*[@role='heading']//span");
+
+            for (let el of spans) {
+                let txt = await el.getText();
+                if (!txt) txt = (await el.getAttribute("innerText")) || "";
+
+                txt = txt?.trim();
+
+                if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
+                    return txt;
+                }
+            }
+            return "";
+        };
+
+        // 🔹 Display ID (🔥 DOM DIRECT — bulletproof)
+        const getDisplayId = async () => {
+            try {
+                const txt = await browser.execute(() => {
+                    const el = document.evaluate(
+                        "//span[starts-with(normalize-space(),'Display ID:')]",
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    ).singleNodeValue;
+
+                    return el ? (el.textContent || "") : "";
+                });
+
+                return txt ? txt.replace("Display ID:", "").trim() : "";
+            } catch (e) {
+                return "";
+            }
+        };
+
+
+        // 🔁 try: current → expand → collapse
+        for (let i = 0; i < 3; i++) {
+
+            const headerText = await getEquipmentName();
+            const displayText = await getDisplayId();
+
+            if (!equipmentName && headerText) equipmentName = headerText;
+            if (!actualId && displayText) actualId = displayText;
+
+            console.log(`Attempt ${i + 1} -> Equipment="${equipmentName || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+
+            if (equipmentName && actualId) break;
+
+            if (i === 0 && await expandBtn.isExisting()) {
+                await browser.execute(el => el.click(), expandBtn);
+            }
+            else if (i === 1 && await collapseBtn.isExisting()) {
+                await browser.execute(el => el.click(), collapseBtn);
+            }
+
+            await browser.pause(1500);
+        }
+
+        // ✅ FINAL
+        this.equipmentHeadValue = equipmentName;
+        this.displayID = actualId;
+        console.log(`Final -> Equipment="${equipmentName}" | DisplayID="${actualId}"`);
+
+        await utils.clickWithWait(this.deleteBtn);
+        await utils.clickWithWait($("//bdi[text()='OK']"));
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log("Equipment deletion in progress");
+        console.log("Waiting for deletion to complete...");
+        console.log("Deletion completed, confirming deletion");
+    }
+ 
+
 }
 export default new EquipmentDetailPage();

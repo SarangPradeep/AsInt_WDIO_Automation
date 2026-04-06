@@ -40,7 +40,7 @@ class ConfigurationAppPage {
     async navigateToPicklist(): Promise<void> {
         await SapUtils.waitForBusyIndicatorToDisappear();
         await SapUtils.waitForSAPPopupAndClose();
-        await SapUtils.waitForFrameAndSwitchToIt(this.iFrame);
+        await SapUtils.switchToIframe(this.iFrame);
         await SapUtils.waitForBusyIndicatorToDisappear();
 
         await SapUtils.clickWithWait(this.picklistTile);

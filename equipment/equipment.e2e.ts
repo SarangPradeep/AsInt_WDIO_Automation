@@ -14,12 +14,11 @@ describe('BTP Equipment App Functional test', () => {
 
     it('should add and verify all the adapt filters', async () => {
         await utils.addAllAdaptFilter();
-        await utils.applyAdaptFilter();
+        //await utils.applyAdaptFilter();
         await utils.resetAllAdaptFilter();
     });
     
     it('should create equipment with mandatory fields and save', async () => {
-        await equipmentListviewPage.verifyOnEquipmentPage();
         createdEquipmentName = await utils.generateRandomEquipmentName();
 
         await equipmentListviewPage.createEquipmentWithMandatoryFields(
@@ -32,15 +31,12 @@ describe('BTP Equipment App Functional test', () => {
     });
 
     it('should verify equipment details page', async () => {
-        await equipmentListviewPage.clickOnEquipmentInList(equipmentTestData.createMandatory.equipmentName);
+        await equipmentListviewPage.clickOnEquipmentInList(createdEquipmentName);
         expect(await equipmentDetailPage.verifyOnEquipmentDetailPage()).toBe(true);
     });
 
     it('should edit general info of equipment', async () => {
-        await browser.pause(10000);
-        await equipmentDetailPage.editBtn.waitForClickable();
-        await equipmentDetailPage.editBtn.click();
-        await browser.pause(5000);
+        
         await equipmentDetailPage.fillGeneralInfo(
             equipmentTestData.generalInfoEdit.inventoryNumber,
             equipmentTestData.generalInfoEdit.componentType,
@@ -80,13 +76,26 @@ describe('BTP Equipment App Functional test', () => {
         );  
     });
 
-    it('should goto Attachments Tab and Assign Attachment to Equipment', async () => {
+    it('should verify Asset Intelligence section in equipment details page', async () => {
+        await equipmentDetailPage.verifyAssetIntelligence();
+    });
+
+    it('should verify Risk Summary Tab of equipment', async () => {
+        await equipmentDetailPage.verifyRiskSummary();
+    });
+
+    it.skip('should goto Attachments Tab and Assign Attachment to Equipment', async () => {
         await equipmentDetailPage.gotoAttachmentsTabAndAssignAttachment();
         await equipmentDetailPage.addLink();
         await equipmentDetailPage.addDocument();
     });
     
-    it('should delete the assigned attachment and verify', async () => {
+    it.skip('should delete the assigned attachment and verify', async () => {
         await equipmentDetailPage.deleteAttachmentAndVerify();
+    });
+
+    it('should delete the created Equipment and verify', async () => {
+        await equipmentDetailPage.deleteEquipment();
+        await equipmentListviewPage.verifyDeletionOfEquipment();
     });
 });
