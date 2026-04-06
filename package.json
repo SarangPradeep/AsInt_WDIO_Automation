@@ -26,6 +26,8 @@
     "report": "npm run report:generate && npm run report:open"
   },
   "dependencies": {
-    "edgedriver": "^6.3.0"
+    "edgedriver": "^6.3.0",
+    "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^3.11.174"
   }
 }

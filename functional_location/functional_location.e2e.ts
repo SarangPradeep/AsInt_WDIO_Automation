@@ -93,6 +93,10 @@ describe('Functional Location test', () => {
         await functionalLocationDetailView.verifyCML();
     });
 
+    it('should download and verify PDF document of functional location' , async () => {
+        await functionalLocationDetailView.downloadAndVerifyPDF();
+    });
+
     it('should delete the created functional location and verify', async () => {
         await functionalLocationDetailView.deleteFunctionalLocation();
         await functionalLocationListView.verifyDeletionOfFunctionalLocation();

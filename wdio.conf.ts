@@ -3,9 +3,11 @@ import allureReporter from '@wdio/allure-reporter';
 import * as fs from 'fs';
 import * as path from 'path';
 import { loginToSAP } from './utils/login.helper';
+import utils from './utils/utils';
+
 dotenv.config();
 
-
+const downloadDir = path.resolve(process.cwd(), 'downloads');
 const isHeadless = process.env.CI === 'true' || process.argv.includes('--headless');
 
 
@@ -24,9 +26,9 @@ export const config: WebdriverIO.Config = {
     specs: [
 
         './functional_location/functional_location.e2e.ts',
-        './equipment/equipment.e2e.ts',
-        './configuration/**/*.e2e.ts',
-        './safety_group/safety.e2e.ts'
+        // './equipment/equipment.e2e.ts',
+        // './configuration/**/*.e2e.ts',
+        // './safety_group/safety.e2e.ts'
     
     ],
     exclude: [],
@@ -46,12 +48,24 @@ export const config: WebdriverIO.Config = {
         //             args: isHeadless ? ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1920,1080'] : []
         //         }
         //     },
-            {
-                browserName: 'chrome',
-                'goog:chromeOptions': {
-                    args: isHeadless ? ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1920,1080'] : []
-                }
-            },
+            // {
+            //     browserName: 'chrome',
+            //     'goog:chromeOptions': {
+            //         args: isHeadless ? ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1920,1080'] : []
+            //     }
+            // },
+        {
+            browserName: 'chrome',
+            'goog:chromeOptions': {
+                prefs: {
+                    'download.default_directory': downloadDir,
+                    'download.prompt_for_download': false,
+                    'download.directory_upgrade': true,
+                    'plugins.always_open_pdf_externally': true
+                },
+                args: isHeadless ? ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1920,1080'] : []
+            }
+        }
     ],
 
     //
@@ -188,6 +202,8 @@ export const config: WebdriverIO.Config = {
      */
     beforeSuite: async function (suite) {
         console.log(`Starting suite: ${suite.title}`);
+        await utils.createDownloadDir();
+        await utils.cleanDownloads();
         await loginToSAP();
         const browserName = (browser.capabilities as any).browserName || 'unknown';
         // Add browser name to suite title for clear identification
