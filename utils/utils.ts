@@ -3,7 +3,10 @@ import * as console from 'console';
 import { utils } from 'mocha';
 import * as path from 'path';
 import type { ChainablePromiseElement } from 'webdriverio';
+import * as fs from 'fs';
+import * as pdf from 'pdf-parse';
 class Utils {
+    downloadDir = path.resolve(process.cwd(), 'downloads');
 
     private get equipmentIframe() {
         return $('iframe[data-help-id="application-equipment-manage"]');
@@ -795,6 +798,65 @@ class Utils {
         console.log("Closing Analytics Chart view");
         await this.clickWithWait(this.closeAnalyticChartBtn);
         await browser.pause(3000);
+    }
+
+    async createDownloadDir() {
+        if (!fs.existsSync(this.downloadDir)) {
+            fs.mkdirSync(this.downloadDir, { recursive: true });
+        }
+    }
+
+    async cleanDownloads() {
+        if (fs.existsSync(this.downloadDir)) {
+            fs.readdirSync(this.downloadDir).forEach(file => {
+                fs.unlinkSync(path.join(this.downloadDir, file));
+            });
+        }
+    }
+
+    async waitForDownload(extension: string = '.pdf'): Promise<string> {
+        await browser.waitUntil(() => {
+            const files = fs.readdirSync(this.downloadDir)
+                .filter(f => f.endsWith(extension) && !f.endsWith('.crdownload'));
+            return files.length > 0;
+        }, { timeout: 20000 });
+
+        const files = fs.readdirSync(this.downloadDir)
+            .filter(f => f.endsWith(extension));
+
+        const latest = files
+            .map(file => ({
+                name: file,
+                time: fs.statSync(path.join(this.downloadDir, file)).mtime.getTime()
+            }))
+            .sort((a, b) => b.time - a.time)[0];
+
+        return path.join(this.downloadDir, latest.name);
+    }
+
+    async extractTextFromPDF(filePath: string): Promise<string> {
+        const fs = await import('fs');
+        const pdfjsLib: any = await import('pdfjs-dist/legacy/build/pdf.js');
+
+        const data = new Uint8Array(fs.readFileSync(filePath));
+
+        const pdf = await pdfjsLib.getDocument({ data }).promise;
+
+        let textContent = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+
+            const pageText = content.items.map((item: any) => item.str).join(' ');
+            textContent += pageText + '\n';
+        }
+
+        return textContent
+        .replace(/\s+/g, ' ')          // normalize spaces
+        .replace(/\s*-\s*/g, '-')     // fix hyphen spacing
+        .replace(/([A-Z])\s+(?=[A-Z])/g, '$1') // 🔥 join broken uppercase words
+        .trim();
     }
 }
 

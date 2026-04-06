@@ -1,6 +1,7 @@
 import functionalLocationListView from './functional_location.listview.page';
 import {funcLocTestData} from '../../../test_data/btp_applications/functional_location.data';
 import utils from '../../../utils/utils';
+import * as path from 'path';
 /**
  * Page Object Model for the Fixed AIP Application within the SAP utils.
  */
@@ -379,6 +380,9 @@ class functionalLocationDetailView {
     }
     private get deleteBtn() {
         return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Delete']]");
+    }
+    private get downloadReport() {
+        return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Download Report']]");
     }
     private get attachSuccMsg() {
         return $("//span[text()='Success']");
@@ -1203,6 +1207,7 @@ class functionalLocationDetailView {
         await browser.pause(4000);
         const { funcLoc, actualId } = await this.getFinalIDs();
         this.funcLocHeadValue = funcLoc;
+        this.displayID = actualId;
         console.log(`Final → FuncLoc="${funcLoc}" | DisplayID="${actualId}"`);
         await utils.switchToIframe(this.funLocIframe);
         console.log("Waiting for UI5 view to finish rendering...");
@@ -1218,6 +1223,27 @@ class functionalLocationDetailView {
         console.log("Functional Location deletion in progress");
         console.log("Waiting for deletion to complete...");
         console.log("Deletion completed, confirming deletion");
+    }
+
+    async downloadAndVerifyPDF() {
+        console.log("Downloading PDF and verifying its content");
+        await utils.switchToIframe(this.funLocIframe);
+        const { funcLoc} = await this.getFinalIDs();
+        this.funcLocHeadValue = funcLoc;
+        await utils.clickWithWait(this.downloadReport);
+        console.log("Download initiated, waiting for file to be downloaded...");
+        const filePath = await utils.waitForDownload('.pdf');
+        console.log("File downloaded at:", filePath);
+        const fileName = path.basename(filePath);
+        console.log("Downloaded file name:", fileName);
+        expect(fileName).toContain(this.funcLocHeadValue); // replace dynamically
+        console.log("File name contains Functional Location header value");
+        const pdfContent = await utils.extractTextFromPDF(filePath);
+        console.log("Extracted PDF content:", pdfContent);
+        expect(pdfContent).toContain(this.funcLocHeadValue);
+        console.log("PDF content contains Functional Location header value");
+        expect(pdfContent).toContain('Table of Content');
+        console.log("PDF content verification completed successfully");
     }
 }
 export default new functionalLocationDetailView();
