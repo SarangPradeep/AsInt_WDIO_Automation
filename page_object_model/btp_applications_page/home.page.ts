@@ -1,6 +1,6 @@
 // Home.page.ts
 import { $, $$, browser } from '@wdio/globals';
-
+import utils from '../../utils/utils';
 class HomePage {
 
     /* =========================
@@ -13,8 +13,10 @@ class HomePage {
 
     // EQUIPMENT APP
     get homeIcon() { return $('//div[contains(@class, "sapUshellAppTitle")]//span[text()="Home"]');}
-    get equipmentTile() { return $('//*[contains(text(),"Equip")]'); }
-
+    
+    private get equipmentTile() { 
+        return $("//a[contains(@aria-label, 'Equipment')]"); 
+    }
     async verifyOnHomePage(): Promise<boolean> {
         try {
             await this.homeIcon.waitForDisplayed({ timeout: 30000 });
@@ -23,16 +25,22 @@ class HomePage {
             return false;
         }
     }
-    
-    async clickEquipmentTile(): Promise<void> {
-        await this.equipmentTile.waitForDisplayed({ timeout: 30000 });
-        await this.equipmentTile.scrollIntoView();
-        await this.equipmentTile.click();
+    async navigateToEquipment(): Promise<void> {
+            await utils.waitForBusyIndicatorToDisappear();
+            await utils.clickWithWait(this.equipmentTile);
+            await utils.waitForBusyIndicatorToDisappear();
     }
     
-    /* =========================
-       PAGE LOAD
-    ========================== */
+    async clickEquipmentTile(): Promise<void> {
+        await utils.waitForSAPPopupAndClose();
+        await this.navigateToEquipment();
+        await utils.waitForSAPPopupAndClose();
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.switchIframe();
+        await utils.waitForSAPPopupAndClose();
+        console.log("Navigated to Equipment List View");
+        await browser.pause(2000);
+    }                              
 
     async waitForHomePageToLoad(): Promise<void> {
     const firstTile = $(this.tileSelector);

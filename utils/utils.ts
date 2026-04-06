@@ -345,10 +345,34 @@ class Utils {
     }
 
     async waitForAnyUI5OptionActive() {
+        // wait until any visible listbox appears
         await browser.waitUntil(async () => {
-            const activeItems = await $$('li[role="option"].sapMLIBActive');
-            return await activeItems.length > 0;
-        }, { timeout: 15000, timeoutMsg: 'No active dropdown options found' });
+            const listboxes = await $$('//ul[@role="listbox"]');
+
+            for (const box of listboxes) {
+                if (await box.isDisplayed()) return true;
+            }
+            return false;
+        }, {
+            timeout: 15000,
+            timeoutMsg: 'UI5 dropdown did not open'
+        });
+
+        // now wait until options exist in the visible listbox
+        await browser.waitUntil(async () => {
+            const listboxes = await $$('//ul[@role="listbox"]');
+
+            for (const box of listboxes) {
+                if (await box.isDisplayed()) {
+                    const options = await box.$$('.//li[@role="option"]');
+                    if (await options.length > 0) return true;
+                }
+            }
+            return false;
+        }, {
+            timeout: 15000,
+            timeoutMsg: 'Dropdown opened but no options found'
+        });
     }
 
     async openDropdown(dropdownArrow: ReturnType<typeof $>) {
@@ -539,6 +563,10 @@ class Utils {
             throw new Error(`Reset failed: Filters still present: ${remainingFilters.join(', ')}`);
         }
         console.log('All filters successfully reset');
+    }
+    async generateRandomEquipmentName(): Promise<string> {
+        console.log(`AUTO-EQUIP-${Math.floor(Math.random() * 10000)}`);
+        return `${Math.floor(Math.random() * 10000000)}-EQUIP-AUTO`;
     }
 
     public async verifyFieldsInListView(): Promise<void> {
