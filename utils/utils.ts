@@ -209,7 +209,10 @@ class Utils {
             if (await popUpCloseBtn.waitForDisplayed({ timeout: timeoutInSeconds * 1000 })) {
                 await popUpCloseBtn.click();
             }
-        } catch {}
+        } catch {
+            console.log("No SAP popup appeared within timeout");
+            console.log("Continuing without closing popup");
+        }
     }
 
     async waitAndSelect(element: any) {
