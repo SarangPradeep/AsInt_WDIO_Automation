@@ -2,10 +2,6 @@ name: Run WDIO Tests
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   schedule:
     - cron: '30 22 * * 0-4'
 
