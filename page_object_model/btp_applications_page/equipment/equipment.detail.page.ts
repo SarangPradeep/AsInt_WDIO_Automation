@@ -1,6 +1,3 @@
-import equipmentListviewPage from "page_object_model/btp_applications_page/equipment/equipment.listview.page";
-import Utils from "../../../utils/utils";
-import { ok } from "node:assert";
 import utils from "../../../utils/utils";
 
 class EquipmentDetailPage {
@@ -26,6 +23,9 @@ class EquipmentDetailPage {
     get editBtn() { return $('//button[contains(@class,"sapMBtn")][.//bdi[text()="Edit"]]'); }
     get inventoryNumberInput() {
         return $('//bdi[text()="Inventory Number"]/following::input[1]');
+    }
+    private get equipmentIframe() {
+        return $('iframe[data-help-id="application-equipment-manage"]');
     }
     get componentTypeDropdown() {
         return $('//bdi[text()="Component Type"]/following::input[1]');
@@ -261,7 +261,7 @@ class EquipmentDetailPage {
         // Headless-safe click for Structure tab (normal click first, JS click fallback)
         //await this.waitForBlockLayerToDisappear();
         await browser.pause(4000);
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await this.structureSection.waitForDisplayed({ timeout: 50000 });
         await this.structureSection.click()
         await browser.pause(2000);
@@ -275,7 +275,7 @@ class EquipmentDetailPage {
         await this.superordinateEquipmentInput.waitForClickable({ timeout: 30000 });
         await this.superordinateEquipmentInput.click();
         await browser.pause(8000);
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         const subordinateResultCell = await $(`(//tr[@role="row"])[3]`);
         await subordinateResultCell.waitForDisplayed({ timeout: 20000 });
         await subordinateResultCell.click();
@@ -295,13 +295,13 @@ class EquipmentDetailPage {
 
         // Iterate through each component equipment value and assign one by one
         for (let i = 1; i <= 2; i++) {
-            await Utils.switchIframe();
+            await utils.switchToIframe(this.equipmentIframe);
             // await this.componentInfoAssignBtn.waitForClickable({ timeout: 30000 });
             // await this.componentInfoAssignBtn.click();
-            await Utils.clickWithWait(this.componentInfoAssignBtn, 0, 50000);
+            await utils.clickWithWait(this.componentInfoAssignBtn, 0, 50000);
             await browser.pause(2000);
 
-            await Utils.switchIframe();
+            await utils.switchToIframe(this.equipmentIframe);
             const equipment = await $('//li[contains(.,"Equipment")]');
             await equipment.waitForDisplayed({ timeout: 5000 })
             await equipment.click()
@@ -329,23 +329,23 @@ class EquipmentDetailPage {
 
     async assignEquipmentTemplate(noOfEquipment: number, autoAssign: boolean): Promise<void> {
         await browser.pause(4000);
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await this.assignmentSection.waitForDisplayed({ timeout: 50000 });
         await this.assignmentSection.click();
 
-        await Utils.switchIframe();
-        await Utils.clickWithWait(this.equipmentAssignBtn,0, 50000);
+        await utils.switchToIframe(this.equipmentIframe);
+        await utils.clickWithWait(this.equipmentAssignBtn,0, 50000);
         await browser.pause(2000);
 
-        await Utils.selectCheckboxes(noOfEquipment);
+        await utils.selectCheckboxes(noOfEquipment);
         if (autoAssign) {
             const checkBox = await $('//footer//div[@role="checkbox" and .//bdi[text()="Auto assign Class and Characteristics"]]');
-            await Utils.clickWithWait(checkBox);
+            await utils.clickWithWait(checkBox);
         }
-        await Utils.switchIframe(); 
-        await Utils.clickWithWait($('//button[.//bdi[text()="Ok"]]'));
+        await utils.switchToIframe(this.equipmentIframe); 
+        await utils.clickWithWait($('//button[.//bdi[text()="Ok"]]'));
         await browser.pause(2000);
-        await Utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
 
         await this.equipmentAssignBtn.waitForClickable({ timeout: 30000 });
     }
@@ -353,7 +353,7 @@ class EquipmentDetailPage {
     async assignEquipmentClass(noOfClasses: number, autoAssign: boolean): Promise<void> {
         
         const classes = await this.groups.getText();
-        await Utils.getAssignedValue(classes);
+        await utils.getAssignedValue(classes);
         console.log(`Already assigned classes: ${classes}`);
 
         if (autoAssign) {
@@ -361,39 +361,39 @@ class EquipmentDetailPage {
             return;
         }
         await browser.pause(4000);
-        await Utils.switchIframe();
-        await Utils.clickWithWait(this.assignmentSection);
+        await utils.switchToIframe(this.equipmentIframe);
+        await utils.clickWithWait(this.assignmentSection);
         await browser.pause(2000);
 
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await this.equipmentClassAssignBtn.waitForClickable({ timeout: 30000 });
         await this.equipmentClassAssignBtn.click();
         await browser.pause(2000);
-        await Utils.switchIframe();
-        await Utils.selectCheckboxes(noOfClasses);
-        await Utils.clickWithWait($('//button[.//bdi[text()="Ok"]]'));
+        await utils.switchToIframe(this.equipmentIframe);
+        await utils.selectCheckboxes(noOfClasses);
+        await utils.clickWithWait($('//button[.//bdi[text()="Ok"]]'));
         await browser.pause(2000);
-        await Utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
     }
 
     async assignCharacteristics(noOfChar: number): Promise<void> {
         let k=0;
         await browser.pause(1000);
-        await utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await this.classificationSection.waitForDisplayed({ timeout: 50000 });
         await this.classificationSection.click();
         const char = await this.noOfCharMDA.getText();
         await utils.getAssignedValue(char);
         console.log("Already assigned charactertics : "+char);
         await browser.pause(1000);
-        await utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await this.classificationSection.waitForDisplayed({ timeout: 50000 });
         await this.classificationSection.click();
-        await utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await this.asgnChrMDA.waitForClickable({ timeout: 30000 });
         await this.asgnChrMDA.click();
         await browser.pause(1000);
-        await utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         const availableChar = await this.noOfClassMDA.getText();
         const availableCharCount = await utils.getAssignedValue(availableChar);
         console.log("Available characteritics:"+ availableCharCount);
@@ -422,11 +422,11 @@ class EquipmentDetailPage {
     }
     async gotoAttachmentsTabAndAssignAttachment() {
         await browser.pause(4000);
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
         await this.attachmentsSection.click();
         // Click on "Add Attachment" button
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         const addAttachmentBtn = await $('//button[.//bdi[text()="Assign"]]');
         await utils.clickWithWait(addAttachmentBtn);
         await browser.pause(2000);
@@ -451,7 +451,7 @@ class EquipmentDetailPage {
         const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
         await utils.clickWithWait(addLinkBtn);
         await browser.pause(2000);
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         const link = await $('//li[contains(.,"Add Link")]');
         await utils.clickWithWait(link);
         await browser.pause(2000);
@@ -506,7 +506,7 @@ class EquipmentDetailPage {
         const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
         await utils.clickWithWait(addLinkBtn);
         await browser.pause(2000);
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         const documentOption = await $('//li[contains(.,"Add Document")]');
         await utils.clickWithWait(documentOption);
         await browser.pause(2000);
@@ -529,7 +529,7 @@ class EquipmentDetailPage {
     async verifyAssetIntelligence() {
         console.log("Navigating to Asset Intelligence Tab");
         await browser.pause(4000);
-        await utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await utils.clickWithWait(this.assetIntelligenceSection);
         await this.assetIntelligenceSection.waitForDisplayed({ timeout: 30000 });
         console.log("Navigated to Asset Intelligence Tab successfully");
@@ -562,7 +562,7 @@ class EquipmentDetailPage {
     public async verifyRiskSummary() {
         console.log("Navigating to Risk Summary Tab");
         await browser.pause(4000);
-        await Utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await utils.clickWithWait(this.riskSection);
         await this.riskSection.waitForDisplayed({ timeout: 30000 });
         console.log("Navigated to Risk Summary Tab successfully");
@@ -581,92 +581,224 @@ class EquipmentDetailPage {
 
     } 
  
+    // async deleteEquipment(){
+    //     console.log("Deleting the Equipment");
+    //     console.log("Capturing Equipment header value for Deletion");
+    //     await utils.switchToIframe(this.equipmentIframe);
+    //     await browser.pause(4000);
+    //     const { funcLoc, actualId } = await this.getFinalIDs();
+    //     this.equipmentHeadValue = funcLoc;
+    //     this.displayID = actualId;
+        
+        
+        
+    //     let equipmentName = "";
+    //     let actualId = "";
+
+    //     const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+    //     const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+
+    //     // 🔹 Equipment header value
+    //     const getEquipmentName = async () => {
+    //         const spans = await $$("//header//*[@role='heading']//span");
+
+    //         for (let el of spans) {
+    //             let txt = await el.getText();
+    //             if (!txt) txt = (await el.getAttribute("innerText")) || "";
+
+    //             txt = txt?.trim();
+
+    //             if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
+    //                 return txt;
+    //             }
+    //         }
+    //         return "";
+    //     };
+
+    //     // 🔹 Display ID (🔥 DOM DIRECT — bulletproof)
+    //     const getDisplayId = async () => {
+    //         try {
+    //             const txt = await browser.execute(() => {
+    //                 const el = document.evaluate(
+    //                     "//bdi[text()='Display ID: ']/ancestor::span[2]/following-sibling::span",
+    //                     document,
+    //                     null,
+    //                     XPathResult.FIRST_ORDERED_NODE_TYPE,
+    //                     null
+    //                 ).singleNodeValue;
+
+    //                 return el ? (el.textContent || "") : "";
+    //             });
+
+    //             return txt ? txt.replace("Display ID:", "").trim() : "";
+    //         } catch (e) {
+    //             return "";
+    //         }
+    //     };
+
+
+    //     // 🔁 try: current → expand → collapse
+    //     for (let i = 0; i < 3; i++) {
+
+    //         const headerText = await getEquipmentName();
+    //         const displayText = await getDisplayId();
+
+    //         if (!equipmentName && headerText) equipmentName = headerText;
+    //         if (!actualId && displayText) actualId = displayText;
+
+    //         console.log(`Attempt ${i + 1} -> Equipment="${equipmentName || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+
+    //         if (equipmentName && actualId) break;
+
+    //         if (i === 0 && await expandBtn.isExisting()) {
+    //             await browser.execute(el => el.click(), expandBtn);
+    //         }
+    //         else if (i === 1 && await collapseBtn.isExisting()) {
+    //             await browser.execute(el => el.click(), collapseBtn);
+    //         }
+
+    //         await browser.pause(1500);
+    //     }
+    //     this.equipmentHeadValue = equipmentName;
+    //     this.displayID = actualId;
+    //     console.log(`Final -> Equipment="${equipmentName}" | DisplayID="${actualId}"`);
+
+    //     await utils.clickWithWait(this.deleteBtn);
+    //     await utils.clickWithWait($("//bdi[text()='OK']"));
+    //     await utils.waitForBusyIndicatorToDisappear();
+    //     console.log("Equipment deletion in progress");
+    //     console.log("Waiting for deletion to complete...");
+    //     console.log("Deletion completed, confirming deletion");
+    // }
+
     async deleteEquipment(){
-        console.log("Deleting the Equipment");
-        console.log("Capturing Equipment header value for Deletion");
-        await utils.switchIframe();
-        await browser.pause(4000);
-        let equipmentName = "";
-        let actualId = "";
+    console.log("Deleting the Equipment");
+    console.log("Capturing Equipment header value for Deletion");
 
-        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+    await utils.switchToIframe(this.equipmentIframe);
+    await browser.pause(4000);
 
-        // 🔹 Equipment header value
-        const getEquipmentName = async () => {
-            const spans = await $$("//header//*[@role='heading']//span");
+    const { equipmentName, actualId } = await this.getEquipmentFinalIDs();
 
-            for (let el of spans) {
+    this.equipmentHeadValue = equipmentName;
+    this.displayID = actualId;
+
+    console.log(`Final → Equipment="${equipmentName}" | DisplayID="${actualId}"`);
+
+    await utils.switchToIframe(this.equipmentIframe);
+    await utils.waitForBusyIndicatorToDisappear();
+    await utils.waitForObjectPageHeader();
+    await browser.pause(5000);
+
+    await this.deleteBtn.waitForExist({ timeout: 30000 });
+    await this.deleteBtn.waitForDisplayed({ timeout: 30000 });
+
+    console.log("Clicking Delete...");
+    await utils.clickWithWait(this.deleteBtn,3000);
+    await utils.clickWithWait($("//bdi[text()='OK']"),3000);
+
+    await utils.waitForBusyIndicatorToDisappear();
+
+    console.log("Equipment deletion in progress");
+    console.log("Waiting for deletion to complete...");
+    console.log("Deletion completed, confirming deletion");
+    }
+    
+    public async getEquipmentFinalIDs() {
+    let equipmentName = "";
+    let actualId = "";
+
+    const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+    const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+
+    for (let i = 0; i < 3; i++) {
+
+        if (i === 0 && await expandBtn.isDisplayed()) {
+            await expandBtn.waitForClickable({ timeout: 5000 });
+            await expandBtn.click();
+        } 
+        else if (i === 1 && await collapseBtn.isDisplayed()) {
+            await collapseBtn.waitForClickable({ timeout: 5000 });
+            await collapseBtn.click();
+        }
+
+        await browser.pause(500);
+
+        const headerText = await this.getEquipmentHeaderId();
+        const displayText = await this.getEquipmentDisplayId();
+
+        if (!equipmentName && headerText) equipmentName = headerText;
+        if (!actualId && displayText) actualId = displayText;
+
+        console.log(`Attempt ${i + 1} → Equipment="${equipmentName || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+
+        if (equipmentName && actualId) break;
+    }
+
+    return { equipmentName, actualId };
+    }
+    public async getEquipmentDisplayId() {
+    try {
+        const txt = await browser.execute(() => {
+            const el = document.evaluate(
+                "//bdi[text()='Display ID: ']/ancestor::span[2]/following-sibling::span",
+                document,
+                null,
+                XPathResult.FIRST_ORDERED_NODE_TYPE,
+                null
+            ).singleNodeValue;
+
+            return el ? (el.textContent || "") : "";
+        });
+
+        return txt ? txt.replace("Display ID:", "").trim() : "";
+    } catch (e) {
+        return "";
+    }
+    }
+    public async getEquipmentHeaderId() {
+    const xpath = "//header//*[@role='heading']//span";
+    let found = false;
+
+    try {
+        await browser.waitUntil(async () => {
+            const els = await $$(xpath);
+            if (!els.length) return false;
+
+            for (let el of els) {
                 let txt = await el.getText();
-                if (!txt) txt = (await el.getAttribute("innerText")) || "";
-
+                if (!txt) txt = await el.getAttribute("innerText");
                 txt = txt?.trim();
 
                 if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
-                    return txt;
+                    found = true;
+                    return true;
                 }
             }
-            return "";
-        };
+            return false;
+        }, {
+            timeout: 4000,
+            interval: 500
+        });
 
-        // 🔹 Display ID (🔥 DOM DIRECT — bulletproof)
-        const getDisplayId = async () => {
-            try {
-                const txt = await browser.execute(() => {
-                    const el = document.evaluate(
-                        "//span[starts-with(normalize-space(),'Display ID:')]",
-                        document,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null
-                    ).singleNodeValue;
-
-                    return el ? (el.textContent || "") : "";
-                });
-
-                return txt ? txt.replace("Display ID:", "").trim() : "";
-            } catch (e) {
-                return "";
-            }
-        };
-
-
-        // 🔁 try: current → expand → collapse
-        for (let i = 0; i < 3; i++) {
-
-            const headerText = await getEquipmentName();
-            const displayText = await getDisplayId();
-
-            if (!equipmentName && headerText) equipmentName = headerText;
-            if (!actualId && displayText) actualId = displayText;
-
-            console.log(`Attempt ${i + 1} -> Equipment="${equipmentName || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
-
-            if (equipmentName && actualId) break;
-
-            if (i === 0 && await expandBtn.isExisting()) {
-                await browser.execute(el => el.click(), expandBtn);
-            }
-            else if (i === 1 && await collapseBtn.isExisting()) {
-                await browser.execute(el => el.click(), collapseBtn);
-            }
-
-            await browser.pause(1500);
-        }
-
-        // ✅ FINAL
-        this.equipmentHeadValue = equipmentName;
-        this.displayID = actualId;
-        console.log(`Final -> Equipment="${equipmentName}" | DisplayID="${actualId}"`);
-
-        await utils.clickWithWait(this.deleteBtn);
-        await utils.clickWithWait($("//bdi[text()='OK']"));
-        await utils.waitForBusyIndicatorToDisappear();
-        console.log("Equipment deletion in progress");
-        console.log("Waiting for deletion to complete...");
-        console.log("Deletion completed, confirming deletion");
+    } catch (e) {
+        console.log("Equipment header not visible in this attempt");
     }
- 
+
+    if (!found) return "";
+
+    const spans = await $$(xpath);
+    for (let el of spans) {
+        let txt = await el.getText();
+        if (!txt) txt = await el.getAttribute("innerText");
+        txt = txt?.trim();
+
+        if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
+            return txt;
+        }
+    }
+    return "";
+    }
 
 }
 export default new EquipmentDetailPage();
