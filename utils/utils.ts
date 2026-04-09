@@ -59,19 +59,6 @@ class Utils {
         console.log("Object Page header ready");
     }
 
-    // async switchIframe(): Promise<void> {
-    //     console.log("--------------------------------------------- Before Switch ---------------------------------------------");
-    //     console.log("URL:", await browser.getUrl());
-    //     await browser.switchFrame(null);
-    //     await this.equipmentIframe.waitForExist({ timeout: 20000 });
-    //     await browser.switchFrame(this.equipmentIframe);
-    //     console.log("--------------------------------------------- After Switch ---------------------------------------------");
-    //     const internalTitle = await browser.execute(() => document.title);
-    //     console.log("Internal Document Title:", internalTitle);
-    //     const btnCount = await $$('button').length;
-    //     console.log("Buttons found in current context:", btnCount);
-    // }
-
     async assertTextEquals(element: any, expectedText: string): Promise<void> {
         const el = await element;  
         await el.waitForDisplayed({ timeout: 10000 });
