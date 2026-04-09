@@ -48,12 +48,6 @@ export const config: WebdriverIO.Config = {
         //             args: isHeadless ? ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1920,1080'] : []
         //         }
         //     },
-            // {
-            //     browserName: 'chrome',
-            //     'goog:chromeOptions': {
-            //         args: isHeadless ? ['--headless', '--disable-gpu', '--no-sandbox', '--window-size=1920,1080'] : []
-            //     }
-            // },
         {
             browserName: 'chrome',
             'goog:chromeOptions': {
