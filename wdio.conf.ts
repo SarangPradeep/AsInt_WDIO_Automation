@@ -72,6 +72,7 @@ export const config: WebdriverIO.Config = {
     // ===================
     // Test Configurations
     // ===================
+    outputDir: './logs',
     logLevel: 'info',
     logLevels: {
         webdriver: 'silent',
