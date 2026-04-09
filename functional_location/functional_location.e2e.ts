@@ -3,7 +3,6 @@ import functionalLocationDetailView from '../page_object_model/btp_applications_
 import {funcLocTestData} from '../test_data/btp_applications/functional_location.data';
 import utils from '../utils/utils';
 describe('BTP | Functional Location test', () => {
-    // --- Test ---
 
     it('should navigate to functional location list view', async () => {
         await functionalLocationListView.navigateFunctionalLocationListView();
