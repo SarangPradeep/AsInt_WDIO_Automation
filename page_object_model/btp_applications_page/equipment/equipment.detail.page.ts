@@ -580,224 +580,136 @@ class EquipmentDetailPage {
         console.log("Assigned reocmmendatios: "+recom);
 
     } 
- 
-    // async deleteEquipment(){
-    //     console.log("Deleting the Equipment");
-    //     console.log("Capturing Equipment header value for Deletion");
-    //     await utils.switchToIframe(this.equipmentIframe);
-    //     await browser.pause(4000);
-    //     const { funcLoc, actualId } = await this.getFinalIDs();
-    //     this.equipmentHeadValue = funcLoc;
-    //     this.displayID = actualId;
-        
-        
-        
-    //     let equipmentName = "";
-    //     let actualId = "";
-
-    //     const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-    //     const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
-
-    //     // 🔹 Equipment header value
-    //     const getEquipmentName = async () => {
-    //         const spans = await $$("//header//*[@role='heading']//span");
-
-    //         for (let el of spans) {
-    //             let txt = await el.getText();
-    //             if (!txt) txt = (await el.getAttribute("innerText")) || "";
-
-    //             txt = txt?.trim();
-
-    //             if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
-    //                 return txt;
-    //             }
-    //         }
-    //         return "";
-    //     };
-
-    //     // 🔹 Display ID (🔥 DOM DIRECT — bulletproof)
-    //     const getDisplayId = async () => {
-    //         try {
-    //             const txt = await browser.execute(() => {
-    //                 const el = document.evaluate(
-    //                     "//bdi[text()='Display ID: ']/ancestor::span[2]/following-sibling::span",
-    //                     document,
-    //                     null,
-    //                     XPathResult.FIRST_ORDERED_NODE_TYPE,
-    //                     null
-    //                 ).singleNodeValue;
-
-    //                 return el ? (el.textContent || "") : "";
-    //             });
-
-    //             return txt ? txt.replace("Display ID:", "").trim() : "";
-    //         } catch (e) {
-    //             return "";
-    //         }
-    //     };
-
-
-    //     // 🔁 try: current → expand → collapse
-    //     for (let i = 0; i < 3; i++) {
-
-    //         const headerText = await getEquipmentName();
-    //         const displayText = await getDisplayId();
-
-    //         if (!equipmentName && headerText) equipmentName = headerText;
-    //         if (!actualId && displayText) actualId = displayText;
-
-    //         console.log(`Attempt ${i + 1} -> Equipment="${equipmentName || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
-
-    //         if (equipmentName && actualId) break;
-
-    //         if (i === 0 && await expandBtn.isExisting()) {
-    //             await browser.execute(el => el.click(), expandBtn);
-    //         }
-    //         else if (i === 1 && await collapseBtn.isExisting()) {
-    //             await browser.execute(el => el.click(), collapseBtn);
-    //         }
-
-    //         await browser.pause(1500);
-    //     }
-    //     this.equipmentHeadValue = equipmentName;
-    //     this.displayID = actualId;
-    //     console.log(`Final -> Equipment="${equipmentName}" | DisplayID="${actualId}"`);
-
-    //     await utils.clickWithWait(this.deleteBtn);
-    //     await utils.clickWithWait($("//bdi[text()='OK']"));
-    //     await utils.waitForBusyIndicatorToDisappear();
-    //     console.log("Equipment deletion in progress");
-    //     console.log("Waiting for deletion to complete...");
-    //     console.log("Deletion completed, confirming deletion");
-    // }
 
     async deleteEquipment(){
-    console.log("Deleting the Equipment");
-    console.log("Capturing Equipment header value for Deletion");
+        console.log("Deleting the Equipment");
+        console.log("Capturing Equipment header value for Deletion");
 
-    await utils.switchToIframe(this.equipmentIframe);
-    await browser.pause(4000);
+        await utils.switchToIframe(this.equipmentIframe);
+        await browser.pause(4000);
 
-    const { equipmentName, actualId } = await this.getEquipmentFinalIDs();
+        const { equipmentName, actualId } = await this.getEquipmentFinalIDs();
 
-    this.equipmentHeadValue = equipmentName;
-    this.displayID = actualId;
+        this.equipmentHeadValue = equipmentName;
+        this.displayID = actualId;
 
-    console.log(`Final → Equipment="${equipmentName}" | DisplayID="${actualId}"`);
+        console.log(`Final → Equipment="${equipmentName}" | DisplayID="${actualId}"`);
 
-    await utils.switchToIframe(this.equipmentIframe);
-    await utils.waitForBusyIndicatorToDisappear();
-    await utils.waitForObjectPageHeader();
-    await browser.pause(5000);
+        await utils.switchToIframe(this.equipmentIframe);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.waitForObjectPageHeader();
+        await browser.pause(5000);
 
-    await this.deleteBtn.waitForExist({ timeout: 30000 });
-    await this.deleteBtn.waitForDisplayed({ timeout: 30000 });
+        await this.deleteBtn.waitForExist({ timeout: 30000 });
+        await this.deleteBtn.waitForDisplayed({ timeout: 30000 });
 
-    console.log("Clicking Delete...");
-    await utils.clickWithWait(this.deleteBtn,3000);
-    await utils.clickWithWait($("//bdi[text()='OK']"),3000);
+        console.log("Clicking Delete...");
+        await utils.clickWithWait(this.deleteBtn,3000);
+        await utils.clickWithWait($("//bdi[text()='OK']"),3000);
 
-    await utils.waitForBusyIndicatorToDisappear();
+        await utils.waitForBusyIndicatorToDisappear();
 
-    console.log("Equipment deletion in progress");
-    console.log("Waiting for deletion to complete...");
-    console.log("Deletion completed, confirming deletion");
+        console.log("Equipment deletion in progress");
+        console.log("Waiting for deletion to complete...");
+        console.log("Deletion completed, confirming deletion");
     }
     
     public async getEquipmentFinalIDs() {
-    let equipmentName = "";
-    let actualId = "";
+        let equipmentName = "";
+        let actualId = "";
 
-    const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-    const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
 
-    for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i++) {
 
-        if (i === 0 && await expandBtn.isDisplayed()) {
-            await expandBtn.waitForClickable({ timeout: 5000 });
-            await expandBtn.click();
-        } 
-        else if (i === 1 && await collapseBtn.isDisplayed()) {
-            await collapseBtn.waitForClickable({ timeout: 5000 });
-            await collapseBtn.click();
-        }
-
-        await browser.pause(500);
-
-        const headerText = await this.getEquipmentHeaderId();
-        const displayText = await this.getEquipmentDisplayId();
-
-        if (!equipmentName && headerText) equipmentName = headerText;
-        if (!actualId && displayText) actualId = displayText;
-
-        console.log(`Attempt ${i + 1} → Equipment="${equipmentName || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
-
-        if (equipmentName && actualId) break;
-    }
-
-    return { equipmentName, actualId };
-    }
-    public async getEquipmentDisplayId() {
-    try {
-        const txt = await browser.execute(() => {
-            const el = document.evaluate(
-                "//bdi[text()='Display ID: ']/ancestor::span[2]/following-sibling::span",
-                document,
-                null,
-                XPathResult.FIRST_ORDERED_NODE_TYPE,
-                null
-            ).singleNodeValue;
-
-            return el ? (el.textContent || "") : "";
-        });
-
-        return txt ? txt.replace("Display ID:", "").trim() : "";
-    } catch (e) {
-        return "";
-    }
-    }
-    public async getEquipmentHeaderId() {
-    const xpath = "//header//*[@role='heading']//span";
-    let found = false;
-
-    try {
-        await browser.waitUntil(async () => {
-            const els = await $$(xpath);
-            if (!els.length) return false;
-
-            for (let el of els) {
-                let txt = await el.getText();
-                if (!txt) txt = await el.getAttribute("innerText");
-                txt = txt?.trim();
-
-                if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
-                    found = true;
-                    return true;
-                }
+            if (i === 0 && await expandBtn.isDisplayed()) {
+                await expandBtn.waitForClickable({ timeout: 5000 });
+                await expandBtn.click();
+            } 
+            else if (i === 1 && await collapseBtn.isDisplayed()) {
+                await collapseBtn.waitForClickable({ timeout: 5000 });
+                await collapseBtn.click();
             }
-            return false;
-        }, {
-            timeout: 4000,
-            interval: 500
-        });
 
-    } catch (e) {
-        console.log("Equipment header not visible in this attempt");
+            await browser.pause(500);
+
+            const headerText = await this.getEquipmentHeaderId();
+            const displayText = await this.getEquipmentDisplayId();
+
+            if (!equipmentName && headerText) equipmentName = headerText;
+            if (!actualId && displayText) actualId = displayText;
+
+            console.log(`Attempt ${i + 1} → Equipment="${equipmentName || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+
+            if (equipmentName && actualId) break;
+        }
+
+        return { equipmentName, actualId };
     }
 
-    if (!found) return "";
+    public async getEquipmentDisplayId() {
+        try {
+            const txt = await browser.execute(() => {
+                const el = document.evaluate(
+                    "//bdi[text()='Display ID: ']/ancestor::span[2]/following-sibling::span",
+                    document,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null
+                ).singleNodeValue;
 
-    const spans = await $$(xpath);
-    for (let el of spans) {
-        let txt = await el.getText();
-        if (!txt) txt = await el.getAttribute("innerText");
-        txt = txt?.trim();
+                return el ? (el.textContent || "") : "";
+            });
 
-        if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
-            return txt;
+            return txt ? txt.replace("Display ID:", "").trim() : "";
+        } catch (e) {
+            return "";
         }
     }
-    return "";
+
+    public async getEquipmentHeaderId() {
+        const xpath = "//header//*[@role='heading']//span";
+        let found = false;
+
+        try {
+            await browser.waitUntil(async () => {
+                const els = await $$(xpath);
+                if (!els.length) return false;
+
+                for (let el of els) {
+                    let txt = await el.getText();
+                    if (!txt) txt = await el.getAttribute("innerText");
+                    txt = txt?.trim();
+
+                    if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
+                        found = true;
+                        return true;
+                    }
+                }
+                return false;
+            }, {
+                timeout: 4000,
+                interval: 500
+            });
+
+        } catch (e) {
+            console.log("Equipment header not visible in this attempt");
+        }
+
+        if (!found) return "";
+
+        const spans = await $$(xpath);
+        for (let el of spans) {
+            let txt = await el.getText();
+            if (!txt) txt = await el.getAttribute("innerText");
+            txt = txt?.trim();
+
+            if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
+                return txt;
+            }
+        }
+        return "";
     }
 
 }
