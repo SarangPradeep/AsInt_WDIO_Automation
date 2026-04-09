@@ -36,42 +36,36 @@ jobs:
             xdg-utils \
             xvfb
 
-      - name: Run WDIO tests
+      - name: Run WDIO tests in parallel (4 workers)
         env:
           CI: true
-        run: npx wdio run wdio.conf.ts --maxInstances 4 || true
+        run: npx wdio run wdio.conf.ts --maxInstances 4
+        continue-on-error: true
 
       - name: Generate Allure Report
-        if: always()
+        if: always()              # run even if tests fail
         run: |
           npm install -g allure-commandline
           allure generate ./allure-results --clean -o ./allure-report
 
       - name: Upload Allure Report
-        if: always()
+        if: always()              # run even if tests fail
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report
-          
-      - name: Upload WDIO logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: wdio-logs
-          path: logs
 
-      - name: Deploy Allure Report & Add Summary Link
+      - name: Deploy Allure Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./allure-report
+          force_orphan: true
+
+      - name: Add report link to workflow summary
         if: always()
         run: |
-          npm install -g gh-pages
-
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
-          gh-pages -d allure-report -b gh-pages -f
-
           echo "## 🧪 Allure Report" >> $GITHUB_STEP_SUMMARY
           echo "Open report: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_STEP_SUMMARY
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
