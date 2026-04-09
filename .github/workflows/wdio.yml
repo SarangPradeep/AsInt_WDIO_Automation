@@ -58,3 +58,18 @@ jobs:
         with:
           name: allure-report
           path: allure-report
+
+      - name: Deploy Allure Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./allure-report
+          force_orphan: true
+
+      - name: Add report link to workflow summary
+        if: always()
+        run: |
+          echo "## 🧪 Allure Report" >> $GITHUB_STEP_SUMMARY
+          echo "Open report: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_STEP_SUMMARY
