@@ -36,15 +36,10 @@ jobs:
             xdg-utils \
             xvfb
 
-      - name: Run WDIO tests + prepare logs
+      - name: Run WDIO tests
         env:
           CI: true
-        run: |
-          mkdir -p logs
-          npx wdio run wdio.conf.ts --maxInstances 4 2>&1 | tee logs/console.log || true
-          
-          echo "Splitting logs by worker..."
-          node scripts/split-wdio-logs.cjs || true
+        run: npx wdio run wdio.conf.ts --maxInstances 4 || true
 
       - name: Generate Allure Report
         if: always()
@@ -70,12 +65,13 @@ jobs:
         if: always()
         run: |
           npm install -g gh-pages
+
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
           gh-pages -d allure-report -b gh-pages -f
 
           echo "## 🧪 Allure Report" >> $GITHUB_STEP_SUMMARY
           echo "Open report: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_STEP_SUMMARY
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Complete job
-        run: echo "Workflow finished"
