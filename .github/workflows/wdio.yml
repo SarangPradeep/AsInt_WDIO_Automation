@@ -40,10 +40,12 @@ jobs:
             xdg-utils \
             xvfb
 
-      - name: Run WDIO tests in parallel (4 workers)
+      - name: Run WDIO tests and capture console logs
         env:
           CI: true
-        run: npx wdio run wdio.conf.ts --maxInstances 4
+        run: |
+          mkdir -p logs
+          npx wdio run wdio.conf.ts --maxInstances 4 2>&1 | tee logs/full-console.log
         continue-on-error: true
 
       - name: Generate Allure Report
@@ -58,7 +60,14 @@ jobs:
         with:
           name: allure-report
           path: allure-report
-
+          
+      - name: Upload WDIO Console Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wdio-console-logs
+          path: logs
+    
       - name: Deploy Allure Report to GitHub Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v4
