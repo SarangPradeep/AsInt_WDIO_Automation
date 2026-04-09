@@ -46,7 +46,7 @@ jobs:
 
       - name: Split logs by worker
         if: always()
-        run: node scripts/split-wdio-logs.js
+        run: node scripts/split-wdio-logs.cjs
 
       - name: Generate Allure Report
         if: always()              # run even if tests fail
