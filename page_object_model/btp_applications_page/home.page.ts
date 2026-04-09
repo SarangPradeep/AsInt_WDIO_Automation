@@ -10,7 +10,9 @@ class HomePage {
     private readonly tilesContainer ='ul.sapUshellTilesContainer-sortable';
 
     private readonly tileSelector ='ul.sapUshellTilesContainer-sortable li a.sapMGT';
-
+    private get equipmentIframe() {
+        return $('iframe[data-help-id="application-equipment-manage"]');
+    }
     // EQUIPMENT APP
     get homeIcon() { return $('//div[contains(@class, "sapUshellAppTitle")]//span[text()="Home"]');}
     
@@ -36,7 +38,7 @@ class HomePage {
         await this.navigateToEquipment();
         await utils.waitForSAPPopupAndClose();
         await utils.waitForBusyIndicatorToDisappear();
-        await utils.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);
         await utils.waitForSAPPopupAndClose();
         console.log("Navigated to Equipment List View");
         await browser.pause(2000);

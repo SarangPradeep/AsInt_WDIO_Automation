@@ -26,9 +26,9 @@ export const config: WebdriverIO.Config = {
     specs: [
 
         './functional_location/functional_location.e2e.ts',
-        // './equipment/equipment.e2e.ts',
-        // './configuration/**/*.e2e.ts',
-        // './safety_group/safety.e2e.ts'
+         './equipment/equipment.e2e.ts',
+        './configuration/**/*.e2e.ts',
+        './safety_group/safety.e2e.ts'
     
     ],
     exclude: [],
