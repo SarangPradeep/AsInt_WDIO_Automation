@@ -90,20 +90,25 @@ export const config: WebdriverIO.Config = {
     automationProtocol: 'webdriver',
 
     framework: 'mocha',
-    reporters:[
-            ['spec', {
-                outputDir: './test-results',
-                outputFileFormat: function(options: any) {
-                    const browserName = options.capabilities.browserName || 'unknown';
-                    return `${browserName}/results-${new Date().getTime()}.txt`
-                }
-            }],['allure', {
-                outputDir: 'allure-results',
-                useCucumberStepReporter: false,
-                disableWebdriverStepsReporting: true,
-                addExecutorInfo: true,
-            }]
-    ],
+    reporters: [
+        ['spec', {
+            outputDir: './test-results',
+            outputFileFormat: function (options: any) {
+            const browserName = options.capabilities.browserName || 'unknown';
+            return `${browserName}/results-${new Date().getTime()}.txt`
+            }
+        }],
+        ['allure', {
+            outputDir: 'allure-results',
+            useCucumberStepReporter: false,
+            disableWebdriverStepsReporting: true,
+            addExecutorInfo: true,
+        }],
+        ['timeline', {
+            outputDir: './timeline-report',
+            embedImages: true
+        }]
+        ],
     mochaOpts: {
         ui: 'bdd',
         // Increased from 60s to 90s to prevent flaky timeouts

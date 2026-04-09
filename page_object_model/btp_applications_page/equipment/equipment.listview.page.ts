@@ -27,24 +27,24 @@ class EquipmentListviewPage {
 
 
     //  methods
-    async switchIframe(): Promise<void> {
+    // async switchIframe(): Promise<void> {
 
-        console.log("--------------------------------------------- Before Switch ---------------------------------------------");
-        console.log("URL:", await browser.getUrl());
+    //     console.log("--------------------------------------------- Before Switch ---------------------------------------------");
+    //     console.log("URL:", await browser.getUrl());
 
-        await browser.switchFrame(null);
+    //     await browser.switchFrame(null);
 
-        await this.equipmentIframe.waitForExist({ timeout: 20000 });
-        await browser.switchFrame(this.equipmentIframe);
+    //     await this.equipmentIframe.waitForExist({ timeout: 20000 });
+    //     await browser.switchFrame(this.equipmentIframe);
 
-        console.log("--------------------------------------------- After Switch ---------------------------------------------");
+    //     console.log("--------------------------------------------- After Switch ---------------------------------------------");
 
-        const internalTitle = await browser.execute(() => document.title);
-        console.log("Internal Document Title:", internalTitle);
+    //     const internalTitle = await browser.execute(() => document.title);
+    //     console.log("Internal Document Title:", internalTitle);
 
-        const btnCount = await $$('button').length;
-        console.log("Buttons found in current context:", btnCount);
-    }
+    //     const btnCount = await $$('button').length;
+    //     console.log("Buttons found in current context:", btnCount);
+    // }
 
     async verifyOnEquipmentPage(): Promise<boolean> {
 
@@ -68,7 +68,7 @@ class EquipmentListviewPage {
         parentAsset: string
     ): Promise<void> {
 
-        await this.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);;
 
         await this.createEquipmentBtn.waitForClickable({ timeout: 50000 });
         await this.createEquipmentBtn.click();
@@ -122,7 +122,7 @@ class EquipmentListviewPage {
         await this.equipmentIcon.waitForClickable({ timeout: 30000 });
     }
     async clickOnEquipmentInList(name: string) { 
-        await this.switchIframe();
+        await utils.switchToIframe(this.equipmentIframe);;
         const compSearchBox = await $('input[placeholder="Search"]');
         await compSearchBox.waitForDisplayed({ timeout: 20000 });
         await compSearchBox.click();

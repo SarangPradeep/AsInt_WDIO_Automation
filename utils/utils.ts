@@ -1,24 +1,19 @@
 import { $$, browser } from '@wdio/globals';
 import * as console from 'console';
-import { utils } from 'mocha';
 import * as path from 'path';
-import type { ChainablePromiseElement } from 'webdriverio';
 import * as fs from 'fs';
-import * as pdf from 'pdf-parse';
 class Utils {
     downloadDir = path.resolve(process.cwd(), 'downloads');
 
     private get equipmentIframe() {
         return $('iframe[data-help-id="application-equipment-manage"]');
     }
-
     private get funLocIframe() {
         return $('iframe[data-help-id="application-functionallocation-manage"]');
     }
     private get CMLIframe() {
         return $('iframe[data-help-id="application-cml-manage"]');
     }
-
     private get backBtn() {  
         return $("//a[@aria-label='Back']"); 
     }
@@ -64,18 +59,18 @@ class Utils {
         console.log("Object Page header ready");
     }
 
-    async switchIframe(): Promise<void> {
-        console.log("--------------------------------------------- Before Switch ---------------------------------------------");
-        console.log("URL:", await browser.getUrl());
-        await browser.switchFrame(null);
-        await this.equipmentIframe.waitForExist({ timeout: 20000 });
-        await browser.switchFrame(this.equipmentIframe);
-        console.log("--------------------------------------------- After Switch ---------------------------------------------");
-        const internalTitle = await browser.execute(() => document.title);
-        console.log("Internal Document Title:", internalTitle);
-        const btnCount = await $$('button').length;
-        console.log("Buttons found in current context:", btnCount);
-    }
+    // async switchIframe(): Promise<void> {
+    //     console.log("--------------------------------------------- Before Switch ---------------------------------------------");
+    //     console.log("URL:", await browser.getUrl());
+    //     await browser.switchFrame(null);
+    //     await this.equipmentIframe.waitForExist({ timeout: 20000 });
+    //     await browser.switchFrame(this.equipmentIframe);
+    //     console.log("--------------------------------------------- After Switch ---------------------------------------------");
+    //     const internalTitle = await browser.execute(() => document.title);
+    //     console.log("Internal Document Title:", internalTitle);
+    //     const btnCount = await $$('button').length;
+    //     console.log("Buttons found in current context:", btnCount);
+    // }
 
     async assertTextEquals(element: any, expectedText: string): Promise<void> {
         const el = await element;  

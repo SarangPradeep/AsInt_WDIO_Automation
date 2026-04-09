@@ -1073,7 +1073,7 @@ class functionalLocationDetailView {
     public async getDisplayId() {
         try {
             const txt = await browser.execute(() => {
-                const el = document.evaluate(
+                const el = document.evaluate( //display ID xpath may differ for different apps, adjust accordingly
                     "//span[starts-with(normalize-space(),'Display ID:')]",
                     document,
                     null,
