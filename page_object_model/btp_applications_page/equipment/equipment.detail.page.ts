@@ -466,37 +466,37 @@ class EquipmentDetailPage {
         await linkInput.setValue("https://testlink.com");
 
         // Phase (MultiComboBox)
-        if (false) {
-            const phaseInput = await $(`//label[.//bdi[text()='Phase']]//following::input[1]`);
-            await phaseInput.click();
-            await phaseInput.setValue(data.phase);
+        // if (false) {
+        //     const phaseInput = await $(`//label[.//bdi[text()='Phase']]//following::input[1]`);
+        //     await phaseInput.click();
+        //     await phaseInput.setValue(data.phase);
 
-            const option = await $(`//li//span[text()='${data.phase}']`);
-            await option.waitForDisplayed();
-            await option.click();
-        }
+        //     const option = await $(`//li//span[text()='${data.phase}']`);
+        //     await option.waitForDisplayed();
+        //     await option.click();
+        // }
 
-        // Category (ComboBox)
-        if (false) {
-            const categoryInput = await $(`//label[.//bdi[text()='Category']]//following::input[1]`);
-            await categoryInput.click();
-            await categoryInput.setValue(data.category);
+        // // Category (ComboBox)
+        // if (false) {
+        //     const categoryInput = await $(`//label[.//bdi[text()='Category']]//following::input[1]`);
+        //     await categoryInput.click();
+        //     await categoryInput.setValue(data.category);
 
-            const option = await $(`//li//span[text()='${data.category}']`);
-            await option.waitForDisplayed();
-            await option.click();
-        }
+        //     const option = await $(`//li//span[text()='${data.category}']`);
+        //     await option.waitForDisplayed();
+        //     await option.click();
+        // }
 
-        // Language (ComboBox)
-        if (false) {
-            const languageInput = await $(`//label[.//bdi[text()='Language']]//following::input[1]`);
-            await languageInput.click();
-            await languageInput.setValue(data.language);
+        // // Language (ComboBox)
+        // if (false) {
+        //     const languageInput = await $(`//label[.//bdi[text()='Language']]//following::input[1]`);
+        //     await languageInput.click();
+        //     await languageInput.setValue(data.language);
 
-            const option = await $(`//li//span[text()='${data.language}']`);
-            await option.waitForDisplayed();
-            await option.click();
-        }
+        //     const option = await $(`//li//span[text()='${data.language}']`);
+        //     await option.waitForDisplayed();
+        //     await option.click();
+        // }
         await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
@@ -678,8 +678,8 @@ class EquipmentDetailPage {
                 if (!els.length) return false;
 
                 for (let el of els) {
-                    let txt = await el.getText();
-                    if (!txt) txt = await el.getAttribute("innerText");
+                    let txt = (await el.getText()) ?? "";
+                    if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
                     txt = txt?.trim();
 
                     if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
@@ -701,8 +701,8 @@ class EquipmentDetailPage {
 
         const spans = await $$(xpath);
         for (let el of spans) {
-            let txt = await el.getText();
-            if (!txt) txt = await el.getAttribute("innerText");
+            let txt = (await el.getText()) ?? "";
+            if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
             txt = txt?.trim();
 
             if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
