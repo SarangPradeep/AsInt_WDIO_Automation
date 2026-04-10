@@ -1037,8 +1037,8 @@ class functionalLocationDetailView {
                 if (!els.length) return false;
 
                 for (let el of els) {
-                    let txt = await el.getText();
-                    if (!txt) txt = await el.getAttribute("innerText");
+                    let txt = (await el.getText()) ?? "";
+                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
                     txt = txt?.trim();
 
                     if (txt && (txt.startsWith("AUTOMATION-FLOC ") || txt.startsWith("AUTOMATION-FUNC-LOC"))) {
@@ -1059,8 +1059,8 @@ class functionalLocationDetailView {
         if (!found) return "";
         const spans = await $$(xpath);
         for (let el of spans) {
-            let txt = await el.getText();
-            if (!txt) txt = await el.getAttribute("innerText");
+            let txt = (await el.getText()) ?? "";
+                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
             txt = txt?.trim();
 
             if (txt && (txt.startsWith("AUTOMATION-FLOC ") || txt.startsWith("AUTOMATION-FUNC-LOC"))) {
@@ -1167,8 +1167,8 @@ class functionalLocationDetailView {
         try {
             await browser.waitUntil(
                 async () => {
-                    let text = await cmlElem.getText();
-                    if (!text) text = await cmlElem.getAttribute("innerText");
+                    let text = (await cmlElem.getText()) ?? "";
+                    if (!text) text = (await cmlElem.getAttribute("innerText")) ?? "";
 
                     lastSeenText = text;
 
@@ -1187,9 +1187,9 @@ class functionalLocationDetailView {
             console.log(`WARNING → CML value is still 0 after waiting`);
             console.log(`FINAL → CML TEXT: ${lastSeenText}`);
         }
-        let cmlText = await cmlElem.getText();
+        let cmlText = (await cmlElem.getText()) ?? "";
         if (!cmlText) {
-            cmlText = await cmlElem.getAttribute("innerText");
+            cmlText = (await cmlElem.getAttribute("innerText")) ?? "";
         }
         console.log("FINAL CML TEXT:", cmlText);
         const CML = await utils.getAssignedValue(cmlText);
