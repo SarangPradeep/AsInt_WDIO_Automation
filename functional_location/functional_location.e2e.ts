@@ -13,6 +13,20 @@ describe('BTP | Functional Location test', () => {
         await utils.resetAllAdaptFilter();
     });
 
+    // it('should create new advanced filter and verify', async () => {
+    //     const createdFilterName = await utils.createNewAdvancedFilter();
+    //     console.log(`Created filter for this run: ${createdFilterName}`);
+    // });
+ 
+    // it('should apply the created advanced filter and verify', async () => {
+    //     await utils.applyAdvancedFilter();
+    // });
+ 
+    // it('should reset and delete the created advanced filter and verify', async () => {
+    //     await utils.resetAdvancedFilter();
+    //     await utils.deleteAdvancedFilter();
+    // });
+
     it('should verify fields in list view using setting option', async () => {
         await utils.verifyFieldsInListView();
         await utils.resetFieldsInListView();

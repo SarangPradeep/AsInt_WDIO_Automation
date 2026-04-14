@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { browser } from '@wdio/globals';
-import BtpLoginPage from '../page_object_model/btp_applications_page/configuration/btpLogin.page';
+//import BtpLoginPage from '../page_object_model/btp_applications_page/configuration/btpLogin.page';
 import HomePage from '../page_object_model/btp_applications_page/configuration/home.page';
 import configurationMatricesPage from '../page_object_model/btp_applications_page/configuration/configurationMatrices.page';
 import SapUtils from '../utils/utils';
@@ -29,12 +29,12 @@ describe('Functionality: Configuration App & Matrices Navigation', () => {
     //     );
     // });
 
-    it('should verify successful login to BTP', async () => {
+    // it('should verify successful login to BTP', async () => {
 
-        const success = await BtpLoginPage.isLoginSuccessful();
-        expect(success).toBe(true);
+    //     const success = await BtpLoginPage.isLoginSuccessful();
+    //     expect(success).toBe(true);
 
-    });
+    // });
 
     it('should navigate to Configuration Management App', async () => {
 

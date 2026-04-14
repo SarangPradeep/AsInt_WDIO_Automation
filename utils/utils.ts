@@ -838,10 +838,196 @@ class Utils {
         }
 
         return textContent
-        .replace(/\s+/g, ' ')          // normalize spaces
-        .replace(/\s*-\s*/g, '-')     // fix hyphen spacing
-        .replace(/([A-Z])\s+(?=[A-Z])/g, '$1') // 🔥 join broken uppercase words
+        .replace(/\s+/g, ' ')          
+        .replace(/\s*-\s*/g, '-')     
+        .replace(/([A-Z])\s+(?=[A-Z])/g, '$1') 
         .trim();
+    }
+
+    async createNewAdvancedFilter(filterName?: string): Promise<string> {
+        await console.log("Creating new advanced filter");
+        const uniqueFilterName = filterName ?? `Test Filter ${Date.now()}`;
+        await this.clickWithWait($('//button[@aria-label="Advanced Filter"]'));
+        await browser.pause(1000);
+        // await this.clickWithWait($('//button[@aria-label="Create Advanced Filter"]'));
+        // await this.switchIframe();
+        const filterInput = await $('//label[.//bdi[text()="Filter Name"]]/following::input[1]');
+ 
+        await filterInput.waitForDisplayed();
+        await filterInput.click();
+        await filterInput.clearValue();
+        await filterInput.addValue(uniqueFilterName);
+ 
+        await this.clickWithWait($('//div[@role="button" and .//div[@title="New Item"]]'));
+        await this.clickWithWait($('//li[.//span[text()="Variables"]]'));
+        await browser.pause(2000);
+        const searchInput = await $('//input[@placeholder="Search..." and @aria-label="Search..."]');
+        await searchInput.waitForDisplayed();
+        await searchInput.click();
+        await searchInput.clearValue();
+        await searchInput.addValue('Criticality');
+        await browser.keys('Enter');
+        const resultItem = await $(`//li[@role='listitem'][.//div[text()='Criticality']]`);
+        await resultItem.waitForDisplayed();
+        await resultItem.click();
+ 
+        await this.clickWithWait($('//div[@role="button" and .//div[@title="New Item"]]'));
+        await this.clickWithWait($('//li[.//span[text()="Operators"]]'));
+        await browser.pause(2000);
+ 
+        const operator = await $(`//button[.//bdi[text()='=']]`);
+        await operator.waitForDisplayed();
+        await operator.click();
+ 
+        await this.clickWithWait($('//div[@role="button" and .//div[@title="New Item"]]'));
+        const literalValue = await $(`//input[@placeholder='Enter a text or a number.']`);
+        await literalValue.waitForDisplayed();
+        await this.clickWithWait(literalValue);
+        await literalValue.clearValue();
+        await literalValue.addValue('A');
+        await browser.pause(1000);
+        await this.clickWithWait($('//button//bdi[text()="OK"]'));
+        await browser.pause(1000);
+        await this.clickWithWait($('//button//bdi[text()="Save"]'));
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);  
+ 
+        await this.clickWithWait($(`//h1[.//span[text()='Success']]//following::button[.//bdi[text()='OK']]`));
+        //await browser.pause(2000);
+        console.log(`Created adapt filter: ${uniqueFilterName}`);
+        return uniqueFilterName;
+ 
+    }
+ 
+    async deleteAdvancedFilter(): Promise<void> {
+        await this.waitForBusyIndicatorToDisappear();
+        await this.clickWithWait($('//button[@aria-label="Advanced Filter"]'));
+        await browser.pause(2000);
+        await this.clickWithWait($(`//div[@role='checkbox' and @aria-label='Select all rows']`));
+        // await this.clickWithWait($(`//button[@aria-label='Delete']`));
+        // await this.clickWithWait($(`//button//bdi[text()="Yes"]`));
+        // const errorDialog = await $("//div[contains(@class,'sapMDialog')][.//span[text()='Error']]");
+ 
+        // if (await errorDialog.isDisplayed()) {
+        //     const errorMsg = await $("//span[contains(@class,'sapMMsgBoxText')]").getText();
+           
+        //     throw new Error(`❌ Test Failed due to Error Popup: ${errorMsg}`);
+        // }
+        // await browser.pause(1000);
+        // await this.clickWithWait($(`//header[.//text()='Success']/following::button[.//text()='OK']`));
+
+        const deleteFlow = async () => {
+        await this.clickWithWait($(`//button[@aria-label='Delete']`));
+        await this.clickWithWait($(`//button//bdi[text()="Yes"]`));
+        console.log("Clicked delete button");
+        };
+
+        const handleErrorPopupIfPresent = async () => {
+            console.log("Checking error");
+            const errorDialog = await $("//header[.//text()='Error']/following::span[text()='Failed to delete some filters']");
+
+            if (await errorDialog.isExisting() && await errorDialog.isDisplayed()) {
+                const errorMsg = await $("//header[.//text()='Error']/following::span[text()='Failed to delete some filters']").getText();
+                console.log("Error popup appeared:", errorMsg);
+
+                const okBtn = await $("//header[.//text()='Error']/following::bdi[.//text()='OK']");
+                await okBtn.click();
+                await browser.pause(1000);
+                console.log("Error found");
+                return true; // error appeared
+            }
+            return false; // no error
+        };
+
+        // ---- EXECUTION ----
+
+        // First attempt
+        await deleteFlow();
+
+        // If error appears → handle and retry once
+        if (await handleErrorPopupIfPresent()) {
+            console.log("Retrying delete flow...");
+            await deleteFlow();
+
+            // If error appears again → fail test
+            if (await handleErrorPopupIfPresent()) {
+                throw new Error("Delete failed twice due to Error popup.");
+            }
+        }
+
+        // Success popup
+        await this.clickWithWait($(`//header[.//text()='Success']/following::button[.//text()='OK']`));
+
+        await this.waitForBusyIndicatorToDisappear();
+        await this.clickWithWait($(`//button//bdi[text()="Close"]`));
+        await console.log("Deleted advanced filter");
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        const createAdvanceFilterHeader = await $(`//header//h1//span[normalize-space()='Create Advanced Filter']`);
+        if (await createAdvanceFilterHeader.isDisplayed()) {
+            await this.clickWithWait($(`//button//bdi[text()="Cancel"]`));
+            await browser.pause(2000);
+        }
+ 
+    }
+ 
+ 
+ 
+ 
+ 
+    async applyAdvancedFilter(): Promise<void> {
+        // const header = await $(`//h1//span[starts-with(normalize-space(),'Advanced Filters')]`);
+        // await browser.pause(2000);
+        // await this.waitForBusyIndicatorToDisappear();
+        // if (await header.isDisplayed()) {
+            await browser.pause(2000);
+            const firstFilterCheckbox = await $(`(//tr[@role='row'])[2]//div[@role='checkbox']`);
+            await firstFilterCheckbox.waitForDisplayed();
+            await firstFilterCheckbox.click();
+            await this.clickWithWait($('//button//bdi[text()="Apply"]'));
+            await this.waitForBusyIndicatorToDisappear();
+            await this.clickWithWait($('//button//bdi[text()="Go"]'));
+            console.log("Applied advanced filter");
+        // }
+        // else {
+        //     await this.waitForBusyIndicatorToDisappear();
+        //     await this.clickWithWait($('//button[@aria-label="Advanced Filter"]'));
+        //     await browser.pause(2000);
+        // }
+       
+        const criticalityElement = await $(`(//tr[@aria-rowindex='2']/preceding::span[text()='Criticality']/following::span[text()='A'])[1]`);
+        await browser.pause(2000);
+        const isDisplayed = await criticalityElement.isDisplayed();
+        if (!isDisplayed) {
+            throw new Error("Criticality is NOT 'A'");
+        }
+ 
+        console.log("Criticality is correctly 'A' ✅");
+    }
+ 
+    async resetAdvancedFilter(): Promise<void> {
+        await this.clickWithWait(this.adaptFilter);
+        await browser.pause(3000);
+        const resetBtn = await $('//button//bdi[text()="Reset"]');
+        await this.clickWithWait(resetBtn);
+        await this.clickWithWait($('(//button[.//bdi[text()="OK"]])[last()]'));
+        await browser.pause(1000);
+        await this.clickWithWait($(`//h1//span[starts-with(normalize-space(),'Adapt Filters')] /ancestor::div[@role='dialog'] //footer//button[.//bdi[normalize-space()='OK']]`));
+        await browser.pause(5000);
+        const actualFiltersElements = await $$('//label//bdi');
+        const remainingFilters: string[] = [];
+ 
+        for (const el of actualFiltersElements) {
+            const text = await el.getText();
+            if (text.trim()) {
+                remainingFilters.push(text.trim());
+            }
+        }
+        console.log('Remaining Filters after reset:', remainingFilters);
+        if (remainingFilters.length > 0) {
+            throw new Error(`Reset failed: Filters still present: ${remainingFilters.join(', ')}`);
+        }
+        console.log('All filters successfully reset');
     }
 }
 
