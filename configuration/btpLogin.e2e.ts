@@ -17,8 +17,8 @@ describe('BTP Login | Positive Scenario', () => {
     it('should login successfully with valid credentials', async () => {
         // Passing credentials directly from the .env file
         await BtpLoginPage.login(
-            process.env.BTP_USERNAME!, 
-            process.env.BTP_PASSWORD!
+            process.env.SAP_USERNAME!, 
+            process.env.SAP_PASSWORD!
         );
 
         // Verification step using the page object's built-in success check
