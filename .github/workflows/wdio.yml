@@ -9,6 +9,12 @@ jobs:
   wdio:
     runs-on: ubuntu-latest
 
+    env:
+      CI: true
+      SAP_USERNAME: ${{ secrets.SAP_USERNAME }}
+      SAP_PASSWORD: ${{ secrets.SAP_PASSWORD }}
+      APP_URL: ${{ secrets.APP_URL }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -37,11 +43,6 @@ jobs:
             xvfb
 
       - name: Run WDIO tests in parallel (4 workers)
-        env:
-          CI: true
-          SAP_USERNAME: ${{ secrets.SAP_USERNAME }}
-          SAP_PASSWORD: ${{ secrets.SAP_PASSWORD }}
-          APP_URL: ${{ secrets.APP_URL }}
         run: npx wdio run wdio.conf.ts --maxInstances 4
         continue-on-error: true
 
