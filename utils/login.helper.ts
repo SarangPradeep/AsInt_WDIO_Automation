@@ -5,6 +5,11 @@ export async function loginToSAP(): Promise<void> {
     const PASSWORD = process.env.SAP_PASSWORD!;
     const APP_URL = process.env.APP_URL!;
 
+    console.log("APP_URL exists:", !!process.env.APP_URL);
+    console.log("USERNAME exists:", !!process.env.SAP_USERNAME);
+    console.log("PASSWORD exists:", !!process.env.SAP_PASSWORD);
+    console.log("APP_URL value:", process.env.APP_URL);
+
     await browser.url(APP_URL);
     const asintLoginLink = await $("a.saml-login-link");
     await asintLoginLink.waitForClickable({ timeout: 100000 });
