@@ -5,11 +5,11 @@ import * as path from 'path';
 import { loginToSAP } from './utils/login.helper';
 import utils from './utils/utils';
 
-dotenv.config();
-
+if (!process.env.CI) {
+  dotenv.config();
+}
 const downloadDir = path.resolve(process.cwd(), 'downloads');
 const isHeadless = process.env.CI === 'true' || process.argv.includes('--headless');
-
 
 export const config: WebdriverIO.Config = {
     runner: 'local',
@@ -82,9 +82,7 @@ export const config: WebdriverIO.Config = {
     },
 
     before: async function (capabilities) {
-        // Add browser information to Allure report
         const browserName = (capabilities as any).browserName || 'unknown';
-        // Add browser as feature tag for grouping in Allure
         allureReporter.addFeature(`Browser: ${browserName}`);
         if (!isHeadless) {
         await browser.maximizeWindow();

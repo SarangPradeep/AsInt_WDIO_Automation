@@ -1,4 +1,3 @@
-import { browser } from '@wdio/globals';
 import HomePage from 'page_object_model/btp_applications_page/home.page';
 import { equipmentTestData } from '../test_data/btp_applications/equipment.data';
 import equipmentListviewPage from 'page_object_model/btp_applications_page/equipment/equipment.listview.page';
@@ -17,6 +16,20 @@ describe('BTP Equipment App Functional test', () => {
         //await utils.applyAdaptFilter();
         await utils.resetAllAdaptFilter();
     });
+    
+    // it('should create new advanced filter and verify', async () => {
+    //     const createdFilterName = await utils.createNewAdvancedFilter();
+    //     console.log(`Created filter for this run: ${createdFilterName}`);
+    // });
+     
+    // it('should apply the created advanced filter and verify', async () => {
+    //     await utils.applyAdvancedFilter();
+    // });
+     
+    // it('should reset and delete the created advanced filter and verify', async () => {
+    //     await utils.resetAdvancedFilter();
+    //     await utils.deleteAdvancedFilter();
+    // });
     
     it('should create equipment with mandatory fields and save', async () => {
         createdEquipmentName = await utils.generateRandomEquipmentName();

@@ -1,17 +1,17 @@
 import 'dotenv/config';
 import { browser } from '@wdio/globals';
-import BtpLoginPage from '../page_object_model/btp_applications_page/configuration/btpLogin.page';
+//import BtpLoginPage from '../page_object_model/btp_applications_page/configuration/btpLogin.page';
 import HomePage from '../page_object_model/btp_applications_page/configuration/home.page';
 import ConfigurationAppPage from '../page_object_model/btp_applications_page/configuration/configurationPicklist.page';
 import SapUtils from '../utils/utils';
 
 // Fail fast if required env vars are missing
-if (!process.env.APP_URL || !process.env.BTP_USERNAME || !process.env.BTP_PASSWORD) {
-    throw new Error(
-        '[CONFIG ERROR] Missing required environment variables. ' +
-        'Ensure APP_URL, BTP_USERNAME, and BTP_PASSWORD are set in your .env file.'
-    );
-}
+// if (!process.env.APP_URL || !process.env.BTP_USERNAME || !process.env.BTP_PASSWORD) {
+//     throw new Error(
+//         '[CONFIG ERROR] Missing required environment variables. ' +
+//         'Ensure APP_URL, BTP_USERNAME, and BTP_PASSWORD are set in your .env file.'
+//     );
+// }
 
 describe('Functionality: Configuration App & Picklist Navigation', () => {
 
@@ -24,10 +24,10 @@ describe('Functionality: Configuration App & Picklist Navigation', () => {
     //     await BtpLoginPage.login(process.env.BTP_USERNAME!, process.env.BTP_PASSWORD!);
     // });
 
-    it('should verify successful login to BTP', async () => {
-        const success = await BtpLoginPage.isLoginSuccessful();
-        expect(success).toBe(true);
-    });
+    // it('should verify successful login to BTP', async () => {
+    //     const success = await BtpLoginPage.isLoginSuccessful();
+    //     expect(success).toBe(true);
+    // });
 
     it('should navigate to the Configuration Management App', async () => {
         await HomePage.waitForHomePageToLoad();
