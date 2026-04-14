@@ -4,15 +4,15 @@ import BtpLoginPage from '../page_object_model/btp_applications_page/configurati
 
 describe('BTP Login | Positive Scenario', () => {
 
-    // Pull from .env or default to the URL if needed
-    const APP_URL = process.env.APP_URL || 'https://apm-02-asint.launchpad.cfapps.us10.hana.ondemand.com';
+    // // Pull from .env or default to the URL if needed
+    // const APP_URL = process.env.APP_URL || 'https://apm-02-asint.launchpad.cfapps.us10.hana.ondemand.com';
 
-    beforeEach(async function () {
-        // Increased timeout for session reload in BTP environments
-        this.timeout(120000);
-        await browser.reloadSession();
-        await BtpLoginPage.open(APP_URL);
-    });
+    // beforeEach(async function () {
+    //     // Increased timeout for session reload in BTP environments
+    //     this.timeout(120000);
+    //     await browser.reloadSession();
+    //     await BtpLoginPage.open(APP_URL);
+    // });
 
     it('should login successfully with valid credentials', async () => {
         // Passing credentials directly from the .env file
