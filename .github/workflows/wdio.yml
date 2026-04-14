@@ -41,7 +41,14 @@ jobs:
             libxtst6 \
             xdg-utils \
             xvfb
-
+            
+      - name: Debug env variables
+        run: |
+          echo "CI=$CI"
+          echo "APP_URL length: ${#APP_URL}"
+          echo "SAP_USERNAME length: ${#SAP_USERNAME}"
+          echo "SAP_PASSWORD length: ${#SAP_PASSWORD}"
+          
       - name: Run WDIO tests in parallel (4 workers)
         run: npx wdio run wdio.conf.ts --maxInstances 4
         continue-on-error: true
