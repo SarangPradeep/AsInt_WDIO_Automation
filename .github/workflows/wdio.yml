@@ -44,7 +44,6 @@ jobs:
                     
       - name: Run WDIO tests in parallel (4 workers)
         run: npx wdio run wdio.conf.ts --maxInstances 4
-        continue-on-error: true
 
       - name: Generate Allure Report
         if: always()              # run even if tests fail
