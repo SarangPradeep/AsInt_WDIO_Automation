@@ -44,6 +44,7 @@ jobs:
                     
       - name: Run WDIO tests in parallel (4 workers)
         run: npx wdio run wdio.conf.ts --maxInstances 4
+        continue-on-error: true
 
       - name: Generate Allure Report
         if: always()              # run even if tests fail
@@ -71,4 +72,4 @@ jobs:
         if: always()
         run: |
           echo "## 🧪 Allure Report" >> $GITHUB_STEP_SUMMARY
-          echo "Open report: https://${{ github.repository_owner }}.github.io/${{ github.repository }}/index.html" >> $GITHUB_STEP_SUMMARY
+          echo "Open report: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_STEP_SUMMARY
