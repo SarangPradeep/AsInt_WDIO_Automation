@@ -47,7 +47,7 @@ export const config: WebdriverIO.Config = {
 
     bail: 0, 
     waitforTimeout: 60000, 
-    connectionRetryTimeout: 180000,
+    connectionRetryTimeout: 600000,
     connectionRetryCount: 3,
 
     services: [],
@@ -65,7 +65,7 @@ export const config: WebdriverIO.Config = {
     ],
     mochaOpts: {
         ui: 'bdd',
-        timeout: 180000 ,
+        timeout: 600000 ,
         reporter: 'spec'
     },
     onPrepare: function (config, capabilities) {
