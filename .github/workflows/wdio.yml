@@ -46,6 +46,13 @@ jobs:
         run: npx wdio run wdio.conf.ts --maxInstances 4
         continue-on-error: true
 
+      - name: Download previous Allure history
+        if: always()
+        run: |
+          git clone --depth 1 --branch gh-pages https://github.com/${{ github.repository }} gh-pages || true
+          mkdir -p allure-results/history
+          cp -r gh-pages/history/* allure-results/history || true
+
       - name: Generate Allure Report
         if: always()              # run even if tests fail
         run: |
