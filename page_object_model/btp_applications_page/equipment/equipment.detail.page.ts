@@ -4,8 +4,8 @@ class EquipmentDetailPage {
     //  SELECTORS 
     public equipmentHeadValue!: string;
     public displayID!: string;
-    private get equipmentNameHeader() { return $('//*[@role="heading"]//span'); }
-    get successOkBtn() { return $('//bdi[text()="OK"]/ancestor::button'); }
+    private get equipmentNameHeader() { return $("//header[.//div[@role='heading']][@role='banner']"); }
+    get successOkBtn() { return $("//header[.//text()='Success']/following::button[.//text()='OK']"); }
     equipmentName(name: string) { return $(`//*[text()="${name}"]//span`); }
     private get deleteBtn() { return $('//bdi[text()="Delete"]/ancestor::button'); }
     get structureSection() { return $('//button[.//bdi[text()="Structure"]]'); }
@@ -302,9 +302,11 @@ class EquipmentDetailPage {
             await browser.pause(2000);
 
             await utils.switchToIframe(this.equipmentIframe);
-            const equipment = await $('//li[contains(.,"Equipment")]');
-            await equipment.waitForDisplayed({ timeout: 5000 })
-            await equipment.click()
+            // const equipment = await $('//li[contains(.,"Equipment")]');
+            // await equipment.waitForDisplayed({ timeout: 5000 })
+            // await equipment.click()
+            await browser.keys(['ArrowDown']);
+            await browser.keys(['Enter']);
             await browser.pause(2000);
 
             const resultCell = await $(`(//tr[@role="row"])[${i * 2}]//div[@role="checkbox"]`);
@@ -343,9 +345,9 @@ class EquipmentDetailPage {
             await utils.clickWithWait(checkBox);
         }
         await utils.switchToIframe(this.equipmentIframe); 
-        await utils.clickWithWait($('//button[.//bdi[text()="Ok"]]'));
+        await utils.clickWithWait($("//header[.//text()='Select Templates']/following::button[.//bdi[text()='Ok']]"));
         await browser.pause(2000);
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await utils.clickWithWait($('//header[.//text()="Success"]/following::button[.//bdi[text()="OK"]]'));
 
         await this.equipmentAssignBtn.waitForClickable({ timeout: 30000 });
     }
@@ -371,9 +373,9 @@ class EquipmentDetailPage {
         await browser.pause(2000);
         await utils.switchToIframe(this.equipmentIframe);
         await utils.selectCheckboxes(noOfClasses);
-        await utils.clickWithWait($('//button[.//bdi[text()="Ok"]]'));
+        await utils.clickWithWait($('//header[.//text()="Assign Classes"]/following::button[.//bdi[text()="Ok"]]'));
         await browser.pause(2000);
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
+        await utils.clickWithWait($('//header[.//text()="Success"]/following::button[.//bdi[text()="OK"]]'));
     }
 
     async assignCharacteristics(noOfChar: number): Promise<void> {

@@ -42,7 +42,7 @@ class functionalLocationDetailView {
         return $("//span[text()='Updated successfully']");
     }
     private get funLocHdOkBtn() {
-        return $("//bdi[text()='OK']");
+        return $("//header[.//text()='Success']/following::bdi[text()='OK']");
     }
     private get objectType() {
         return $("//bdi[text()='Object Type']/following::input[1]");
@@ -234,7 +234,7 @@ class functionalLocationDetailView {
         return $("//span[normalize-space()='Updated successfully']");
     }
     private get infoUpdateOK() {
-        return $("//bdi[text()='OK']");
+        return $("//header[.//text()='Success']/following::bdi[text()='OK']");
     }
     private get funLocStrucTab() {  
         return $("//bdi[text()='Structure']"); 
@@ -285,7 +285,7 @@ class functionalLocationDetailView {
         return $("//bdi[text()='Cancel']");
     }
     private get okBtn() {
-        return $("//bdi[text()='OK']");
+        return $("//header[.//text()='Success']/following::bdi[text()='OK']");
     }
     private get okBtn2() {
         return $("//bdi[text()='Ok']");
@@ -588,7 +588,12 @@ class functionalLocationDetailView {
     let i = 1;
     while (selectedCount < noOfFunLoc) {
         await utils.clickWithWait(this.compInfoAsgn,1000);
-        await utils.clickWithWait(this.compInfoFunLocAsgn,1000);
+        await browser.pause(2000);
+        //await utils.clickWithWait(this.compInfoFunLocAsgn,1000);
+        // SECOND selection → Functional Location
+        await browser.keys(['ArrowDown']);
+        await browser.keys(['ArrowDown']);
+        await browser.keys(['Enter']);
         await browser.pause(2000);
         await utils.switchToIframe(this.funLocIframe);
         let foundValid = false;
@@ -676,7 +681,8 @@ class functionalLocationDetailView {
         if(availableCount === 0)
         {
             console.log("No of classes available is zero")
-            await this.cancelBtn.click();
+            //await this.cancelBtn.click();
+            await utils.clickWithWait($("//header[.//text()='Assign Classes']/following::bdi[text()='Cancel']"));
             utils.waitForBusyIndicatorToDisappear();
             return;
         }
@@ -726,7 +732,8 @@ class functionalLocationDetailView {
         if(availableCharCount === 0)
         {
             console.log("No of characteritics available is zero")
-            await this.cancelBtn.click();
+            //await this.cancelBtn.click();
+            await utils.clickWithWait($("//header[.//text()='Assign Classes']/following::bdi[text()='Cancel']"));
             utils.waitForBusyIndicatorToDisappear();
             k=1;
         }
@@ -942,7 +949,7 @@ class functionalLocationDetailView {
         });
 
         console.log("Document assign success message displayed");
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'),1000);
+        await utils.clickWithWait(this.okBtn,1000);
         console.log("Attachment assigned successfully");
     }
 
@@ -1218,7 +1225,7 @@ class functionalLocationDetailView {
         await this.deleteBtn.waitForDisplayed({ timeout: 30000 });
         console.log("Clicking Delete...");
         await utils.clickWithWait(this.deleteBtn,3000);
-        await utils.clickWithWait(this.okBtn,3000);
+        await utils.clickWithWait($("//header[.//text()='Confirmation']/following::button[.//text()='OK']"),3000);
         await utils.waitForBusyIndicatorToDisappear();
         console.log("Functional Location deletion in progress");
         console.log("Waiting for deletion to complete...");
@@ -1231,6 +1238,25 @@ class functionalLocationDetailView {
         const { funcLoc} = await this.getFinalIDs();
         this.funcLocHeadValue = funcLoc;
         await utils.clickWithWait(this.downloadReport);
+        let expectedFilters: string[] = [];
+        try {
+            const info = await $("//*[contains(text(),'Failed to export')]");
+            await info.waitForDisplayed({ timeout: 7000 });
+            console.log(await info.getText());
+            const viewDetails = await $("//span[.='Failed to export the following']/following::a");
+            await utils.clickWithWait(viewDetails);
+            const filterNames = await $$("//span[.='Failed to export the following']/following-sibling::div//li");
+            for (const el of filterNames) {
+                const text = (await el.getText()).trim();
+                if (text) expectedFilters.push(text);
+            }
+            console.log("Details not downloaded:", expectedFilters);
+            const okBtn = await $("//header[.='Information']/following::button[.='OK']");
+            await okBtn.waitForDisplayed({ timeout: 5000 });
+            await utils.clickWithWait(okBtn);
+        } catch (e) {
+            console.log("Export success popup not shown");
+        }
         console.log("Download initiated, waiting for file to be downloaded...");
         const filePath = await utils.waitForDownload('.pdf');
         console.log("File downloaded at:", filePath);
