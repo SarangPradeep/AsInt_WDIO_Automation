@@ -17,19 +17,19 @@ describe('BTP Equipment App Functional test', () => {
         await utils.resetAllAdaptFilter();
     });
     
-    // it('should create new advanced filter and verify', async () => {
-    //     const createdFilterName = await utils.createNewAdvancedFilter();
-    //     console.log(`Created filter for this run: ${createdFilterName}`);
-    // });
+    it('should create new advanced filter and verify', async () => {
+        const createdFilterName = await utils.createNewAdvancedFilter();
+        console.log(`Created filter for this run: ${createdFilterName}`);
+    });
      
-    // it('should apply the created advanced filter and verify', async () => {
-    //     await utils.applyAdvancedFilter();
-    // });
+    it('should apply the created advanced filter and verify', async () => {
+        await utils.applyAdvancedFilter();
+    });
      
-    // it('should reset and delete the created advanced filter and verify', async () => {
-    //     await utils.resetAdvancedFilter();
-    //     await utils.deleteAdvancedFilter();
-    // });
+    it('should reset and delete the created advanced filter and verify', async () => {
+        await utils.resetAdvancedFilter();
+        await utils.deleteAdvancedFilter();
+    });
     
     it('should create equipment with mandatory fields and save', async () => {
         createdEquipmentName = await utils.generateRandomEquipmentName();

@@ -71,7 +71,7 @@ class functionalLocationListView {
         await utils.waitForBusyIndicatorToDisappear();
         await this.succCrtMsg.waitForDisplayed({ timeout: 100000 });
         console.log("Functional Location created successfully");
-        await utils.clickWithWait(this.oKbtn2);
+        await utils.clickWithWait($("//header[.//text()='Success']/following::button[.//text()='OK']"));
     }
 
     public async navigateFunctionalLocationListView(): Promise<void> {
@@ -79,6 +79,7 @@ class functionalLocationListView {
         await this.navigateToFunctionalLocation(); 
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.funLocIframe);
+        await browser.pause(2000);
         console.log("Navigated to Functional Location List View");
     }
 
@@ -112,12 +113,12 @@ class functionalLocationListView {
 
     public async navigateFunctionalLocation(): Promise<void> {
 
-        console.log("Searching for created Functional Location in the list view and navigating to detail view");
-        await utils.clickWithWait(this.search,1000);
-        await utils.setValueWithWait(this.search,this.functionalLocName,1000);
-        await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
-        await browser.pause(2000);
-        console.log(`Searched for Functional Location with name: ${this.functionalLocName}`);
+        // console.log("Searching for created Functional Location in the list view and navigating to detail view");
+        // await utils.clickWithWait(this.search,1000);
+        // await utils.setValueWithWait(this.search,this.functionalLocName,1000);
+        // await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
+        // await browser.pause(2000);
+        // console.log(`Searched for Functional Location with name: ${this.functionalLocName}`);
 
         console.log("Navigating to Detail view page of Functional Location");
         await utils.waitForBusyIndicatorToDisappear();
@@ -213,6 +214,7 @@ class functionalLocationListView {
         await goBtn.waitForDisplayed({ timeout: 10000 });
         await goBtn.waitForClickable({ timeout: 10000 });
         await goBtn.click();
+        await browser.pause(5000);
 
         console.log("Waiting for table to refresh after search...");
         const noDataCell = '//td[text()="No data"]';

@@ -4,9 +4,6 @@ import { waitForDisplayed } from "webdriverio/build/commands/element";
 import equipmentDetailPage from "./equipment.detail.page";
 
 class EquipmentListviewPage {
-
-    // ===== SELECTORS =====
-
     //equipment listview
     get firstEquipmentInList() { return $('//tbody[contains(@class,"sapMTableTBody")]//tr[@role="row"][1]'); }
     // buttons
@@ -15,37 +12,12 @@ class EquipmentListviewPage {
     private get confirmBtn() { return $('//bdi[text()="Confirm"]/ancestor::button'); }
     private get createBtn() { return $('//bdi[text()="Create"]/ancestor::button'); }
     private get okBtn() { return $('//bdi[text()="OK"]/ancestor::button'); }
-
-    // inputs
     private get equipmentNameInput() { return $('//bdi[text()="Equipment Name"]/ancestor::label/following::input[1]'); }
     private get equipmentDescInput() { return $('//bdi[text()="Description"]/ancestor::label/following::input[1]'); }
     private get equipmentTemplateInput() { return $('//bdi[text()="Equipment Template"]/ancestor::label/following::input[1]'); }
     private get parentAssetInput() { return $('//bdi[text()="Parent Asset"]/ancestor::label/following::input[1]'); }
-
-    // iframe
     private get equipmentIframe() { return $('iframe[data-help-id="application-equipment-manage"]'); }
-
-
-    //  methods
-    // async switchIframe(): Promise<void> {
-
-    //     console.log("--------------------------------------------- Before Switch ---------------------------------------------");
-    //     console.log("URL:", await browser.getUrl());
-
-    //     await browser.switchFrame(null);
-
-    //     await this.equipmentIframe.waitForExist({ timeout: 20000 });
-    //     await browser.switchFrame(this.equipmentIframe);
-
-    //     console.log("--------------------------------------------- After Switch ---------------------------------------------");
-
-    //     const internalTitle = await browser.execute(() => document.title);
-    //     console.log("Internal Document Title:", internalTitle);
-
-    //     const btnCount = await $$('button').length;
-    //     console.log("Buttons found in current context:", btnCount);
-    // }
-
+    
     async verifyOnEquipmentPage(): Promise<boolean> {
 
         try {
@@ -116,8 +88,10 @@ class EquipmentListviewPage {
         await this.createBtn.waitForClickable({ timeout: 30000 });
         await this.createBtn.click();
 
-        await this.okBtn.waitForDisplayed({ timeout: 30000 });
-        await this.okBtn.click();
+        // await this.okBtn.waitForDisplayed({ timeout: 30000 });
+        // await this.okBtn.click();
+        const okBtn = await $("//header[.//text()='Success']/following::button[.//text()='OK']");
+        await utils.clickWithWait(okBtn);
 
         await this.equipmentIcon.waitForClickable({ timeout: 30000 });
     }
