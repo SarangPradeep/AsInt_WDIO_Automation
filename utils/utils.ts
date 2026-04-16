@@ -70,16 +70,12 @@ class Utils {
         }
     }
 
-    async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 30000): Promise<void> {
+    async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 300000): Promise<void> {
         const el = await element;
         await el.waitForExist({ timeout });
         await el.waitForDisplayed({ timeout });
-
-        // small buffer for animations (important for UI5)
         await browser.pause(200);
-
         await this.scrollIntoViewIfNeeded(el);
-
         await el.waitForClickable({
             timeout,
             timeoutMsg: `Element not clickable: ${el.selector}`
@@ -388,6 +384,10 @@ class Utils {
     }
 
     async selectCheckboxes(noOfEquipment: number): Promise<void> {
+        const firstCheckBox = await $('(//tr[@role="row"])[2]//div[@role="checkbox"]');
+        await firstCheckBox.waitForDisplayed();
+        await firstCheckBox.waitForClickable();
+        console.log("Checkbox now clickable");
         console.log(`Selecting checkboxes...`);
         for (let i = 1; i <= noOfEquipment; i++) {
             const expectedRow = i * 2;
@@ -437,93 +437,68 @@ class Utils {
 
     async addAllAdaptFilter(): Promise<void> {
 
-        let isAdaptFilterClickable = false;
-        try {
-            await this.adaptFilter.waitForClickable({ timeout: 30000 });
-            isAdaptFilterClickable = true;
-        } catch {
-            isAdaptFilterClickable = false;
-        }
+        await this.adaptFilter.waitForClickable({ timeout: 100000 });
 
-        if (!isAdaptFilterClickable) {
-            console.log("Settings not clickable → trying Back");
-            await browser.switchFrame(null);
-            const back = await this.backBtn;
-
-            if (await back.isExisting()) {
-                try {
-                    await this.clickWithWait(back);
-                    await this.waitForBusyIndicatorToDisappear();
-                    console.log("Clicked Back");
-                } catch {
-                    console.log("Back present but not clickable → skipping");
-                }
-            } else {
-                console.log("Back button not present → skipping");
-            }
-        }
         await browser.switchFrame(null);
-        if(await this.funLocIframe.isExisting()) {
+
+        if (await this.funLocIframe.isExisting()) {
             await this.switchToIframe(this.funLocIframe);
         } else if (await this.equipmentIframe.isExisting()) {
             await this.switchToIframe(this.equipmentIframe);
         }
+
         await this.adaptFilter.waitForClickable({ timeout: 10000 });
         await this.adaptFilter.click();
+        await browser.pause(5000);
 
-        console.log("Adapt Filters opened");
+        let prevCount: number = -1;
 
-        await browser.pause(10000);
         while (true) {
-            const checkboxes = await $$(
-                `//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"]`
-            );
+        const checkboxes: any = await $$(`//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"]`);
+        const uncheckedCount: number = checkboxes.length;
 
-            const uncheckedCount = await checkboxes.length;
-            console.log(`Found ${uncheckedCount} unchecked checkboxes`);
+        if (uncheckedCount === 0) break;
 
-            if (uncheckedCount === 0) break;
-
-            const checkbox = checkboxes[0];
-
-            try {
-                await this.clickWithWait(checkbox);
-            } catch {
-                await browser.execute(el => el.click(), checkbox);
-            }
+        if (uncheckedCount === prevCount) {
+            await browser.pause(2000);
         }
+
+        const checkbox = checkboxes[0];
+        try {
+            await checkbox.click();
+        } catch {
+            await browser.execute((el) => el.click(), checkbox);
+        }
+
+        prevCount = uncheckedCount;
+    }
+
         const filterNames = await $$('//tr[@role="row"]//bdi');
         const expectedFilters: string[] = [];
-        for (const el of filterNames) {
-            const text = await el.getText();
-            if (text.trim()) {
-                expectedFilters.push(text.trim());
-            }
-        }
-        console.log('Expected Filters:', expectedFilters);
 
-         await this.clickWithWait($('//button//bdi[text()="OK"]'));
+        for (const el of filterNames) {
+            const text = (await el.getText()) || (await el.getAttribute("innerText")) || "";
+            if (text.trim()) expectedFilters.push(text.trim());
+        }
+
+        await this.clickWithWait($('//button//bdi[text()="OK"]'));
         await browser.pause(5000);
 
         const actualFiltersElements = await $$('//label//bdi');
         const actualFilters: string[] = [];
 
         for (const el of actualFiltersElements) {
-            const text = await el.getText();
-            if (text.trim()) {
-                actualFilters.push(text.trim());
-            }
+            const text = (await el.getText()) || (await el.getAttribute("innerText")) || "";
+            if (text.trim()) actualFilters.push(text.trim());
         }
-        console.log('Actual Filters:', actualFilters);
+
         const missingFilters: string[] = [];
         for (const expected of expectedFilters) {
             if (!actualFilters.includes(expected)) {
-                console.error(`Missing filter: ${expected}`);
                 missingFilters.push(expected);
-            } else {
-                console.log(`Found filter: ${expected}`);
             }
         }
+
         if (missingFilters.length > 0) {
             throw new Error(`Missing filters: ${missingFilters.join(', ')}`);
         }
@@ -609,8 +584,9 @@ class Utils {
             const checkbox = await row.$(".//div[@role='checkbox']");
             const textElem = await row.$(".//td[@role='gridcell']//bdi");
             if (!(await checkbox.isExisting())) continue;
-            let text = await textElem.getText();
-            if (!text) text = await textElem.getAttribute("innerText");
+            // let text = await textElem.getText();
+            // if (!text) text = await textElem.getAttribute("innerText");
+            let text: string = (await textElem.getText()) || (await textElem.getAttribute("innerText")) || "";
             const isChecked = await checkbox.getAttribute("aria-checked");
             if (isChecked === "true") {
                 if (text && text.trim()) {
@@ -629,12 +605,14 @@ class Utils {
         await this.clickWithWait($("//h1[.//text()='View Settings']/following::button[.//text()='OK']"));
         console.log("Clicked OK");
         await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(10000);
         for (const field of selectedFields) {
             let found = false;
             const headerElems = await $$("//th//span");
             for (const el of headerElems) {
-                let text = await el.getText();
-                if (!text) text = await el.getAttribute("innerText");
+                // let text = await el.getText();
+                // if (!text) text = await el.getAttribute("innerText");
+                let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
                 const safeText = (text || "").trim();
                 if (safeText === field) {
                     console.log(`Found in HEADER: ${field}`);
@@ -645,8 +623,9 @@ class Utils {
             if (found) continue;
             const rowElems = await $$("//tbody//tr[2]//span[1][normalize-space()][not(normalize-space()='Yes')]");
             for (const el of rowElems) {
-                let text = await el.getText();
-                if (!text) text = await el.getAttribute("innerText");
+                // let text = await el.getText();
+                // if (!text) text = await el.getAttribute("innerText");
+                let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
                 const safeText = (text || "").trim();
                 if (safeText === field) {
                     console.log(`Found in ROW: ${field}`);
@@ -681,8 +660,9 @@ class Utils {
             "(//div[@role='checkbox' and @aria-checked='true']/ancestor::tr//td[@role='gridcell']//bdi)[position() <= 12]"
             );
             for (const el of fieldElems) {
-                let text = await el.getText();
-                if (!text) text = await el.getAttribute("innerText");
+                // let text = await el.getText();
+                // if (!text) text = await el.getAttribute("innerText");
+                let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
                 const safeText = (text || "").trim();
                 if (safeText && !selectedFields.includes(safeText)) {
                     selectedFields.push(safeText);
@@ -706,20 +686,21 @@ class Utils {
         }
         const headerTexts: string[] = [];
         for (const el of await $$("//th//span")) {
-            let text = await el.getText();
-            if (!text) text = await el.getAttribute("innerText");
-
+            // let text = await el.getText();
+            // if (!text) text = await el.getAttribute("innerText");
+            let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
             const safeText = (text || "").trim();
             if (safeText) headerTexts.push(safeText);
         }
         const rowTexts: string[] = [];
         for (const el of await $$("//tbody//tr[2]//span[1][normalize-space()][not(normalize-space()='Yes')]")) {
-            let text = await el.getText();
-            if (!text) text = await el.getAttribute("innerText");
-
+            // let text = await el.getText();
+            // if (!text) text = await el.getAttribute("innerText");
+            let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
             const safeText = (text || "").trim();
             if (safeText) rowTexts.push(safeText);
         }
+        await browser.pause(10000);
         console.log("DEBUG selectedFields length:", selectedFields.length);
         for (const field of selectedFields) {
             if (headerTexts.includes(field)) {
@@ -774,8 +755,9 @@ class Utils {
             console.log(`Found ${charts.length} chart(s) in Analytics Chart view`);
             console.log("Analytics Chart entries:");
             for (const chart of charts) {
-                let text = await chart.getText();
-                if (!text) text = await chart.getAttribute("innerText");
+                // let text = await chart.getText();
+                // if (!text) text = await chart.getAttribute("innerText");
+                let text: string = (await chart.getText()) || (await chart.getAttribute("innerText")) || "";
                 console.log(text);
             }
         }

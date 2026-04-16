@@ -5,7 +5,6 @@ import equipmentDetailPage from 'page_object_model/btp_applications_page/equipme
 import utils from 'utils/utils';
 
 describe('BTP Equipment App Functional test', () => {
-    let createdEquipmentName: string;
 
     it('should click on equipment application and verify the title', async () => {
         await HomePage.clickEquipmentTile();
@@ -32,10 +31,8 @@ describe('BTP Equipment App Functional test', () => {
     });
     
     it('should create equipment with mandatory fields and save', async () => {
-        createdEquipmentName = await utils.generateRandomEquipmentName();
 
         await equipmentListviewPage.createEquipmentWithMandatoryFields(
-            createdEquipmentName,
             equipmentTestData.createMandatory.description,
             equipmentTestData.createMandatory.equipmentTemplate,
             equipmentTestData.createMandatory.parentAsset
@@ -44,7 +41,7 @@ describe('BTP Equipment App Functional test', () => {
     });
 
     it('should verify equipment details page', async () => {
-        await equipmentListviewPage.clickOnEquipmentInList(createdEquipmentName);
+        await equipmentListviewPage.clickOnEquipmentInList(equipmentListviewPage.createdEquipmentName);
         expect(await equipmentDetailPage.verifyOnEquipmentDetailPage()).toBe(true);
     });
 
@@ -70,7 +67,7 @@ describe('BTP Equipment App Functional test', () => {
     });
 
     it('should edit structure info of equipment', async () => {
-        await equipmentDetailPage.editStructureInfo();
+        await equipmentDetailPage.editStructureInfo(2);
     });
     
     it('should assign Equipment Template and Equipment Classes to Equipment', async () => {

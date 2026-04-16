@@ -1,5 +1,5 @@
 import utils from "../../../utils/utils";
-
+import EquipmentListviewPage from "./equipment.listview.page.ts";
 class EquipmentDetailPage {
     //  SELECTORS 
     public equipmentHeadValue!: string;
@@ -7,7 +7,7 @@ class EquipmentDetailPage {
     private get equipmentNameHeader() { return $("//header[.//div[@role='heading']][@role='banner']"); }
     get successOkBtn() { return $("//header[.//text()='Success']/following::button[.//text()='OK']"); }
     equipmentName(name: string) { return $(`//*[text()="${name}"]//span`); }
-    private get deleteBtn() { return $('//bdi[text()="Delete"]/ancestor::button'); }
+    private get deleteBtn() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Delete']]"); }
     get structureSection() { return $('//button[.//bdi[text()="Structure"]]'); }
     get assignmentSection() { return $('//button[.//bdi[text()="Assignments"]]'); }
     get classificationSection() { return $('//button[.//bdi[text()="Classification & MDA"]]'); }
@@ -130,7 +130,8 @@ class EquipmentDetailPage {
         return $("//span[text()='Maintenance Data Attribute']/following::h2//span");
     }
  
-
+    public superEquipValue!: string;
+    public equipHeadValue!: string;
 
     //  METHODS 
     async verifyOnEquipmentDetailPage(expectedName?: string): Promise<boolean> {
@@ -257,9 +258,7 @@ class EquipmentDetailPage {
         }
     }
 
-    async editStructureInfo(): Promise<void> {
-        // Headless-safe click for Structure tab (normal click first, JS click fallback)
-        //await this.waitForBlockLayerToDisappear();
+    async editStructureInfo(noOfequip: number) {
         await browser.pause(4000);
         await utils.switchToIframe(this.equipmentIframe);
         await this.structureSection.waitForDisplayed({ timeout: 50000 });
@@ -280,8 +279,6 @@ class EquipmentDetailPage {
         await subordinateResultCell.waitForDisplayed({ timeout: 20000 });
         await subordinateResultCell.click();
         await browser.pause(2000);
-
-        // If dialog didn't auto-close, click Close button
         const closeBtn = await $('//bdi[text()="Close"]/ancestor::button');
         try {
             await closeBtn.waitForDisplayed({ timeout: 5000 });
@@ -293,40 +290,66 @@ class EquipmentDetailPage {
         }
         await browser.pause(2000);
 
-        // Iterate through each component equipment value and assign one by one
-        for (let i = 1; i <= 2; i++) {
-            await utils.switchToIframe(this.equipmentIframe);
-            // await this.componentInfoAssignBtn.waitForClickable({ timeout: 30000 });
-            // await this.componentInfoAssignBtn.click();
-            await utils.clickWithWait(this.componentInfoAssignBtn, 0, 50000);
-            await browser.pause(2000);
+        const superEquip = await $("//bdi[text()='Superordinate Equipment']/following::input[1]");
+        console.log("Assigning Equipment");
+        if (noOfequip === 0) return;
+        const superEquipValue: string =
+            (await superEquip.getAttribute("value"))?.trim() || "";
+        console.log("Super Ordinate Equipment Value :"+superEquipValue);
+        console.log("Equipment Name is:"+EquipmentListviewPage.createdEquipmentName);
+        let selectedCount = 0;
+        let i = 1;
 
-            await utils.switchToIframe(this.equipmentIframe);
-            // const equipment = await $('//li[contains(.,"Equipment")]');
-            // await equipment.waitForDisplayed({ timeout: 5000 })
-            // await equipment.click()
+        while (selectedCount < noOfequip) {
+            await utils.clickWithWait(this.componentInfoAssignBtn, 1000);
+            await browser.pause(2000);
+            await browser.keys(['ArrowDown']);
+            await browser.keys(['ArrowDown']);
             await browser.keys(['ArrowDown']);
             await browser.keys(['Enter']);
             await browser.pause(2000);
 
-            const resultCell = await $(`(//tr[@role="row"])[${i * 2}]//div[@role="checkbox"]`);
-            await resultCell.waitForClickable({ timeout: 20000 });
-            await resultCell.click();
+            await utils.switchToIframe(this.equipmentIframe);
 
-            const confirmBtn = await $('//button[.//bdi[text()="Confirm"]]');
-            await confirmBtn.waitForClickable({ timeout: 30000 });
-            await confirmBtn.click();
-            const okBtn = await $('//button[.//bdi[text()="OK"]]');
-            await okBtn.waitForClickable({ timeout: 30000 });
-            await okBtn.click();
-            await okBtn.waitForDisplayed({ reverse: true, timeout: 30000 });
-            await this.componentInfoAssignBtn.waitForClickable({ timeout: 30000 });
-        }
-        //await Utils.clickWithWait(this.componentInfoUnassignBtn, 0, 50000);
-        await this.saveBtn.click();
-        await this.successOkBtn.waitForClickable({ timeout: 30000 });
-        await this.successOkBtn.click();
-        await browser.pause(5000);
+            let foundValid = false;
+
+            while (!foundValid) {
+                const nameCell = $(`(//tr[@role='row'])[${i + 1}]//td[3]//span`);
+                await nameCell.waitForDisplayed({ timeout: 20000 });
+
+                let equipName: string = (await nameCell.getText()) || (await nameCell.getAttribute("innerText")) || "";
+                equipName = equipName.trim();
+
+                if (
+                    equipName &&
+                    (equipName.includes(EquipmentListviewPage.createdEquipmentName) || equipName.includes(superEquipValue))
+                ) {
+                    i++;
+                    continue;
+                }
+
+                // click corresponding checkbox (td[2])
+                const checkbox = $(`((//tr[@role='row'])[${i + 1}]//td[2]//div)[1]`);
+                await utils.clickWithWait(checkbox);
+                await utils.waitForBusyIndicatorToDisappear();
+
+                selectedCount++;
+                i++;
+                foundValid = true;
+
+                await utils.clickWithWait($("//header[.//text()='Select Equipment']/following::bdi[text()='Confirm']"));
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(1000);
+                await utils.clickWithWait($("//header[.//text()='Success']/following::bdi[text()='OK']"), 1000);
+                await utils.waitForBusyIndicatorToDisappear();
+
+                selectedCount++;
+                i++;
+                foundValid = true;
+            }
+    }
+
+    console.log("Equipment assigned");
     }
 
     async assignEquipmentTemplate(noOfEquipment: number, autoAssign: boolean): Promise<void> {
@@ -402,8 +425,8 @@ class EquipmentDetailPage {
         if(availableCharCount === 0)
         {
             console.log("No of characteritics available is zero")
-            await this.cancelBtn.click();
-            utils.waitForBusyIndicatorToDisappear();
+            await utils.clickWithWait($("//header[.//text()='Assign Classes']/following::button[.//bdi[text()='Cancel']]"));
+            await utils.waitForBusyIndicatorToDisappear();
             k=1;
         }
         else if (availableCharCount <= noOfChar )
@@ -607,7 +630,7 @@ class EquipmentDetailPage {
 
         console.log("Clicking Delete...");
         await utils.clickWithWait(this.deleteBtn,3000);
-        await utils.clickWithWait($("//bdi[text()='OK']"),3000);
+        await utils.clickWithWait($("//header[.//text()='Confirmation']/following::bdi[text()='OK']"),3000);
 
         await utils.waitForBusyIndicatorToDisappear();
 
