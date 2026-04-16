@@ -33,20 +33,21 @@ class EquipmentListviewPage {
         }
     }
 
+    public createdEquipmentName!: string;
+
     async createEquipmentWithMandatoryFields(
-        equipmentName: string,
         description: string,
         equipmentTemplate: string,
         parentAsset: string
     ): Promise<void> {
-
+        this.createdEquipmentName = await utils.generateRandomEquipmentName();
         await utils.switchToIframe(this.equipmentIframe);;
 
         await this.createEquipmentBtn.waitForClickable({ timeout: 50000 });
         await this.createEquipmentBtn.click();
         await browser.pause(2000);
         await this.equipmentNameInput.waitForDisplayed({ timeout: 30000 });
-        await this.equipmentNameInput.setValue(equipmentName);
+        await this.equipmentNameInput.setValue(this.createdEquipmentName);
         await browser.pause(2000);
         await this.equipmentDescInput.waitForDisplayed({ timeout: 30000 });
         await this.equipmentDescInput.setValue(description);

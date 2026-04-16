@@ -582,38 +582,42 @@ class functionalLocationDetailView {
     }
 
     public async assignFuncLoc(noOfFunLoc: number) {
-    console.log("Assigning Functional Location");
-    if (noOfFunLoc === 0) return;
-    let selectedCount = 0;
-    let i = 1;
-    while (selectedCount < noOfFunLoc) {
-        await utils.clickWithWait(this.compInfoAsgn,1000);
-        await browser.pause(2000);
-        //await utils.clickWithWait(this.compInfoFunLocAsgn,1000);
-        // SECOND selection → Functional Location
-        await browser.keys(['ArrowDown']);
-        await browser.keys(['ArrowDown']);
-        await browser.keys(['Enter']);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.funLocIframe);
-        let foundValid = false;
-        while (!foundValid) {
-            const row = $(`(//tr[@role='row'])[${i + 1}]//td[2]//span`);
-            await row.waitForDisplayed({ timeout: 20000 });
-            const text = await row.getText();
-            console.log("Text -> "+text);
-            if (text === this.funcLocHeadValue ||text === this.superFuncLocValue) {
-                i++;
-                continue;
-            }
-            await utils.clickWithWait(row);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(1000);
-            await utils.clickWithWait(this.okBtn,1000);
-            await utils.waitForBusyIndicatorToDisappear();
-            selectedCount++;
-            i++;
-            foundValid = true;
+        console.log("Assigning Functional Location");
+        if (noOfFunLoc === 0) return;
+        let selectedCount = 0;
+        let i = 1;
+        while (selectedCount < noOfFunLoc) {
+            await utils.clickWithWait(this.compInfoAsgn,1000);
+            await browser.pause(2000);
+            await browser.keys(['ArrowDown']);
+            await browser.keys(['ArrowDown']);
+            await browser.keys(['Enter']);
+            await browser.pause(2000);
+            await utils.switchToIframe(this.funLocIframe);
+            let foundValid = false;
+            while (!foundValid) {
+                const row = $(`(//tr[@role='row'])[${i + 1}]//td[2]//span`);
+                await row.waitForDisplayed({ timeout: 20000 });
+                let text: string = (await row.getText()) || (await row.getAttribute("innerText")) || "";
+                text = text.trim();
+                console.log("Row text ->", text);
+                console.log("Skip values ->", this.funcLocHeadValue, this.superFuncLocValue);
+                if (
+                    text &&
+                    (text.includes(this.funcLocHeadValue) || text.includes(this.superFuncLocValue))
+                ) {
+                    i++;
+                    continue;
+                }
+
+                await utils.clickWithWait(row);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(1000);
+                await utils.clickWithWait(this.okBtn, 1000);
+                await utils.waitForBusyIndicatorToDisappear();
+                selectedCount++;
+                i++;                 
+                foundValid = true;
             }
         }
         console.log("Functional Location assigned");
