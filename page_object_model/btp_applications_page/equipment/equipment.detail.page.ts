@@ -18,138 +18,67 @@ class EquipmentDetailPage {
     private get changeHistorySection() { return $('//button[.//bdi[text()="Change History"]]'); }
     get equipmentAssignBtn() {return $('(//div[text()="Equipment Templates"]/following::bdi[text()="Assign"])[1]')}
     get equipmentClassAssignBtn() {return $('(//div[text()="Equipment Template Class & Characteristics"]/following::bdi[text()="Assign"])[1]')}
-
-    //GENERAL INFO
     get editBtn() { return $('//button[contains(@class,"sapMBtn")][.//bdi[text()="Edit"]]'); }
-    get inventoryNumberInput() {
-        return $('//bdi[text()="Inventory Number"]/following::input[1]');
-    }
-    private get equipmentIframe() {
-        return $('iframe[data-help-id="application-equipment-manage"]');
-    }
-    get componentTypeDropdown() {
-        return $('//bdi[text()="Component Type"]/following::input[1]');
-    }
-    get activationStateDropdown() {
-        return $('//bdi[text()="Activation State"]/following::input[1]');
-    }
-    get authorizationGroupInput() {
-        return $('//bdi[text()="Authorization Group"]/following::input[1]');
-    }
-    get startUpDateInput() {
-        return $('//bdi[text()="Start up date"]/following::input[1]');
-    }
-    get deactivationDateInput() {
-        return $('//bdi[text()="Deactivation Date"]/following::input[1]');
-    }
-    get componentRegulatoryIdInput() {
-        return $('//bdi[text()="Component Regulatory ID"]/following::input[1]');
-    }
-    get commentsTextArea() {
-        return $('//bdi[text()="Comments"]/following::textarea[1]');
-    }
-    get longDescTextArea() {
-        return $('//bdi[text()="Long Description"]/following::textarea[1]');
-    }
-    // Reference Data
-    get acquisitionValueInput() {
-        return $('//bdi[text()="Acquisition Value / Currency"]/following::input[1]');
-    }
-    // Manufacturer Data
-    get assetManufacturerInput() {
-        return $('//bdi[text()="Asset Manufacturer Name "]/following::input[1]');
-    }
-    get partNumberInput() {
-        return $('//bdi[text()="Part Number "]/following::input[1]');
-    }
-    get modelNumberInput() {
-        return $('//bdi[text()="Model Number "]/following::input[1]');
-    }
-    get serialNumberInput() {
-        return $('//bdi[text()="Serial Number"]/following::input[1]');
-    }
-
-    get superordinateEquipmentInput() {
-        return $('//bdi[text()="Superordinate Equipment"]/following::input[1]');
-    }
-    get functionalLocationInput() {
-        return $('//bdi[text()="Functional Location"]/following::input[1]');
-    }
-    get componentInfoAssignBtn() {
-        return $('//button[.//bdi[text()="Assign"]]');
-    }
-    get componentInfoUnassignBtn() {
-        return $('//button[.//bdi[text()="Unassign"]]');
-    }
-
-    // save button
-    get saveBtn() {
-        return $('//button[.//bdi[text()="Save"]]');
-    }
-    private get groups() {
-        return $("//div[text()='Equipment Template Class & Characteristics']/following::span[1]");
-    }
-
-    get asgnChrMDA() {
-        return $("//span[text()='Maintenance Data Attribute']/following::bdi[text()='Assign']");
-    }
-    get noOfClassMDA() {
-        return $("//span[text()='Assign Classes']/following::span[2]");
-    }
-    private get riskProfile() {
-        return $("//bdi[text()='Risk Summary']//following::h2[1]");
-    }
-    private get component() {
-        return $("//bdi[text()='Risk Summary']//following::h2[2]");
-    }
-    private get recommendation() {
-        return $("//bdi[text()='Risk Summary']//following::div[@aria-level='2']//span");
-    }
-    private get riskAndCriticality() {
-        return $("//div[text()='Risk and Criticality']/following::span[1]");
-    }
-    private get assetStrategyRBI() {
-        return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]");
-    }
-    private get assetStrategyRCM() {
-        return $("(//div[text()='Asset Strategy']/following::li//div//div)[2]");
-    }
-    private get assetInsp() {
-        return $("//div[text()='Asset Inspection']/following::span[1]");
-    }
-    private get findings() {
-        return $("//div[text()='Findings']/following::span[1]");
-    }
-    private get recommend() {
-        return $("//div[text()='Recommendations']/following::span[1]");
-    }
-     get cancelBtn() {
-        return $("//bdi[text()='Cancel']");
-    }
-    private get noOfCharMDA () {
-        return $("//span[text()='Maintenance Data Attribute']/following::h2//span");
-    }
- 
+    get inventoryNumberInput() { return $('//bdi[text()="Inventory Number"]/following::input[1]'); }
+    private get equipmentIframe() { return $('iframe[data-help-id="application-equipment-manage"]'); }
+    get componentTypeDropdown() { return $('//bdi[text()="Component Type"]/following::input[1]'); }
+    get activationStateDropdown() { return $('//bdi[text()="Activation State"]/following::input[1]'); }
+    get authorizationGroupInput() { return $('//bdi[text()="Authorization Group"]/following::input[1]'); }
+    get startUpDateInput() { return $('//bdi[text()="Start up date"]/following::input[1]'); }
+    get deactivationDateInput() { return $('//bdi[text()="Deactivation Date"]/following::input[1]'); }
+    get componentRegulatoryIdInput() { return $('//bdi[text()="Component Regulatory ID"]/following::input[1]'); }
+    get commentsTextArea() { return $('//bdi[text()="Comments"]/following::textarea[1]'); }
+    get longDescTextArea() { return $('//bdi[text()="Long Description"]/following::textarea[1]'); }
+    get acquisitionValueInput() { return $('//bdi[text()="Acquisition Value / Currency"]/following::input[1]'); }
+    get assetManufacturerInput() { return $('//bdi[text()="Asset Manufacturer Name "]/following::input[1]'); }
+    get partNumberInput() { return $('//bdi[text()="Part Number "]/following::input[1]'); }
+    get modelNumberInput() { return $('//bdi[text()="Model Number "]/following::input[1]'); }
+    get serialNumberInput() { return $('//bdi[text()="Serial Number"]/following::input[1]'); }
+    get superordinateEquipmentInput() { return $('//bdi[text()="Superordinate Equipment"]/following::input[1]'); }
+    get functionalLocationInput() { return $('//bdi[text()="Functional Location"]/following::input[1]'); }
+    get componentInfoAssignBtn() { return $('//button[.//bdi[text()="Assign"]]'); }
+    get componentInfoUnassignBtn() { return $('//button[.//bdi[text()="Unassign"]]'); }
+    get saveBtn() { return $('//button[.//bdi[text()="Save"]]'); }
+    private get groups() { return $("//div[text()='Equipment Template Class & Characteristics']/following::span[1]"); }
+    get asgnChrMDA() { return $("//span[text()='Maintenance Data Attribute']/following::bdi[text()='Assign']"); }
+    get noOfClassMDA() { return $("//span[text()='Assign Classes']/following::span[2]"); }
+    private get riskProfile() { return $("//bdi[text()='Risk Summary']//following::h2[1]"); }
+    private get component() { return $("//bdi[text()='Risk Summary']//following::h2[2]"); }
+    private get recommendation() { return $("//bdi[text()='Risk Summary']//following::div[@aria-level='2']//span"); }
+    private get riskAndCriticality() { return $("//div[text()='Risk and Criticality']/following::span[1]"); }
+    private get assetStrategyRBI() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]"); }
+    private get assetStrategyRCM() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[2]"); }
+    private get assetInsp() { return $("//div[text()='Asset Inspection']/following::span[1]"); }
+    private get findings() { return $("//div[text()='Findings']/following::span[1]"); }
+    private get recommend() { return $("//div[text()='Recommendations']/following::span[1]"); }
+    get cancelBtn() { return $("//bdi[text()='Cancel']"); }
+    private get noOfCharMDA() { return $("//span[text()='Maintenance Data Attribute']/following::h2//span"); }
+    private get equipmentHeaderTitleSpans() { return $$("//header[@role='banner']//*[@role='heading']//span[normalize-space()]"); }
+    private get equipmentEditHeader() { return $("//bdi[text()='Edit Header']"); }
+    private get equipmentDescEditHeader() { return $("//div[@role='dialog']//bdi[contains(text(),'Description')]/following::input[1][not(@readonly)]"); }
+    private get equipmentCategoryEditHeader() { return $("//div[@role='dialog']//bdi[text()='Category']/following::input[1]"); }
+    private get equipmentCategoryDialog() { return $("//span[text()='Select Category']"); }
+    private get equipmentFirstCategoryChoose() { return $("(//span[.='Select Category']/ancestor::header/following::*[name()='circle'][2])[1]"); }
+    private get equipmentCategorySave() { return $("(//bdi[text()='Save'])[2]"); }
+    private get equipmentHeaderSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get equipmentHdSaveSucc() { return $("//span[text()='Updated successfully']"); }
+    private get equipmentHdOkBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
     public superEquipValue!: string;
     public equipHeadValue!: string;
 
-    //  METHODS 
     async verifyOnEquipmentDetailPage(expectedName?: string): Promise<boolean> {
         try {
             await this.equipmentNameHeader.waitForDisplayed({ timeout: 50000 });
-
-            // If no argument passed → just verify element exists
             if (!expectedName) {
                 return true;
             }
-
             const actualName = await this.equipmentName(expectedName).getText();
             return actualName === expectedName;
-
         } catch {
             return false;
         }
     }
+    
     async fillGeneralInfo(
         inventoryNumber?: string,
         componentType?: string,
@@ -735,6 +664,69 @@ class EquipmentDetailPage {
             }
         }
         return "";
+    }
+
+    public async verifyHeader(): Promise<void> {
+        console.log("Verifying Equipment name");
+        const expectedEquipmentName = EquipmentListviewPage.createdEquipmentName;
+        console.log(`Expected Equipment header: ${expectedEquipmentName}`);
+        console.log("Waiting for visible Equipment header title element");
+ 
+        await browser.waitUntil(async () => {
+            const headingSpans = await this.equipmentHeaderTitleSpans;
+            for (const span of headingSpans) {
+                if (await span.isDisplayed()) {
+                    const headingText = (await span.getText())?.trim();
+                    if (headingText === expectedEquipmentName) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }, {
+            timeout: 30000,
+            interval: 500,
+            timeoutMsg: `Equipment header '${expectedEquipmentName}' was not visible in Object Page header`
+        });
+ 
+        let actualVisibleHeader = "";
+        const headingSpans = await this.equipmentHeaderTitleSpans;
+        for (const span of headingSpans) {
+            if (await span.isDisplayed()) {
+                const headingText = (await span.getText())?.trim();
+                if (headingText) {
+                    actualVisibleHeader = headingText;
+                    break;
+                }
+            }
+        }
+ 
+        console.log(`Actual Equipment header: ${actualVisibleHeader}`);
+        await expect(actualVisibleHeader).toEqual(expectedEquipmentName);
+        console.log("Equipment name matches header name");
+    }
+ 
+    public async editHeader(): Promise<void> {
+        console.log("Editing header's Information");
+        await utils.clickWithWait(this.equipmentEditHeader);
+        await utils.setValueWithWait(this.equipmentDescEditHeader, "Equipment header updated by automation");
+        await utils.clickWithWait(this.equipmentCategoryEditHeader);
+        await this.equipmentCategoryDialog.waitForDisplayed({ timeout: 30000 });
+ 
+        console.log("selecting first available category option");
+        await this.equipmentFirstCategoryChoose.scrollIntoView();
+        await utils.clickWithWait(this.equipmentFirstCategoryChoose);
+       
+        await utils.clickWithWait(this.equipmentCategorySave);
+        await utils.clickWithWait(this.equipmentHeaderSave);
+        console.log("Header save clicked, waiting for success message");
+        await this.equipmentHdSaveSucc.waitForDisplayed({ timeout: 30000 });
+        console.log("Header update success message displayed");
+        await utils.clickWithWait(this.equipmentHdOkBtn);
+        console.log("Success dialog acknowledged with OK");
+        console.log("Header edited successfully");
+ 
+        await browser.pause(5000);
     }
 
 }

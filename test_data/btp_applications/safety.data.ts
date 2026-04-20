@@ -28,8 +28,8 @@ export const safetydata = {
         barrierDiscipline : 'Civil',
         barrierRemarks : 'BarrierRemarks!@',
         objtypeRecomm : 'Functional',
-        sdOfRecomme : 'AutomationRecommendation',
-        LdofRecomme : 'AutomationLDOfrecomm',
+        sdOfRecomme : 'Automation Recommendation for Hazop',
+        LdofRecomme : 'Automation LD Of recomm for Hazop',
         recommSubType : 'Condition',
 
 

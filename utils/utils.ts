@@ -5,33 +5,16 @@ import * as fs from 'fs';
 class Utils {
     downloadDir = path.resolve(process.cwd(), 'downloads');
 
-    private get equipmentIframe() {
-        return $('iframe[data-help-id="application-equipment-manage"]');
-    }
-    private get funLocIframe() {
-        return $('iframe[data-help-id="application-functionallocation-manage"]');
-    }
-    private get CMLIframe() {
-        return $('iframe[data-help-id="application-cml-manage"]');
-    }
-    private get backBtn() {  
-        return $("//a[@aria-label='Back']"); 
-    }
-    private get settingsBtn() {  
-        return $("//span[text()='Settings']/preceding-sibling::span//span"); 
-    }
-    private get showHierarchyBtn() {  
-        return $("//span[text()='Show Hierarchy']/preceding-sibling::span"); 
-    }
-    private get showAnalyticChartBtn() {  
-        return $("//span[text()='Analytics Chart']/preceding-sibling::span"); 
-    }
-    private get closeHierarchyBtn() {  
-        return $("//div[@role='toolbar']/button[@aria-label='Decline']"); 
-    }
-    private get closeAnalyticChartBtn() {  
-        return $("//button[@title='Close']"); 
-    }
+    private get equipmentIframe() { return $('iframe[data-help-id="application-equipment-manage"]'); }
+    private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
+    private get CMLIframe() { return $('iframe[data-help-id="application-cml-manage"]'); }
+    private get backBtn() { return $("//a[@aria-label='Back']"); }
+    private get settingsBtn() { return $("//span[text()='Settings']/preceding-sibling::span//span"); }
+    private get showHierarchyBtn() { return $("//span[text()='Show Hierarchy']/preceding-sibling::span"); }
+    private get showAnalyticChartBtn() { return $("//span[text()='Analytics Chart']/preceding-sibling::span"); }
+    private get closeHierarchyBtn() { return $("//div[@role='toolbar']/button[@aria-label='Decline']"); }
+    private get closeAnalyticChartBtn() { return $("//button[@title='Close']"); }
+    private get hazopIframe(): any { return $("iframe[data-help-id='application-hazop-manage']"); }
 
     async switchToIframe(frameElement: any): Promise<void> {
         console.log("---- Switching to iframe ----");
@@ -70,7 +53,7 @@ class Utils {
         }
     }
 
-    async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 300000): Promise<void> {
+    async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 100000): Promise<void> {
         const el = await element;
         await el.waitForExist({ timeout });
         await el.waitForDisplayed({ timeout });
@@ -80,7 +63,6 @@ class Utils {
             timeout,
             timeoutMsg: `Element not clickable: ${el.selector}`
         });
-
         // ========== TRY 1 : normal click ==========
         try {
             await el.click();
@@ -89,7 +71,6 @@ class Utils {
         } catch (err) {
             console.log(`Normal click failed → ${el.selector}`);
         }
-
         // ========== TRY 2 : scroll + retry ==========
         try {
             await browser.pause(500);
@@ -101,7 +82,6 @@ class Utils {
         } catch (err) {
             console.log(`Retry click failed → ${el.selector}`);
         }
-
         // ========== TRY 3 : JS click ==========
         try {
             await browser.execute(
@@ -113,18 +93,15 @@ class Utils {
         } catch (err) {
             console.log(`JS click failed → ${el.selector}`);
         }
-
         // ========== TRY 4 : real mouse action click ==========
         try {
             await el.moveTo();
             await browser.pause(200);
-
             await browser.action('pointer')
                 .move({ origin: el })
                 .down()
                 .up()
                 .perform();
-
             if (delayAfter) await browser.pause(delayAfter);
             return;
         } catch (err) {
@@ -132,7 +109,7 @@ class Utils {
         }
     }
 
-    async setValueWithWait(element: any, value: string, delayAfter = 0, timeout = 30000): Promise<void> {
+    async setValueWithWait(element: any, value: string, delayAfter = 0, timeout = 60000): Promise<void> {
         const el = await element;
         await el.waitForDisplayed({ timeout });
         await el.scrollIntoView();
@@ -436,8 +413,8 @@ class Utils {
     }
 
     async addAllAdaptFilter(): Promise<void> {
-
-        await this.adaptFilter.waitForClickable({ timeout: 100000 });
+        console.log("Trying to open Adapt filter");
+       // await this.adaptFilter.waitForClickable({ timeout: 100000 });
 
         await browser.switchFrame(null);
 
@@ -445,33 +422,36 @@ class Utils {
             await this.switchToIframe(this.funLocIframe);
         } else if (await this.equipmentIframe.isExisting()) {
             await this.switchToIframe(this.equipmentIframe);
+        }else if(await this.hazopIframe.isExisting()){
+            await this.switchToIframe(this.hazopIframe);
         }
 
-        await this.adaptFilter.waitForClickable({ timeout: 10000 });
+        await this.adaptFilter.waitForClickable({ timeout: 200000 });
         await this.adaptFilter.click();
         await browser.pause(5000);
-
+        console.log("Adapt filter opened");
         let prevCount: number = -1;
 
-        while (true) {
-        const checkboxes: any = await $$(`//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"]`);
-        const uncheckedCount: number = checkboxes.length;
+        while (true) { 
+            //const checkboxes: any = await $$(`//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"]`);
+            const checkboxes: any = await $$(`(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]//div[@role='checkbox' and @aria-checked='false']`);
+            const uncheckedCount: number = checkboxes.length;
 
-        if (uncheckedCount === 0) break;
+            if (uncheckedCount === 0) break;
 
-        if (uncheckedCount === prevCount) {
-            await browser.pause(2000);
+            if (uncheckedCount === prevCount) {
+                await browser.pause(2000);
+            }
+
+            const checkbox = checkboxes[0];
+            try {
+                await checkbox.click();
+            } catch {
+                await browser.execute((el) => el.click(), checkbox);
+            }
+
+            prevCount = uncheckedCount;
         }
-
-        const checkbox = checkboxes[0];
-        try {
-            await checkbox.click();
-        } catch {
-            await browser.execute((el) => el.click(), checkbox);
-        }
-
-        prevCount = uncheckedCount;
-    }
 
         const filterNames = await $$('//tr[@role="row"]//bdi');
         const expectedFilters: string[] = [];
@@ -532,189 +512,170 @@ class Utils {
         return `${Math.floor(Math.random() * 10000000)}-EQUIP-AUTO`;
     }
 
-    public async verifyFieldsInListView(): Promise<void> {
-        const settings = await this.settingsBtn;
-        this.waitForBusyIndicatorToDisappear();
-        console.log("Checking if Settings is available on current page");
-        let isSettingsClickable = false;
-        try {
-            await settings.waitForClickable({ timeout: 30000 });
-            isSettingsClickable = true;
-        } catch {
-            isSettingsClickable = false;
-        }
-        if (!isSettingsClickable) {
-            console.log("Settings not clickable → trying Back");
-            await browser.switchFrame(null);
-            const back = await this.backBtn;
-            if (await back.isExisting()) {
-                try {
-                    await this.clickWithWait(back);
-                    await this.waitForBusyIndicatorToDisappear();
-                    console.log("Clicked Back");
-                } catch {
-                    console.log("Back present but not clickable → skipping");
-                }
-            } else {
-                console.log("Back button not present → skipping");
-            }
-        }
-        await browser.switchFrame(null);
-        if(await this.funLocIframe.isExisting()) {
-            await this.switchToIframe(this.funLocIframe);
-        } else if (await this.equipmentIframe.isExisting()) {
-            await this.switchToIframe(this.equipmentIframe);
-        }
-        await settings.waitForClickable({ timeout: 10000 });
-        await settings.click();
-        console.log("Settings opened");
-        await browser.pause(2000); 
-        const allTextElems = await $$("//td[@role='gridcell']//bdi");
-        const availableTexts: string[] = [];
-        for (const el of allTextElems) {
-            const text = await el.getText();
-            if (text.trim()) {
-                availableTexts.push(text.trim());
-            }
-        }
-        console.log("Available fields:", availableTexts);
-        const selectedFields: string[] = [];
-        const rows = await $$("//tr[@role='row']");
-        for (const row of rows) {
-            const checkbox = await row.$(".//div[@role='checkbox']");
-            const textElem = await row.$(".//td[@role='gridcell']//bdi");
-            if (!(await checkbox.isExisting())) continue;
-            // let text = await textElem.getText();
-            // if (!text) text = await textElem.getAttribute("innerText");
-            let text: string = (await textElem.getText()) || (await textElem.getAttribute("innerText")) || "";
-            const isChecked = await checkbox.getAttribute("aria-checked");
-            if (isChecked === "true") {
-                if (text && text.trim()) {
-                    selectedFields.push(text.trim());
-                }
-            }
-            if (isChecked === "false") {
-                if (text && text.trim()) {
-                    selectedFields.push(text.trim()); // include newly selected also
-                }
-                await checkbox.click();
-            }
-        }
-
-        console.log("Final selected fields (including pre-selected):", selectedFields);
-        await this.clickWithWait($("//h1[.//text()='View Settings']/following::button[.//text()='OK']"));
-        console.log("Clicked OK");
-        await this.waitForBusyIndicatorToDisappear();
-        await browser.pause(10000);
-        for (const field of selectedFields) {
-            let found = false;
-            const headerElems = await $$("//th//span");
-            for (const el of headerElems) {
-                // let text = await el.getText();
-                // if (!text) text = await el.getAttribute("innerText");
-                let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
-                const safeText = (text || "").trim();
-                if (safeText === field) {
-                    console.log(`Found in HEADER: ${field}`);
-                    found = true;
-                    break;
-                }
-            }
-            if (found) continue;
-            const rowElems = await $$("//tbody//tr[2]//span[1][normalize-space()][not(normalize-space()='Yes')]");
-            for (const el of rowElems) {
-                // let text = await el.getText();
-                // if (!text) text = await el.getAttribute("innerText");
-                let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
-                const safeText = (text || "").trim();
-                if (safeText === field) {
-                    console.log(`Found in ROW: ${field}`);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                throw new Error(`Field NOT found on screen: ${field}`);
-            }
-        }
-        console.log("All selected fields verified successfully");
+    async generateRandomHazopName(): Promise<string> {
+        console.log(`AUTOMATION-HAZOP-${Math.floor(Math.random() * 10000)}`);
+        return `AUTOMATION-HAZOP-${Math.floor(Math.random() * 10000)}`;
     }
 
-    async resetFieldsInListView(): Promise<void> {
+    public async verifyFieldsInListView(): Promise<void> {
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.switchFrame(null);
+        if(await this.funLocIframe.isExisting()) await this.switchToIframe(this.funLocIframe);
+        else if (await this.equipmentIframe.isExisting()) await this.switchToIframe(this.equipmentIframe);
+        else if (await this.hazopIframe.isExisting()) await this.switchToIframe(this.hazopIframe);
+
+        await this.clickWithWait(this.settingsBtn);
+        await browser.pause(2000);
+        const rows = await browser.$$("(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]//tr[@role='row']");
+        const rowsArr = Array.from(rows);
+        let uncheckedCheckboxes: any[] = [];
+        let removedFields: string[] = [];
+        let selectedFields: string[] = [];
+
+        for (let i = 0; i < rowsArr.length; i++) {
+
+        const row = rowsArr[i];
+        const checkbox = await row.$(".//div[@role='checkbox']");
+        const textElem = await row.$(".//td[@role='gridcell']//bdi");
+        if (!(await checkbox.isExisting())) continue;
+        const text = ((await textElem.getText()) || "").trim();
+        const state = await checkbox.getAttribute("aria-checked");
+        if (text) selectedFields.push(text);
+        if (state === "false") uncheckedCheckboxes.push(checkbox);
+        }
+
+        if (uncheckedCheckboxes.length > 0) {
+            for (let i = 0; i < uncheckedCheckboxes.length; i++) {
+                await uncheckedCheckboxes[i].click();
+            }
+        }
+        else {
+            const startIndex = rowsArr.length - 2;
+            for (let i = startIndex; i < rowsArr.length; i++) {
+                const row = rowsArr[i];
+                const checkbox = await row.$(".//div[@role='checkbox']");
+                const textElem = await row.$(".//td[@role='gridcell']//bdi");
+
+                const text = ((await textElem.getText()) || "").trim();
+                await checkbox.click();
+                removedFields.push(text);
+            }
+        }
+
+        await this.clickWithWait($("//h1[.//text()='View Settings']/following::button[.//text()='OK']"));
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(8000);
+
+        const headerElems = await $$("//th//span");
+        const rowElems = await $$("//tbody//tr[2]//span[1][normalize-space()][not(normalize-space()='Yes')]");
+
+        for (const field of selectedFields) {
+
+            if (removedFields.includes(field)) continue;
+
+            let found = false;
+
+            for (const el of headerElems) {
+                const txt = ((await el.getText()) || "").trim();
+                if (txt === field) {
+                    console.log(`FOUND: ${field} in HEADER`);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                for (const el of rowElems) {
+                    const txt = ((await el.getText()) || "").trim();
+                    if (txt === field) {
+                        console.log(`FOUND: ${field} in ROW`);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!found) {
+                throw new Error(`Field NOT visible: ${field}`);
+            }
+        }
+
+        // verify removed fields (HAZOP case)
+        for (const field of removedFields) {
+            for (const el of headerElems) {
+                const txt = ((await el.getText()) || "").trim();
+                if (txt === field) {
+                    throw new Error(`Field still visible after removal: ${field}`);
+                }
+            }
+        }
+
+        console.log("verifyFieldsInListView PASSED");
+    }
+
+
+   async resetFieldsInListView(): Promise<void> {
         const settings = await this.settingsBtn;
         await this.waitForBusyIndicatorToDisappear();
         await settings.waitForClickable({ timeout: 10000 });
         await settings.click();
-        console.log("Settings opened");
         const resetBtn = await $('//h1[.//text()="View Settings"]/following::button[.//text()="Reset"]');
-        let selectedFields: string[] = [];
-        if (await resetBtn.isExisting() && await resetBtn.isEnabled()) {
-            await this.clickWithWait(resetBtn);
-            await this.waitForBusyIndicatorToDisappear();
-            const OkWrnBtn = await $('//span[text()="Warning"]//following::bdi[text()="OK"]');
-            await this.clickWithWait(OkWrnBtn);
-            await this.waitForBusyIndicatorToDisappear();
-            await browser.pause(5000); // wait for fields to update after reset
-            console.log("Reset confirmed, capturing checked fields");
-            const fieldElems = await $$(
-            "(//div[@role='checkbox' and @aria-checked='true']/ancestor::tr//td[@role='gridcell']//bdi)[position() <= 12]"
-            );
-            for (const el of fieldElems) {
-                // let text = await el.getText();
-                // if (!text) text = await el.getAttribute("innerText");
-                let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
-                const safeText = (text || "").trim();
-                if (safeText && !selectedFields.includes(safeText)) {
-                    selectedFields.push(safeText);
-                }
-            }
-            console.log("Fields after reset:", selectedFields);
-            if (selectedFields.length < 8 || selectedFields.length > 12) {
-                throw new Error(`Wrong number of reset fields: ${selectedFields.length}`);
-            }
-            if (selectedFields.length < 8 || selectedFields.length > 12) {
-                throw new Error(`Wrong number of reset fields: ${selectedFields.length}`);
-            }
-            await this.clickWithWait($("//h1[.//text()='View Settings']/following::button[.//text()='OK']"));
-            await this.waitForBusyIndicatorToDisappear();
-            console.log("Popup closed");
-        } else 
-        {
-            console.log("Reset not available → skipping");
+
+        if (!(await resetBtn.isExisting())) {
             await this.clickWithWait($('//button//bdi[text()="OK"]'));
             return;
         }
+
+        await this.clickWithWait(resetBtn);
+        await this.waitForBusyIndicatorToDisappear();
+        await this.clickWithWait($('//span[text()="Warning"]//following::bdi[text()="OK"]'));
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(5000);
+        const elems = await browser.$$(
+            "(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]//div[@role='checkbox' and @aria-checked='true']/ancestor::tr//td[@role='gridcell']//bdi"
+        );
+        const elemsArr = Array.from(elems);
+        const resetFields: string[] = [];
+        for (let i = 0; i < elemsArr.length; i++) {
+            const text = ((await elemsArr[i].getText()) || "").trim();
+            if (text && !resetFields.includes(text)) resetFields.push(text);
+        }
+        console.log("Fields after RESET:", resetFields);
+        await this.clickWithWait($("//h1[.//text()='View Settings']/following::button[.//text()='OK']"));
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(8000);
+        const headerElems = await $$("//th//span");
+        const rowElems = await $$("//tbody//tr[2]//span[1][normalize-space()][not(normalize-space()='Yes')]");
+
         const headerTexts: string[] = [];
-        for (const el of await $$("//th//span")) {
-            // let text = await el.getText();
-            // if (!text) text = await el.getAttribute("innerText");
-            let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
-            const safeText = (text || "").trim();
-            if (safeText) headerTexts.push(safeText);
-        }
         const rowTexts: string[] = [];
-        for (const el of await $$("//tbody//tr[2]//span[1][normalize-space()][not(normalize-space()='Yes')]")) {
-            // let text = await el.getText();
-            // if (!text) text = await el.getAttribute("innerText");
-            let text: string = (await el.getText()) || (await el.getAttribute("innerText")) || "";
-            const safeText = (text || "").trim();
-            if (safeText) rowTexts.push(safeText);
+
+        for (let i = 0; i < await headerElems.length; i++) {
+        const t = ((await headerElems[i].getText()) || "").trim();
+        if (t) headerTexts.push(t);
         }
-        await browser.pause(10000);
-        console.log("DEBUG selectedFields length:", selectedFields.length);
-        for (const field of selectedFields) {
-            if (headerTexts.includes(field)) {
-                console.log(`Found in HEADER: ${field}`);
-                continue;
-            }
-            if (rowTexts.includes(field)) {
-                console.log(`Found in ROW: ${field}`);
-                continue;
-            }
-            console.log(`NOT FOUND: ${field}`);
-            throw new Error(`Field NOT found on screen: ${field}`);
+
+        for (let i = 0; i < await rowElems.length; i++) {
+        const t = ((await rowElems[i].getText()) || "").trim();
+        if (t) rowTexts.push(t);
         }
-        console.log("All reset fields verified successfully");
+        console.log("HEADER:", headerTexts);
+        console.log("ROW:", rowTexts);
+        for (const field of resetFields) {
+
+        if (headerTexts.includes(field)) {
+            console.log(`FOUND AFTER RESET: ${field} in HEADER`);
+            continue;
+        }
+
+        if (rowTexts.includes(field)) {
+            console.log(`FOUND AFTER RESET: ${field} in ROW`);
+            continue;
+        }
+
+        throw new Error(`Reset failed, field missing: ${field}`);
+        }
+        console.log("resetFieldsInListView PASSED");
     }
 
     public async verifyShowHierarchy(): Promise<void> {

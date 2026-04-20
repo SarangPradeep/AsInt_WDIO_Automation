@@ -30,15 +30,15 @@ describe('BTP | Functional Location test', () => {
     it('should verify fields in list view using setting option', async () => {
         await utils.verifyFieldsInListView();
         await utils.resetFieldsInListView();
-     });
+    });
 
-     it('should verify show hierarchy option in list View', async () => {
+    it('should verify show hierarchy option in list View', async () => {
         await utils.verifyShowHierarchy();
-     });
+    });
 
-     it('should verify Analytic chart option in list View', async () => {
+    it('should verify Analytic chart option in list View', async () => {
         await utils.verifyAnalyticsChart();
-     });
+    });
 
     it('should create a new functional location', async () => {
         await functionalLocationListView.createFunctionalLocation

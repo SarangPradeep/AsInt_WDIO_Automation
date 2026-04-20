@@ -45,6 +45,11 @@ describe('BTP Equipment App Functional test', () => {
         expect(await equipmentDetailPage.verifyOnEquipmentDetailPage()).toBe(true);
     });
 
+    it('should verify and edit header information' , async () => {
+        await equipmentDetailPage.verifyHeader();
+        await equipmentDetailPage.editHeader();
+    });
+
     it('should edit general info of equipment', async () => {
         
         await equipmentDetailPage.fillGeneralInfo(
