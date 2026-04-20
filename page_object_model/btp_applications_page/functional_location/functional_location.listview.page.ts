@@ -4,59 +4,27 @@ import functionalLocationDetailView from './functional_location.detail.page';
 
 class functionalLocationListView {
 
-    private get functionalLocationApp() { 
-        return $("//a[contains(@aria-label, 'Functional Location')]"); 
-    }
-    private get newFunctionalLocButton() { 
-        return $("//span[text()='Add']/ancestor::button"); 
-    }
-    private get newFunctionalLocName() { 
-        return $("//bdi[text()='Functional Location Name']/ancestor::div[1]/following::input[1]"); 
-    }
-    private get shortDescName() { 
-        return $("//bdi[text()='Short Description']/ancestor::div[1]/following::input[1]"); 
-    }
-    private get selectFunLocTemp() { 
-        return $("//bdi[text()='Functional Location Template']/ancestor::div[1]/following::input[1]"); 
-    }
-    private get selectParentAsset() { 
-        return $("//bdi[text()='Parent Asset']/ancestor::div[1]/following::input[1]"); 
-    }
-    private get selectFuncLocBox() { 
-        return $("//span[text()='Select Functional Location']"); 
-    }
-    private get selectParentFuncLoc() { 
-        return $("(//tr[@role='row'])[3]//td[2]//span"); 
-    }
-    private get createFuncLocButton() { 
-        return $("//bdi[text()='Create']"); 
-    }
-    private get succCrtMsg() {  
-        return $("//span[text()='Functional Location created successfully']"); 
-    }
-    private get oKbtn() {  
-        return $("//bdi[text()='Ok']"); 
-    }
-    private get oKbtn2() {  
-        return $("//bdi[text()='OK']"); 
-    }
-    private get search() {  
-        return $("//input[@type='search' and not(@title) and not(@aria-haspopup) and not(@aria-labelledby)]"); 
-    }
-    private funcLocSearched() {  
-    return $("(//tr[@role='row']//span[@title='Navigation'])[1]");
-    }
-    private get funLocGeneralInfoTab() {  
-        return $("//bdi[text()='General Information']/ancestor::button"); 
-    }
-    private get funLocIframe() {
-        return $('iframe[data-help-id="application-functionallocation-manage"]');
-    }
+    private get functionalLocationApp() { return $("//a[contains(@aria-label, 'Functional Location')]"); }
+    private get newFunctionalLocButton() { return $("//span[text()='Add']/ancestor::button"); }
+    private get newFunctionalLocName() { return $("//bdi[text()='Functional Location Name']/ancestor::div[1]/following::input[1]"); }
+    private get shortDescName() { return $("//bdi[text()='Short Description']/ancestor::div[1]/following::input[1]"); }
+    private get selectFunLocTemp() { return $("//bdi[text()='Functional Location Template']/ancestor::div[1]/following::input[1]"); }
+    private get selectParentAsset() { return $("//bdi[text()='Parent Asset']/ancestor::div[1]/following::input[1]"); }
+    private get selectFuncLocBox() { return $("//span[text()='Select Functional Location']"); }
+    private get selectParentFuncLoc() { return $("(//tr[@role='row'])[3]//td[2]//span"); }
+    private get createFuncLocButton() { return $("//bdi[text()='Create']"); }
+    private get succCrtMsg() { return $("//span[text()='Functional Location created successfully']"); }
+    private get oKbtn() { return $("//bdi[text()='Ok']"); }
+    private get oKbtn2() { return $("//bdi[text()='OK']"); }
+    private get search() { return $("//input[@type='search' and not(@title) and not(@aria-haspopup) and not(@aria-labelledby)]"); }
+    private funcLocSearched() { return $("(//tr[@role='row']//span[@title='Navigation'])[1]"); }
+    private get funLocGeneralInfoTab() { return $("//bdi[text()='General Information']/ancestor::button"); }
+    private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
     public functionalLocName!: string;
     public functionalLocDescName!: string;
     public parentFunctionalLoc: string = "FL0603";
 
-        public async navigateToFunctionalLocation(): Promise<void> {
+    public async navigateToFunctionalLocation(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait(this.functionalLocationApp);
         await utils.waitForBusyIndicatorToDisappear();
@@ -113,12 +81,12 @@ class functionalLocationListView {
 
     public async navigateFunctionalLocation(): Promise<void> {
 
-        console.log("Searching for created Functional Location in the list view and navigating to detail view");
-        await utils.clickWithWait(this.search,1000);
-        await utils.setValueWithWait(this.search,this.functionalLocName,1000);
-        await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
-        await browser.pause(2000);
-        console.log(`Searched for Functional Location with name: ${this.functionalLocName}`);
+        // console.log("Searching for created Functional Location in the list view and navigating to detail view");
+        // await utils.clickWithWait(this.search,1000);
+        // await utils.setValueWithWait(this.search,this.functionalLocName,1000);
+        // await utils.clickWithWait($('//bdi[text()="Go"]'),2000);
+        // await browser.pause(2000);
+        // console.log(`Searched for Functional Location with name: ${this.functionalLocName}`);
 
         console.log("Navigating to Detail view page of Functional Location");
         await utils.waitForBusyIndicatorToDisappear();

@@ -7,389 +7,132 @@ import * as path from 'path';
  */
 class functionalLocationDetailView {
 
-    private get funLocHeader() {  
-        return $(`(//header//*[@role='heading']/span[text()='${functionalLocationListView.functionalLocName}'])[2]`); 
-    }
-
-    private get funLocHeadChk() {  
-        return $("(//header//*[@role='heading']/span)[2]"); 
-    }
-    private get funLocDisplayId() {  
-        return $("//span[starts-with(normalize-space(), 'Display ID:')]"); 
-    }
-    private get funLocEditHeader() {  
-        return $("//bdi[text()='Edit Header']"); 
-    }
-    private get funLocDescEditHeader() {  
-        return $("//bdi[text()='Functional Location Description']/following::input[1][not(@readonly)]"); 
-    }
-    private get funLocCategoryEditHeader() {
-        return $("//bdi[text()='Category']/following::input[1]");
-    }
-    private get funLocCategory() {
-        return $("//span[text()='Select Category']");
-    }
-    private get funLocCtgChoose() {
-        return $(`//span[text()='${funcLocTestData.headerInfoEdit.linearAsset}']/ancestor::tr//td[2]//*[name()='circle'][2]`);
-    }
-    private get funLocCtgSave() {
-        return $("(//bdi[text()='Save'])[2]");
-    }
-    private get funLocheaderSave() {
-        return $("//bdi[text()='Save']");
-    }
-    private get funLocHdSaveSucc() {
-        return $("//span[text()='Updated successfully']");
-    }
-    private get funLocHdOkBtn() {
-        return $("//header[.//text()='Success']/following::bdi[text()='OK']");
-    }
-    private get objectType() {
-        return $("//bdi[text()='Object Type']/following::input[1]");
-    }
-    private get selectObjGrpBox() {
-        return $("//span[text()='Select Object Type']");
-    }
-    private get selectObj() {
-        return $("//span[.='Select Object Type']/ancestor::header/following::*[name()='circle'][2]");
-    }
-    private get selectObjSave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-
-    private get editGenInfo() {
-        return $("//bdi[text()='Edit']");
-    }
-    private get authGrp() {
-        return $("//bdi[text()='Authorization Group']/following::input[1]");
-    }
-
-    private get inventryGrp() {
-        return $("//bdi[text()='Inventory Number']/following::input[1]");
-    }
-
-    private get strUpDt() {
-        return $("//bdi[text()='Start up date']/following::input[1]");
-    }
-
-    private get longDesc() {
-        return $("//bdi[text()='Long Description']/following::textarea[1]");
-    }
-
-    private get acqValue() {
-        return $("//bdi[text()='Acquisition Value / Currency']/following::input[1]");
-    }
-    private get acqCurr() {
-        return $("//bdi[text()='Acquisition Value / Currency']/following::input[2]");
-    }
-    private get selectCurrBox() {
-        return $("//span[text()='Select Currency']");
-    }
-    private get selectCurr() {
-        return $("//span[.='Select Currency']/ancestor::header/following::*[name()='circle'][2]");
-    }
-    private get selectCurrSave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-
-    private get asstManuName() {
-        return $("//bdi[text()='Asset Manufacturer Name ']/following::input[1]");
-    }
-    private get modelNum() {
-        return $("//bdi[text()='Model Number ']/following::input[1]");
-    }
-    private get partNum() {
-        return $("//bdi[text()='Part Number']/following::input[1]");
-    }
-    private get manuSrlNum() {
-        return $("//bdi[text()='Manufacturer Serial Number']/following::input[1]");
-    }
-    private get country() {
-        return $("//bdi[text()='Country']/following::input[1]");
-    }
-    private get cntryBox() {
-        return $("//span[text()='Select Country']");
-    }
-     private get cntryBoxSelect() {
-        return $("//span[.='Select Country']/ancestor::header/following::*[name()='circle'][2]");
-    }
-    private get cntrySave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-    private get cnstYear() {
-        return $("(//bdi[text()='Construction Year / Month']/ancestor::label/../following-sibling::div//span)[1]");
-    }
-    private get cnstYearSelect() {
-        return $(`//div[text()='${funcLocTestData.generalInfoEdit.constructionYear}']`);
-    }
-    private get cnstMon() {
-        return $("(//bdi[text()='Construction Year / Month']/ancestor::label/../following-sibling::div//span)[2]");
-    }
-    private get cnstMonSelect() {
-        return $(`//span[text()='${funcLocTestData.generalInfoEdit.constructionMonth}']`);
-    }
-    private get mntPlant() {
-        return $("//bdi[text()='Maintenance Plant']/following::input[1]");
-    }
-    private get mntPlantBox() {
-        return $("//span[text()='Select Maintenance Plant']");
-    }
-    private get mntPlantSelect() {
-        return $("//span[.='Select Maintenance Plant']/ancestor::header/following::*[name()='circle'][2]");
-    }
-    private get mntPlantSave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-    private get plantSec() {
-        return $("//bdi[text()='Plant Section']/following::input[1]");
-    }
-    private get plantSecBox() {
-        return $("//span[text()='Select Plant Section']");
-    }
-    private get plantSecSelect() {
-        return $("//span[.='Select Plant Section']/ancestor::header/following::*[name()='circle'][2]");
-    }
-    private get plantSecSave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-    private get workCen() {
-        return $("//bdi[text()='Work Center ']/following::input[1]");
-    }
-    private get workCenBox() {
-        return $("//span[text()='Select Work Center ']");
-    }
-    private get workCenSelect() {
-        return $("//span[.='Select Work Center ']/ancestor::header/following::*[name()='circle'][2]");
-    }
-    private get workCenSave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-    private get criticality() {
-        return $("//bdi[text()='Criticality']/following::input[1]");
-    }
-    private get criticalityBox() {
-        return $("//span[text()='Select Criticality']");
-    }
-    private get criticalitySelect() {
-        return $("//span[.='Select Criticality']/ancestor::header/following::*[name()='circle'][4]");
-    }
-    private get criticalitySave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-    private get sortField() {
-        return $("//bdi[text()='Sort Field ']/following::input[1]");
-    }
-    private get funLoc() {
-        return $("//bdi[text()='Functional Location']/following::input[1]");
-    }
-    private get compCode() {
-        return $("//bdi[text()='Company Code ']/following::input[1]");
-    }
-    private get costCenter() {
-        return $("//bdi[text()='Cost Center ']/following::input[1]");
-    }
-    private get bussArea() {
-        return $("//bdi[text()='Business Area']/following::input[1]");
-    }
-    private get planPlant() {
-        return $("//bdi[text()='Planning Plant']/following::input[1]");
-    }
-    private get planPlantBox() {
-        return $("//span[text()='Select Planning Plant']");
-    }
-    private get planPlantSelect() {
-        return $("//span[.='Select Planning Plant']/ancestor::header/following::*[name()='circle'][4]");
-    }
-    private get planPlantSave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-    private get planGrp() {
-        return $("//bdi[text()='Planner Group']/following::input[1]");
-    }
-    private get planGrpBox() {
-        return $("//span[text()='Select Planner Group']");
-    }
-    private get planGrpSelect() {
-        return $("//span[.='Select Planner Group']/ancestor::header/following::*[name()='circle'][4]");
-    }
-    private get planGrpSave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-    private get ctgProfile() {
-        return $("//bdi[text()='Catalog Profile']/following::input[1]");
-    }
-    private get ctgProfileBox() {
-        return $("//span[text()='Select Catalog Profile']");
-    }
-    private get CtgProfileSelect() {
-        return $("//span[.='Select Catalog Profile']/ancestor::header/following::*[name()='circle'][6]");
-    }
-    private get CtgProfileSave() {
-        return $("//footer//*[name()='bdi' and text()='Save']");
-    }
-    private get infoSave() { 
-        return $("//bdi[normalize-space()='Save']/ancestor::button");
-    }
-    private get infoSuccUpdate() {
-        return $("//span[normalize-space()='Updated successfully']");
-    }
-    private get infoUpdateOK() {
-        return $("//header[.//text()='Success']/following::bdi[text()='OK']");
-    }
-    private get funLocStrucTab() {  
-        return $("//bdi[text()='Structure']"); 
-    }
-    private get funLocAssetIntTab() {  
-        return $("//bdi[text()='Asset Intelligence']"); 
-    }
-    private get funLocRiskSumTab() {  
-        return $("//bdi[text()='Risk Summary']"); 
-    }
-    private get funLocMainSerTab() {  
-        return $("//bdi[text()='Maintenance and Service']"); 
-    }
-    private get funLocAttach() {  
-        return $("//bdi[text()='Attachments']"); 
-    }
-    private get funLocChngHist() {  
-        return $("//bdi[text()='Change History']"); 
-    }
-    private get editStrucInfo() {
-        return $("//bdi[text()='Edit']");
-    }
-    private get superFunLoc() {
-        return $("//bdi[text()='Superior Functional Location']/following::input[1]");
-    }
-    private get superFunLocBox() {
-        return $("//span[text()='Select Functional Location']");
-    }
-    private get superFunLocSelect() {
-        return $("(//tr[@role='row'])[2]//td[2]//span");
-    }
-    private get superFunLocDesc() {
-        return $("//bdi[text()='Superior Functional Location Description']/following::input[1]");
-    }
-    private get compInfoAsgn() {
-        return $("//bdi[text()='Assign']");
-    }
-    private get compInfoEqAsgn() {
-        return $("//li[contains(.,'Equipment')]");
-    }
-    private get compInfoEqCnf() {
-        return $("//bdi[text()='Confirm']");
-    }
-    private get yesBtn() {
-        return $("//bdi[text()='Yes']");
-    }
-    private get cancelBtn() {
-        return $("//bdi[text()='Cancel']");
-    }
-    private get okBtn() {
-        return $("//header[.//text()='Success']/following::bdi[text()='OK']");
-    }
-    private get okBtn2() {
-        return $("//bdi[text()='Ok']");
-    }
-    private get compInfoFunLocAsgn() {
-        return $("//li[contains(.,'Functional Location')]");
-    }
-    private get groups() {
-        return $("//div[text()='Groups']/following::span[1]");
-    }
-    private get components() {
-        return $("//div[text()='Component Information']/following::span[1]");
-    }
-    private get funLocAsgnTab() {  
-        return $("//bdi[text()='Assignments']"); 
-    }
-    private get funLocMDATab() {  
-        return $("//bdi[text()='Classification & MDA']"); 
-    }
-    private get asgnFunLocTemp() {
-        return $("(//div[text()='Functional Location Templates']/following::bdi[text()='Assign'])[1]");
-    }
-    private get asgnClsAndChr() {
-        return $("(//div[text()='Class & Characteristics']/following::bdi[text()='Assign'])[1]");
-    }
-    private get asgnChrMDA() {
-        return $("//span[text()='Maintenance Data Attribute']/following::bdi[text()='Assign']");
-    }
-    private get autoAsgnClsAndChr() {
-        return $("//footer//div[@role='checkbox' and .//bdi[text()='Auto assign Class and Characteristics']]");
-    }
-    private get class() {
-        return $("//div[text()='Class & Characteristics']/following::span[1]");
-    }
-    private get noOfClassMDA() {
-        return $("//span[text()='Assign Classes']/following::span[2]");
-    }
-    private get characteristics () {
-        return $("//div[text()='Class & Characteristics']/following::h2[2]");
-    }
-    private get noOfCharMDA () {
-        return $("//span[text()='Maintenance Data Attribute']/following::h2//span");
-    }
-    private get riskAndCriticality() {
-        return $("//div[text()='Risk and Criticality']/following::span[1]");
-    }
+    private get funLocHeader() { return $(`(//header//*[@role='heading']/span[text()='${functionalLocationListView.functionalLocName}'])[2]`); }
+    private get funLocHeadChk() { return $("(//header//*[@role='heading']/span)[2]"); }
+    private get funLocDisplayId() { return $("//span[starts-with(normalize-space(), 'Display ID:')]"); }
+    private get funLocEditHeader() { return $("//bdi[text()='Edit Header']"); }
+    private get funLocDescEditHeader() { return $("//bdi[text()='Functional Location Description']/following::input[1][not(@readonly)]"); }
+    private get funLocCategoryEditHeader() { return $("//bdi[text()='Category']/following::input[1]"); }
+    private get funLocCategory() { return $("//span[text()='Select Category']"); }
+    private get funLocCtgChoose() { return $(`//span[text()='${funcLocTestData.headerInfoEdit.linearAsset}']/ancestor::tr//td[2]//*[name()='circle'][2]`); }
+    private get funLocCtgSave() { return $("(//bdi[text()='Save'])[2]"); }
+    private get funLocheaderSave() { return $("//bdi[text()='Save']"); }
+    private get funLocHdSaveSucc() { return $("//span[text()='Updated successfully']"); }
+    private get funLocHdOkBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
+    private get objectType() { return $("//bdi[text()='Object Type']/following::input[1]"); }
+    private get selectObjGrpBox() { return $("//span[text()='Select Object Type']"); }
+    private get selectObj() { return $("//span[.='Select Object Type']/ancestor::header/following::*[name()='circle'][2]"); }
+    private get selectObjSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get editGenInfo() { return $("//bdi[text()='Edit']"); }
+    private get authGrp() { return $("//bdi[text()='Authorization Group']/following::input[1]"); }
+    private get inventryGrp() { return $("//bdi[text()='Inventory Number']/following::input[1]"); }
+    private get strUpDt() { return $("//bdi[text()='Start up date']/following::input[1]"); }
+    private get longDesc() { return $("//bdi[text()='Long Description']/following::textarea[1]"); }
+    private get acqValue() { return $("//bdi[text()='Acquisition Value / Currency']/following::input[1]"); }
+    private get acqCurr() { return $("//bdi[text()='Acquisition Value / Currency']/following::input[2]"); }
+    private get selectCurrBox() { return $("//span[text()='Select Currency']"); }
+    private get selectCurr() { return $("//span[.='Select Currency']/ancestor::header/following::*[name()='circle'][2]"); }
+    private get selectCurrSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get asstManuName() { return $("//bdi[text()='Asset Manufacturer Name ']/following::input[1]"); }
+    private get modelNum() { return $("//bdi[text()='Model Number ']/following::input[1]"); }
+    private get partNum() { return $("//bdi[text()='Part Number']/following::input[1]"); }
+    private get manuSrlNum() { return $("//bdi[text()='Manufacturer Serial Number']/following::input[1]"); }
+    private get country() { return $("//bdi[text()='Country']/following::input[1]"); }
+    private get cntryBox() { return $("//span[text()='Select Country']"); }
+    private get cntryBoxSelect() { return $("//span[.='Select Country']/ancestor::header/following::*[name()='circle'][2]"); }
+    private get cntrySave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get cnstYear() { return $("(//bdi[text()='Construction Year / Month']/ancestor::label/../following-sibling::div//span)[1]"); }
+    private get cnstYearSelect() { return $(`//div[text()='${funcLocTestData.generalInfoEdit.constructionYear}']`); }
+    private get cnstMon() { return $("(//bdi[text()='Construction Year / Month']/ancestor::label/../following-sibling::div//span)[2]"); }
+    private get cnstMonSelect() { return $(`//span[text()='${funcLocTestData.generalInfoEdit.constructionMonth}']`); }
+    private get mntPlant() { return $("//bdi[text()='Maintenance Plant']/following::input[1]"); }
+    private get mntPlantBox() { return $("//span[text()='Select Maintenance Plant']"); }
+    private get mntPlantSelect() { return $("//span[.='Select Maintenance Plant']/ancestor::header/following::*[name()='circle'][2]"); }
+    private get mntPlantSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get plantSec() { return $("//bdi[text()='Plant Section']/following::input[1]"); }
+    private get plantSecBox() { return $("//span[text()='Select Plant Section']"); }
+    private get plantSecSelect() { return $("//span[.='Select Plant Section']/ancestor::header/following::*[name()='circle'][2]"); }
+    private get plantSecSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get workCen() { return $("//bdi[text()='Work Center ']/following::input[1]"); }
+    private get workCenBox() { return $("//span[text()='Select Work Center ']"); }
+    private get workCenSelect() { return $("//span[.='Select Work Center ']/ancestor::header/following::*[name()='circle'][2]"); }
+    private get workCenSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get criticality() { return $("//bdi[text()='Criticality']/following::input[1]"); }
+    private get criticalityBox() { return $("//span[text()='Select Criticality']"); }
+    private get criticalitySelect() { return $("//span[.='Select Criticality']/ancestor::header/following::*[name()='circle'][4]"); }
+    private get criticalitySave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get sortField() { return $("//bdi[text()='Sort Field ']/following::input[1]"); }
+    private get funLoc() { return $("//bdi[text()='Functional Location']/following::input[1]"); }
+    private get compCode() { return $("//bdi[text()='Company Code ']/following::input[1]"); }
+    private get costCenter() { return $("//bdi[text()='Cost Center ']/following::input[1]"); }
+    private get bussArea() { return $("//bdi[text()='Business Area']/following::input[1]"); }
+    private get planPlant() { return $("//bdi[text()='Planning Plant']/following::input[1]"); }
+    private get planPlantBox() { return $("//span[text()='Select Planning Plant']"); }
+    private get planPlantSelect() { return $("//span[.='Select Planning Plant']/ancestor::header/following::*[name()='circle'][4]"); }
+    private get planPlantSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get planGrp() { return $("//bdi[text()='Planner Group']/following::input[1]"); }
+    private get planGrpBox() { return $("//span[text()='Select Planner Group']"); }
+    private get planGrpSelect() { return $("//span[.='Select Planner Group']/ancestor::header/following::*[name()='circle'][4]"); }
+    private get planGrpSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get ctgProfile() { return $("//bdi[text()='Catalog Profile']/following::input[1]"); }
+    private get ctgProfileBox() { return $("//span[text()='Select Catalog Profile']"); }
+    private get CtgProfileSelect() { return $("//span[.='Select Catalog Profile']/ancestor::header/following::*[name()='circle'][6]"); }
+    private get CtgProfileSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
+    private get infoSave() { return $("//bdi[normalize-space()='Save']/ancestor::button"); }
+    private get infoSuccUpdate() { return $("//span[normalize-space()='Updated successfully']"); }
+    private get infoUpdateOK() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
+    private get funLocStrucTab() { return $("//bdi[text()='Structure']"); }
+    private get funLocAssetIntTab() { return $("//bdi[text()='Asset Intelligence']"); }
+    private get funLocRiskSumTab() { return $("//bdi[text()='Risk Summary']"); }
+    private get funLocMainSerTab() { return $("//bdi[text()='Maintenance and Service']"); }
+    private get funLocAttach() { return $("//bdi[text()='Attachments']"); }
+    private get funLocChngHist() { return $("//bdi[text()='Change History']"); }
+    private get editStrucInfo() { return $("//bdi[text()='Edit']"); }
+    private get superFunLoc() { return $("//bdi[text()='Superior Functional Location']/following::input[1]"); }
+    private get superFunLocBox() { return $("//span[text()='Select Functional Location']"); }
+    private get superFunLocSelect() { return $("(//tr[@role='row'])[2]//td[2]//span"); }
+    private get superFunLocDesc() { return $("//bdi[text()='Superior Functional Location Description']/following::input[1]"); }
+    private get compInfoAsgn() { return $("//bdi[text()='Assign']"); }
+    private get compInfoEqAsgn() { return $("//li[contains(.,'Equipment')]"); }
+    private get compInfoEqCnf() { return $("//bdi[text()='Confirm']"); }
+    private get yesBtn() { return $("//bdi[text()='Yes']"); }
+    private get cancelBtn() { return $("//bdi[text()='Cancel']"); }
+    private get okBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
+    private get okBtn2() { return $("//bdi[text()='Ok']"); }
+    private get compInfoFunLocAsgn() { return $("//li[contains(.,'Functional Location')]"); }
+    private get groups() { return $("//div[text()='Groups']/following::span[1]"); }
+    private get components() { return $("//div[text()='Component Information']/following::span[1]"); }
+    private get funLocAsgnTab() { return $("//bdi[text()='Assignments']"); }
+    private get funLocMDATab() { return $("//bdi[text()='Classification & MDA']"); }
+    private get asgnFunLocTemp() { return $("(//div[text()='Functional Location Templates']/following::bdi[text()='Assign'])[1]"); }
+    private get asgnClsAndChr() { return $("(//div[text()='Class & Characteristics']/following::bdi[text()='Assign'])[1]"); }
+    private get asgnChrMDA() { return $("//span[text()='Maintenance Data Attribute']/following::bdi[text()='Assign']"); }
+    private get autoAsgnClsAndChr() { return $("//footer//div[@role='checkbox' and .//bdi[text()='Auto assign Class and Characteristics']]"); }
+    private get class() { return $("//div[text()='Class & Characteristics']/following::span[1]"); }
+    private get noOfClassMDA() { return $("//span[text()='Assign Classes']/following::span[2]"); }
+    private get characteristics() { return $("//div[text()='Class & Characteristics']/following::h2[2]"); }
+    private get noOfCharMDA() { return $("//span[text()='Maintenance Data Attribute']/following::h2//span"); }
+    private get riskAndCriticality() { return $("//div[text()='Risk and Criticality']/following::span[1]"); }
     private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]]'); }
-    private get assetInsp() {
-        return $("//div[text()='Asset Inspection']/following::span[1]");
-    }
-    private get findings() {
-        return $("//div[text()='Findings']/following::span[1]");
-    }
-    private get recommend() {
-        return $("//div[text()='Recommendations']/following::span[1]");
-    }
-    private get maintainNoti() {
-        return $("//div[text()='Maintenance Notification']/following::span[1]");
-    }
-    private get maintainOrder() {
-        return $("//div[text()='Maintenance Order']/following::span[1]");
-    }
-    private get maintainPlan() {
-        return $("//div[text()='Maintenance Plan']/following::span[1]");
-    }
-    private get recomWrk() {
-        return $("//div[text()='Recommendation Workbench']/following::span[1]");
-    }
-    private get maintaintask() {
-        return $("//div[text()='Maintenance Tasks']/following::span[5]");
-    }
-    private get assetStrategyRBI() {
-        return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]");
-    }
-    private get assetStrategyRCM() {
-        return $("(//div[text()='Asset Strategy']/following::li//div//div)[2]");
-    }
-    private get riskProfile() {
-        return $("//bdi[text()='Risk Summary']//following::h2[1]");
-    }
-    private get component() {
-        return $("//bdi[text()='Risk Summary']//following::h2[2]");
-    }
-    private get recommendation() {
-        return $("//bdi[text()='Risk Summary']//following::div[@aria-level='2']//span");
-    }
-    private get funLocTemp() {
-        return $("//div[text()='Functional Location Templates']/following::span[1]");
-    }
-    private get noOfCML() {
-        return $("(//h2//span)[2]");
-    }
-    private get deleteBtn() {
-        return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Delete']]");
-    }
-    private get downloadReport() {
-        return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Download Report']]");
-    }
-    private get attachSuccMsg() {
-        return $("//span[text()='Success']");
-    }
-    private get funLocIframe() {
-        return $('iframe[data-help-id="application-functionallocation-manage"]');
-    }
+    private get assetInsp() { return $("//div[text()='Asset Inspection']/following::span[1]"); }
+    private get findings() { return $("//div[text()='Findings']/following::span[1]"); }
+    private get recommend() { return $("//div[text()='Recommendations']/following::span[1]"); }
+    private get maintainNoti() { return $("//div[text()='Maintenance Notification']/following::span[1]"); }
+    private get maintainOrder() { return $("//div[text()='Maintenance Order']/following::span[1]"); }
+    private get maintainPlan() { return $("//div[text()='Maintenance Plan']/following::span[1]"); }
+    private get recomWrk() { return $("//div[text()='Recommendation Workbench']/following::span[1]"); }
+    private get maintaintask() { return $("//div[text()='Maintenance Tasks']/following::span[5]"); }
+    private get assetStrategyRBI() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]"); }
+    private get assetStrategyRCM() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[2]"); }
+    private get riskProfile() { return $("//bdi[text()='Risk Summary']//following::h2[1]"); }
+    private get component() { return $("//bdi[text()='Risk Summary']//following::h2[2]"); }
+    private get recommendation() { return $("//bdi[text()='Risk Summary']//following::div[@aria-level='2']//span"); }
+    private get funLocTemp() { return $("//div[text()='Functional Location Templates']/following::span[1]"); }
+    private get noOfCML() { return $("(//h2//span)[2]"); }
+    private get deleteBtn() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Delete']]"); }
+    private get downloadReport() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Download Report']]"); }
+    private get attachSuccMsg() { return $("//span[text()='Success']"); }
+    private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
     
     public superFuncLocValue!: string;
     public funcLocHeadValue!: string;

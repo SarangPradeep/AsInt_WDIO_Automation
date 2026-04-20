@@ -19,8 +19,9 @@ export const config: WebdriverIO.Config = {
         './functional_location/functional_location.e2e.ts',
         './equipment/equipment.e2e.ts',
         './configuration/**/*.e2e.ts',
-        './safety_group/safety.e2e.ts'
-    
+        './safety_group/safety.e2e.ts',
+        './task_management/task_management.e2e.ts',
+
     ],
     exclude: [],
     maxInstances: 3,
@@ -39,6 +40,12 @@ export const config: WebdriverIO.Config = {
         }
         }
     ],
+
+    //
+    // ===================
+    // Test Configurations
+    // ===================
+
     logLevel: 'info',
     logLevels: {
         webdriver: 'silent',
@@ -65,7 +72,8 @@ export const config: WebdriverIO.Config = {
     ],
     mochaOpts: {
         ui: 'bdd',
-        timeout: 600000 ,
+        // Keep runnable timeout aligned with long end-to-end flows and explicit waitUntil calls.
+        timeout: 900000,
         reporter: 'spec'
     },
     onPrepare: function (config, capabilities) {

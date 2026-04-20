@@ -3,10 +3,6 @@ import { $, $$, browser } from '@wdio/globals';
 import utils from '../../utils/utils';
 class HomePage {
 
-    /* =========================
-       SELECTORS
-    ========================== */
-
     private readonly tilesContainer ='ul.sapUshellTilesContainer-sortable';
 
     private readonly tileSelector ='ul.sapUshellTilesContainer-sortable li a.sapMGT';
@@ -54,10 +50,6 @@ class HomePage {
 }
 
 
-    /* =========================
-       GETTERS
-    ========================== */
-
     async getAllTiles() {
         return await $$(this.tileSelector);
     }
@@ -94,20 +86,12 @@ class HomePage {
         return tile;
     }
 
-    /* =========================
-       ACTIONS
-    ========================== */
-
     async clickTile(tileName: string): Promise<void> {
         const tile = await this.getTileByName(tileName);
         await tile.scrollIntoView();
         await tile.waitForClickable({ timeout: 15000 });
         await browser.execute(el => el.click(), tile);
     }
-
-    /* =========================
-       VERIFICATIONS
-    ========================== */
 
     async isTileVisible(tileName: string): Promise<boolean> {
         try {

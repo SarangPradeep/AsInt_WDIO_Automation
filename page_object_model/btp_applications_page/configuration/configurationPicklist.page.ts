@@ -98,6 +98,24 @@ class ConfigurationAppPage {
         await SapUtils.waitForBusyIndicatorToDisappear();
     }
 
+    async fillPicklistDetails1(): Promise<void> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+
+        await SapUtils.setValueWithWait(this.columnNameInput, 'column1');
+        await SapUtils.clickWithWait(this.codeListDropdown);
+        
+        await SapUtils.waitForBusyIndicatorToDisappear();
+    }
+
+    async fillPicklistDetailss1(): Promise<void> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+
+        await SapUtils.setValueWithWait(this.columnNameInput, 'column2');
+        await SapUtils.clickWithWait(this.codeListDropdown);
+        
+        await SapUtils.waitForBusyIndicatorToDisappear();
+    }
+
     async fillPicklistDetails(): Promise<void> {
         await SapUtils.waitForBusyIndicatorToDisappear();
 
