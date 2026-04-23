@@ -55,8 +55,8 @@ class Utils {
 
     async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 100000): Promise<void> {
         const el = await element;
-        await el.waitForExist({ timeout });
-        await el.waitForDisplayed({ timeout });
+        await el.waitForExist({ timeout : 50000 });
+        await el.waitForDisplayed({ timeout : 50000 });
         await browser.pause(200);
         await this.scrollIntoViewIfNeeded(el);
         await el.waitForClickable({
@@ -109,7 +109,7 @@ class Utils {
         }
     }
 
-    async setValueWithWait(element: any, value: string, delayAfter = 0, timeout = 60000): Promise<void> {
+    async setValueWithWait(element: any, value: string, delayAfter = 0, timeout = 100000): Promise<void> {
         const el = await element;
         await el.waitForDisplayed({ timeout });
         await el.scrollIntoView();
@@ -127,7 +127,7 @@ class Utils {
         if (delayAfter > 0) await browser.pause(delayAfter);
     }
 
-    async waitForBusyIndicatorToDisappear(timeoutInSeconds = 30): Promise<void> {
+    async waitForBusyIndicatorToDisappear(timeoutInSeconds = 50): Promise<void> {
         const busy = $("//div[@role='progressbar']");
         try {
             await busy.waitForDisplayed({

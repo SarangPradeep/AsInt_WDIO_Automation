@@ -21,6 +21,7 @@ export const config: WebdriverIO.Config = {
         './configuration/**/*.e2e.ts',
         './safety_group/safety.e2e.ts',
         './task_management/task_management.e2e.ts',
+        './reliability/asset_rcm_analysis/asset_rcm_list.e2e.ts'
 
     ],
     exclude: [],
