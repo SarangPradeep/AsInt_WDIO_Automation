@@ -1,10 +1,10 @@
 import HomePage from 'page_object_model/btp_applications_page/home.page';
 import { equipmentTestData } from '../test_data/btp_applications/equipment.data';
-import equipmentListviewPage from 'page_object_model/btp_applications_page/equipment/equipment.listview.page';
-import equipmentDetailPage from 'page_object_model/btp_applications_page/equipment/equipment.detail.page';
+import equipmentListviewPage from 'page_object_model/btp_applications_page/master_data/equipment/equipment.listview.page';
+import equipmentDetailPage from 'page_object_model/btp_applications_page/master_data/equipment/equipment.detail.page';
 import utils from 'utils/utils';
 
-describe('BTP Equipment App Functional test', () => {
+describe('BTP - Equipment Application - Functional test', () => {
 
     it('should click on equipment application and verify the title', async () => {
         await HomePage.clickEquipmentTile();
@@ -98,6 +98,10 @@ describe('BTP Equipment App Functional test', () => {
     it('should verify Risk Summary Tab of equipment', async () => {
         await equipmentDetailPage.verifyRiskSummary();
     });
+    
+    it('should verify maintenance and service' , async () => {
+        await equipmentDetailPage.verifyMainAndSum();
+    });
 
     it.skip('should goto Attachments Tab and Assign Attachment to Equipment', async () => {
         await equipmentDetailPage.gotoAttachmentsTabAndAssignAttachment();
@@ -107,6 +111,10 @@ describe('BTP Equipment App Functional test', () => {
     
     it.skip('should delete the assigned attachment and verify', async () => {
         await equipmentDetailPage.deleteAttachmentAndVerify();
+    });
+    
+    it('should verify change history' , async () => {
+        await equipmentDetailPage.verifyChangeHistory();
     });
 
     it('should delete the created Equipment and verify', async () => {

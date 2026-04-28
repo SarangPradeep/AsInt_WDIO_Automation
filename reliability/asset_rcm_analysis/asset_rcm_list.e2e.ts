@@ -1,33 +1,74 @@
-import utils from '../../utils/utils';
+import assetRCMList from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.listview.page';
+import assetRCMDetailView from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.detailview.page';
 
-describe('BTP Equipment App Functional test', () => {
+describe('BTP - RCM Application - Functional Test', () => {
 
-    it('should navigate to functional location list view', async () => {
-            await assetRCM.navigateAssetRCMListView();
-        });
+    it('should navigate to Asset RCM list view', async () => {
+        await assetRCMList.navigateToAssetRCM();
+    });
     
-        it('should add and verify all the adapt filters', async () => {
-            await utils.addAllAdaptFilter();
-            await utils.resetAllAdaptFilter();
-        });
-    
-        it('should create new advanced filter and verify', async () => {
-            const createdFilterName = await utils.createNewAdvancedFilter();
-            console.log(`Created filter for this run: ${createdFilterName}`);
-        });
-     
-        it('should apply the created advanced filter and verify', async () => {
-            await utils.applyAdvancedFilter();
-        });
-     
-        it('should reset and delete the created advanced filter and verify', async () => {
-            await utils.resetAdvancedFilter();
-            await utils.deleteAdvancedFilter();
-        });
-    
-        it('should verify fields in list view using setting option', async () => {
-            await utils.verifyFieldsInListView();
-            await utils.resetFieldsInListView();
-        });
+    it('Create new Asset RCM Assessment', async () => {
+        await assetRCMList.createAssetRCM();
+    });
+
+    it('should verify and edit information tab' , async () => {
+        await assetRCMDetailView.verifyAndEditGenInfo();
+        await assetRCMDetailView.verifyAndEditPlanningData();
+        await assetRCMDetailView.addRoles();
+    });
+
+    it('should verify assessment tab and add tecnhinal objects' , async () => {
+        await assetRCMDetailView.createAssessmentFlow();
+        await assetRCMDetailView.verifyAssessment();
+        await assetRCMDetailView.verifyAssessmentSections();
+    });
+
+    it('should add maintanable itmes for techninal objects' , async () => {
+        await assetRCMDetailView.addMaintanableItems();
+        await assetRCMDetailView.verifyMaintainableDetails();
+    });
+
+    it('should add failure modes for added maintanable itmes of techninal objects' , async () => {
+        await assetRCMDetailView.addFailureModes();
+        await assetRCMDetailView.verifyFailureModesDetails();
+    });
+
+    it('should add functional location as techincal objects', async () => {
+        await assetRCMDetailView.addFunLocTechObj();
+        await assetRCMDetailView.verifyDetailPageFunLoc();
+    });
+
+    it('should add functions for functional location techincal objects', async () => {
+        await assetRCMDetailView.assignFunctions();
+    });
+
+    it('should add functional failure for assigned functions', async () => {
+        await assetRCMDetailView.assignFunctionalFailure();
+    });
+
+    it('should add maintanable itmes for techninal objects' , async () => {
+        await assetRCMDetailView.addMaintainableItemsForFuncLoc();
+    });
+
+    it('should add failure modes for added maintanable itmes of techninal objects' , async () => {
+        await assetRCMDetailView.addFailureModesForFuncLoc();
+        await assetRCMDetailView.verifyFailureModesDetails();
+    });
+
+    it('should verify attachment section' , async () => {
+        await assetRCMDetailView.gotoAttachmentsTabAndAssignAttachment();
+        // await assetRCMDetailView.addDocument();
+        // await assetRCMDetailView.addLink();
+        // await assetRCMDetailView.deleteAttachmentAndVerify();
+    });
+
+    it('should able to download and verify summary report', async () => {
+        await assetRCMDetailView.downloadSummaryReport();
+    });
+
+    it('should able to delete newly created RCM', async () => {
+        await assetRCMDetailView.deleteRCM();
+        await assetRCMList.verifyRCMDeletion();
+    });
     
 });

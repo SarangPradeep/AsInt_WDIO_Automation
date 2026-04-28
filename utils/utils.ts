@@ -127,16 +127,29 @@ class Utils {
         if (delayAfter > 0) await browser.pause(delayAfter);
     }
 
-    async waitForBusyIndicatorToDisappear(timeoutInSeconds = 30): Promise<void> {
-        const busy = $("//div[@role='progressbar']");
+    async waitForBusyIndicatorToDisappear(timeoutInSeconds = 60): Promise<void> {
+        const busy = $("#sapUiBusyIndicator");
         try {
-            await busy.waitForDisplayed({
+            const appeared = await browser.waitUntil(async () => {
+                return await busy.isDisplayed().catch(() => false);
+            }, {
+                timeout: 3000,
+                interval: 300
+            }).then(() => true).catch(() => false);
+            if (!appeared) {
+                console.log("Busy indicator did not appear → skipping wait");
+                return;
+            }
+            await browser.waitUntil(async () => {
+                const isDisplayed = await busy.isDisplayed().catch(() => false);
+                return !isDisplayed;
+            }, {
                 timeout: timeoutInSeconds * 1000,
-                reverse: true,
-                interval: 200
+                interval: 300,
+                timeoutMsg: "Busy indicator did not disappear"
             });
         } catch {
-            console.warn("Busy indicator timeout");
+            console.warn("Busy indicator wait failed");
         }
     }
 

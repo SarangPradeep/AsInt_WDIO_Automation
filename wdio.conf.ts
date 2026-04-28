@@ -21,6 +21,8 @@ export const config: WebdriverIO.Config = {
         './configuration/**/*.e2e.ts',
         './safety_group/safety.e2e.ts',
         './task_management/task_management.e2e.ts',
+        './reliability/asset_risk_and_criticality_analysis/asset_risk_and_criticality_analysis.e2e.ts',
+        './reliability/asset_rcm_analysis/asset_rcm_list.e2e.ts',
 
     ],
     exclude: [],
@@ -40,18 +42,11 @@ export const config: WebdriverIO.Config = {
         }
         }
     ],
-
-    //
-    // ===================
-    // Test Configurations
-    // ===================
-
     logLevel: 'info',
     logLevels: {
         webdriver: 'silent',
         '@wdio/mocha-framework': 'info'
     },
-
     bail: 0, 
     waitforTimeout: 60000, 
     connectionRetryTimeout: 600000,
@@ -59,7 +54,6 @@ export const config: WebdriverIO.Config = {
 
     services: [],
     automationProtocol: 'webdriver',
-
     framework: 'mocha',
     reporters: [
         'spec',
@@ -72,7 +66,6 @@ export const config: WebdriverIO.Config = {
     ],
     mochaOpts: {
         ui: 'bdd',
-        // Keep runnable timeout aligned with long end-to-end flows and explicit waitUntil calls.
         timeout: 900000,
         reporter: 'spec'
     },

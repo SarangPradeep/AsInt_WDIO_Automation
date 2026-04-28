@@ -1,4 +1,4 @@
-import utils from "../../../utils/utils";
+import utils from "../../../../utils/utils.ts";
 import EquipmentListviewPage from "./equipment.listview.page.ts";
 class EquipmentDetailPage {
     //  SELECTORS 
@@ -13,6 +13,23 @@ class EquipmentDetailPage {
     get classificationSection() { return $('//button[.//bdi[text()="Classification & MDA"]]'); }
     get assetIntelligenceSection() { return $('//button[.//bdi[text()="Asset Intelligence"]]'); }
     get riskSection() { return $('//button[.//bdi[text()="Risk Summary"]]'); }
+    get mainAndServiceSection() { return $('//button[.//bdi[text()="Maintenance and Service"]]'); }
+    private get maintainNoti() { return $("//div[text()='Maintenance Notifications']/following::span[1]"); }
+    private get maintainOrder() { return $("//div[text()='Maintenance Orders']/following::span[1]"); }
+    private get maintainPlan() { return $("//div[text()='Maintenance Plan']/following::span[1]"); }
+    private get recomWrk() { return $("//div[text()='Recommendation Workbench']/following::span[1]"); }
+    private get maintaintask() { return $("//div[text()='Maintenance Tasks']/following::span[5]"); }
+    private get changeHistoryEditHeader() { return $("//bdi[text()='Edit Header']"); }
+    private get descEditHeader() { return $("//bdi[text()='Short Description']/following::input[1][not(@readonly)]"); }
+    private get categoryEditHeader() { return $("//bdi[text()='Category']/following::input[1]"); }
+    private get category() { return $("//span[text()='Select Category']"); }
+    private get ctgChoose() { return $(`//span[text()='Linear Asset']/ancestor::tr//td[2]//*[name()='circle'][2]`); }
+    private get ctgSave() { return $("(//bdi[text()='Save'])[2]"); }
+    private get headerSave() { return $("//bdi[text()='Save']"); }
+    private get hdSaveSucc() { return $("//span[text()='Updated successfully']"); }
+    private get hdOkBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
+    private get chngHist() { return $("//bdi[text()='Change History']"); }
+
     private get maintenanceSection() { return $('//button[.//bdi[text()="Maintenance and Service"]]'); }
     private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]]'); }
     private get changeHistorySection() { return $('//button[.//bdi[text()="Change History"]]'); }
@@ -243,17 +260,20 @@ class EquipmentDetailPage {
             let foundValid = false;
 
             while (!foundValid) {
+                await browser.pause(3000);
                 const nameCell = $(`(//tr[@role='row'])[${i + 1}]//td[3]//span`);
                 await nameCell.waitForDisplayed({ timeout: 20000 });
 
                 let equipName: string = (await nameCell.getText()) || (await nameCell.getAttribute("innerText")) || "";
                 equipName = equipName.trim();
+                await console.log(`Checking equipment: ${equipName}`);
 
                 if (
                     equipName &&
-                    (equipName.includes(EquipmentListviewPage.createdEquipmentName) || equipName.includes(superEquipValue))
+                    (equipName === EquipmentListviewPage.createdEquipmentName) || equipName === superEquipValue
                 ) {
                     i++;
+                    await console.log(`Skipping equipment: ${equipName} as it matches either the equipment being edited or the superordinate equipment`);
                     continue;
                 }
 
@@ -729,5 +749,89 @@ class EquipmentDetailPage {
         await browser.pause(5000);
     }
 
+    public async verifyMainAndSum() {
+        console.log("Navigating to Maintenance and Service Tab");
+        await utils.clickWithWait(this.mainAndServiceSection);
+        await this.mainAndServiceSection.waitForDisplayed({ timeout: 30000 });
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log("Navigated to Maintenance and Service successfully");
+
+        // const maintainNoti = await this.maintainNoti.getText();
+        // const mn = await utils.getAssignedValue(maintainNoti);
+        // console.log(" Assigned Maintenance Notification : "+mn);
+
+        const maintainOrder = await this.maintainOrder.getText();
+        const mo = await utils.getAssignedValue(maintainOrder);
+        console.log(" Assigned Maintenance Order: "+mo);
+
+        const maintainPlan = await this.maintainPlan.getText();
+        const mp = await utils.getAssignedValue(maintainPlan);
+        console.log(" Assigned Maintenance Plan: "+mp);
+
+        const recomWrk = await this.recomWrk.getText();
+        const rw = await utils.getAssignedValue(recomWrk);
+        console.log(" Assigned recommendations: "+rw);
+
+        const maintaintask = await this.maintaintask.getText();
+        const mt = await utils.getAssignedValue(maintaintask);
+        console.log(" Assigned Maintenance Task: "+mt);
+    }
+    
+    public async verifyChangeHistory() {
+            console.log("Editing header's Information for change history check");
+            await utils.clickWithWait(this.changeHistoryEditHeader);
+            await utils.setValueWithWait(
+                this.descEditHeader,
+                await utils.generateRandomFuncDescName()
+            );
+            const enteredDesc = await this.descEditHeader.getValue();
+            await utils.clickWithWait(this.categoryEditHeader);
+            await this.category.waitForDisplayed({ timeout: 30000 });
+            await this.ctgChoose.scrollIntoView();
+            let selectedCategory = "";
+            const sElem = $("//span[text()='S']/ancestor::tr//td[2]//*[name()='circle'][2]/ancestor::div[@aria-checked='false']");
+            if (await sElem.isExisting()) {
+                await utils.clickWithWait(sElem);
+                selectedCategory = "S";
+            } else {
+                const mElem = $("//span[text()='M']/ancestor::tr//td[2]//*[name()='circle'][2]");
+                await utils.clickWithWait(mElem);
+                selectedCategory = "M";
+            }
+            await utils.clickWithWait(this.ctgSave);
+            await utils.clickWithWait(this.headerSave);
+            await this.hdSaveSucc.waitForDisplayed({ timeout: 30000 });
+            await utils.clickWithWait(this.hdOkBtn);
+            console.log("Header edited successfully");
+    
+            console.log("Navigating to Change History tab");
+            await utils.clickWithWait(this.chngHist);
+            await utils.waitForBusyIndicatorToDisappear();
+            await this.chngHist.waitForDisplayed({ timeout: 30000 });
+            console.log("Navigated to Change History tab successfully");
+            console.log("Fetching latest change history entry");
+            const latestCngHst = await $("(//ul/li//div[2]/div/span)[1]");
+            await latestCngHst.waitForDisplayed();
+            console.log("Latest change history entry fetched successfully");
+            const text = await latestCngHst.getText();
+            console.log("Change History Text:\n", text);
+            console.log("Validating change history entry");
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            console.log("Extracted Lines from Change History Entry:");
+            const categoryLine = lines.find(l => l.toLowerCase().includes('category'));
+            const descLine = lines.find(l => l.toLowerCase().includes('description'));
+    
+            if (!categoryLine || !categoryLine.includes(selectedCategory)) {
+                throw new Error(
+                    `Category mismatch. Expected: ${selectedCategory}, Found: ${categoryLine}`
+                );
+            }
+            if (!descLine || !descLine.includes(enteredDesc)) {
+                throw new Error(
+                    `Description mismatch. Expected: ${enteredDesc}, Found: ${descLine}`
+                );
+            }
+            console.log("Change history validation passed successfully");
+        }
 }
 export default new EquipmentDetailPage();

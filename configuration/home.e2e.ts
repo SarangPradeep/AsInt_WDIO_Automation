@@ -1,8 +1,8 @@
 // home.e2e.ts
 import 'dotenv/config';
-import HomePage from '../page_object_model/btp_applications_page/configuration/home.page';
+import HomePage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/home.page';
 
-describe('Home Page | Full Dashboard Load Validation', () => {
+describe('BTP - Home Page - Functional Test', () => {
 
     it('should wait for the last tile (HAZOP) to load and verify count', async () => {
         await HomePage.waitForHomePageToLoad();

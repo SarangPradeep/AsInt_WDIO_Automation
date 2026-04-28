@@ -1,5 +1,5 @@
 import { ChainablePromiseElement } from 'webdriverio';
-import utils from '../../../utils/utils';
+import utils from '../../../../utils/utils';
 import functionalLocationDetailView from './functional_location.detail.page';
 
 class functionalLocationListView {
