@@ -1,13 +1,25 @@
-import taskManagementListView from '../page_object_model/btp_applications_page/task_management/task_management.listview.page.js';
+import taskManagementListView from '../page_object_model/btp_applications_page/planning/task_management/task_management.listview.page';
 
-describe('Task Management test', () => {
+describe('BTP Task Management - Functional Test', () => {
+    // Shared variables across tests
+    let taskDescription: string;
+    let editedTaskDescription: string;
+    let updatedComment: string;
+    let updatedHeader: string;
+    let updatedLongDescription: string;
 
-    it('should create a new task from task management list view', async function () {
+    before(function () {
+        // Initialize shared test data
+        const timestamp = Date.now();
+        taskDescription = `AUTO TASK ${timestamp}`;
+        editedTaskDescription = `UPDATED AUTO TASK ${timestamp}`;
+        updatedComment = `EDITED COMMENT ${timestamp}`;
+        updatedHeader = `Updated Header ${timestamp}`;
+        updatedLongDescription = `Updated Long Description ${timestamp}`;
+    });
+
+    it('should navigate to Task Management and create a new task', async function () {
         this.timeout(900000); // 15 minutes
-        const taskDescription = `AUTO TASK ${Date.now()}`;
-        const editedTaskDescription = `UPDATED AUTO TASK ${Date.now()}`;
-        const updatedComment = `EDITED COMMENT ${Date.now()}`;
-
         await taskManagementListView.navigateToTaskManagementListView();
         await taskManagementListView.createTask(taskDescription, {
             activity: 'Asset Inspection',
@@ -15,12 +27,24 @@ describe('Task Management test', () => {
             assignedTo: 'anmol.kumar@asint.net',
             objectType: 'None'
         });
+    });
+
+    it('should verify task was created successfully', async function () {
+        this.timeout(900000);
         await taskManagementListView.verifyTaskCreated(taskDescription);
+    });
+
+    it('should open task detail and edit header details', async function () {
+        this.timeout(900000);
         await taskManagementListView.openTaskDetail(taskDescription);
         await taskManagementListView.editHeaderDetails(
-            `Updated Header ${Date.now()}`,
-            `Updated Long Description ${Date.now()}`
+            updatedHeader,
+            updatedLongDescription
         );
+    });
+
+    it('should edit task details and save changes', async function () {
+        this.timeout(900000);
         await taskManagementListView.editTaskAndSave({
             description: editedTaskDescription,
             activity: 'Asset Inspection',
@@ -28,8 +52,20 @@ describe('Task Management test', () => {
             assignedTo: 'anmol.kumar@asint.net',
             comment: updatedComment
         });
+    });
+
+    it('should update task status to Completed', async function () {
+        this.timeout(900000);
         await taskManagementListView.updateStatusToCompleted();
+    });
+
+    it('should delete the task', async function () {
+        this.timeout(900000);
         await taskManagementListView.deleteTaskAndConfirm();
+    });
+
+    it('should verify task deletion', async function () {
+        this.timeout(900000);
         await taskManagementListView.searchAndVerifyTaskDeleted(editedTaskDescription);
     });
 }).timeout(900000);

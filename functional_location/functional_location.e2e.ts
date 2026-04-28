@@ -1,8 +1,8 @@
-import functionalLocationListView from '../page_object_model/btp_applications_page/functional_location/functional_location.listview.page';
-import functionalLocationDetailView from '../page_object_model/btp_applications_page/functional_location/functional_location.detail.page';
+import functionalLocationListView from '../page_object_model/btp_applications_page/master_data/functional_location/functional_location.listview.page';
+import functionalLocationDetailView from '../page_object_model/btp_applications_page/master_data/functional_location/functional_location.detail.page';
 import {funcLocTestData} from '../test_data/btp_applications/functional_location.data';
 import utils from '../utils/utils';
-describe('BTP | Functional Location test', () => {
+describe('BTP - Functional Location - Functional Test', () => {
 
     it('should navigate to functional location list view', async () => {
         await functionalLocationListView.navigateFunctionalLocationListView();

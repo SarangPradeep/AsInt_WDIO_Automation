@@ -1,6 +1,6 @@
 import { browser } from '@wdio/globals';
-import HomePage from '../home.page';
-import utils from '../../../utils/utils';
+import HomePage from '../../home.page';
+import utils from '../../../../utils/utils';
 
 type TaskCreateOptions = { activity?: string; priority?: string; objectType?: string; assignedTo?: string; };
 type TaskEditOptions = { description?: string; activity?: string; priority?: string; assignedTo?: string; startDate?: string; dueDate?: string; comment?: string; };
@@ -11,19 +11,19 @@ class TaskManagementListView {
     
     // Frame & Table
     private get taskManagementFrame() { return $('//iframe[@title="Application"]'); }
-    private get taskTable() { return $('//*[contains(@id,"idTaskManagementListMTable")]'); }
+    private get taskTable() { return $('//table[@role="grid" and @aria-roledescription="Responsive Table"]'); }
     private get searchInput() { return $('//input[@type="search" and (@aria-label="Search" or @placeholder="Search")]'); }
     
     // Create Dialog Selectors
     private get createTaskDialog() { return $('//div[@role="dialog"]'); }
-    private get descriptionInput() { return $('//div[@role="dialog"]//bdi[contains(normalize-space(),"Description")]/ancestor::label/following::input[1]'); }
-    private get activityInput() { return $('//div[@role="dialog"]//input[contains(@id,"CreateTaskMultiInput-inner")]'); }
-    private get priorityDropdownArrow() { return $('//div[@role="dialog"]//bdi[contains(normalize-space(),"Priority")]/ancestor::label/following::span[contains(@id,"arrow")][1]'); }
-    private get assignedToDropdownArrow() { return $('//div[@role="dialog"]//bdi[contains(normalize-space(),"Assigned To")]/ancestor::label/following::span[contains(@id,"arrow")][1]'); }
-    private get startDateInput() { return $('//div[@role="dialog"]//input[contains(@id,"datePicker-inner")]'); }
-    private get dueDateInput() { return $('//div[@role="dialog"]//input[contains(@id,"datePicker2-inner")]'); }
-    private get objectTypeDropdownArrow() { return $('//div[@role="dialog"]//bdi[contains(normalize-space(),"Object Type")]/ancestor::label/following::span[contains(@id,"arrow")][1]'); }
-    private get createButton() { return $('//div[@role="dialog"]//bdi[normalize-space()="Create"]/ancestor::button'); }
+    private get descriptionInput() { return $('//div[@role="dialog"]//label[.//bdi[text()="Short Description"]]/following::input[@type="text"][1]'); }
+    private get activityInput() { return $('//input[@type="text" and @aria-roledescription="Multi Value Input"]'); }
+    private get priorityDropdownArrow() { return $('//div[@role="dialog"]//label[.//bdi[text()="Priority"]]/following::span[@role="button"][1]'); }
+    private get assignedToDropdownArrow() { return $('//div[@role="dialog"]//label[.//bdi[text()="Assigned To"]]/following::span[@role="button"][1]'); }
+    private get startDateInput() { return $('(//div[@role="dialog"]//input[@aria-roledescription="Date Input"])[1]'); }
+    private get dueDateInput() { return $('(//div[@role="dialog"]//input[@aria-roledescription="Date Input"])[2]'); }
+    private get objectTypeDropdownArrow() { return $('//div[@role="dialog"]//label[.//bdi[text()="Object Type"]]/following::span[@role="button"][1]'); }
+    private get createButton() { return $('//div[@role="dialog"]//button[.//bdi[text()="Create"]]'); }
     
     // Detail Page Selectors
     private get detailEditHeaderButton() { return $('//button[contains(text(),"Edit Header") or .//bdi[contains(normalize-space(),"Edit Header")]]'); }
@@ -32,30 +32,30 @@ class TaskManagementListView {
     private get detailSaveButton() { return $('(//button[.//bdi[normalize-space()="Save"]])[last()]'); }
     private get detailDeleteButton() { return $('(//button[.//bdi[normalize-space()="Delete"] or contains(@title,"Delete") or contains(@aria-label,"Delete")])[last()]'); }
     private get detailDescriptionInput() { return $('//bdi[contains(normalize-space(),"Description")]/ancestor::label/following::input[1]'); }
-    private get detailActivityInput() { return $('//input[contains(@id,"idFindingMultiInput-inner")]'); }
-    private get detailPriorityDropdownArrow() { return $('//bdi[contains(normalize-space(),"Priority")]/ancestor::label/following::span[contains(@id,"arrow")][1]'); }
-    private get detailAssignedToDropdownArrow() { return $('//bdi[contains(normalize-space(),"Assigned")]/ancestor::label/following::span[contains(@id,"arrow")][1]'); }
-    private get detailStartDateInput() { return $('//input[contains(@id,"datePicker-inner")]'); }
-    private get detailDueDateInput() { return $('//input[contains(@id,"datePicker2-inner")]'); }
-    private get detailDisciplineDropdownArrow() { return $('//bdi[contains(normalize-space(),"Discipline")]/ancestor::label/following::span[contains(@id,"arrow")][1]'); }
+    private get detailActivityInput() { return $('//label[.//bdi[text()="Activity"]]/following::input[@aria-roledescription="Multi Value Input"][1]'); }
+    private get detailPriorityDropdownArrow() { return $('//label[.//bdi[text()="Priority"]]/following::span[@role="button"][1]'); }
+    private get detailAssignedToDropdownArrow() { return $('//label[.//bdi[text()="Assigned To"]]/following::span[@role="button"][1]'); }
+    private get detailStartDateInput() { return $('//label[.//bdi[text()="Start Date"]]/following::input[@aria-roledescription="Date Input"][1]'); }
+    private get detailDueDateInput() { return $('//label[.//bdi[text()="Due Date"]]/following::input[@aria-roledescription="Date Input"][1]'); }
+    private get detailDisciplineDropdownArrow() { return $('//label[.//bdi[text()="Discipline"]]/following::span[@role="button"][1]'); }
     private get detailDisciplineValueInput() { return $('//bdi[contains(normalize-space(),"Discipline")]/ancestor::label/following::input[1]'); }
     private get detailCommentTextArea() { return $('//bdi[contains(normalize-space(),"Comment")]/ancestor::label/following::textarea[1]'); }
     
     // Edit Header Dialog Selectors
-    private get headerShortDescTextArea() { return $('//textarea[contains(@id,"idHeaderShortDesc-inner")]'); }
-    private get headerLongDescTextArea() { return $('//textarea[contains(@id,"idHeaderLongDesc-inner")]'); }
-    private get headerStartDateInput() { return $('//input[contains(@id,"datePickerStartDateHeader-inner")]'); }
-    private get headerDueDateInput() { return $('//input[contains(@id,"datePickerDueDateHeader-inner")]'); }
+    private get headerShortDescTextArea() { return $('//div[@role="dialog"]//label[.//bdi[text()="Short Description"]]/following::textarea[1]'); }
+    private get headerLongDescTextArea() { return $('//div[@role="dialog"]//label[.//bdi[text()="Long Description"]]/following::textarea[1]'); }
+    private get headerStartDateInput() { return $('//div[@role="dialog"]//label[.//bdi[text()="Start Date"]]/following::input[@aria-roledescription="Date Input"][1]'); }
+    private get headerDueDateInput() { return $('//div[@role="dialog"]//label[.//bdi[text()="Due Date"]]/following::input[@aria-roledescription="Date Input"][1]'); }
     
     // Dynamic Selectors
-    private taskDescriptionCell(taskDescription: string) { return $(`//*[contains(@id,"idTaskManagementListMTable")]//tr[@role="row"]//*[contains(@title,"${taskDescription}") or contains(normalize-space(),"${taskDescription}")]`); }
-    private taskRowByDescription(taskDescription: string) { return $(`(//*[contains(@id,"idTaskManagementListMTable")]//tr[@role="row"][.//*[contains(@title,"${taskDescription}") or contains(normalize-space(),"${taskDescription}")]])[1]`); }
+    private taskDescriptionCell(taskDescription: string) { return $(`//table[@role="grid" and @aria-roledescription="Responsive Table"]//tr[@role="row"]//*[contains(@title,"${taskDescription}") or contains(normalize-space(),"${taskDescription}")]`); }
+    private taskRowByDescription(taskDescription: string) { return $(`(//table[@role="grid" and @aria-roledescription="Responsive Table"]//tr[@role="row"][.//*[contains(@title,"${taskDescription}") or contains(normalize-space(),"${taskDescription}")]])[1]`); }
     private getOptionInLastListboxByText(optionText: string) { return $(`((//ul[@role="listbox"])[last()]//li[@role="option"][.//*[normalize-space()="${optionText}" or contains(normalize-space(),"${optionText}")] or normalize-space()="${optionText}" or contains(normalize-space(),"${optionText}")])[1]`); }
 
     // ============ PRIVATE HELPER METHODS ============
 
     private async getAddTaskButton(): Promise<any> {
-        const candidates = ['(//*[contains(@id,"idTaskManagementListMTable")]//ancestor::div[contains(@class,"sapMList")][1]//button[contains(@title,"Add") or contains(@aria-label,"Add")])[1]', '(//*[contains(@id,"idTaskManagementListMTable")]//ancestor::div[contains(@class,"sapMList")][1]//button[contains(@title,"task") or contains(@aria-label,"task")])[1]', '(//*[contains(@id,"idTaskManagementListMTable")]//ancestor::div[contains(@class,"sapMList")][1]//button)[2]'];
+        const candidates = ['(//table[@role="grid" and @aria-roledescription="Responsive Table"]//ancestor::div[contains(@class,"sapMList")][1]//button[contains(@title,"Add") or contains(@aria-label,"Add")])[1]', '(//table[@role="grid" and @aria-roledescription="Responsive Table"]//ancestor::div[contains(@class,"sapMList")][1]//button[contains(@title,"task") or contains(@aria-label,"task")])[1]', '(//table[@role="grid" and @aria-roledescription="Responsive Table"]//ancestor::div[contains(@class,"sapMList")][1]//button)[2]'];
         for (const selector of candidates) {
             const button = await $(selector);
             if (await button.isExisting()) return button;
@@ -135,17 +135,29 @@ class TaskManagementListView {
     private async selectActivityFromSuggestions(activity: string): Promise<void> {
         await utils.clickWithWait(this.activityInput);
         await utils.setValueWithWait(this.activityInput, activity);
-        await browser.pause(300);
+        await browser.pause(500);
         const listOption = $(`//li[@role="option"][.//*[normalize-space()="${activity}"] or normalize-space()="${activity}"]`);
-        const tableOption = $(`//tr[@role="row"][.//*[normalize-space()="${activity}"] or normalize-space()="${activity}"]`);
+        const tableOption = $(`//tr[@role="option"][.//*[normalize-space()="${activity}"] or normalize-space()="${activity}"]`);
+        
+        // Try list option first
         if (await listOption.isDisplayed().catch(() => false)) {
-            await utils.clickWithWait(listOption);
-            return;
+            const isClickable = await listOption.isClickable().catch(() => false);
+            if (isClickable) {
+                await utils.clickWithWait(listOption);
+                return;
+            }
         }
+        
+        // Try table option
         if (await tableOption.isDisplayed().catch(() => false)) {
-            await utils.clickWithWait(tableOption);
-            return;
+            const isClickable = await tableOption.isClickable().catch(() => false);
+            if (isClickable) {
+                await utils.clickWithWait(tableOption);
+                return;
+            }
         }
+        
+        // Fallback to Enter key
         await browser.keys('Enter');
     }
 
@@ -168,10 +180,13 @@ class TaskManagementListView {
     }
 
     private async clearDetailActivityTokens(): Promise<void> {
-        let tokenDeleteIcons = await $$('//input[contains(@id,"idFindingMultiInput-inner")]/ancestor::div[contains(@class,"sapMMultiInput")][1]//span[contains(@class,"sapMTokenIcon")]');
+        let tokenDeleteIcons = await $$('//label[.//bdi[text()="Activity"]]/following::div[contains(@class,"sapMMultiInput")][1]//span[contains(@class,"sapMTokenIcon")]');
         while ((await tokenDeleteIcons.length) > 0) {
+            const isDisplayed = await tokenDeleteIcons[0].isDisplayed().catch(() => false);
+            if (!isDisplayed) break;
             await utils.clickWithWait(tokenDeleteIcons[0]);
-            tokenDeleteIcons = await $$('//input[contains(@id,"idFindingMultiInput-inner")]/ancestor::div[contains(@class,"sapMMultiInput")][1]//span[contains(@class,"sapMTokenIcon")]');
+            await browser.pause(200);
+            tokenDeleteIcons = await $$('//label[.//bdi[text()="Activity"]]/following::div[contains(@class,"sapMMultiInput")][1]//span[contains(@class,"sapMTokenIcon")]');
         }
     }
 
@@ -231,8 +246,8 @@ class TaskManagementListView {
 
     private async clickEditHeaderSaveButton(): Promise<void> {
         const selectors = [
-            '//*[contains(@id,"idAddDialog")]//button[.//bdi[normalize-space()="Save"] or .//span[normalize-space()="Save"] or contains(@aria-label,"Save")]',
-            '//div[contains(@class,"sapMDialog") and .//textarea[contains(@id,"idHeaderShortDesc-inner")]]//button[.//bdi[normalize-space()="Save"] or .//span[normalize-space()="Save"] or contains(@aria-label,"Save")]',
+            '//div[@role="dialog" and .//h1[contains(text(),"Edit Header")]]//button[.//bdi[normalize-space()="Save"] or .//span[normalize-space()="Save"] or contains(@aria-label,"Save")]',
+            '//div[@role="dialog" and .//label[.//bdi[text()="Short Description"]]]//button[.//bdi[normalize-space()="Save"] or .//span[normalize-space()="Save"] or contains(@aria-label,"Save")]',
             '(//button[not(starts-with(@id,"__mbox-btn-")) and (.//bdi[normalize-space()="Save"] or .//span[normalize-space()="Save"] or contains(@aria-label,"Save"))])[last()]'
         ];
 

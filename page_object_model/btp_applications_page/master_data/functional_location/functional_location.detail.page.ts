@@ -1,6 +1,6 @@
 import functionalLocationListView from './functional_location.listview.page';
-import {funcLocTestData} from '../../../test_data/btp_applications/functional_location.data';
-import utils from '../../../utils/utils';
+import {funcLocTestData} from '../../../../test_data/btp_applications/functional_location.data';
+import utils from '../../../../utils/utils';
 import * as path from 'path';
 /**
  * Page Object Model for the Fixed AIP Application within the SAP utils.

@@ -1,5 +1,5 @@
 import { $, browser } from '@wdio/globals';
-import SapUtils from '../../../utils/utils';
+import SapUtils from '../../../../utils/utils';
 
 class ConfigurationAppPage {
 

@@ -55,8 +55,8 @@ class Utils {
 
     async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 100000): Promise<void> {
         const el = await element;
-        await el.waitForExist({ timeout : 50000 });
-        await el.waitForDisplayed({ timeout : 50000 });
+        await el.waitForExist({ timeout });
+        await el.waitForDisplayed({ timeout });
         await browser.pause(200);
         await this.scrollIntoViewIfNeeded(el);
         await el.waitForClickable({
@@ -109,7 +109,7 @@ class Utils {
         }
     }
 
-    async setValueWithWait(element: any, value: string, delayAfter = 0, timeout = 100000): Promise<void> {
+    async setValueWithWait(element: any, value: string, delayAfter = 0, timeout = 60000): Promise<void> {
         const el = await element;
         await el.waitForDisplayed({ timeout });
         await el.scrollIntoView();
@@ -127,16 +127,29 @@ class Utils {
         if (delayAfter > 0) await browser.pause(delayAfter);
     }
 
-    async waitForBusyIndicatorToDisappear(timeoutInSeconds = 50): Promise<void> {
-        const busy = $("//div[@role='progressbar']");
+    async waitForBusyIndicatorToDisappear(timeoutInSeconds = 60): Promise<void> {
+        const busy = $("#sapUiBusyIndicator");
         try {
-            await busy.waitForDisplayed({
+            const appeared = await browser.waitUntil(async () => {
+                return await busy.isDisplayed().catch(() => false);
+            }, {
+                timeout: 3000,
+                interval: 300
+            }).then(() => true).catch(() => false);
+            if (!appeared) {
+                console.log("Busy indicator did not appear → skipping wait");
+                return;
+            }
+            await browser.waitUntil(async () => {
+                const isDisplayed = await busy.isDisplayed().catch(() => false);
+                return !isDisplayed;
+            }, {
                 timeout: timeoutInSeconds * 1000,
-                reverse: true,
-                interval: 200
+                interval: 300,
+                timeoutMsg: "Busy indicator did not disappear"
             });
         } catch {
-            console.warn("Busy indicator timeout");
+            console.warn("Busy indicator wait failed");
         }
     }
 

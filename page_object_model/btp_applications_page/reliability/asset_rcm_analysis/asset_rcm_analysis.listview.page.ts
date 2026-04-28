@@ -14,8 +14,6 @@ class assetRCMListView {
     private get saveBtn() { return $("//button[.//bdi[text()='Save']]"); }
     private get okBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
     private get infoTab() { return $("//bdi[text()='Information']"); }
-    private get assessmentTab() { return $("//bdi[text()='Assessment']"); }
-    private get attachmentTab() { return $("//bdi[text()='Attachment']"); }
     public assetRCMDisplayID!: string;
     public assetRCMDesc!: string;
 
@@ -30,33 +28,33 @@ class assetRCMListView {
     public async createAssetRCM(){
         console.log("Creating Asset RCM - start");
         await utils.switchToIframe(this.rcmIframe);
-        // await utils.clickWithWait(this.createBtn);
-        // await utils.waitForBusyIndicatorToDisappear();
-        // this.assetRCMDesc = `Automation_RCM_${Date.now()}`;
-        // console.log(`Generated RCM Description: ${this.assetRCMDesc}`);
-        // await utils.setValueWithWait(this.descInput, this.assetRCMDesc);
-        // await this.templateDropdown.click();
-        // await browser.waitUntil(async()=> await this.templateFirstOption.isDisplayed(),{timeout:20000});
-        // await this.templateFirstOption.click();
-        // await this.longDescriptionTxtArea.setValue(assetRcmData.description);
-        // await utils.waitForBusyIndicatorToDisappear();
-        // await utils.clickWithWait(this.saveBtn);
-        // await utils.waitForBusyIndicatorToDisappear();
-        // await utils.clickWithWait(this.okBtn);
-        // await utils.waitForBusyIndicatorToDisappear();
-        // console.log("Creating Asset RCM is done");
-        // console.log("Navigating to detail page of RCM...");
-        // await this.infoTab.waitForEnabled({timeout:100000});
-        // console.log("Navigated to detail view page of new ly created RCM");
-        // await this.fetchRCMDisplayID();
-        // await this.verifyHeader();
-        // console.log("Header verification done");
-        // console.log("Capturing all header values");
-        // await this.captureRCMHeaderDetails();
+        await utils.clickWithWait(this.createBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        this.assetRCMDesc = `Automation_RCM_${Date.now()}`;
+        console.log(`Generated RCM Description: ${this.assetRCMDesc}`);
+        await utils.setValueWithWait(this.descInput, this.assetRCMDesc);
+        await this.templateDropdown.click();
+        await browser.waitUntil(async()=> await this.templateFirstOption.isDisplayed(),{timeout:20000});
+        await this.templateFirstOption.click();
+        await this.longDescriptionTxtArea.setValue(assetRcmData.description);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait(this.saveBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait(this.okBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log("Creating Asset RCM is done");
+        console.log("Navigating to detail page of RCM...");
+        await this.infoTab.waitForEnabled({timeout:100000});
+        console.log("Navigated to detail view page of new ly created RCM");
+        await this.fetchRCMDisplayID();
+        await this.verifyHeader();
+        console.log("Header verification done");
+        console.log("Capturing all header values");
+        await this.captureRCMHeaderDetails();
 
-        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
-        await utils.clickWithWait(el);
-        await browser.pause(10000);
+        // const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
+        // await utils.clickWithWait(el);
+        // await browser.pause(10000);
 
     }
 
@@ -128,8 +126,112 @@ class assetRCMListView {
         }
         console.log("End: captured RCM header -> ", result);
         await browser.switchToParentFrame();
-    }
+    }    
 
-    
+    public async verifyRCMDeletion()
+    {
+        console.log("Verifying deletion of RCM");
+
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.waitUntil(
+            async () => (await browser.execute(() => document.readyState)) === "complete",
+            { timeout: 20000 }
+        );
+
+        await browser.waitUntil(async () => {
+        const frames = await $$("//iframe");
+        for (const frame of frames) {
+            try {
+                await browser.switchFrame(frame);
+
+                const search = await $("//input[@type='search']");
+                if (await search.isExisting()) {
+                    return true; // correct frame
+                }
+                await browser.switchFrame(null);
+            } catch (e) {
+                await browser.switchFrame(null);
+            }
+        }
+        return false;
+        }, { timeout: 30000 });
+
+        const getVisibleSearch = async () => {
+            const elements = await $$("//input[@type='search']");
+            for (const el of elements) {
+                if (await el.isDisplayed()) {
+                    return el;
+                }
+            }
+            return null;
+        };
+
+        let searchBox;
+        await browser.waitUntil(async () => {
+            searchBox = await getVisibleSearch();
+            return searchBox !== null;
+        }, { timeout: 30000 });
+
+        if (!searchBox) {
+            throw new Error("Visible search box not found");
+        }
+        console.log("Visible search box found, searching for deleted RCM");
+        await browser.execute((el, value) => {const input = el as unknown as HTMLInputElement;
+            input.value = value as string;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }, searchBox, this.assetRCMDisplayID);
+        console.log(`Searched for Functional Location with Display ID: ${this.assetRCMDisplayID}`);
+        const getVisibleGo = async () => {
+            const buttons = await $$("//bdi[text()='Go']");
+            for (const btn of buttons) {
+                if (await btn.isDisplayed()) {
+                    return btn;
+                }
+            }
+            return null;
+        };
+
+        let goBtn: any;
+        await browser.waitUntil(async () => {
+            goBtn = await getVisibleGo();   // should return Element | null
+            return goBtn !== null;
+        }, {
+            timeout: 20000,
+            interval: 500,
+            timeoutMsg: "Go button not found"
+        });
+        if (!goBtn) {
+            throw new Error("Go button not found");
+        }
+
+        console.log("Clicking Go button to search for RCM");
+        await goBtn.waitForDisplayed({ timeout: 10000 });
+        await goBtn.waitForClickable({ timeout: 10000 });
+        await goBtn.click();
+        await browser.pause(5000);
+
+        console.log("Waiting for table to refresh after search...");
+        const noDataCell = '//td[text()="No data"]';
+        const tableRows = '//table//tr[contains(@class,"sapMListTblRow")]';
+
+        await browser.waitUntil(async () => {
+            const noDataExists = await $(noDataCell).isExisting();
+            const rowsExist = await $$(tableRows).length > 0;
+            return noDataExists || rowsExist;
+        }, {
+            timeout: 20000,
+            interval: 500,
+            timeoutMsg: "Search results never loaded"
+        });
+
+        console.log("Checking if RCM is present in the list after deletion");
+        const isFuncLocPresent = await $(noDataCell).isExisting();
+
+        if (!isFuncLocPresent) {
+            throw new Error("RCM still exists after deletion");
+        } else {
+            console.log("RCM deletion verified successfully");
+        }
+    }
 }
 export default new assetRCMListView();

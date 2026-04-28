@@ -1,12 +1,12 @@
 import 'dotenv/config';
 import { browser } from '@wdio/globals';
-//import BtpLoginPage from '../page_object_model/btp_applications_page/configuration/btpLogin.page';
-import HomePage from '../page_object_model/btp_applications_page/configuration/home.page';
-import ConfigurationAppPage from '../page_object_model/btp_applications_page/configuration/configurationPicklist.page';
+//import BtpLoginPage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/btpLogin.page';
+import HomePage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/home.page';
+import ConfigurationAppPage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/configurationPicklist.page';
 import SapUtils from '../utils/utils';
 
 
-describe('Functionality: Configuration App & Picklist Navigation', () => {
+describe('BTP - Configuration (Picklist Publish) - Functional Test', () => {
 
     it('should navigate to the Configuration Management App', async () => {
         await HomePage.waitForHomePageToLoad();
@@ -49,6 +49,10 @@ describe('Functionality: Configuration App & Picklist Navigation', () => {
         await ConfigurationAppPage.clickAddButton();
         await ConfigurationAppPage.fillPicklistDetails();
         await ConfigurationAppPage.clickAddButton();
+        
+        // Wait for the first column to be fully added before adding the second one
+        await browser.pause(2000);
+        await SapUtils.waitForBusyIndicatorToDisappear();
         
         await ConfigurationAppPage.clickAddButton();
         await ConfigurationAppPage.fillPicklistDetailss();

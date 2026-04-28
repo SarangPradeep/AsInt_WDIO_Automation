@@ -1,8 +1,8 @@
-import safetyHAZOPDetailView from '../page_object_model/btp_applications_page/safety_group/hazop.detail.page';
-import safetyHAZOPListView from '../page_object_model/btp_applications_page/safety_group/hazop.listview.page';
+import safetyHAZOPDetailView from '../page_object_model/btp_applications_page/safety_group/hazop/hazop.detail.page';
+import safetyHAZOPListView from '../page_object_model/btp_applications_page/safety_group/hazop/hazop.listview.page';
 import utils from '../utils/utils';
 
-describe("Hazop Functional Test", () => {
+describe("BTP - HAZOP - Functional Test", () => {
 
   it('should navigate to HAZOP Application', async () => {
     await safetyHAZOPListView.navigateToHazopTile();
