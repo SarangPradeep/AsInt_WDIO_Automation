@@ -1,6 +1,6 @@
 // home.e2e.ts
 import 'dotenv/config';
-import HomePage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/home.page';
+import HomePage from '../page_object_model/btp_applications_page/integrity/configuration/home.page';
 
 describe('BTP - Home Page - Functional Test', () => {
 
