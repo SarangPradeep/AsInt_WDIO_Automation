@@ -15,6 +15,7 @@ class Utils {
     private get closeHierarchyBtn() { return $("//div[@role='toolbar']/button[@aria-label='Decline']"); }
     private get closeAnalyticChartBtn() { return $("//button[@title='Close']"); }
     private get hazopIframe(): any { return $("iframe[data-help-id='application-hazop-manage']"); }
+    private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
 
     async switchToIframe(frameElement: any): Promise<void> {
         console.log("---- Switching to iframe ----");
@@ -442,6 +443,8 @@ class Utils {
             await this.switchToIframe(this.equipmentIframe);
         }else if(await this.hazopIframe.isExisting()){
             await this.switchToIframe(this.hazopIframe);
+        }else if(await this.rcmIframe.isExisting()){
+            await this.switchToIframe(this.rcmIframe);
         }
 
         await this.adaptFilter.waitForClickable({ timeout: 200000 });
@@ -541,6 +544,7 @@ class Utils {
         if(await this.funLocIframe.isExisting()) await this.switchToIframe(this.funLocIframe);
         else if (await this.equipmentIframe.isExisting()) await this.switchToIframe(this.equipmentIframe);
         else if (await this.hazopIframe.isExisting()) await this.switchToIframe(this.hazopIframe);
+        else if (await this.rcmIframe.isExisting()) await this.switchToIframe(this.rcmIframe);
 
         await this.clickWithWait(this.settingsBtn);
         await browser.pause(2000);
