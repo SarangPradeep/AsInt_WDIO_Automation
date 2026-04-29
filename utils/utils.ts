@@ -53,7 +53,7 @@ class Utils {
         }
     }
 
-    async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 100000): Promise<void> {
+    async clickWithWait(element: any,delayAfter: number = 0,timeout: number = 75000): Promise<void> {
         const el = await element;
         await el.waitForExist({ timeout });
         await el.waitForDisplayed({ timeout });
@@ -112,7 +112,7 @@ class Utils {
     async setValueWithWait(element: any, value: string, delayAfter = 0, timeout = 60000): Promise<void> {
         const el = await element;
         await el.waitForDisplayed({ timeout });
-        await el.scrollIntoView();
+        await this.scrollIntoViewIfNeeded(el);
 
         try {
             await el.click();
@@ -120,29 +120,34 @@ class Utils {
             await el.setValue(value);
         } catch {
             await browser.pause(1000);
-            await el.scrollIntoView();
+            await this.scrollIntoViewIfNeeded(el);
             await el.clearValue();
             await el.setValue(value);
         }
         if (delayAfter > 0) await browser.pause(delayAfter);
     }
 
-    async waitForBusyIndicatorToDisappear(timeoutInSeconds = 60): Promise<void> {
+    public async waitForBusyIndicatorToDisappear(timeoutInSeconds = 60): Promise<void> {
         const busy = $("#sapUiBusyIndicator");
+        const anim = $(".sapUiLocalBusyIndicatorAnimation");
         try {
             const appeared = await browser.waitUntil(async () => {
-                return await busy.isDisplayed().catch(() => false);
+                const b = await busy.isDisplayed().catch(() => false);
+                const a = await anim.isDisplayed().catch(() => false);
+                return b || a;
             }, {
                 timeout: 3000,
                 interval: 300
             }).then(() => true).catch(() => false);
+
             if (!appeared) {
                 console.log("Busy indicator did not appear → skipping wait");
                 return;
             }
             await browser.waitUntil(async () => {
-                const isDisplayed = await busy.isDisplayed().catch(() => false);
-                return !isDisplayed;
+                const b = await busy.isDisplayed().catch(() => false);
+                const a = await anim.isDisplayed().catch(() => false);
+                return !(b || a);
             }, {
                 timeout: timeoutInSeconds * 1000,
                 interval: 300,

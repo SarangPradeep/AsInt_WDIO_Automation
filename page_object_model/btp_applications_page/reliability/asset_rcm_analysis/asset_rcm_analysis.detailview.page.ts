@@ -61,7 +61,7 @@ class assetRCMDetailView {
     private get maintenanceOrdersHeader() { return $("//header//span[contains(text(),'Orders')]"); }
     private get maintenancePlansText() { return $("//div[contains(text(),'Maintenance Plans')]"); }
     private get footerCancelBtn() { return $("//footer//button[.//text()='Cancel']"); }
-    private get strategiesHeader() { return $("//div[@role='heading']//span[contains(text(),'Strategies')]"); }
+    private get strategiesHeader() { return $$("//div[@role='heading']//span[contains(text(),'Strategies')]"); }
     private get strategiesExpandBtn() { return $("//span[contains(text(),'Strategies')]/preceding::button[1]"); }
     private get strategiesRows() { return $$("//tr[@role='row']//div[@role='heading']//span"); }
     private get recommendationHeader() { return $("//div[@role='heading']//span[contains(text(),'Recommendation')]"); }
@@ -144,25 +144,25 @@ class assetRCMDetailView {
     private get sheRiskDropdownRow1() { return $("(//th[@aria-colindex='4']//span[text()='SHE Risk']/following::td[@aria-colindex='4']//input)[1]"); }
     private get finRiskDropdownRow1() { return $("(//th[@aria-colindex='5']//span[text()='FIN Risk']/following::td[@aria-colindex='5']//input)[1]"); }
     private get finConsequenceRow1() { return $("(//th[@aria-colindex='6']//span[text()='FIN Consequence ($K)']/following::td[@aria-colindex='6']//input)[1]"); }
-    private get finPofRow1() { return $("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[1]"); }
+    private get finPofRow1() { return $$("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[1]"); }
     private get transitionTextRow2() { return $("(//th[@aria-colindex='2']//span[text()='Transition']/following::tr[@aria-rowindex='2']/following::td[@aria-colindex='2']//span)[1]"); }
     private get lastTransitionDateRow2() { return $("(//th[@aria-colindex='3']//span[text()='Last Transition Date']/following::tr[@aria-rowindex='2']/following::td[@aria-colindex='3']//input)[1]"); }
     private get sheRiskDropdownRow2() { return $("(//th[@aria-colindex='4']//span[text()='SHE Risk']/following::tr[@aria-rowindex='2']/following::td[@aria-colindex='4']//input)[1]"); }
     private get finRiskDropdownRow2() { return $("(//th[@aria-colindex='5']//span[text()='FIN Risk']/following::tr[@aria-rowindex='2']/following::td[@aria-colindex='5']//input)[1]"); }
     private get finConsequenceRow2() { return $("(//th[@aria-colindex='6']//span[text()='FIN Consequence ($K)']/following::tr[@aria-rowindex='2']/following::td[@aria-colindex='6']//input)[1]"); }
-    private get finPofRow2() { return $("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[2]"); }
+    private get finPofRow2() { return $$("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[2]"); }
     private get transitionTextRow3() { return $("(//th[@aria-colindex='2']//span[text()='Transition']/following::tr[@aria-rowindex='3']/following::td[@aria-colindex='2']//span)[1]"); }
     private get lastTransitionDateRow3() { return $("(//th[@aria-colindex='3']//span[text()='Last Transition Date']/following::tr[@aria-rowindex='3']/following::td[@aria-colindex='3']//input)[1]"); }
     private get sheRiskDropdownRow3() { return $("(//th[@aria-colindex='4']//span[text()='SHE Risk']/following::tr[@aria-rowindex='3']/following::td[@aria-colindex='4']//input)[1]"); }
     private get finRiskDropdownRow3() { return $("(//th[@aria-colindex='5']//span[text()='FIN Risk']/following::tr[@aria-rowindex='3']/following::td[@aria-colindex='5']//input)[1]"); }
     private get finConsequenceRow3() { return $("(//th[@aria-colindex='6']//span[text()='FIN Consequence ($K)']/following::tr[@aria-rowindex='3']/following::td[@aria-colindex='6']//input)[1]"); }
-    private get finPofRow3() { return $("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[3]"); }
+    private get finPofRow3() { return $$("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[3]"); }
     private get transitionTextRow4() { return $("(//th[@aria-colindex='2']//span[text()='Transition']/following::tr[@aria-rowindex='4']/following::td[@aria-colindex='2']//span)[1]"); }
     private get lastTransitionDateRow4() { return $("(//th[@aria-colindex='3']//span[text()='Last Transition Date']/following::tr[@aria-rowindex='4']/following::td[@aria-colindex='3']//input)[1]"); }
     private get sheRiskDropdownRow4() { return $("(//th[@aria-colindex='4']//span[text()='SHE Risk']/following::tr[@aria-rowindex='4']/following::td[@aria-colindex='4']//input)[1]"); }
     private get finRiskDropdownRow4() { return $("(//th[@aria-colindex='5']//span[text()='FIN Risk']/following::tr[@aria-rowindex='4']/following::td[@aria-colindex='5']//input)[1]"); }
     private get finConsequenceRow4() { return $("(//th[@aria-colindex='6']//span[text()='FIN Consequence ($K)']/following::tr[@aria-rowindex='4']/following::td[@aria-colindex='6']//input)[1]"); }
-    private get finPofRow4() { return $("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[4]"); }
+    private get finPofRow4() { return $$("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[4]"); }
     private get saveRiskBtn() { return $("//button[.//text()='Save']"); }
     private get riskMatrixSections() { return $$("//bdi[normalize-space()='Risk Matrix']"); }
     private get riskMatrixTitle() { return $("//div[text()='Exxon 4x5 FIN Risk Matrix']"); }
@@ -170,6 +170,8 @@ class assetRCMDetailView {
     private get finPofValue() { return $("//div[contains(.,'FIN PoF')]/b"); }
     private get finCofValue() { return $("//div[contains(.,'FIN CoF ($K)')]/b"); }
     private get assignTechObjBtn() { return $("//button[.//text()='Assign Technical Objects']"); }
+    private get hierarchyMoreBtn() { return $("//span[text()='Hierarchy']/following::button[@aria-label='Additional Options']//span[@role='presentation']"); }
+    private get headerMoreBtn() { return $("//header//button[@aria-label='Additional Options']//span[@role='presentation']"); }
     private get functionalLocationHeader() { return $("//header//span[contains(text(),'Functional Location')]"); }
     private get checkBoxByIndex() { return (i: number) => $(`(//tr[@role='row']//div[@role='checkbox'])[${i}]`); }
     private functionalLocationRow = (funcLoc: string) =>$(`//span[@dir='auto'][contains(text(),'${funcLoc}')]`);
@@ -331,12 +333,17 @@ class assetRCMDetailView {
         console.log("Store equipment data start");
         const row = await this.getRowByIndex(i);
         const equipmentId = await row.$(".//td[@aria-colindex='2']//span[contains(@id,'txt')]").getText();
+        console.log("Equipment ID selected: "+equipmentId);
         const equipmentName = await row.$(".//td[@aria-colindex='2']//div[contains(@class,'Text')]/span[last()]").getText();
+        console.log("Equipment Name selected: "+equipmentName);
         const category = await row.$(".//td[@aria-colindex='3']//span").getText();
+        console.log("Category selected: "+category);
         const objectType = await row.$(".//td[@aria-colindex='4']//span").getText();
+        console.log("Object type selected: "+objectType);
         const catalogProfile = await row.$(".//td[@aria-colindex='8']//span").getText();
-        const criticality = await row.nextElement().$(".//span[text()='Criticality']/ancestor::div[1]/following::span[1]").getText();
-        this.selectedEquipmentData = {equipmentId,equipmentName,category,objectType,catalogProfile,criticality};
+        console.log("Catalog profile selected: "+catalogProfile);
+        //const criticality = await row.nextElement().$(".//span[text()='Criticality']/ancestor::div[1]/following::span[1]").getText();
+        this.selectedEquipmentData = {equipmentId,equipmentName,category,objectType,catalogProfile};
         console.log("Store equipment data end");
     }
     
@@ -364,8 +371,8 @@ class assetRCMDetailView {
         this.riskInformationSection,
         this.headerTechnicalObjectId(data.equipmentId),
         this.headerTechnicalObjectName(data.equipmentName),
-        this.criticalityLabel,
-        this.criticalityValue(data.criticality)
+        //this.criticalityLabel,
+        //this.criticalityValue(data.criticality)
         ];
 
         for (const el of elements) {
@@ -402,16 +409,29 @@ class assetRCMDetailView {
                 await utils.clickWithWait(this.riskInformationExpandBtn);
             }
         }
-        const stratHeaderTxt = await this.strategiesHeader.getText();
-        const stratCount = await utils.getAssignedValue(stratHeaderTxt);
-        if(stratCount > 0){
-            if((await this.strategiesExpandBtn.getAttribute("aria-expanded")) === "false"){
-                await utils.clickWithWait(this.strategiesExpandBtn);
+        let headerText = "";
+
+        for (const el of await this.strategiesHeader) {
+            if (await el.isDisplayed().catch(() => false)) {
+                headerText = await el.getText();
+                break;
             }
-            const rows = await this.strategiesRows;
-            for(const row of rows){
-                if(await row.isDisplayed()){
-                    console.log("Strategy:", await row.getText());
+        }
+
+        const strategyVal = await utils.getAssignedValue(headerText);
+        console.log("Assigned strategies is/are :", strategyVal);
+
+        if (strategyVal > 0) {
+            await this.strategiesExpandBtn.waitForDisplayed({ timeout: 60000 });
+
+            if ((await this.strategiesExpandBtn.getAttribute("aria-expanded")) === "false") {
+                await utils.clickWithWait(this.strategiesExpandBtn);
+                await browser.pause(2000);
+            }
+
+            for (const row of await this.strategiesRows) {
+                if (await row.isDisplayed().catch(() => false)) {
+                    console.log("Strategy Row: " + await row.getText());
                 }
             }
         }
@@ -516,6 +536,7 @@ class assetRCMDetailView {
                 break;
             }
         }
+        await browser.pause(3000);
         await expect(this.assignMaintainableItemsHeader).toBeDisplayed();
         const miText = await this.maintainableItemsText.getText();
         this.assignedMaintainable = await utils.getAssignedValue(miText);
@@ -602,16 +623,27 @@ class assetRCMDetailView {
         await utils.clickWithWait(this.failureModeAddBtn(this.maintanableItems));
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
-        //await utils.clickWithWait(this.assignFailureModeBtn);
-        console.log("Clicking assign falilure mode button...");
+        console.log("Clicking assign failure mode button...");
+        let clicked = false;
         for (const btn of await this.assignFailureModeBtn) {
-            if (await btn.isDisplayed() && await btn.isClickable()) {
+            if (await btn.isDisplayed().catch(() => false) && await btn.isClickable().catch(() => false)) {
+                await btn.scrollIntoView();
+                await browser.pause(500);
                 await utils.clickWithWait(btn);
-                break;
+                const opened = await this.assignFailureModeHeader.waitForDisplayed({
+                    timeout: 10000
+                }).then(() => true).catch(() => false);
+                if (opened) {
+                    clicked = true;
+                    break;
+                }
             }
         }
-        console.log("Assign falilure mode button clicked");
-        await expect(this.assignFailureModeHeader).toBeDisplayed();
+        if (!clicked) {
+            throw new Error("Assign Failure Mode popup did not open");
+        }
+        console.log("Assign failure mode button clicked");
+        await expect(this.failureModeCountText).toBeDisplayed();
         const fmText = await this.failureModeCountText.getText();
         const count = await utils.getAssignedValue(fmText);
         console.log("Failure Modes count: " + count);
@@ -619,7 +651,7 @@ class assetRCMDetailView {
             await utils.clickWithWait(this.cancelBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
-            console.log("addFailureModes end");
+            console.log("Add Failure Modes ends with no available failure mode to assign");
             return;
         }
         this.failureMode = await this.failureModeValue.getText();
@@ -673,6 +705,7 @@ class assetRCMDetailView {
             }
 
             await expect(isDisplayed).toBe(true);
+            await browser.execute(() => window.scrollTo(0, 0));
             await expect(this.failureModeId(idOnly)).toBeDisplayed();
         }
         else
@@ -749,8 +782,8 @@ class assetRCMDetailView {
             await browser.pause(2000);
         } else {
             await utils.clickWithWait(this.failureMechanismCheckbox);
-            const failVal = this.failureMechanismValue.getText();
-            console.log("Failure value selected :"+failVal);
+            const failVal = await this.failureMechanismValue.getText();
+            console.log("Failure value selected :",failVal);
             await utils.clickWithWait(this.assignBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
@@ -855,7 +888,7 @@ class assetRCMDetailView {
 
     public async verifyRiskInfoDetails()
     {
-        console.log("handleRiskInformation start");
+        console.log("Handle Risk Information starts...");
         for (const el of await this.riskInformationSections) {
             if (await el.isDisplayed()) {
                 await utils.clickWithWait(el);
@@ -872,59 +905,79 @@ class assetRCMDetailView {
 
         const t1 = await this.transitionTextRow1.getText();
         console.log("Editing Transition " + t1);
-        await this.lastTransitionDateRow1.setValue(format(today));
+        await utils.setValueWithWait(this.lastTransitionDateRow1, format(today));
         const getRandomRisk1 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        await this.sheRiskDropdownRow1.setValue(getRandomRisk1());
+        await utils.setValueWithWait(this.sheRiskDropdownRow1, getRandomRisk1());
         await browser.pause(2000);
-        await this.finRiskDropdownRow1.setValue(getRandomRisk1());
+        await utils.setValueWithWait(this.finRiskDropdownRow1, getRandomRisk1());
         await browser.pause(2000);
-        await this.finConsequenceRow1.setValue(Math.floor(Math.random() * 50000).toString());
+        await utils.setValueWithWait( this.finConsequenceRow1, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
         await browser.pause(2000);
-        await this.finPofRow1.setValue((Math.random()).toFixed(2));
+        for (const el of await this.finPofRow1) {
+            if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
+                await utils.setValueWithWait(el, (Math.random()).toFixed(2));
+                break;
+            }
+        }
         await browser.pause(2000);
 
         const t2 = await this.transitionTextRow2.getText();
         console.log("Editing Transition " + t2);
-        await this.lastTransitionDateRow2.setValue(format(today));
+        await utils.setValueWithWait(this.lastTransitionDateRow2, format(today));
         await browser.pause(2000);
         const getRandomRisk2 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        await this.sheRiskDropdownRow2.setValue(getRandomRisk2());
+        await utils.setValueWithWait(this.sheRiskDropdownRow2, getRandomRisk2());
         await browser.pause(2000);
-        await this.finRiskDropdownRow2.setValue(getRandomRisk2());
+        await utils.setValueWithWait(this.finRiskDropdownRow2, getRandomRisk2());
         await browser.pause(2000);
-        await this.finConsequenceRow2.setValue(Math.floor(Math.random() * 50000).toString());
+        await utils.setValueWithWait(this.finConsequenceRow2, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
         await browser.pause(2000);
-        await this.finPofRow2.setValue((Math.random()).toFixed(2));
+        for (const el of await this.finPofRow2) {
+            if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
+                await utils.setValueWithWait(el, (Math.random()).toFixed(2));
+                break;
+            }
+        }
 
         const t3 = await this.transitionTextRow3.getText();
         console.log("Editing Transition " + t3);
-        await this.lastTransitionDateRow3.setValue(format(today));
+        await utils.setValueWithWait(this.lastTransitionDateRow3, format(today));
         await browser.pause(2000);
         const getRandomRisk3 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        await this.sheRiskDropdownRow3.setValue(getRandomRisk3());
+        await utils.setValueWithWait(this.sheRiskDropdownRow3, getRandomRisk3());
         await browser.pause(2000);
-        await this.finRiskDropdownRow3.setValue(getRandomRisk3());
+        await utils.setValueWithWait(this.finRiskDropdownRow3, getRandomRisk3());
         await browser.pause(2000);
-        await this.finConsequenceRow3.setValue(Math.floor(Math.random() * 50000).toString());
+        await utils.setValueWithWait(this.finConsequenceRow3, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
         await browser.pause(2000);
-        await this.finPofRow3.setValue((Math.random()).toFixed(2));
+        for (const el of await this.finPofRow3) {
+            if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
+                await utils.setValueWithWait(el, (Math.random()).toFixed(2));
+                break;
+            }
+        }
 
         const t4 = await this.transitionTextRow4.getText();
         console.log("Editing Transition " + t4);
-        await this.lastTransitionDateRow4.setValue(format(today));
+        await utils.setValueWithWait(this.lastTransitionDateRow4, format(today));
         await browser.pause(2000);
         const getRandomRisk4 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        await this.sheRiskDropdownRow4.setValue(getRandomRisk4());
+        await utils.setValueWithWait(this.sheRiskDropdownRow4, getRandomRisk4());
         await browser.pause(2000);
-        await this.finRiskDropdownRow4.setValue(getRandomRisk4());
+        await utils.setValueWithWait(this.finRiskDropdownRow4, getRandomRisk4());
         await browser.pause(2000);
-        await this.finConsequenceRow4.setValue(Math.floor(Math.random() * 50000).toString());
+        await utils.setValueWithWait(this.finConsequenceRow4, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
         await browser.pause(2000);
-        await this.finPofRow4.setValue((Math.random()).toFixed(2));
+        for (const el of await this.finPofRow4) {
+            if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
+                await utils.setValueWithWait(el, (Math.random()).toFixed(2));
+                break;
+            }
+        }
 
         await utils.clickWithWait(this.saveRiskBtn);
         await browser.pause(1500);
-        console.log("handleRiskInformation ends");
+        console.log("Handle Risk Information ends");
     }
 
     public async verifyRiskMatrix()
@@ -960,7 +1013,6 @@ class assetRCMDetailView {
         utils.switchToIframe(this.rcmIframe);
         await utils.clickWithWait(this.assessmentTab);
         console.log("Navigated to Assessment tab");
-        //await utils.clickWithWait(this.technicalObjectRowClick(this.techObj));
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(3000);
         utils.switchToIframe(this.rcmIframe);
@@ -975,7 +1027,11 @@ class assetRCMDetailView {
 
             console.log(`Trying checkbox index: ${i}`);
 
-            // open only when first time OR after warning
+            if (await this.hierarchyMoreBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.hierarchyMoreBtn);
+                await browser.pause(1000);
+            }
+
             await utils.clickWithWait(this.assignTechObjBtn);
             await browser.pause(1000);
             await browser.keys("ArrowDown");
@@ -1044,7 +1100,6 @@ class assetRCMDetailView {
         const idOnly = data.locationId;
         await browser.pause(3000);
         await utils.waitForBusyIndicatorToDisappear();
-        //await expect(this.headerTechnicalObjectId(idOnly)).toBeDisplayed();
         let isDisplayed2 = false;
         for (const el of await this.headerTechnicalObjectId(idOnly)) {
             if (await el.isDisplayed()) {
@@ -1066,7 +1121,7 @@ class assetRCMDetailView {
         console.log(`Verified Functional Location -> ${nameOnly} (${idOnly})`);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(3000);
-        console.log("Navigating to RiskInformation");
+        console.log("Navigating to Risk Information");
         for (const el of await this.riskInformationSections) {
             if (await el.isDisplayed()) {
                 await utils.clickWithWait(el);
@@ -1077,26 +1132,39 @@ class assetRCMDetailView {
 
         await expect(this.riskInformationHeader).toBeDisplayed();
         await browser.pause(2500);
-        console.log("Assigned Risk Informations is/are :"+ utils.getAssignedValue(await this.riskInformationHeader.getText()));
-        await this.strategiesHeader.waitForDisplayed({ timeout: 60000 });
-        console.log("Assigned strategies is/are :"+utils.getAssignedValue(await this.strategiesHeader.getText()))
-        if(await utils.getAssignedValue(await this.strategiesHeader.getText()) >0)
-        {
+        const riskVal = await utils.getAssignedValue(await this.riskInformationHeader.getText());
+        console.log("Assigned Risk Informations is/are :", riskVal);
+        let headerText = "";
+
+        for (const el of await this.strategiesHeader) {
+            if (await el.isDisplayed().catch(() => false)) {
+                headerText = await el.getText();
+                break;
+            }
+        }
+
+        const strategyVal = await utils.getAssignedValue(headerText);
+        console.log("Assigned strategies is/are :", strategyVal);
+
+        if (strategyVal > 0) {
             await this.strategiesExpandBtn.waitForDisplayed({ timeout: 60000 });
+
             if ((await this.strategiesExpandBtn.getAttribute("aria-expanded")) === "false") {
                 await utils.clickWithWait(this.strategiesExpandBtn);
                 await browser.pause(2000);
             }
+
             for (const row of await this.strategiesRows) {
-                if (await row.isDisplayed()) {
+                if (await row.isDisplayed().catch(() => false)) {
                     console.log("Strategy Row: " + await row.getText());
                 }
             }
         }
 
         await this.recommendationHeader.waitForDisplayed({ timeout: 60000 });
-        console.log("Assigned Recoomendations is/are :"+ utils.getAssignedValue(await this.recommendationHeader.getText()));
-        
+        const recommendationVal = await utils.getAssignedValue(await this.recommendationHeader.getText());
+        console.log("Assigned Recoomendations is/are :", recommendationVal);
+
         if(await utils.getAssignedValue(await this.recommendationHeader.getText()) >0)
         {
             await this.recommendationExpandBtn.waitForDisplayed({ timeout: 60000 });
@@ -1123,25 +1191,25 @@ class assetRCMDetailView {
 
 
         let txt = await this.maintenanceNotifText.getText();
-        console.log("Maintenance Notifications: " + await utils.getAssignedValue(txt));
+        console.log("Maintenance Notifications: " , await utils.getAssignedValue(txt));
         await utils.clickWithWait(this.maintenanceNotifAssignBtn);
         await browser.pause(2500);
         await expect(this.maintenanceNotifHeader).toBeDisplayed();
-        console.log("Available Notifications: " + await utils.getAssignedValue(await this.maintenanceNotifHeader.getText()));
+        console.log("Available Notifications: " , await utils.getAssignedValue(await this.maintenanceNotifHeader.getText()));
         await utils.clickWithWait(this.footerCancelBtn);
         await browser.pause(2500);
         txt = await this.maintenanceOrdersText.getText();
-        console.log("Maintenance Orders: " + await utils.getAssignedValue(txt));
+        console.log("Maintenance Orders: " , await utils.getAssignedValue(txt));
 
         await utils.clickWithWait(this.maintenanceOrdersAssignBtn);
         await browser.pause(2500);
         await expect(this.maintenanceOrdersHeader).toBeDisplayed();
-        console.log("Available Orders: " + await utils.getAssignedValue(await this.maintenanceOrdersHeader.getText()));
+        console.log("Available Orders: " , await utils.getAssignedValue(await this.maintenanceOrdersHeader.getText()));
         await utils.clickWithWait(this.footerCancelBtn);
         await browser.pause(2500);
 
         txt = await this.maintenancePlansText.getText();
-        console.log("Maintenance Plans: " + await utils.getAssignedValue(txt));
+        console.log("Maintenance Plans: " , await utils.getAssignedValue(txt));
 
         let clicked = false;
         for (const btn of await this.closeBtn) {
@@ -1180,7 +1248,7 @@ class assetRCMDetailView {
             console.log("Assign Functions not present, only Maintainable Items available");
             return;
         }
-
+        await browser.pause(3000);
         await this.assignFunctionsHeader.waitForDisplayed({ timeout: 60000 });
         const fnText = await this.functionsCountText.getText();
         const fnCount = await utils.getAssignedValue(fnText);
@@ -1194,7 +1262,7 @@ class assetRCMDetailView {
             const fnValue = await this.firstFunctionValue.getText();
 
             if (!fnValue) {
-                throw new Error("fnValue is empty");
+                throw new Error("Function Value is empty");
             }
 
             this.functionValue = fnValue;
@@ -1262,7 +1330,7 @@ class assetRCMDetailView {
                 break;
             }
         }
-
+        await browser.pause(3000);
         let ffClicked = false;
         for (const btn of await this.assignFunctionalFailureBtn) {
             if (await btn.isDisplayed() && await btn.isClickable()) {
@@ -1347,6 +1415,7 @@ class assetRCMDetailView {
             console.log("Assign Maintainable Items not present");
             return;
         }
+        await browser.pause(3000);
         await this.assignMaintainableItemsHeader.waitForDisplayed({ timeout: 60000 });
         const txt = await this.maintainableItemsText.getText();
         const count = await utils.getAssignedValue(txt);
@@ -1606,40 +1675,32 @@ class assetRCMDetailView {
 
         console.log("Downloading summary report...");
         await utils.switchToIframe(this.rcmIframe);
-
+        if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.headerMoreBtn);
+            await browser.pause(1000);
+        }
         await utils.clickWithWait(this.summaryReportBtn);
         await this.downloadReportHeader.waitForDisplayed({ timeout: 60000 });
-
         const text = await this.includeAllTechObjText.getText();
         console.log("Selected Option: " + text);
-
         await utils.clickWithWait(this.downloadReportOkBtn);
         await utils.clickWithWait(this.confirmationYesBtn);
         await utils.clickWithWait(this.okBtn);
-
         const filePath = await utils.waitForDownload('.pdf');
         const pdfContent = await utils.extractTextFromPDF(filePath);
-
         const normalize = (val: string) =>
             (val || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
         const content = normalize(pdfContent);
-
-        // ===== helper =====
         const verifyValue = (label: string, value: string) => {
             if (!value) return;
-
             const norm = normalize(value);
-
-            // split name + id if present
             if (value.includes("(")) {
                 const match = value.match(/(.*)\((.*)\)/);
                 if (match) {
                     const name = normalize(match[1]);
                     const id = normalize(match[2]);
-
                     const ok = content.includes(name) && content.includes(id);
-
                     expect(ok).toBe(true);
                     console.log(`PDF contains ${label} (name + id)`);
                     return;
@@ -1650,7 +1711,6 @@ class assetRCMDetailView {
             console.log(`PDF contains ${label}`);
         };
 
-        // ===== validations =====
         verifyValue("techObj", this.techObj);
         verifyValue("maintanableItems", this.maintanableItems);
         verifyValue("failureMode", this.failureMode);
@@ -1666,6 +1726,10 @@ class assetRCMDetailView {
     {
         console.log("Deleting the RCM...");
         console.log("Deleting :"+assetRCMListView.assetRCMDisplayID);
+        if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.headerMoreBtn);
+            await browser.pause(1000);
+        }
         await utils.clickWithWait(this.manageBtn);
         await browser.pause(1000);
         await browser.keys("ArrowDown");

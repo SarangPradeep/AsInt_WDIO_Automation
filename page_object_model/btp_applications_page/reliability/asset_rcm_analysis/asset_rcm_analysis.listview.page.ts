@@ -60,6 +60,7 @@ class assetRCMListView {
 
     public async verifyHeader()
     {
+        console.log("Verifying RCM detail page header");
         const headers = await $$("//div[@role='heading' and @title]//span");
         const headerTexts: string[] = [];
         for (const h of headers) {
