@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { browser } from '@wdio/globals';
 //import BtpLoginPage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/btpLogin.page';
-import HomePage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/home.page';
-import ConfigurationAppPage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/configurationPicklist.page';
+import HomePage from '../page_object_model/btp_applications_page/integrity/configuration/home.page';
+import ConfigurationAppPage from '../page_object_model/btp_applications_page/integrity/configuration/configurationPicklist.page';
 import SapUtils from '../utils/utils';
 
 

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 //import BtpLoginPage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/btpLogin.page';
-import HomePage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/home.page';
-import configurationMatricesPage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/configurationMatrices.page';
+import HomePage from '../page_object_model/btp_applications_page/integrity/configuration/home.page';
+import configurationMatricesPage from '../page_object_model/btp_applications_page/integrity/configuration/configurationMatrices.page';
 import SapUtils from '../utils/utils';
 
 describe('BTP Configuration (Matrices) - Functional Test', () => {
