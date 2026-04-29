@@ -28,17 +28,17 @@ describe('BTP - RCM Application - Functional Test', () => {
         await assetRCMDetailView.verifyMaintainableDetails();
     });
 
-    it('should add failure modes for added maintanable itmes of techninal objects' , async () => {
+    it('should add failure modes for added maintanable itmes of technical objects' , async () => {
         await assetRCMDetailView.addFailureModes();
         await assetRCMDetailView.verifyFailureModesDetails();
     });
 
-    it('should add functional location as techincal objects', async () => {
+    it('should add functional location as technical objects', async () => {
         await assetRCMDetailView.addFunLocTechObj();
         await assetRCMDetailView.verifyDetailPageFunLoc();
     });
 
-    it('should add functions for functional location techincal objects', async () => {
+    it('should add functions for functional location technical objects', async () => {
         await assetRCMDetailView.assignFunctions();
     });
 
@@ -46,11 +46,11 @@ describe('BTP - RCM Application - Functional Test', () => {
         await assetRCMDetailView.assignFunctionalFailure();
     });
 
-    it('should add maintanable itmes for techninal objects' , async () => {
+    it('should add maintanable itmes for technical objects' , async () => {
         await assetRCMDetailView.addMaintainableItemsForFuncLoc();
     });
 
-    it('should add failure modes for added maintanable itmes of techninal objects' , async () => {
+    it('should add failure modes for added maintanable itmes of technical objects' , async () => {
         await assetRCMDetailView.addFailureModesForFuncLoc();
         await assetRCMDetailView.verifyFailureModesDetails();
     });

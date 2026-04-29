@@ -4,7 +4,7 @@ import equipmentListviewPage from 'page_object_model/btp_applications_page/maste
 import equipmentDetailPage from 'page_object_model/btp_applications_page/master_data/equipment/equipment.detail.page';
 import utils from 'utils/utils';
 
-describe('BTP - Equipment Application - Functional test', () => {
+describe('BTP Equipment Application - Functional test', () => {
 
     it('should click on equipment application and verify the title', async () => {
         await HomePage.clickEquipmentTile();
