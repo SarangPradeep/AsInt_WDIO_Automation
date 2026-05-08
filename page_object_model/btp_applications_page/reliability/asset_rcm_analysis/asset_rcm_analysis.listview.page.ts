@@ -50,7 +50,7 @@ class assetRCMListView {
         await this.verifyHeader();
         console.log("Header verification done");
         console.log("Capturing all header values");
-        await this.captureRCMHeaderDetails();
+        await utils.captureHeaderDetails();
 
         // const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
         // await utils.clickWithWait(el);
@@ -88,46 +88,6 @@ class assetRCMListView {
         }
         console.log("End: fetched RCM Display ID -> " + this.assetRCMDisplayID);
     }
-
-    public async captureRCMHeaderDetails() {
-        console.log("Start: capturing RCM header details");
-        await utils.switchToIframe(this.rcmIframe);
-        await browser.pause(5000);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.waitUntil(async () => {
-            return await (await $$(`//span[contains(@class,'sapMObjStatusTitle')]`)).length > 0;
-        }, { timeout: 30000 });
-        const result: any = {};
-        const titles = await $$(`//span[contains(@class,'sapMObjStatusTitle')]`);
-        for (const title of titles) {
-            if (!(await title.isDisplayed())) continue;
-            const key = (await title.getText()).trim();
-            const parent = await title.$("..");
-            const valueEl = await parent.$(".//span[contains(@class,'sapMObjStatusText')]");
-            if (await valueEl.isDisplayed()) {
-                result[key] = (await valueEl.getText()).trim();
-            }
-        }
-        const labels = await $$(`//span[contains(@class,'sapMLabelTextWrapper')]`);
-        for (const label of labels) {
-            if (!(await label.isDisplayed())) continue;
-            const key = (await label.getText()).replace(":", "").trim();
-            const parent = await label.$("..");
-            const textNodes = await parent.$$("span.sapMText");
-            for (const t of textNodes) {
-                if (await t.isDisplayed()) {
-                    const value = (await t.getText()).trim();
-
-                    if (key && value) {
-                        result[key] = value;
-                        break;
-                    }
-                }
-            }
-        }
-        console.log("End: captured RCM header -> ", result);
-        await browser.switchToParentFrame();
-    }    
 
     public async verifyRCMDeletion()
     {

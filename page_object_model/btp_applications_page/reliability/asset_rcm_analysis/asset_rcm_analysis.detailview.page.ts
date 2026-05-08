@@ -322,6 +322,8 @@ class assetRCMDetailView {
                 console.log("Warning displayed, retrying with next checkbox");
                 await utils.clickWithWait(this.warningOkBtn);
                 await utils.clickWithWait(this.previousBtn);
+                await browser.pause(4000);
+                await utils.waitForBusyIndicatorToDisappear();
                 await utils.clickWithWait(this.removeSelectedToken);
             }
         }

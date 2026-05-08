@@ -248,6 +248,12 @@ class functionalLocationDetailView {
         console.log("Bussiness Area : "+bussinessArea)
         await utils.clickWithWait(this.planPlant);
         await this.planPlantBox.waitForDisplayed({ timeout: 30000 });
+        try {
+            await this.planPlantSelect.waitForDisplayed({ timeout: 30000 });
+        } catch {
+            await utils.clickWithWait(await $("//footer//bdi[text()='Cancel']"));
+            throw new Error("Plan Plant Select not displayed");
+        }
         await utils.clickWithWait(this.planPlantSelect,2000);
         await utils.clickWithWait(this.planPlantSave,1000);
         await utils.clickWithWait(this.planGrp);
@@ -439,7 +445,7 @@ class functionalLocationDetailView {
             await utils.clickWithWait(selectAll);
         } 
         else {
-            await utils.selectCheckboxes(noOfClasses);
+            await utils.selectCheckboxesForClass(noOfClasses);
         }
         await utils.clickWithWait(this.okBtn2,1500);
         await utils.waitForBusyIndicatorToDisappear();

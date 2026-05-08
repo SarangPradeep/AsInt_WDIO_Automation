@@ -1,6 +1,6 @@
 import rncaListViewPage from '../../page_object_model/btp_applications_page/reliability/asset_risk_and_criticality_analysis/rnca.listview.page';
 import rncaDetailpage from '../../page_object_model/btp_applications_page/reliability/asset_risk_and_criticality_analysis/rnca.detail.page';
-import { browser } from '@wdio/globals';
+import { browser, expect } from '@wdio/globals';
 import utils from '../../utils/utils';
 
 describe('BTP - Asset Risk and Criticality Analysis Application - Functional Test', () => {
@@ -20,7 +20,7 @@ describe('BTP - Asset Risk and Criticality Analysis Application - Functional Tes
 		await rncaListViewPage.selectRiskType('Current Risk');
 		await rncaListViewPage.selectAllowedObjects('Both');
 		await rncaListViewPage.selectCurrencyByIndex(3);
-		const selectedCurrency = await rncaListViewPage.getSelectedCurrencyValue();
+		const selectedCurrency = await rncaListViewPage.getSelectedCurrencyValue();	
 		await expect(selectedCurrency).not.toEqual('');
 		await rncaListViewPage.saveNewAssessment();
 		await utils.waitForBusyIndicatorToDisappear();

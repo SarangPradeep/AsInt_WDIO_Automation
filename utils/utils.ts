@@ -7,13 +7,16 @@ class Utils {
 
     private get equipmentIframe() { return $('iframe[data-help-id="application-equipment-manage"]'); }
     private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
+    private get ASDIframe() { return $('iframe[data-help-id="application-assetstrategydevelopment-manage"]'); }
     private get CMLIframe() { return $('iframe[data-help-id="application-cml-manage"]'); }
     private get backBtn() { return $("//a[@aria-label='Back']"); }
     private get settingsBtn() { return $("//span[text()='Settings']/preceding-sibling::span//span"); }
+    private get tableSettingsBtn() { return $("//span[text()='Table Settings']/preceding-sibling::span//span"); }
     private get showHierarchyBtn() { return $("//span[text()='Show Hierarchy']/preceding-sibling::span"); }
     private get showAnalyticChartBtn() { return $("//span[text()='Analytics Chart']/preceding-sibling::span"); }
     private get closeHierarchyBtn() { return $("//div[@role='toolbar']/button[@aria-label='Decline']"); }
     private get closeAnalyticChartBtn() { return $("//button[@title='Close']"); }
+    private get cancelAnalyticChartBtn() { return $("//button[@title='Cancel']"); }
     private get hazopIframe(): any { return $("iframe[data-help-id='application-hazop-manage']"); }
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
 
@@ -125,6 +128,8 @@ class Utils {
             await el.clearValue();
             await el.setValue(value);
         }
+        await browser.keys("Enter");
+        await browser.keys("Tab");
         if (delayAfter > 0) await browser.pause(delayAfter);
     }
 
@@ -379,6 +384,32 @@ class Utils {
         await browser.pause(500);
     }
 
+    async selectCheckboxesForClass(noOfClass: number): Promise<void> {
+        const classText = await $(`//header[.//text()='Assign Classes']/following-sibling::section//span[contains(text(),'Classes')]`);
+        await classText.waitForDisplayed();
+        const availableClasses = await this.getAssignedValue(await classText.getText());
+        console.log(`Available Classes: ${availableClasses}`);
+        const classesToSelect = Math.min(noOfClass, availableClasses);
+        let selectedCount = 0;
+        let rowIndex = 2;
+        console.log(`Selecting ${classesToSelect} checkboxes...`);
+        while (selectedCount < classesToSelect) {
+            const checkbox = await $(`(//tr[@role="row"])[${rowIndex}]//div[@role="checkbox"]`);
+            if (await checkbox.isExisting()) {
+                await checkbox.scrollIntoView();
+                await checkbox.waitForClickable({ timeout: 20000 });
+                await checkbox.click();
+                selectedCount++;
+                console.log(`Selected checkbox ${selectedCount} at row ${rowIndex}`);
+            }
+            rowIndex++;
+            if (rowIndex > 100) {
+                break;
+            }
+        }
+        console.log(`Checkbox selection completed.`);
+    }
+
     async selectCheckboxes(noOfEquipment: number): Promise<void> {
         const firstCheckBox = await $('(//tr[@role="row"])[2]//div[@role="checkbox"]');
         await firstCheckBox.waitForDisplayed();
@@ -445,6 +476,8 @@ class Utils {
             await this.switchToIframe(this.hazopIframe);
         }else if(await this.rcmIframe.isExisting()){
             await this.switchToIframe(this.rcmIframe);
+        }else if(await this.ASDIframe.isExisting()){
+            await this.switchToIframe(this.ASDIframe);
         }
 
         await this.adaptFilter.waitForClickable({ timeout: 200000 });
@@ -545,8 +578,15 @@ class Utils {
         else if (await this.equipmentIframe.isExisting()) await this.switchToIframe(this.equipmentIframe);
         else if (await this.hazopIframe.isExisting()) await this.switchToIframe(this.hazopIframe);
         else if (await this.rcmIframe.isExisting()) await this.switchToIframe(this.rcmIframe);
+        else if (await this.ASDIframe.isExisting()) await this.switchToIframe(this.ASDIframe);
 
+        if (await this.settingsBtn.isDisplayed().catch(() => false)) {
         await this.clickWithWait(this.settingsBtn);
+        }
+
+        if (await this.tableSettingsBtn.isDisplayed().catch(() => false)) {
+            await this.clickWithWait(this.tableSettingsBtn);
+        }
         await browser.pause(2000);
         const rows = await browser.$$("(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]//tr[@role='row']");
         const rowsArr = Array.from(rows);
@@ -637,10 +677,17 @@ class Utils {
 
 
    async resetFieldsInListView(): Promise<void> {
-        const settings = await this.settingsBtn;
+        const btn = await this.settingsBtn.isDisplayed().catch(() => false)
+            ? this.settingsBtn
+            : await this.tableSettingsBtn.isDisplayed().catch(() => false)
+                ? this.tableSettingsBtn
+                : null;
+
+        if (!btn) throw new Error("Neither Settings nor Table Settings button is visible");
+
         await this.waitForBusyIndicatorToDisappear();
-        await settings.waitForClickable({ timeout: 10000 });
-        await settings.click();
+        await btn.waitForClickable({ timeout: 10000 });
+        await btn.click();
         const resetBtn = await $('//h1[.//text()="View Settings"]/following::button[.//text()="Reset"]');
 
         if (!(await resetBtn.isExisting())) {
@@ -738,15 +785,20 @@ class Utils {
             console.log(`Found ${charts.length} chart(s) in Analytics Chart view`);
             console.log("Analytics Chart entries:");
             for (const chart of charts) {
-                // let text = await chart.getText();
-                // if (!text) text = await chart.getAttribute("innerText");
                 let text: string = (await chart.getText()) || (await chart.getAttribute("innerText")) || "";
                 console.log(text);
             }
         }
 
         console.log("Closing Analytics Chart view");
+        if (await this.closeAnalyticChartBtn.isDisplayed().catch(() => false)) {
         await this.clickWithWait(this.closeAnalyticChartBtn);
+            return;
+        }
+
+        if (await this.cancelAnalyticChartBtn.isDisplayed().catch(() => false)) {
+            await this.clickWithWait(this.cancelAnalyticChartBtn);
+        }
         await browser.pause(3000);
     }
 
@@ -1028,6 +1080,131 @@ class Utils {
             throw new Error(`Reset failed: Filters still present: ${remainingFilters.join(', ')}`);
         }
         console.log('All filters successfully reset');
+    }
+
+    public async captureHeaderDetails() : Promise<Record<string, string>>   {
+        if (await this.funLocIframe.isExisting()) {
+            await this.switchToIframe(this.funLocIframe);
+        } else if (await this.equipmentIframe.isExisting()) {
+            await this.switchToIframe(this.equipmentIframe);
+        }else if(await this.hazopIframe.isExisting()){
+            await this.switchToIframe(this.hazopIframe);
+        }else if(await this.rcmIframe.isExisting()){
+            await this.switchToIframe(this.rcmIframe);
+        }else if(await this.ASDIframe.isExisting()){
+            await this.switchToIframe(this.ASDIframe);
+        }else if(await this.CMLIframe.isExisting()){
+            await this.switchToIframe(this.CMLIframe);
+        }
+        await this.waitForBusyIndicatorToDisappear();
+        const result: any = {};
+        const blocks = await $$(`//div[contains(@class,'sapFDynamicPageHeaderContent')]//*`);
+        for (const block of blocks) {
+            const titleEl = await block.$(`.//span[contains(@class,'sapMObjStatusTitle')]`);
+            if (await titleEl.isExisting()) {
+                const key = (await titleEl.getText()).trim();
+                const valueEl = await block.$(`.//span[contains(@class,'sapMObjStatusText')]`);
+                if (await valueEl.isExisting()) {
+                    result[key] = (await valueEl.getText()).trim();
+                }
+                continue;
+            }
+            const labelEl = await block.$(`.//span[contains(@class,'sapMLabelTextWrapper')]`);
+            if (await labelEl.isExisting()) {
+                const key = (await labelEl.getText()).replace(":", "").trim();
+                let value = "";
+                const link = await block.$(`.//a`);
+                if (await link.isExisting() && await link.isDisplayed()) {
+                    value = await link.getText();
+                }
+                if (!value) {
+                    const text = await block.$(`.//span[contains(@class,'sapMText')]`);
+                    if (await text.isExisting() && await text.isDisplayed()) {
+                        value = await text.getText();
+                    }
+                }
+                if (!value) {
+                    const exText = await block.$(`.//span[contains(@class,'sapMExTextString')]`);
+                    if (await exText.isExisting() && await exText.isDisplayed()) {
+                        value = await exText.getText();
+                    }
+                }
+                if (key && value) {
+                    result[key] = value.trim();
+                }
+            }
+        }
+        console.log(result);
+        await browser.switchToParentFrame();
+        return result;
+    }
+
+    public selectFromDropdown = async (el: any, downCount: number) => {
+        await el.waitForDisplayed();
+        await browser.pause(1500);
+        await el.click();
+        for (let i = 0; i < downCount; i++) {
+            await browser.keys("ArrowDown");
+        }
+        await browser.keys("Enter");
+        await browser.keys("Escape");  
+        await browser.keys("Tab");
+    };
+
+    public rand(min: number, max: number): number {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    public formatDate(daysMinus: number): string {
+        const d = new Date();
+        d.setDate(d.getDate() - daysMinus);
+        return d.toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric'
+        });
+    }
+
+    public formatDatePlus(daysMinus: number): string {
+        const d = new Date();
+        d.setDate(d.getDate() + daysMinus);
+        return d.toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric'
+        });
+    }
+
+    public async verifyProgressBar(element: any, sectionName: string) {
+        if (!(await element.isExisting())) {
+            throw new Error(`${sectionName} progress bar not found`);
+        }
+        const style = await element.getAttribute("style");
+        if (!style) {
+            throw new Error(`${sectionName} style attribute not found`);
+        }
+        const match = style.match(/flex-basis:\s*([\d.]+)%/);
+        const value = match ? parseFloat(match[1]) : 0;
+        if (value === 100) {
+            console.log(`${sectionName} - All mandatory fields are filled`);
+        } else {
+            throw new Error(`${sectionName} - Not all mandatory fields filled, current: ${value}%`);
+        }
+    }
+
+    async waitForBlockLayerToDisappear(timeoutInSeconds = 30): Promise<void> {
+        const blockLayer = $("//div[contains(@class,'sapUiBLy')]");
+
+        try {
+            await browser.waitUntil(async () => {
+                return !(await blockLayer.isDisplayed().catch(() => false));
+            }, {
+                timeout: timeoutInSeconds * 1000,
+                interval: 200
+            });
+        } catch {
+            console.warn("Block layer timeout");
+        }
     }
 }
 
