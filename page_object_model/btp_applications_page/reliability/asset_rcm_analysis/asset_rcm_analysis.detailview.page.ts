@@ -1675,42 +1675,49 @@ class assetRCMDetailView {
 
     public async downloadSummaryReport() {
 
-        console.log("Downloading summary report...");
-        await utils.switchToIframe(this.rcmIframe);
-        if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
-            await utils.clickWithWait(this.headerMoreBtn);
-            await browser.pause(1000);
-        }
-        await utils.clickWithWait(this.summaryReportBtn);
-        await this.downloadReportHeader.waitForDisplayed({ timeout: 60000 });
-        const text = await this.includeAllTechObjText.getText();
-        console.log("Selected Option: " + text);
-        await utils.clickWithWait(this.downloadReportOkBtn);
-        await utils.clickWithWait(this.confirmationYesBtn);
-        await utils.clickWithWait(this.okBtn);
+        console.log("Downloading Summary Report for RCM...");
         const filePath = await utils.waitForDownload('.pdf');
         const pdfContent = await utils.extractTextFromPDF(filePath);
+
+        console.log("----- PDF CONTENT START -----");
+        console.log(pdfContent);
+        console.log("----- PDF CONTENT END -----");
+
         const normalize = (val: string) =>
             (val || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
         const content = normalize(pdfContent);
+
         const verifyValue = (label: string, value: string) => {
-            if (!value) return;
+            if (!value) {
+                console.log(`${label} skipped (empty)`);
+                return;
+            }
+
+            console.log(`\nVerifying ${label}: ${value}`);
+
             const norm = normalize(value);
+
             if (value.includes("(")) {
                 const match = value.match(/(.*)\((.*)\)/);
                 if (match) {
                     const name = normalize(match[1]);
                     const id = normalize(match[2]);
-                    const ok = content.includes(name) && content.includes(id);
-                    expect(ok).toBe(true);
-                    console.log(`PDF contains ${label} (name + id)`);
+
+                    const hasName = content.includes(name);
+                    const hasId = content.includes(id);
+
+                    console.log(`Name check (${name}): ${hasName}`);
+                    console.log(`ID check (${id}): ${hasId}`);
+
+                    expect(hasName && hasId).toBe(true);
                     return;
                 }
             }
 
-            expect(content).toContain(norm);
-            console.log(`PDF contains ${label}`);
+            const result = content.includes(norm);
+            console.log(`Check (${norm}): ${result}`);
+            expect(result).toBe(true);
         };
 
         verifyValue("techObj", this.techObj);

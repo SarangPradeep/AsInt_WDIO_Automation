@@ -1,9 +1,7 @@
 import RNCTListViewPage from '../../page_object_model/btp_applications_page/reliability/asset_risk_and_criticality_template/rnct.listview.page';
 import RNCTDetailPage from '../../page_object_model/btp_applications_page/reliability/asset_risk_and_criticality_template/rnct.detail.page';
-import { browser } from '@wdio/globals';
-import utils from '../../utils/utils';
 
-describe('BTP Asset Risk and Criticality Template App Functional test', () => {
+describe('BTP - (RCT) -Asset Risk and Criticality Template App - Functional test', () => {
 
 	it('should click on asset risk and criticality template application', async () => {
 		await RNCTListViewPage.navigateToRNCTListView();

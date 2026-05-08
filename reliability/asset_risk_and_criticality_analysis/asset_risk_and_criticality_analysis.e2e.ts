@@ -3,7 +3,7 @@ import rncaDetailpage from '../../page_object_model/btp_applications_page/reliab
 import { browser, expect } from '@wdio/globals';
 import utils from '../../utils/utils';
 
-describe('BTP - Asset Risk and Criticality Analysis Application - Functional Test', () => {
+describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Functional Test', () => {
 
 	it('should click on asset risk and criticality analysis application', async () => {
 		await rncaListViewPage.navigateToRNCAListView();

@@ -1,7 +1,7 @@
 import assetRCMList from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.listview.page';
 import assetRCMDetailView from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.detailview.page';
 
-describe('BTP - RCM Application - Functional Test', () => {
+describe('BTP - RCM Analysis Application - Functional Test', () => {
 
     it('should navigate to Asset RCM list view', async () => {
         await assetRCMList.navigateToAssetRCM();
