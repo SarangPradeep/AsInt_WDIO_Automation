@@ -149,7 +149,7 @@ class CML_ListView_Page {
                             }
                         }
                     }
-                    console.log("Choosing add grif CMLs check box")
+                    console.log("Choosing add grid CMLs check box")
                     await utils.clickWithWait(this.addGridCMLCheckbox);
                     await browser.pause(2000);
                     await this.gridCMLNameInput.isClickable();
