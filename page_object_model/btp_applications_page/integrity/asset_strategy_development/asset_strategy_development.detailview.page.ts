@@ -220,7 +220,7 @@ class asset_strategy_development_listview_page {
     private get attachSuccMsg() { return $("//span[text()='Success']"); }
     private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]]'); }
     private get ASDEditHeader() { return $("//bdi[text()='Edit Header']"); }
-    private get ASDHeader() { return $(`(//header//*[@role='heading']/span[text()='${ASDListView.assetASDDesc}'])[2]`); }
+    private ASDHeader(i: number) { return $(`(//header//*[@role='heading']/span[text()='${ASDListView.assetASDDesc}'])[${i}]`);}
     private get editHeaderTitle() { return $("//h1[.//text()='Edit Header']"); }
     private get shortDescriptionInput() { return $("//label[.//text()='Short Description']/following::input[1]"); }
     private get assessDateInput() { return $("//label[.//text()='Assessment Date']/following::input[1]"); }
@@ -231,7 +231,7 @@ class asset_strategy_development_listview_page {
     private get reportBtn() { return $("//button[.//text()='Report']"); }
     private get deleteConfirmText() { return $("//span[.//text()='Are you sure you want to delete the assessment?']"); }
     private get confirmOkBtn() { return $("//header[.//text()='Confirmation']/following::button[.//text()='OK']"); }
-    private get workflowBtn() { return $("//button[.//text()='Workflow']"); }
+    private get workflowBtn() { return $$("//button[.//text()='Workflow']"); }
     private get workflowHeader() { return $("//span[contains(text(),'Workflow Inbox')]") };
     private get createWorkflowBtn() { return $("//span[contains(text(),'Workflow Inbox')]/following::button[.//text()='Create']")};
     private get createWorkflowBtn2() { return $("//span[contains(text(),'Create Workflow')]/following::button[.//text()='Create']")};
@@ -369,16 +369,109 @@ class asset_strategy_development_listview_page {
         console.log("General selection details of ASD captured successfully");
     }
 
+    public async waitForASDHeader() {
+        for (let i = 1; i <= 2; i++) {
+            if (await this.ASDHeader(i).isDisplayed().catch(() => false)) {
+                await this.ASDHeader(i).waitForDisplayed();
+                return;
+            }
+        }
+        throw new Error("ASD Header not found");
+    }
+
     public async verifyHeader()
     {
         console.log("Verifying header information of ASD");
         await utils.waitForBusyIndicatorToDisappear();
-        await this.ASDHeader.waitForDisplayed();
-        const asdHeader = await this.ASDHeader.getText();
-        console.log(asdHeader);
-        const ASDHeader = ASDListView.assetASDDesc;
-        await expect(asdHeader).toEqual(ASDHeader);
+        await this.waitForASDHeader();
+        const asdHeader = await this.getFinalIDs();
+        await expect(asdHeader.ASD).toEqual(ASDListView.assetASDDesc);
         console.log("Asset Strategy Development name matches header's name");
+    }
+
+    public async getFinalIDs() {
+        let ASD = "";
+        let actualId = "";
+        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+        for (let i = 0; i < 3; i++) {
+            if (i === 0 && await expandBtn.isDisplayed()) {
+                await expandBtn.waitForClickable({ timeout: 5000 });
+                await expandBtn.click();
+            } 
+            else if (i === 1 && await collapseBtn.isDisplayed()) {
+                await collapseBtn.waitForClickable({ timeout: 5000 });
+                await collapseBtn.click();
+            }
+            await browser.pause(500); // small buffer before waitUntil kicks in
+            const headerText = await this.getASDId();
+            const displayText = await this.getDisplayId();
+            if (!ASD && headerText) ASD = headerText;
+            if (!actualId && displayText) actualId = displayText;
+            console.log(`Attempt ${i + 1} → ASD="${ASD || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+            if (ASD && actualId) break;
+        }
+        return { ASD, actualId };
+    }
+
+    public async getASDId() {
+        const xpath = "//header//*[@role='heading']//span";
+        let found = false;
+        try {
+            await browser.waitUntil(async () => {
+                const els = await $$(xpath);
+                if (!els.length) return false;
+
+                for (let el of els) {
+                    let txt = (await el.getText()) ?? "";
+                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
+                    txt = txt?.trim();
+
+                    if (txt && (txt.startsWith("AUTOMATION-ASD ") || txt.startsWith("AUTOMATION-ASD"))) {
+                        found = true;
+                        return true;
+                    }
+                }
+                return false;
+            }, {
+                timeout: 4000,   // shorter wait per attempt
+                interval: 500
+            });
+
+        } catch (e) {
+            console.log("FuncLoc not visible in this attempt");
+        }
+
+        if (!found) return "";
+        const spans = await $$(xpath);
+        for (let el of spans) {
+            let txt = (await el.getText()) ?? "";
+                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
+            txt = txt?.trim();
+
+            if (txt && (txt.startsWith("AUTOMATION-ASD ") || txt.startsWith("AUTOMATION-ASD"))) {
+                return txt;
+            }
+        }
+        return "";
+    }
+
+    public async getDisplayId() {
+        try {
+            const txt = await browser.execute(() => {
+                const el = document.evaluate( //display ID xpath may differ for different apps, adjust accordingly
+                    "//span[starts-with(normalize-space(),'Display ID:')]",
+                    document,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null
+                ).singleNodeValue;
+                return el ? (el.textContent || "") : "";
+            });
+            return txt ? txt.replace("Display ID:", "").trim() : "";
+        } catch (e) {
+            return "";
+        }
     }
 
     public async editHeader()
@@ -1226,13 +1319,22 @@ class asset_strategy_development_listview_page {
     public async createWorkflow()
     {
         const isOddDay = new Date().getDate() % 2 !== 0;
-        if (!isOddDay) return;
+        if (!isOddDay) 
+        {
+            console.log("Workflow creation will not execute today...");
+            return;
+        }
         console.log("Creating workflow for the ASD...");
         if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
             await utils.clickWithWait(this.headerMoreBtn);
             await browser.pause(1000);
         }
-        await utils.clickWithWait(this.workflowBtn);
+        for (const el of await this.workflowBtn) {
+            if (await el.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(el);
+                return;
+            }
+        }
         await browser.pause(2000);
         await this.workflowHeader.waitForDisplayed({ timeout: 10000 });
         if(await this.createWorkflowBtn.isDisplayed().catch(() => false) )
@@ -1284,12 +1386,16 @@ class asset_strategy_development_listview_page {
 
     public async publishASD()
     {
+        console.log("In publish method...");
         const today = new Date();
         const day = today.getDay();     // 0=Sun,1=Mon,...6=Sat
         const date = today.getDate();   // 1–31
         const isEvenDay = date % 2 === 0;
 
-        if (!isEvenDay) return;
+        if (!isEvenDay){
+            console.log("ASD publish will not execute today...");
+            return;
+        }
 
         if(await this.calculateAnalysis === false)
         {
