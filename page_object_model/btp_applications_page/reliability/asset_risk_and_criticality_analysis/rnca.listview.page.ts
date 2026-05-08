@@ -87,8 +87,8 @@ class RNCAListViewPage {
 	public async verifyDescriptionValues(expectedDescription: string, expectedLongDescription: string): Promise<void> {
 		const descriptionValue = await utils.getValueWithWait(this.descriptionField);
 		const longDescriptionValue = await utils.getValueWithWait(this.longDescriptionField);
-		await expect(descriptionValue).toEqual(expectedDescription);
-		await expect(longDescriptionValue).toEqual(expectedLongDescription);
+		await expect(descriptionValue.trim()).toEqual(expectedDescription.trim());
+		await expect(longDescriptionValue.trim()).toEqual(expectedLongDescription.trim());
 	}
 
 	public async selectRiskType(optionText: string): Promise<void> {
@@ -124,7 +124,7 @@ class RNCAListViewPage {
 
 	public async getSelectedCurrencyValue(): Promise<string> {
 		await this.currencyInput.waitForDisplayed({ timeout: 60000 });
-		return await utils.getValueWithWait(this.currencyInput);
+		return (await utils.getValueWithWait(this.currencyInput)).trim();
 	}
 
 	public async saveNewAssessment(): Promise<void> {

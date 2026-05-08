@@ -477,6 +477,7 @@ class EquipmentDetailPage {
         await browser.pause(2000);
     }
     async addDocument() {
+        
         const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
         await utils.clickWithWait(addLinkBtn);
         await browser.pause(2000);
@@ -487,12 +488,18 @@ class EquipmentDetailPage {
         await utils.uploadDocument('vessel-1.png');
         await browser.pause(9000);
         await utils.clickWithWait($('//label[.//bdi[text()="Category"]]//following::span[contains(@id,"arrow")][1]'));
-        await utils.clickWithWait($('//li[@role="option"][1]'));
+        await utils.clickWithWait($('//li[@role="option" and .//span[text()="Bills of Materials"]]'));
+        await browser.pause(1000);
         await utils.clickWithWait($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'));
+        await browser.pause(1000);
         await utils.clickWithWait($('//li[@role="option"][1]//div[@role="checkbox"]'));
+        await browser.pause(1000);
         await utils.clickWithWait($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'));
+        await browser.pause(1000);
         await utils.clickWithWait($('//label[.//bdi[text()="Language"]]//following::span[contains(@id,"arrow")][1]'));
+        await browser.pause(1000);
         await utils.clickWithWait($('//span[text()="English"]/ancestor::li'));
+        await browser.pause(1000);
         await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));

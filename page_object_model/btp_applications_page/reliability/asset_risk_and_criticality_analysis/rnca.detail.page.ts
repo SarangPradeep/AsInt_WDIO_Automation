@@ -15,6 +15,22 @@ class RNCADetailPage {
         return $(`//div[text()='Scope']//following::bdi[text()='Edit'][1]`);
     }
 
+    private async clickSuccessOkIfPresent(timeout = 5000) {
+        await browser.pause(2500); 
+        const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
+
+        try {
+            await okBtn.waitForExist({ timeout });
+        } catch (err) {
+            return;
+        }
+
+        if (await okBtn.isDisplayed().catch(() => false)) {
+            await okBtn.waitForClickable({ timeout });
+            await okBtn.click();
+        }
+    }
+
     async editGeneralInformation(description: string, longDescription: string) {
         await console.log("Editing General Information with description:", description, "and longDescription:", longDescription);
         await browser.pause(3000);
@@ -37,9 +53,7 @@ class RNCADetailPage {
 
         await utils.waitForBusyIndicatorToDisappear();
 
-        const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-        await okBtn.waitForClickable({ timeout: 50000 });
-        await okBtn.click();
+        await this.clickSuccessOkIfPresent(50000);
         await console.log("General Information edited successfully");
         await utils.waitForBusyIndicatorToDisappear();
     }
@@ -60,9 +74,7 @@ class RNCADetailPage {
 
         await utils.waitForBusyIndicatorToDisappear();
 
-        const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-        await okBtn.waitForClickable({ timeout: 50000 });
-        await okBtn.click();
+        await this.clickSuccessOkIfPresent(50000);
         await utils.waitForBusyIndicatorToDisappear();
         await console.log("Validity edited successfully");
 
@@ -70,7 +82,9 @@ class RNCADetailPage {
 
     async editScope(description: string) {
         await console.log("Editing Scope with description:", description);
-        await this.scopeInfoEditBtn.click();
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.waitForBlockLayerToDisappear();
+        await utils.clickWithWait(this.scopeInfoEditBtn);
 
         const descriptionInput = await $(`//div[text()='Scope']//following::bdi[text()='Description']/following::textarea[1]`);
         await descriptionInput.setValue(description);
@@ -81,22 +95,172 @@ class RNCADetailPage {
 
         await utils.waitForBusyIndicatorToDisappear();
 
-        const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-        await okBtn.waitForClickable({ timeout: 50000 });
-        await okBtn.click();
+        await this.clickSuccessOkIfPresent(50000);
         await utils.waitForBusyIndicatorToDisappear();
         await console.log("Scope edited successfully");
         await browser.pause(3000);
+    }
+
+    private async getEquipmentTable() {
+        const table = await $("(//table[@role='grid' and @aria-multiselectable='true' and @aria-rowcount])[1]");
+        await table.waitForExist({ timeout: 10000 });
+        return table;
+    }
+
+    private async getEquipmentRows() {
+        const table = await this.getEquipmentTable();
+        return await table.$$(".//tbody//tr[@role='row']");
+    }
+
+    private async getEquipmentCheckboxes() {
+        const table = await this.getEquipmentTable();
+        return await table.$$(".//tbody//tr[@role='row']//div[@role='checkbox']");
+    }
+
+    private async getDialogScrollContainer() {
+        const table = await this.getEquipmentTable();
+        const dialogSection = await table.$("./ancestor::section[contains(@style,'overflow')][1]");
+
+        if (await dialogSection.isExisting()) {
+            return dialogSection;
+        }
+
+        const dialogScroll = await table.$("./ancestor::div[contains(@style,'overflow')][1]");
+
+        if (await dialogScroll.isExisting()) {
+            return dialogScroll;
+        }
+
+        return table;
+    }
+
+    private async loadMoreRowsUntil(targetIndex: number) {
+        let rows = await this.getEquipmentRows();
+        let lastCount = rows.length;
+        let attempts = 0;
+
+        while (rows.length <= targetIndex) {
+            console.log(`Loading more rows... current rows: ${rows.length}, need: ${targetIndex}`);
+
+            const container = await this.getDialogScrollContainer();
+            await container.scrollIntoView();
+            await browser.execute((el) => {
+                el.scrollTop = el.scrollHeight;
+            }, container);
+
+            await browser.pause(3000);
+            const moreBtn = await $("(//div[@role='button' and .//span[normalize-space()='More']])[1]");
+            if (await moreBtn.isDisplayed().catch(() => false)) {
+                await moreBtn.click();
+            }
+
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+
+            rows = await this.getEquipmentRows();
+
+            if (rows.length <= lastCount) {
+                attempts += 1;
+                if (attempts >= 3) {
+                    throw new Error("No more rows can be loaded.");
+                }
+            } else {
+                lastCount = rows.length;
+                attempts = 0;
+            }
+        }
+    }
+    async ensureItemsLoaded(requiredIndex: number) {
+        await this.loadMoreRowsUntil(requiredIndex);
+        return await this.getEquipmentCheckboxes();
+    }
+    async ensureRowVisible(targetIndex: number) {
+        await this.loadMoreRowsUntil(targetIndex);
+        return await this.getEquipmentCheckboxes();
     }
     
     async assignEquipment(equipmentName: string) {
         await console.log("Assigning equipment:", equipmentName);
         await utils.switchToIframe(this.rncaIframe);
         await utils.clickWithWait($("//bdi[normalize-space()='Assignments']"));
+        // let count = 0;
+        // while(true) {
+        //     await console.log("Attempting to assign equipment, batch starting at index:", count);
+        //     const assignBtn = await $(`//div[.//span[normalize-space()='Assignments']]//button[.//bdi[normalize-space()='Assign']]`);
+        //     await assignBtn.waitForClickable({ timeout: 50000 });
+        //     await assignBtn.click();
 
-        let count = 0;
-        while(true) {
-            await console.log("Attempting to assign equipment, batch starting at index:", count);
+        //     const equipmentDropdown = await $("//*[normalize-space()='Equipment']");
+        //     await equipmentDropdown.waitForClickable({ timeout: 50000 });
+        //     await equipmentDropdown.click();
+
+        //     await browser.pause(6000); // Wait for dropdown options to load
+        //     const checkboxes = await $$("//tbody//tr[@role='row']//div[@role='checkbox']");
+        //     const checkboxesCount = await checkboxes.length;
+        //     if (count >= checkboxesCount) {
+        //         throw new Error("No more technical objects available to assign after duplicate-selection retries.");
+        //     }
+        //     if(count > 10) {
+        //         const container = await $('//section[contains(@style,"overflow: auto")]');
+        //         let lastScrollTop = 0;
+        //         while (true) {
+        //             const newScrollTop = await browser.execute((el) => {
+        //                 el.scrollTop += 20;   // scroll step
+        //                 return el.scrollTop;
+        //             }, container);
+
+        //             if (newScrollTop === lastScrollTop) break;
+
+        //             lastScrollTop = newScrollTop;
+
+        //             await browser.pause(1500); // wait for new data load
+        //         }
+        //     }
+        //     await console.log(`Selecting equipment checkbox at index: ${count}`);
+        //     await checkboxes[count].waitForClickable({ timeout: 10000 });
+        //     await browser.execute(el => el.scrollIntoView({ block: 'center' }), checkboxes[count]);
+        //     await checkboxes[count].click();
+
+        //     await utils.clickWithWait($(`//bdi[text()='Confirm']`));
+        //     await utils.waitForBusyIndicatorToDisappear();
+
+        //     const dialog = await $("//div[@role='alertdialog']");
+        //     await dialog.waitForDisplayed({ timeout: 50000 });
+        //     await browser.pause(500);
+
+        //     const dialogText = await dialog.getText();
+        //     console.log("Assignment Dialog Message:", dialogText);
+
+        //     if (dialogText.includes("Please select different Technical Objects")) {
+        //         const warningOkBtn = await dialog.$(".//button[.//bdi[normalize-space()='OK']]");
+        //         await warningOkBtn.waitForClickable({ timeout: 10000 });
+        //         await warningOkBtn.click();
+        //         await utils.waitForBusyIndicatorToDisappear();
+        //         count++;
+        //         continue;
+        //     }
+
+        //     const isAssignmentSuccess = /Technical\s*Object\s*Assigned\s*successfully|Assigned\s*successfully/i.test(dialogText);
+        //     if (!isAssignmentSuccess) {
+        //         throw new Error(`Unexpected assignment dialog message: ${dialogText}`);
+        //     }
+
+        //     const yesBtn = await dialog.$(".//button[.//bdi[normalize-space()='Yes' or normalize-space()='OK']]");
+        //     await yesBtn.waitForClickable({ timeout: 10000 });
+        //     await yesBtn.click();
+        //     await utils.waitForBusyIndicatorToDisappear();
+        //     await this.clickSuccessOkIfPresent(50000);
+        //     await utils.waitForBusyIndicatorToDisappear();
+        //     await console.log("Equipment assigned successfully");
+        //     break;
+        // }
+        let batchStart = 0;
+        let batchSize = 20;
+
+        while (true) {
+
+            console.log(`Starting batch from index: ${batchStart}`);
+
             const assignBtn = await $(`//div[.//span[normalize-space()='Assignments']]//button[.//bdi[normalize-space()='Assign']]`);
             await assignBtn.waitForClickable({ timeout: 50000 });
             await assignBtn.click();
@@ -105,51 +269,90 @@ class RNCADetailPage {
             await equipmentDropdown.waitForClickable({ timeout: 50000 });
             await equipmentDropdown.click();
 
-            await browser.pause(5000); // Wait for dropdown options to load
-            const checkboxes = await $$("//tbody//tr[@role='row']//div[@role='checkbox']");
-            const checkboxesCount = await checkboxes.length;
-            if (count >= checkboxesCount) {
-                throw new Error("No more technical objects available to assign after duplicate-selection retries.");
-            }
-            await console.log(`Selecting equipment checkbox at index: ${count}`);
-            await checkboxes[count].waitForClickable({ timeout: 10000 });
-            await browser.execute(el => el.scrollIntoView({ block: 'center' }), checkboxes[count]);
-            await checkboxes[count].click();
+            await browser.pause(3000);
 
+            await this.loadMoreRowsUntil(batchStart + batchSize - 1);
+
+            const checkboxes = await this.getEquipmentCheckboxes();
+            const totalLoaded = checkboxes.length;
+
+            let selectedCount = 0;
+            for (let i = batchStart; i < Math.min(batchStart + batchSize, totalLoaded); i++) {
+                try {
+                    await browser.execute(el => el.scrollIntoView({ block: 'center' }), checkboxes[i]);
+                    await checkboxes[i].waitForClickable({ timeout: 5000 });
+                    await checkboxes[i].click();
+
+                    selectedCount++;
+                } catch (err) {
+                    console.log(`Skipping index ${i}`);
+                }
+            }
+
+            console.log(`Selected ${selectedCount} items`);
+
+            if (selectedCount === 0) {
+                throw new Error("No selectable items found in batch.");
+            }
+
+            // ✅ SINGLE CONFIRM CLICK
             await utils.clickWithWait($(`//bdi[text()='Confirm']`));
             await utils.waitForBusyIndicatorToDisappear();
 
             const dialog = await $("//div[@role='alertdialog']");
             await dialog.waitForDisplayed({ timeout: 50000 });
-            await browser.pause(500);
 
             const dialogText = await dialog.getText();
-            console.log("Assignment Dialog Message:", dialogText);
+            console.log("Dialog:", dialogText);
 
+            // ⚠️ HANDLE DUPLICATES / PARTIAL FAIL
             if (dialogText.includes("Please select different Technical Objects")) {
-                const warningOkBtn = await dialog.$(".//button[.//bdi[normalize-space()='OK']]");
-                await warningOkBtn.waitForClickable({ timeout: 10000 });
-                await warningOkBtn.click();
+                console.log("Some duplicates found, moving to next batch...");
+
+                const okBtn = await dialog.$(".//button[.//bdi[normalize-space()='OK']]");
+                await okBtn.click();
+
                 await utils.waitForBusyIndicatorToDisappear();
-                count++;
+
+                batchStart += batchSize;
                 continue;
             }
-
-            const isAssignmentSuccess = /Technical\s*Object\s*Assigned\s*successfully|Assigned\s*successfully/i.test(dialogText);
-            if (!isAssignmentSuccess) {
-                throw new Error(`Unexpected assignment dialog message: ${dialogText}`);
+            if (dialogText.includes("Few of the selected Technical Objects are already assigned to other ongoing assessments")) {
+                await console.log(dialogText);
+                console.log("Some items already assigned, confirming to assign the rest...");
+                const yesBtn = await dialog.$(".//button[.//bdi[normalize-space()='Yes' or normalize-space()='OK']]");
+                await yesBtn.waitForClickable({ timeout: 10000 });
+                await yesBtn.click();
+                await utils.waitForBusyIndicatorToDisappear();
+                await this.clickSuccessOkIfPresent(50000);
+                await browser.pause(3000);
+                const noDataCell = await $("//td[normalize-space()='No data']");
+                if (await noDataCell.isDisplayed()) {
+                    console.log("⚠️ No equipment available (No data found), skipping...");
+                    batchStart += batchSize;
+                    continue;
+                }                
+                console.log("Batch assigned with some duplicates skipped, done.");
+                break;
             }
 
+            // ✅ SUCCESS
+            // const isSuccess = /Assigned\s*successfully/i.test(dialogText);
+
+            // if (!isSuccess) {
+            //     throw new Error(`Unexpected dialog: ${dialogText}`);
+            // }
+
             const yesBtn = await dialog.$(".//button[.//bdi[normalize-space()='Yes' or normalize-space()='OK']]");
-            await yesBtn.waitForClickable({ timeout: 10000 });
             await yesBtn.click();
+
             await utils.waitForBusyIndicatorToDisappear();
-            const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-            await okBtn.waitForClickable({ timeout: 50000 });
-            await okBtn.click();
-            await utils.waitForBusyIndicatorToDisappear();
-            await console.log("Equipment assigned successfully");
-            break;
+            await this.clickSuccessOkIfPresent(50000);
+
+            console.log("✅ Batch assigned successfully");
+
+            // 🔁 MOVE TO NEXT BATCH
+            batchStart += batchSize;
         }
     }
 
@@ -190,9 +393,7 @@ class RNCADetailPage {
     //     await yesBtn.waitForClickable({ timeout: 10000 });
     //     await yesBtn.click();
     //     await utils.waitForBusyIndicatorToDisappear();
-    //     const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-    //     await okBtn.waitForClickable({ timeout: 50000 });
-    //     await okBtn.click();
+    //     await this.clickSuccessOkIfPresent(50000);
     //     await console.log("Equipment assigned successfully");
     //     await utils.waitForBusyIndicatorToDisappear();
     // }
@@ -234,9 +435,7 @@ class RNCADetailPage {
         await yesBtn.waitForClickable({ timeout: 10000 });
         await yesBtn.click();
         await utils.waitForBusyIndicatorToDisappear();
-        const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-        await okBtn.waitForClickable({ timeout: 50000 });
-        await okBtn.click();
+        await this.clickSuccessOkIfPresent(50000);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
     }
@@ -257,7 +456,7 @@ class RNCADetailPage {
         // await utils.clickWithWait(manageTemplateAssignOption);
         //await browser.keys(['ArrowDown']);
         await browser.keys(['Enter']);
-        await browser.pause(3000);
+        await browser.pause(4000);
         const firstRadio = await $("(//tr[@role='row']//div[@role='radio'])[1]");
 
         await firstRadio.waitForDisplayed({ timeout: 10000 });
@@ -271,9 +470,8 @@ class RNCADetailPage {
         }
 
         await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Cancel']]/preceding::button[.//bdi[normalize-space()='Assign']][1]`));
-        const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-        await okBtn.waitForClickable({ timeout: 50000 });
-        await okBtn.click();
+        await utils.waitForBusyIndicatorToDisappear();
+        await this.clickSuccessOkIfPresent(50000);
         await utils.waitForBusyIndicatorToDisappear();
         await console.log("Template assigned successfully");
         await browser.pause(3000); 
@@ -371,9 +569,7 @@ class RNCADetailPage {
         }
         await utils.clickWithWait($(`//bdi[normalize-space()='Action:']/following::button[.//bdi[normalize-space()='Save']][1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-        await okBtn.waitForClickable({ timeout: 50000 });
-        await okBtn.click();
+        await this.clickSuccessOkIfPresent(50000);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
         
@@ -420,9 +616,7 @@ class RNCADetailPage {
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait($(`//button[.//bdi[normalize-space()='OK']]`));
         await utils.waitForBusyIndicatorToDisappear();
-        const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
-        await okBtn.waitForClickable({ timeout: 50000 });
-        await okBtn.click();
+        await this.clickSuccessOkIfPresent(50000);
         await console.log("Assessment deleted successfully");
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(3000);

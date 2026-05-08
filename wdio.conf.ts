@@ -20,9 +20,13 @@ export const config: WebdriverIO.Config = {
         './configuration/**/*.e2e.ts',
         './task_management/task_management.e2e.ts',
         './reliability/asset_risk_and_criticality_analysis/asset_risk_and_criticality_analysis.e2e.ts',
+        './reliability/asset_risk_and_criticality_template/asset_risk_and_criticality_template.e2e.ts',
         './reliability/asset_rcm_analysis/*.e2e.ts',
-        //'./integrity/asset_strategy_development/asset_strategy_development.e2e.ts',
-        //'./safety_group/safety.e2e.ts',
+        './integrity/asset_strategy_development/asset_strategy_development_listview.e2e.ts',
+        './integrity/asset_strategy_development/asset_strategy_development.e2e.ts'
+        // './integrity/asset_strategy_development/*.e2e.ts',
+        //'./integrity/asset_strategy_development/asset_strategy_development_multiple_funcloc.e2e.ts'
+        // './safety_group/safety.e2e.ts',
 
     ],
     exclude: [],

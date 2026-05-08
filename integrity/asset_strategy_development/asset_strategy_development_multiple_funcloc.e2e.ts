@@ -1,14 +1,15 @@
 import ASDListView from '../../page_object_model/btp_applications_page/integrity/asset_strategy_development/asset_strategy_development.listview.page';
 import ASDDetailView from '../../page_object_model/btp_applications_page/integrity/asset_strategy_development/asset_strategy_development.detailview.page';
 import utils from '../../utils/utils';
-describe('BTP - Asset Strategy Development (ASD) - Functional Test', () => {
+
+describe('BTP - Asset Strategy Development (ASD)- Multiple Functional Locations - Functional Test', () => {
 
     it('should navigate to asset strategy development list view', async () => {
         await ASDListView.navigateToASDListView();
     });
 
-    it('should be able to create asset strategy development for single equipment', async () => {
-        await ASDListView.createASDForSingleEquipment();
+    it('should be able to create asset strategy development for multiple functional locations', async () => {
+        await ASDListView.createASDForMultipleFunctionalLocations();
     });
 
     it('should be able to capture asset strategy development details for single equipment', async () => {
@@ -58,14 +59,6 @@ describe('BTP - Asset Strategy Development (ASD) - Functional Test', () => {
 
     it('should be able to download and verify ASD report', async () => {
         await ASDDetailView.downloadAndVerifyReport();
-    });
-
-    it('should be able create workflow', async () => {
-        await ASDDetailView.createWorkflow();
-    });
-
-    it('should be able publish ASD', async () => {
-        await ASDDetailView.publishASD();
     });
 
     it.skip('should able to delete newly created ASD', async () => {
