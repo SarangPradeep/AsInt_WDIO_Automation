@@ -2,6 +2,7 @@ import utils from '../../../../utils/utils';
 import assetRCMListView from "./asset_rcm_analysis.listview.page";
 import assetRcmData from "../../../../test_data/btp_applications/reliability/asset_rcm.data";
 import * as path from 'path';
+import { url } from 'inspector';
 class assetRCMDetailView {
 
     private get infoTab() { return $("//bdi[text()='Information']"); }
@@ -1040,6 +1041,7 @@ class assetRCMDetailView {
             await browser.keys("ArrowDown");
             await browser.keys("Enter");
 
+            await browser.pause(3000);
             await expect(this.functionalLocationHeader).toBeDisplayed();
             await browser.pause(5000);
             const checkBox = this.checkBoxByIndex(i);
@@ -1676,6 +1678,23 @@ class assetRCMDetailView {
     public async downloadSummaryReport() {
 
         console.log("Downloading Summary Report for RCM...");
+        await (await this.summaryReportBtn).click();
+        await (await this.downloadReportHeader).waitForDisplayed({ timeout: 20000 });
+        if (await (await this.includeAllTechObjText).isDisplayed().catch(() => false)) {
+            await (await this.includeAllTechObjText).click();
+        }
+        await (await this.downloadReportOkBtn).click();
+        await browser.pause(3000);
+        await utils.waitForBusyIndicatorToDisappear();
+
+        if (await (await this.confirmationYesBtn).isDisplayed().catch(() => false)) {
+            await (await this.confirmationYesBtn).click();
+        }
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
+        await utils.clickWithWait(this.okBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+
         const filePath = await utils.waitForDownload('.pdf');
         const pdfContent = await utils.extractTextFromPDF(filePath);
 

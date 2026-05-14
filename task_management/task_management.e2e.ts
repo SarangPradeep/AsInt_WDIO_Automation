@@ -19,23 +19,23 @@ describe('BTP Task Management - Functional Test', () => {
     });
 
     it('should navigate to Task Management and create a new task', async function () {
-        this.timeout(900000); // 15 minutes
+        // this.timeout(900000); // 15 minutes
         await taskManagementListView.navigateToTaskManagementListView();
         await taskManagementListView.createTask(taskDescription, {
             activity: 'Asset Inspection',
             priority: 'Low',
-            assignedTo: 'anmol.kumar@asint.net',
+            assignedTo: 'ashweyth.sunil@asint.net',
             objectType: 'None'
         });
     });
 
     it('should verify task was created successfully', async function () {
-        this.timeout(900000);
+        // this.timeout(900000);
         await taskManagementListView.verifyTaskCreated(taskDescription);
     });
 
     it('should open task detail and edit header details', async function () {
-        this.timeout(900000);
+        // this.timeout(900000);
         await taskManagementListView.openTaskDetail(taskDescription);
         await taskManagementListView.editHeaderDetails(
             updatedHeader,
@@ -49,23 +49,23 @@ describe('BTP Task Management - Functional Test', () => {
             description: editedTaskDescription,
             activity: 'Asset Inspection',
             priority: 'Low',
-            assignedTo: 'anmol.kumar@asint.net',
+            assignedTo: 'ashweyth.sunil@asint.net',
             comment: updatedComment
         });
     });
 
     it('should update task status to Completed', async function () {
-        this.timeout(900000);
+        // this.timeout(900000);
         await taskManagementListView.updateStatusToCompleted();
     });
 
     it('should delete the task', async function () {
-        this.timeout(900000);
+        // this.timeout(900000);
         await taskManagementListView.deleteTaskAndConfirm();
     });
 
     it('should verify task deletion', async function () {
-        this.timeout(900000);
+        // this.timeout(900000);
         await taskManagementListView.searchAndVerifyTaskDeleted(editedTaskDescription);
     });
 }).timeout(900000);

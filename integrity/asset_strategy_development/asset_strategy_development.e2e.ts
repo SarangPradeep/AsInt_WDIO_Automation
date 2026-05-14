@@ -68,7 +68,7 @@ describe('BTP - Asset Strategy Development (ASD) - Functional Test', () => {
         await ASDDetailView.publishASD();
     });
 
-    it.skip('should able to delete newly created ASD', async () => {
+    it('should able to delete newly created ASD', async () => {
         await ASDDetailView.deleteASD();
         await ASDListView.verifyASDDeletion();
     });

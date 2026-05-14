@@ -282,7 +282,6 @@ class Utils {
             timeoutMsg: 'No visible dropdown listbox with options found'
         });
 
-        // return the ACTIVE listbox element
         for (const xpath of dropdownXpaths) {
             const listboxes = await browser.$$(xpath);
 
@@ -330,7 +329,6 @@ class Utils {
     }
 
     async waitForAnyUI5OptionActive() {
-        // wait until any visible listbox appears
         await browser.waitUntil(async () => {
             const listboxes = await $$('//ul[@role="listbox"]');
 
@@ -343,7 +341,6 @@ class Utils {
             timeoutMsg: 'UI5 dropdown did not open'
         });
 
-        // now wait until options exist in the visible listbox
         await browser.waitUntil(async () => {
             const listboxes = await $$('//ul[@role="listbox"]');
 
@@ -378,7 +375,6 @@ class Utils {
             await arrow.click();
         } catch {}
 
-        // JS fallback click (SAP UI5 fix)
         await browser.execute(el => el.click(), arrow);
 
         await browser.pause(500);
@@ -458,14 +454,12 @@ class Utils {
     return match ? parseInt(match[1], 10) : 0;
     }
 
-      private get adaptFilter() {
+    private get adaptFilter() {
         return $("//input[@placeholder='Search']/following::bdi[contains(text(),'Adapt Filters')]");
     }
 
     async addAllAdaptFilter(): Promise<void> {
         console.log("Trying to open Adapt filter");
-       // await this.adaptFilter.waitForClickable({ timeout: 100000 });
-
         await browser.switchFrame(null);
 
         if (await this.funLocIframe.isExisting()) {
@@ -487,7 +481,6 @@ class Utils {
         let prevCount: number = -1;
 
         while (true) { 
-            //const checkboxes: any = await $$(`//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"]`);
             const checkboxes: any = await $$(`(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]//div[@role='checkbox' and @aria-checked='false']`);
             const uncheckedCount: number = checkboxes.length;
 
@@ -662,7 +655,6 @@ class Utils {
             }
         }
 
-        // verify removed fields (HAZOP case)
         for (const field of removedFields) {
             for (const el of headerElems) {
                 const txt = ((await el.getText()) || "").trim();
@@ -749,7 +741,7 @@ class Utils {
 
     public async verifyShowHierarchy(): Promise<void> {
         await this.clickWithWait(this.showHierarchyBtn);
-        await browser.pause(5000); // wait for hierarchy to show   
+        await browser.pause(5000);  
         console.log("Show Hierarchy clicked and hierarchy displayed");
         console.log("Some of the below entries are present"); 
 
@@ -1055,7 +1047,7 @@ class Utils {
             throw new Error("Criticality is NOT 'A'");
         }
 
-        console.log("Criticality is correctly 'A' ✅");
+        console.log("Criticality is correctly 'A'");
     }
  
     async resetAdvancedFilter(): Promise<void> {
@@ -1205,6 +1197,19 @@ class Utils {
         } catch {
             console.warn("Block layer timeout");
         }
+    }
+
+    xpathString(value: string): string {
+        const s = String(value);
+        if (!s.includes('"')) {
+            return `"${s}"`;
+        }
+        if (!s.includes("'")) {
+            return `'${s}'`;
+        }
+        // Contains both quote types — build via concat().
+        const parts = s.split('"').map(p => `"${p}"`).join(`, '"', `);
+        return `concat(${parts})`;
     }
 }
 

@@ -133,11 +133,12 @@ class RNCTDetailPage {
         const impactSection = await $(`//bdi[text()="Impacts"]`);
         await impactSection.waitForDisplayed();
         await impactSection.click();
-
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
         const createBtn = await $(`//bdi[text()="Create"]`);
         await createBtn.waitForClickable({ timeout: 50000 });
         await createBtn.click();
-
+        await browser.pause(1000);
         const descriptionInput = await $(`.//span[normalize-space()='Description']/following::input[1]`);
         await descriptionInput.setValue(title);
         await browser.pause(1000);
@@ -155,8 +156,6 @@ class RNCTDetailPage {
         await saveBtn.waitForClickable({ timeout: 50000 });
         await saveBtn.click();
         await utils.waitForBusyIndicatorToDisappear();
-
-        
         const okBtn = await $("//span[text()='Success']/following::button[.//bdi[text()='OK']][1]");
         await browser.pause(3000);
         if (await okBtn.isExisting()) {
@@ -271,8 +270,9 @@ class RNCTDetailPage {
 
                 await descriptionInput.setValue(`Desc${d}-${i}`);
                 await browser.pause(1000);
-                await valueInput.setValue(`Val${d}-${i}`);
-                console.log(`Filled Description: Desc${d}-${i} and Value: Val${d}-${i} for Dimension ${d}, Row ${i}`);
+                const numericValue = i * 100;
+                await valueInput.setValue(`${numericValue}`);
+                console.log(`Filled Description: Desc${d}-${i} and Value: ${numericValue} for Dimension ${d}, Row ${i}`);
                 await browser.pause(1000);
             }
             await browser.pause(1000);
@@ -292,7 +292,33 @@ class RNCTDetailPage {
         console.log("Dimension added successfully");
         await utils.waitForBusyIndicatorToDisappear();
             
-}
+    }
+    async verifyThresholdSection() {
+        await console.log("Verifying Thresholds section");
+        await browser.pause(2000);
+        await utils.switchToIframe(this.applicationFrame);
+        const thresholdsSection = await $(`//bdi[text()="Threshold"]`);
+        await thresholdsSection.waitForDisplayed();
+        await thresholdsSection.click();
+        await browser.pause(2000);
+        await utils.waitForBusyIndicatorToDisappear();
+        const riskMatrixSvg = await $("//*[name()='svg' and @role='img']");
+
+        await riskMatrixSvg.waitForDisplayed({ timeout: 50000 });
+
+        expect(await riskMatrixSvg.isDisplayed()).toBe(true);
+
+        console.log("Risk Matrix SVG is displayed");
+
+        const rows = await $$("(//span[normalize-space()='Define Threshold:']/following::table[@role='grid'])[1]//tbody/tr");
+
+        for (let i = 0; i < rows.length; i++) {
+
+            const cell = await rows[i].$(".//td[@aria-colindex='1']//span");
+
+            console.log(`Row ${i + 1} :`, await cell.getText());
+        }
+    }
 
 
 }
