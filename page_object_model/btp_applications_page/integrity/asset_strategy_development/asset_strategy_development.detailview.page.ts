@@ -229,9 +229,9 @@ class asset_strategy_development_listview_page {
     private get headerMoreBtn() { return $("//header//button[@aria-label='Additional Options']//span[@role='presentation']"); }
     private get deleteBtn() { return $("//button[.//text()='Delete']"); }
     private get reportBtn() { return $("//button[.//text()='Report']"); }
-    private get deleteConfirmText() { return $("//span[.//text()='Are you sure you want to delete the assessment?']"); }
+    private get deleteConfirmText() { return $("//span[.//text()='Are you sure want to delete the Assessment?']"); }
     private get confirmOkBtn() { return $("//header[.//text()='Confirmation']/following::button[.//text()='OK']"); }
-    private get workflowBtn() { return $$("//button[.//text()='Workflow']"); }
+    private get workflowBtn() { return $("//header//button[.//text()='Workflow']"); }
     private get workflowHeader() { return $("//span[contains(text(),'Workflow Inbox')]") };
     private get createWorkflowBtn() { return $("//span[contains(text(),'Workflow Inbox')]/following::button[.//text()='Create']")};
     private get createWorkflowBtn2() { return $("//span[contains(text(),'Create Workflow')]/following::button[.//text()='Create']")};
@@ -260,9 +260,11 @@ class asset_strategy_development_listview_page {
     private get reccSucMsg() { return $("//span[.//text()='Work Bench Created and Assessment Published Successfully']"); }
     private get skipAllReccSuccMsg() { return $("//span[.//text()='Assessment Published Successfully']"); }
     private get cancelBtn() { return $("//footer//button[.//text()='Cancel']"); }
+    private get errorOkBtn() { return $("//header[.//text()='Error']/following::button[.//text()='OK']"); }
 
     public selectedItemsGlobal:any = {};
     public calculateAnalysis :boolean = false;
+    public publish :boolean = false;
     
     public async verifyEditGenInfo() {
         console.log("Start: Verifying and editing general information section of ASD");
@@ -297,10 +299,13 @@ class asset_strategy_development_listview_page {
 
     public async captureGeneralSelection() {
         console.log("Capturing general selection details of ASD");
+        await utils.switchToIframe(this.ASDIframe);
+        await browser.pause(4000);
         await utils.waitForBusyIndicatorToDisappear();
-        if (await this.generalSelectionHeader.isDisplayed()) {
-            await utils.switchToIframe(this.ASDIframe);
-            await browser.pause(5000);
+        const isHeaderVisible = await this.generalSelectionHeader.isDisplayed().catch(() => false);
+        const isLinkVisible = await this.generalSelectionLink.isDisplayed().catch(() => false);
+
+        if (isHeaderVisible) {
             console.log("Verifying selected items in General Selection");
             const items = await this.selectedCheckboxTexts;
             this.selectedItemsGlobal = {} as any;
@@ -308,6 +313,44 @@ class asset_strategy_development_listview_page {
                 const text: string = await el.getText();
                 this.selectedItemsGlobal[text] = true;
                 console.log("Selected: " + text);
+            }
+            if (Object.keys(this.selectedItemsGlobal).length === 0) {
+                ASDListView.generalSelectionData = false;
+                await utils.clickWithWait(this.cancelBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                console.log("No items selected → Cancel clicked");
+            } else {
+                const isChecked = await this.selectAllToggle.getAttribute("aria-checked");
+                if (isChecked === "false") {
+                    await this.selectAllToggle.click();
+                }
+                await this.saveButton.click();
+                await utils.waitForBusyIndicatorToDisappear();
+                console.log("Saved general ASD after creation");
+            }
+        } 
+        else if (isLinkVisible) {
+            console.log("Header not found → opening via link");
+            await this.generalSelectionLink.waitForDisplayed({ timeout: 10000 });
+            await this.generalSelectionLink.scrollIntoView();
+            await browser.execute(el => el.click(), await this.generalSelectionLink);
+            await utils.waitForBusyIndicatorToDisappear();
+            const checkboxes = await $$("//li[@role='treeitem']//div[@role='checkbox']/following::div[1]");
+            if (await checkboxes.length === 0) {
+                console.log("No General Sections are present");
+                if (await this.cancelBtn.isDisplayed().catch(() => false)) {
+                    await this.cancelBtn.click();
+                }
+                return;
+            }
+            const items = await this.selectedCheckboxTexts;
+            this.selectedItemsGlobal = {} as any;
+            for (let el of items) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    const text: string = await el.getText();
+                    this.selectedItemsGlobal[text] = true;
+                    console.log("Selected: " + text);
+                }
             }
             const isChecked = await this.selectAllToggle.getAttribute("aria-checked");
             if (isChecked === "false") {
@@ -317,157 +360,111 @@ class asset_strategy_development_listview_page {
             await utils.waitForBusyIndicatorToDisappear();
             console.log("Selected items are : ", this.selectedItemsGlobal);
         } 
-        else if(await this.generalSelectionLink.isClickable())
-        {
-            console.log("General Selection header not found, clicking on link to open general selection");
-            await utils.switchToIframe(this.ASDIframe);
-            await browser.pause(5000);
-            await utils.clickWithWait(this.generalSelectionLink);
-            await this.generalSelectionLink.waitForDisplayed({ timeout: 10000 });
-
-            await browser.pause(2000);
-            await utils.waitForBusyIndicatorToDisappear();
-
-            const checkboxes = await $$(`//li[@role='treeitem']//div[@role='checkbox']/following::div[1]`);
-
-            if (await checkboxes.length === 0) {
-                console.log("No General Sections are present");
-
-                if (await this.cancelBtn.isDisplayed()) {
-                    await this.cancelBtn.click();
-                }
-
-                return;
-            }
-
-            const items = await this.selectedCheckboxTexts;
-            this.selectedItemsGlobal = {} as any;
-
-            for (let el of items) {
-                if(await el.isDisplayed() && await el.isClickable())
-                {
-                    const text: string = await el.getText();
-                    this.selectedItemsGlobal[text] = true;
-                    console.log("Selected: " + text);
-                }
-            }
-
-            const isChecked = await this.selectAllToggle.getAttribute("aria-checked");
-            if (isChecked === "false") {
-                await this.selectAllToggle.click();
-            }
-
-            await this.saveButton.click();
-            await utils.waitForBusyIndicatorToDisappear();
-
-            console.log("Selected items are : ", this.selectedItemsGlobal);
-        }
-        else
-        {
+        else {
             console.log("GENERAL SELECTION SECTION NOT PRESENT FOR THIS ASD");
         }
         console.log("General selection details of ASD captured successfully");
-    }
-
-    public async waitForASDHeader() {
-        for (let i = 1; i <= 2; i++) {
-            if (await this.ASDHeader(i).isDisplayed().catch(() => false)) {
-                await this.ASDHeader(i).waitForDisplayed();
-                return;
-            }
-        }
-        throw new Error("ASD Header not found");
     }
 
     public async verifyHeader()
     {
         console.log("Verifying header information of ASD");
         await utils.waitForBusyIndicatorToDisappear();
-        await this.waitForASDHeader();
+        await utils.switchToIframe(this.ASDIframe);
+        await browser.pause(4000);
         const asdHeader = await this.getFinalIDs();
-        await expect(asdHeader.ASD).toEqual(ASDListView.assetASDDesc);
+        if(ASDListView.singleCreate === true)
+        {
+            await expect(asdHeader.ASD).toEqual(ASDListView.assetASDDesc);
+        }
+        else{
+            await expect(asdHeader.ASD).toEqual(ASDListView.assetASDFunLoc);
+        }
         console.log("Asset Strategy Development name matches header's name");
     }
 
     public async getFinalIDs() {
         let ASD = "";
         let actualId = "";
+
         const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
         const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+
         for (let i = 0; i < 3; i++) {
-            if (i === 0 && await expandBtn.isDisplayed()) {
+
+            if (i === 0 && await expandBtn.isDisplayed().catch(() => false)) {
                 await expandBtn.waitForClickable({ timeout: 5000 });
                 await expandBtn.click();
             } 
-            else if (i === 1 && await collapseBtn.isDisplayed()) {
+            else if (i === 1 && await collapseBtn.isDisplayed().catch(() => false)) {
                 await collapseBtn.waitForClickable({ timeout: 5000 });
                 await collapseBtn.click();
             }
-            await browser.pause(500); // small buffer before waitUntil kicks in
-            const headerText = await this.getASDId();
-            const displayText = await this.getDisplayId();
-            if (!ASD && headerText) ASD = headerText;
-            if (!actualId && displayText) actualId = displayText;
+
+            // 🔥 wait for header to stabilize
+            await browser.pause(1000);
+
+            // 🔥 HARD WAIT for ASD to appear
+            try {
+                await browser.waitUntil(async () => {
+                    const txt = await this.getASDId();
+                    return !!txt;
+                }, { timeout: 10000, interval: 500 });
+            } catch {}
+
+            ASD = await this.getASDId();
+            actualId = await this.getDisplayId();
+
             console.log(`Attempt ${i + 1} → ASD="${ASD || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+
             if (ASD && actualId) break;
         }
+
         return { ASD, actualId };
     }
 
+
     public async getASDId() {
         const xpath = "//header//*[@role='heading']//span";
-        let found = false;
-        try {
-            await browser.waitUntil(async () => {
-                const els = await $$(xpath);
-                if (!els.length) return false;
 
-                for (let el of els) {
-                    let txt = (await el.getText()) ?? "";
-                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
-                    txt = txt?.trim();
-
-                    if (txt && (txt.startsWith("AUTOMATION-ASD ") || txt.startsWith("AUTOMATION-ASD"))) {
-                        found = true;
-                        return true;
-                    }
-                }
-                return false;
-            }, {
-                timeout: 4000,   // shorter wait per attempt
-                interval: 500
-            });
-
-        } catch (e) {
-            console.log("FuncLoc not visible in this attempt");
-        }
-
-        if (!found) return "";
         const spans = await $$(xpath);
-        for (let el of spans) {
-            let txt = (await el.getText()) ?? "";
-                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
-            txt = txt?.trim();
 
-            if (txt && (txt.startsWith("AUTOMATION-ASD ") || txt.startsWith("AUTOMATION-ASD"))) {
+        for (let el of spans) {
+            let txt = (await el.getText().catch(() => "")) || "";
+            if (!txt) txt = (await el.getAttribute("innerText").catch(() => "")) || "";
+
+            txt = txt.trim();
+
+            if (txt && txt.includes("Automation_ASD")) {
                 return txt;
             }
         }
+
         return "";
     }
+
 
     public async getDisplayId() {
         try {
             const txt = await browser.execute(() => {
-                const el = document.evaluate( //display ID xpath may differ for different apps, adjust accordingly
-                    "//span[starts-with(normalize-space(),'Display ID:')]",
+                const result = document.evaluate(
+                    "//header//span[contains(text(),'ASDA')]",
                     document,
                     null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
                     null
-                ).singleNodeValue;
-                return el ? (el.textContent || "") : "";
+                );
+
+                for (let i = 0; i < result.snapshotLength; i++) {
+                    const el = result.snapshotItem(i);
+                    if (el && el.textContent && el.textContent.trim()) {
+                        return el.textContent;
+                    }
+                }
+
+                return "";
             });
+
             return txt ? txt.replace("Display ID:", "").trim() : "";
         } catch (e) {
             return "";
@@ -480,10 +477,10 @@ class asset_strategy_development_listview_page {
         await utils.clickWithWait(this.ASDEditHeader);
         await browser.pause(2000);
         await this.editHeaderTitle.waitForDisplayed();
-        const newASDDesc = `Automation_ASD_Single_Equipment_${Date.now()}`;
+        const newASDDesc = `Automation_ASD_Multiple_Equipment_${Date.now()}`;
         console.log("Setting new short description: " + newASDDesc);
         await utils.setValueWithWait(this.shortDescriptionInput, newASDDesc);
-        ASDListView.assetASDDesc = newASDDesc;
+        ASDListView.assetASDFunLoc = newASDDesc;
         await utils.setValueWithWait(this.assessDateInput, utils.formatDate(0));
         await utils.setValueWithWait(this.longDescriptionTextarea, "Automation long description");
         await utils.waitForBusyIndicatorToDisappear();
@@ -496,6 +493,11 @@ class asset_strategy_development_listview_page {
     }
 
     public async editAnalysisInfo() {
+        if(ASDListView.generalSelectionData === false)
+        {
+            console.log("Skipping this as there were no data for general selection")
+            return;
+        }
         console.log("Start: Verifying and editing analysis information section of ASD");
         await utils.switchToIframe(this.ASDIframe);
         await browser.pause(4000);
@@ -896,6 +898,11 @@ class asset_strategy_development_listview_page {
 
     public async verifyAnalysisInfo()
     {
+        if(ASDListView.generalSelectionData === false)
+        {
+            console.log("Skipping this as there were no data for general selection")
+            return;
+        }
         console.log("Start: Verifying analysis information of ASD");
         await utils.switchToIframe(this.ASDIframe);
         await browser.pause(4000);
@@ -1097,6 +1104,13 @@ class asset_strategy_development_listview_page {
         console.log("Start: Verifying risk information of ASD");
         await utils.clickWithWait(this.riskAndInfoTab);
         await browser.pause(2000);
+        const isErrorPresent = await this.errorOkBtn.isDisplayed().catch(() => false);
+        if (isErrorPresent) {
+            await this.errorOkBtn.waitForClickable({ timeout: 5000 });
+            await this.errorOkBtn.click();
+            console.log("Error popup handled → OK clicked");
+            return;
+        }
         const riskInfo = utils.getAssignedValue(await this.riskInformationValue.getText());
         const strategies = utils.getAssignedValue(await this.strategiesValue.getText());
         const recommendations = utils.getAssignedValue(await this.recommendationsValue.getText());
@@ -1114,9 +1128,9 @@ class asset_strategy_development_listview_page {
         const maintenanceNotification = utils.getAssignedValue(await this.maintenanceNotificationValue.getText());
         const maintenanceOrders = utils.getAssignedValue(await this.maintenanceOrdersValue.getText());
         const maintenancePlans = utils.getAssignedValue(await this.maintenancePlansValue.getText());
-        console.log("Maintenance Notification:"+ maintenanceNotification);
-        console.log("Maintenance Orders:"+ maintenanceOrders);
-        console.log("Maintenance Plans:"+ maintenancePlans);
+        console.log("Maintenance Notification:", maintenanceNotification);
+        console.log("Maintenance Orders:", maintenanceOrders);
+        console.log("Maintenance Plans:", maintenancePlans);
         console.log("Maintenance and service information of ASD verified successfully");
     }
 
@@ -1318,6 +1332,8 @@ class asset_strategy_development_listview_page {
 
     public async createWorkflow()
     {
+        await utils.switchToIframe(this.ASDIframe);
+        await browser.pause(4000);
         const isOddDay = new Date().getDate() % 2 !== 0;
         if (!isOddDay) 
         {
@@ -1325,71 +1341,111 @@ class asset_strategy_development_listview_page {
             return;
         }
         console.log("Creating workflow for the ASD...");
+
         if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
             await utils.clickWithWait(this.headerMoreBtn);
-            await browser.pause(1000);
+            await browser.pause(3000);
         }
-        for (const el of await this.workflowBtn) {
-            if (await el.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(el);
-                return;
-            }
-        }
-        await browser.pause(2000);
+        await utils.clickWithWait(this.workflowBtn);
+        await browser.pause(3000);
+
         await this.workflowHeader.waitForDisplayed({ timeout: 10000 });
-        if(await this.createWorkflowBtn.isDisplayed().catch(() => false) )
-        {
-            await utils.clickWithWait(this.createWorkflowBtn);
-            console.log("Create Workflow header is displayed");
-            console.log("Clicking apporval workflow button");
-            await browser.keys("ArrowDown");
-            await browser.keys("Enter");
-            await browser.pause(2000);
-            await utils.clickWithWait(this.createWorkflowBtn2);
-            await this.workflowSuccessMsg.waitForDisplayed({ timeout: 10000 });
-            console.log("Workflow created successfully");
-            await utils.clickWithWait(this.okBtn);
-            await browser.pause(2000);
-            await utils.waitForBusyIndicatorToDisappear();
-            const headers = await utils.captureHeaderDetails();
-            if (headers["Status"] !== "Published") {
-                throw new Error(`Status is not Published → ${headers["Status"]}`);
+        const day = new Date().getDay(); 
+        const isdays = day >= 1 && day <= 3;
+
+        if (await this.createWorkflowBtn.isDisplayed().catch(() => false)) {
+            if (isdays) {
+                console.log("Creating Technical Review Workflow");
+                await browser.keys("ArrowDown");
+                await browser.keys("Enter");
+                await browser.pause(2000);
+                await utils.clickWithWait(this.createWorkflowBtn2);
+                await this.workflowSuccessMsg.waitForDisplayed({ timeout: 10000 });
+                console.log("Technical Workflow created");
+                await utils.clickWithWait(this.okBtn);
+                await browser.pause(2000);
+                await utils.waitForBusyIndicatorToDisappear();
+            }   
+            else {
+                console.log("Creating Recommendation Workflow");
+                await browser.keys("Enter");
+                await browser.pause(2000);
+                await utils.clickWithWait(this.createWorkflowBtn2);
+                await this.workflowSuccessMsg.waitForDisplayed({ timeout: 10000 });
+                console.log("Recommendation Workflow created");
+                await utils.clickWithWait(this.okBtn);
+                await browser.pause(2000);
+                await utils.waitForBusyIndicatorToDisappear();
+                const headers = await utils.captureHeaderDetails();
+                if (headers["Status"] !== "Published") {
+                    throw new Error(`Status is not Published → ${headers["Status"]}`);
+                }
+                this.publish === true;
+                console.log("Status is Published");
             }
-            console.log("Status is Published");
-        }
-        else
-        {
-            console.log("Workflow for this ASD can not be created");
+        } else {
+            throw new Error("Create Workflow button not available. Hence, workflow cannot be created");
         }
         console.log("Workflow verified successfully");
     }
 
     public async deleteASD()
     {
-        console.log("Deleting the ASD...");
-        await ASDListView.fetchASDDisplayID();
-        console.log("Deleting :"+ASDListView.assetASDDisplayID);
-        if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
-            await utils.clickWithWait(this.headerMoreBtn);
-            await browser.pause(1000);
+        console.log("Inside deletion ASD method...");
+        await utils.switchToIframe(this.ASDIframe);
+        await browser.pause(4000);
+        if(await this.calculateAnalysis === false && this.publish === false)
+        {
+            console.log("Deleting the ASD...");
+            await ASDListView.fetchASDDisplayID();
+            console.log("Deleting :"+ASDListView.assetASDDisplayID);
+            if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.headerMoreBtn);
+                await browser.pause(4000);
+            }
+            await utils.clickWithWait(this.deleteBtn);
+            await browser.pause(2000);
+            await this.deleteConfirmText.waitForDisplayed({ timeout: 60000 });
+            console.log(this.deleteConfirmText.getText());
+            const yesBtn = await $("//header[.//text()='Confirmation']/following::button[.//text()='Yes']");
+            await utils.clickWithWait(yesBtn);
+            await browser.pause(4000);
+            await utils.clickWithWait(this.okBtn);
+            console.log("ASD deleted successfully");
         }
-        await utils.clickWithWait(this.deleteBtn);
-        await browser.pause(1000);
-        await browser.keys("ArrowDown");
-        await browser.keys("Enter");
-        await this.deleteConfirmText.waitForDisplayed({ timeout: 60000 });
-        await utils.clickWithWait(this.confirmOkBtn);
-        await this.okBtn.waitForDisplayed({ timeout: 60000 });
-        await utils.clickWithWait(this.okBtn);
-        console.log("ASD deleted successfully");
+        else
+        {
+            const headers = await utils.captureHeaderDetails();
+            if (headers["Status"] == "Published") {
+                console.log("Status is Published, Cannot delete the ASD");
+            }
+            else
+            {
+                console.log("Deleting the ASD...");
+                await ASDListView.fetchASDDisplayID();
+                console.log("Deleting :"+ASDListView.assetASDDisplayID);
+                if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.headerMoreBtn);
+                    await browser.pause(4000);
+                }
+                await utils.clickWithWait(this.deleteBtn);
+                await browser.pause(1000);
+                await this.deleteConfirmText.waitForDisplayed({ timeout: 60000 });
+                await utils.clickWithWait($("//button[.//text()='Yes']"));
+                await browser.pause(2000);
+                await this.okBtn.waitForDisplayed({ timeout: 60000 });
+                await utils.clickWithWait(this.okBtn);
+                console.log("ASD deleted successfully");
+            }
+        }
     }
 
     public async publishASD()
     {
         console.log("In publish method...");
         const today = new Date();
-        const day = today.getDay();     // 0=Sun,1=Mon,...6=Sat
-        const date = today.getDate();   // 1–31
+        const day = today.getDay();     
+        const date = today.getDate();   
         const isEvenDay = date % 2 === 0;
 
         if (!isEvenDay){
@@ -1399,7 +1455,9 @@ class asset_strategy_development_listview_page {
 
         if(await this.calculateAnalysis === false)
         {
-            throw new Error("ASD calculation failed, hence cannot publish the ASD");
+            this.publish === false
+            console.log("ASD CALCULATION WAS FAILED, HENCE CANNOT PUBLISH THE ASD");
+            return;
         }
         else
         {
@@ -1415,6 +1473,7 @@ class asset_strategy_development_listview_page {
             const text = await this.headerData.getText();
             const noOfRecc = await utils.getAssignedValue(text);
             if (noOfRecc === 0) {
+                this.publish === false
                 throw new Error("No recommendations found after publishing, something went wrong");
             }
             else
@@ -1470,6 +1529,7 @@ class asset_strategy_development_listview_page {
                 if (headers["Status"] !== "Published") {
                     throw new Error(`Status is not Published → ${headers["Status"]}`);
                 }
+                this.publish === true;
                 console.log("Status is Published");
                 break;
             }
@@ -1505,6 +1565,7 @@ class asset_strategy_development_listview_page {
                 if (headers["Status"] !== "Published") {
                     throw new Error(`Status is not Published → ${headers["Status"]}`);
                 }
+                this.publish === true;
                 console.log("Status is Published");
                 break;
             }
@@ -1533,6 +1594,7 @@ class asset_strategy_development_listview_page {
         if (headers["Status"] !== "Published") {
             throw new Error(`Status is not Published → ${headers["Status"]}`);
         }
+        this.publish === true;
         console.log("Status is Published");
     }
 

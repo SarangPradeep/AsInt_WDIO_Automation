@@ -21,17 +21,21 @@ class asset_strategy_development_listview_page {
     private get generalSelectionHeader() { return $("//h1[.='General Selection']"); }
     private get selectAllToggle() { return $("//span[.='Select All / Deselect All']/preceding-sibling::div/ancestor::div[1]"); }
     private get saveButton() { return $("//button[.//bdi[.='Save']]"); }
+    private get cancelBtn() { return $("//button[.//bdi[.='Cancel']]"); }
     private get analysisDetailButton() { return $("//button[.//bdi[.='Analysis Detail']]"); }
     private get selectMultiFunLoc() { return $("//div[@role='toolbar']//button[.//text()='Add All']"); }
     private get calculateMassRunBtn() { return $("//button[.//text()='Calculate Mass Run']")}
     private get cmlTab() { return $("//bdi[text()='CML']"); }
-
+    private get selectedCheckboxTexts() { return $$("//li[@role='treeitem']//div[@role='checkbox']/following::div[1]"); }
+    
+    public selectedItemsGlobal:any = {};
     public assetASDDisplayID!: string;
     public assetASDDesc!: string;
     public assetASDFunLoc!: string;
     public assessmentTemplateName!: string;
     public selectedFuncLocsGlobal: string[] = [];
-
+    public generalSelectionData: boolean = true;
+    public singleCreate: boolean = true;
 
     public async navigateToASDListView() {
         console.log("Navigating to Asset Strategy Development List View");
@@ -53,11 +57,11 @@ class asset_strategy_development_listview_page {
     }
 
     public async createASDForSingleEquipment() {
+        this.singleCreate = true;
         console.log("Starting creation of Asset Strategy Development for single equipment");   
         await utils.clickWithWait(this.newASDButton);
         console.log("Asset Strategy Development creation process initiated for single equipment"); 
         console.log("choosing equiment for ASD")
-        //await browser.keys("ArrowDown");
         await browser.keys("Enter");
         console.log("Equipment selected for ASD");
         await browser.pause(2000);
@@ -66,22 +70,10 @@ class asset_strategy_development_listview_page {
         console.log("Single equipment option selected");
         await this.createASDHeader.waitForDisplayed({ timeout: 10000 });
         console.log("Filling in ASD details");
+        await browser.pause(4000);
         this.assetASDDesc = `Automation_ASD_Single_Equipment_${Date.now()}`;
         console.log(`Generated ASD Description: ${this.assetASDDesc}`);
         await this.descriptionInput.setValue(this.assetASDDesc);
-        // let i = 2;
-        // while (true) {
-        //     await this.equipmentComponentInput.click();
-        //     await this.selectEquipmentHeader.waitForDisplayed();
-        //     await this.equipmentRowOption(i).waitForClickable();
-        //     await this.equipmentRowOption(i).click();
-        //     const value = await this.assessmentTemplateInput.getAttribute("value");
-        //     console.log(`Attempted row ${i}, got value: ${value}`);
-        //     if (value && value.trim() === "RBI+ Fixed Equipment") {
-        //         break;
-        //     }
-        //     i++;
-        // }
         await utils.clickWithWait(this.equipmentComponentInput);
         await this.selectEquipmentHeader.waitForDisplayed({ timeout: 10000 });
         await utils.waitForBusyIndicatorToDisappear();
@@ -112,14 +104,31 @@ class asset_strategy_development_listview_page {
         await utils.waitForBusyIndicatorToDisappear();
         if (await this.generalSelectionHeader.isDisplayed()) {
             console.log("Creation successful and navigated to detail view and able to see general selection header");
-            const isChecked = await this.selectAllToggle.getAttribute("aria-checked");
-            if (isChecked === "false") {
-                await this.selectAllToggle.click();
+            console.log("Verifying selected items in General Selection");
+            const items = await this.selectedCheckboxTexts;
+            this.selectedItemsGlobal = {} as any;
+            for (let el of items) {
+                const text: string = await el.getText();
+                this.selectedItemsGlobal[text] = true;
+                console.log("Selected: " + text);
             }
-            await this.saveButton.click();
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(2000);
-            console.log("Saved general ASD after creation");
+            if (Object.keys(this.selectedItemsGlobal).length === 0) {
+                this.generalSelectionData = false;
+                await utils.clickWithWait(this.cancelBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(3000);
+                console.log("No items selected → Cancel clicked");
+            } else {
+                const isChecked = await this.selectAllToggle.getAttribute("aria-checked");
+                if (isChecked === "false") {
+                    await this.selectAllToggle.click();
+                }
+                await this.saveButton.click();
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+                console.log("Saved general ASD after creation");
+            }
+            
         } else {
             if (await this.analysisDetailButton.isClickable() || await this.cmlTab.isClickable()) {
                 console.log("Creation successful and navigated to detail view");
@@ -147,7 +156,7 @@ class asset_strategy_development_listview_page {
                 }
                 return false;
             }, {
-                timeout: 4000,   // shorter wait per attempt
+                timeout: 4000,  
                 interval: 500
             });
 
@@ -293,6 +302,7 @@ class asset_strategy_development_listview_page {
     }
 
     public async createASDForMultipleFunctionalLocations() {
+        this.singleCreate = false;
         console.log("Starting creation of Asset Strategy Development for multiple functional locations");
         await utils.clickWithWait(this.newASDButton);
         console.log("Asset Strategy Development creation process initiated for multiple functional locations");
@@ -306,6 +316,7 @@ class asset_strategy_development_listview_page {
         console.log("Multiple functional locations option selected");
         await this.createMassRun.waitForDisplayed({ timeout: 10000 });
         console.log("Filling in ASD details");
+        await browser.pause(4000);
         this.assetASDFunLoc = `Automation_ASD_Multiple_FuncLoc_${Date.now()}`;
         console.log(`Generated ASD Description: ${this.assetASDFunLoc}`);
         await this.descriptionInput.setValue(this.assetASDFunLoc);
@@ -380,6 +391,10 @@ class asset_strategy_development_listview_page {
         if (!success) {
         throw new Error("Mass run not possible with any functional location");
         }
+        await browser.pause(4000);
+        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
+        await utils.clickWithWait(el);
+        await browser.pause(10000);
         await this.verifyASDCreation();
     }
 

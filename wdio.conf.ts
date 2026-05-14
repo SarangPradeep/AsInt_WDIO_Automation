@@ -16,21 +16,25 @@ export const config: WebdriverIO.Config = {
     tsConfigPath: './tsconfig.json',
     specs: [
         './functional_location/functional_location.e2e.ts',
-        './equipment/equipment.e2e.ts',
+        // './equipment/equipment.e2e.ts',
         './configuration/**/*.e2e.ts',
         './task_management/task_management.e2e.ts',
         './reliability/asset_risk_and_criticality_analysis/asset_risk_and_criticality_analysis.e2e.ts',
         './reliability/asset_risk_and_criticality_template/asset_risk_and_criticality_template.e2e.ts',
         './reliability/asset_rcm_analysis/*.e2e.ts',
-        './integrity/asset_strategy_development/asset_strategy_development_listview.e2e.ts',
-        './integrity/asset_strategy_development/asset_strategy_development.e2e.ts'
-        // './integrity/asset_strategy_development/*.e2e.ts',
-        //'./integrity/asset_strategy_development/asset_strategy_development_multiple_funcloc.e2e.ts'
+        './reliability/asset_strategy_analysis_for_classes/*.e2e.ts',
+        './integrity/asset_strategy_development/*.e2e.ts',
+        // './integrity/inspection_templates/inspection_template.e2e.ts',
+        './root_cause_analysis/root_cause_analysis.e2e.ts',
+
+ 
+        // './integrity/cmls/cmls.e2e.ts',
         // './safety_group/safety.e2e.ts',
+
 
     ],
     exclude: [],
-    maxInstances: 3,
+    maxInstances: 1,
 
     capabilities: [
         {

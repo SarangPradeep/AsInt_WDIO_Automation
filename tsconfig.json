@@ -32,6 +32,8 @@
         "page_object_model",
         "configuration",
         "task_management",
+        "reliability",
+        "root_cause_analysis",
         "wdio.conf.ts"
     ]
 }

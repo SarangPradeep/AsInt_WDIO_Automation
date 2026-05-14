@@ -61,7 +61,7 @@ describe('BTP - Asset Strategy Development (ASD)- Multiple Functional Locations 
         await ASDDetailView.downloadAndVerifyReport();
     });
 
-    it.skip('should able to delete newly created ASD', async () => {
+    it('should able to delete newly created ASD', async () => {
         await ASDDetailView.deleteASD();
         await ASDListView.verifyASDDeletion();
     });

@@ -29,6 +29,10 @@ describe('BTP - (RCT) -Asset Risk and Criticality Template App - Functional test
 		await RNCTDetailPage.addDimensionToImpact(impactTitle, "Test Dimension " + new Date().getTime());
 	});
 
+	it('should go to threshold section and verify risk matrix score and other details', async () => {
+		await RNCTDetailPage.verifyThresholdSection();
+	});
+
 	it('should delete the created template', async () => {
 		await RNCTDetailPage.deleteTemplate();
 	});
