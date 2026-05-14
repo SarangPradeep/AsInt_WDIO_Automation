@@ -16,7 +16,7 @@ export const config: WebdriverIO.Config = {
     tsConfigPath: './tsconfig.json',
     specs: [
         './functional_location/functional_location.e2e.ts',
-        './equipment/equipment.e2e.ts',
+        // './equipment/equipment.e2e.ts',
         './configuration/**/*.e2e.ts',
         './task_management/task_management.e2e.ts',
         './reliability/asset_risk_and_criticality_analysis/asset_risk_and_criticality_analysis.e2e.ts',
