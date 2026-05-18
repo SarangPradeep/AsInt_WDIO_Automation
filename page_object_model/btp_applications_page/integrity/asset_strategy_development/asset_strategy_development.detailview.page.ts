@@ -477,10 +477,19 @@ class asset_strategy_development_listview_page {
         await utils.clickWithWait(this.ASDEditHeader);
         await browser.pause(2000);
         await this.editHeaderTitle.waitForDisplayed();
-        const newASDDesc = `Automation_ASD_Multiple_Equipment_${Date.now()}`;
-        console.log("Setting new short description: " + newASDDesc);
-        await utils.setValueWithWait(this.shortDescriptionInput, newASDDesc);
-        ASDListView.assetASDFunLoc = newASDDesc;
+        if(ASDListView.singleCreate = true)
+        {
+            ASDListView.assetASDDesc = `Automation_ASD_Single_Equipment_${Date.now()}`;
+            console.log(`Generated ASD Description: ${ASDListView.assetASDDesc}`);
+            await utils.setValueWithWait(this.shortDescriptionInput, ASDListView.assetASDDesc);
+        }
+        else
+        {
+            const newASDDesc = `Automation_ASD_Multiple_Equipment_${Date.now()}`;
+            console.log("Setting new short description: " + newASDDesc);
+            await utils.setValueWithWait(this.shortDescriptionInput, newASDDesc);
+            ASDListView.assetASDFunLoc = newASDDesc;
+        }
         await utils.setValueWithWait(this.assessDateInput, utils.formatDate(0));
         await utils.setValueWithWait(this.longDescriptionTextarea, "Automation long description");
         await utils.waitForBusyIndicatorToDisappear();
@@ -1356,6 +1365,7 @@ class asset_strategy_development_listview_page {
         if (await this.createWorkflowBtn.isDisplayed().catch(() => false)) {
             if (isdays) {
                 console.log("Creating Technical Review Workflow");
+                await utils.clickWithWait(this.createWorkflowBtn);
                 await browser.keys("ArrowDown");
                 await browser.keys("Enter");
                 await browser.pause(2000);
@@ -1368,6 +1378,7 @@ class asset_strategy_development_listview_page {
             }   
             else {
                 console.log("Creating Recommendation Workflow");
+                await utils.clickWithWait(this.createWorkflowBtn);
                 await browser.keys("Enter");
                 await browser.pause(2000);
                 await utils.clickWithWait(this.createWorkflowBtn2);
