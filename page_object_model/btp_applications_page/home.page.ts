@@ -89,6 +89,7 @@ class HomePage {
     async clickTile(tileName: string): Promise<void> {
         const tile = await this.getTileByName(tileName);
         await tile.scrollIntoView();
+        await browser.pause(1000); 
         await tile.waitForClickable({ timeout: 15000 });
         await browser.execute(el => el.click(), tile);
     }

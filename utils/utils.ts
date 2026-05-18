@@ -19,6 +19,7 @@ class Utils {
     private get cancelAnalyticChartBtn() { return $("//button[@title='Cancel']"); }
     private get hazopIframe(): any { return $("iframe[data-help-id='application-hazop-manage']"); }
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
+    private get AssessmentTempIframe() { return $('iframe[data-help-id="application-assessmenttemp-manage"]'); }
 
     async switchToIframe(frameElement: any): Promise<void> {
         console.log("---- Switching to iframe ----");
@@ -1087,6 +1088,8 @@ class Utils {
             await this.switchToIframe(this.ASDIframe);
         }else if(await this.CMLIframe.isExisting()){
             await this.switchToIframe(this.CMLIframe);
+        }else if(await this.AssessmentTempIframe.isExisting()){
+            await this.switchToIframe(this.AssessmentTempIframe);
         }
         await this.waitForBusyIndicatorToDisappear();
         const result: any = {};
@@ -1211,6 +1214,27 @@ class Utils {
         const parts = s.split('"').map(p => `"${p}"`).join(`, '"', `);
         return `concat(${parts})`;
     }
+    
+    public clickSuccessOkButton = async () => {
+            console.log("---- clickSuccessOkButton START ----");
+
+            const successOk = $(`//header[.//text()='Success']/following::button[.//text()='OK']`);
+
+            if (await successOk.isDisplayed().catch(()=>false)) {
+                console.log("Success popup OK found → clicking");
+                await successOk.click();
+            } else {
+                console.log("No OK button found");
+                
+            }
+
+            console.log("Waiting for busy indicator after OK...");
+            await this.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+
+            console.log("---- clickSuccessOkButton END ----");
+    };
+
 }
 
 export default new Utils();

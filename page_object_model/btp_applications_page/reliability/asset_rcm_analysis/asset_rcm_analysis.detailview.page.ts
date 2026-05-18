@@ -297,8 +297,11 @@ class assetRCMDetailView {
         console.log("Navigated to Assessment tab");
         console.log("Assessment flow start");
         await utils.switchToIframe(this.rcmIframe);
+        await browser.pause(4000);
         await utils.clickWithWait(this.startAssessmentBtn);
+        await browser.pause(2000);
         await utils.switchToIframe(this.rcmIframe);
+        await browser.pause(4000);
         await this.technicalObjectsHeader.waitForDisplayed();
         for(let i=2;i<=81;i++){
             console.log(`Trying checkbox index: ${i}`);

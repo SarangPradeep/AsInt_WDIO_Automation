@@ -12,7 +12,7 @@ class DocumentsDetailPage {
     private get documentHeaderSave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
     private get documentHdSaveSucc() { return $("//span[text()='Updated successfully']"); }
     private get documentHdOkBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
-
+    isLink = false;
     async verifyOnDocumentDetailPage(expectedName?: string): Promise<boolean> {
         try {
             await utils.waitForObjectPageHeader();
@@ -80,6 +80,13 @@ class DocumentsDetailPage {
     }
  
     public async editHeader(): Promise<void> {
+        const fileTypeText = await $("//span[contains(normalize-space(),'File Type:')]").getText();
+
+        if (fileTypeText.includes("Link")) {
+            this.isLink = true;
+        }
+        console.log("isLink:", this.isLink);
+
         console.log("Editing header's Information");
         await utils.clickWithWait(this.documentEditHeader);
         const updatedDescription = "updated " + documentsListviewPage.createdDocumentName + " description";
@@ -99,6 +106,11 @@ class DocumentsDetailPage {
         console.log("Editing document details - implementation needed");
         utils.clickWithWait($(`//button[contains(@class,"sapMBtn")][.//bdi[text()="Edit"]]`));
         await browser.pause(1000);
+
+        if (this.isLink) {
+            const urlInput = await $("//bdi[normalize-space()='URL']/ancestor::label/following::input[1]");
+            await urlInput.waitForDisplayed({ timeout: 50000 });
+
         const dropdown = await $("//bdi[normalize-space()='Category']/ancestor::label/following::span[@role='button'][1]");
         await dropdown.click();
 
