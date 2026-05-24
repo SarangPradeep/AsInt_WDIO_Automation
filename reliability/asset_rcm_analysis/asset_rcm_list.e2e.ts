@@ -57,9 +57,6 @@ describe('BTP - RCM Analysis Application - Functional Test', () => {
 
     it('should verify attachment section' , async () => {
         await assetRCMDetailView.gotoAttachmentsTabAndAssignAttachment();
-        // await assetRCMDetailView.addDocument();
-        // await assetRCMDetailView.addLink();
-        // await assetRCMDetailView.deleteAttachmentAndVerify();
     });
 
     it('should able to download and verify summary report', async () => {

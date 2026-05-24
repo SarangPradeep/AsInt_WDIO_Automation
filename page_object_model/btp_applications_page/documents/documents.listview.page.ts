@@ -1,12 +1,12 @@
 import HomePage from '../home.page';
-import { browser } from '@wdio/globals';
+import { browser, $, $$ } from '@wdio/globals';
 import utils from 'utils/utils';
 import documentsDetailPage from './documents.detail.page';
 
 class DocumentsListviewPage {
     // try to locate common elements in documents list view
     private get createBtn() { return $('button .sapUiIcon[data-sap-ui-icon-content=""]'); }
-
+    public get appIframe() { return $('iframe[data-help-id="application-documents-manage"]'); }
     public createdDocumentName = 'vessel-1.png';
     async openDocumentsFromHome(): Promise<void> {
         await HomePage.waitForHomePageToLoad();
@@ -174,6 +174,7 @@ class DocumentsListviewPage {
     async clickOnDocumentInList(): Promise<void> {
         await browser.pause(2000); 
         await this.switchToVisibleAppFrame();
+        await browser.pause(2000); 
         const name  = $(`//tr[@role='row'][1]//td[@aria-colindex='3']//span`);
         await name.waitForDisplayed({ timeout: 30000 });
         const listFileName = await name.getText();

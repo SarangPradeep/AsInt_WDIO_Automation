@@ -134,37 +134,48 @@ class InspectionTemplatesDetailPage {
         await browser.keys('Enter');
         await utils.waitForBusyIndicatorToDisappear();
         
-        let foundValid = false;
-        let selectedCount = 0;
-        let i = 1;
+        // let foundValid = false;
+        // let selectedCount = 0;
+        // let i = 2;
+        await browser.pause(3000);
+        const searchInput = await $("//div[@role='dialog']//input[@type='search']");
+        await searchInput.waitForDisplayed({ timeout: 20000 });
+        await browser.pause(500);
+        await searchInput.setValue("OBJT.51437");
+        await browser.pause(500);
+        await browser.keys('Enter');
+        await browser.pause(2000);
+        const nameCell = $(`//tr[.//span[text()='OBJT.51437']]//div[@role='checkbox']`);
+        await nameCell.waitForDisplayed({ timeout: 20000 });
+        await nameCell.click();
 
-        while (!foundValid && selectedCount == 0) {
-            await browser.pause(3000);
-            const nameCell = $(`((//tr[@role='row'])[${i + 1}]//td[3]//span)[1]`);
-            await nameCell.waitForDisplayed({ timeout: 20000 });
+        // while (!foundValid && selectedCount == 0) {
+        //     await browser.pause(3000);
+        //     const nameCell = $(`((//tr[@role='row'])[${i + 1}]//td[3]//span)[1]`);
+        //     await nameCell.waitForDisplayed({ timeout: 20000 });
 
-            let templateName: string = (await nameCell.getText()) || (await nameCell.getAttribute("innerText")) || "";
-            templateName = templateName.trim();
-            await console.log(`Checking template: ${templateName}`);
+        //     let templateName: string = (await nameCell.getText()) || (await nameCell.getAttribute("innerText")) || "";
+        //     templateName = templateName.trim();
+        //     await console.log(`Checking template: ${templateName}`);
 
-            if (
-                templateName &&
-                (templateName.startsWith("SA"))
-            ) {
-                i++;
-                await console.log(`Skipping template: ${templateName} as it starts with 'SA'`);
-                continue;
-            }
+        //     if (
+        //         templateName &&
+        //         (templateName.startsWith("SA"))
+        //     ) {
+        //         i++;
+        //         await console.log(`Skipping template: ${templateName} as it starts with 'SA'`);
+        //         continue;
+        //     }
 
-            // click corresponding checkbox (td[2])
-            const checkbox = $(`((//tr[@role='row'])[${i + 1}]//td[2]//div)[1]`);
-            await utils.clickWithWait(checkbox);
-            await utils.waitForBusyIndicatorToDisappear();
+        //     // click corresponding checkbox (td[2])
+        //     const checkbox = $(`((//tr[@role='row'])[${i + 1}]//td[2]//div)[1]`);
+        //     await utils.clickWithWait(checkbox);
+        //     await utils.waitForBusyIndicatorToDisappear();
 
-            selectedCount++;
-            i++;
-            foundValid = true;
-        }
+        //     selectedCount++;
+        //     i++;
+        //     foundValid = true;
+        // }
         await utils.clickWithWait($("//button[.//bdi[text()='Ok']]"));
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickSuccessOkButton();

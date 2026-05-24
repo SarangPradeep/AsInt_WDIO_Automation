@@ -1,6 +1,6 @@
 import utils from "utils/utils";
 import ASDListView from "./asset_strategy_development.listview.page";
-class asset_strategy_development_listview_page {
+class asset_strategy_development_detailview_page {
     private get ASDIframe() { return $('iframe[data-help-id="application-assetstrategydevelopment-manage"]'); }
     private get genInfoTab() { return $("//bdi[text()='General Information']"); }
     private get analysisDetailTab() { return $("//bdi[text()='Analysis Detail']"); }
@@ -1391,7 +1391,7 @@ class asset_strategy_development_listview_page {
                 if (headers["Status"] !== "Published") {
                     throw new Error(`Status is not Published → ${headers["Status"]}`);
                 }
-                this.publish === true;
+                this.publish = true;
                 console.log("Status is Published");
             }
         } else {
@@ -1405,50 +1405,27 @@ class asset_strategy_development_listview_page {
         console.log("Inside deletion ASD method...");
         await utils.switchToIframe(this.ASDIframe);
         await browser.pause(4000);
-        if(await this.calculateAnalysis === false && this.publish === false)
-        {
-            console.log("Deleting the ASD...");
-            await ASDListView.fetchASDDisplayID();
-            console.log("Deleting :"+ASDListView.assetASDDisplayID);
-            if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.headerMoreBtn);
-                await browser.pause(4000);
-            }
-            await utils.clickWithWait(this.deleteBtn);
-            await browser.pause(2000);
-            await this.deleteConfirmText.waitForDisplayed({ timeout: 60000 });
-            console.log(this.deleteConfirmText.getText());
-            const yesBtn = await $("//header[.//text()='Confirmation']/following::button[.//text()='Yes']");
-            await utils.clickWithWait(yesBtn);
+        const headers = await utils.captureHeaderDetails();
+        if (this.publish || headers["Status"]?.trim() === "Published") {
+            console.log("Status is Published, Cannot delete the ASD");
+            return;
+        }
+        console.log("Deleting the ASD...");
+        await ASDListView.fetchASDDisplayID();
+        console.log("Deleting :" + ASDListView.assetASDDisplayID);
+        if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.headerMoreBtn);
             await browser.pause(4000);
-            await utils.clickWithWait(this.okBtn);
-            console.log("ASD deleted successfully");
         }
-        else
-        {
-            const headers = await utils.captureHeaderDetails();
-            if (headers["Status"] == "Published") {
-                console.log("Status is Published, Cannot delete the ASD");
-            }
-            else
-            {
-                console.log("Deleting the ASD...");
-                await ASDListView.fetchASDDisplayID();
-                console.log("Deleting :"+ASDListView.assetASDDisplayID);
-                if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
-                    await utils.clickWithWait(this.headerMoreBtn);
-                    await browser.pause(4000);
-                }
-                await utils.clickWithWait(this.deleteBtn);
-                await browser.pause(1000);
-                await this.deleteConfirmText.waitForDisplayed({ timeout: 60000 });
-                await utils.clickWithWait($("//button[.//text()='Yes']"));
-                await browser.pause(2000);
-                await this.okBtn.waitForDisplayed({ timeout: 60000 });
-                await utils.clickWithWait(this.okBtn);
-                console.log("ASD deleted successfully");
-            }
-        }
+        await utils.clickWithWait(this.deleteBtn);
+        await browser.pause(2000);
+        await this.deleteConfirmText.waitForDisplayed({ timeout: 60000 });
+        const yesBtn = await $("//header[.//text()='Confirmation']/following::button[.//text()='Yes']");
+        await utils.clickWithWait(yesBtn);
+        await browser.pause(4000);
+        await this.okBtn.waitForDisplayed({ timeout: 60000 });
+        await utils.clickWithWait(this.okBtn);
+        console.log("ASD deleted successfully");
     }
 
     public async publishASD()
@@ -1609,4 +1586,4 @@ class asset_strategy_development_listview_page {
         console.log("Status is Published");
     }
 
-}export default new asset_strategy_development_listview_page();
+}export default new asset_strategy_development_detailview_page();
