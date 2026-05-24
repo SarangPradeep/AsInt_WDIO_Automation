@@ -108,33 +108,108 @@ class DocumentsDetailPage {
         await browser.pause(1000);
 
         if (this.isLink) {
-            const urlInput = await $("//bdi[normalize-space()='URL']/ancestor::label/following::input[1]");
-            await urlInput.waitForDisplayed({ timeout: 50000 });
+            const link = await $("//bdi[normalize-space()='Link']/following::a[1]");
 
-        const dropdown = await $("//bdi[normalize-space()='Category']/ancestor::label/following::span[@role='button'][1]");
-        await dropdown.click();
+            if (await link.isExisting()) {
 
-        const option = await $("//li[@role='option']//span[normalize-space()='Firmware']");
-        await option.waitForClickable({ timeout: 50000 });
-        await option.click();
+                console.log("Link is present");
 
-        const Phase = await $("//bdi[normalize-space()='Phase']/ancestor::label/following::span[@role='button'][1]");
-        await Phase.click();
-        const design = await $("//li[@role='option'][.//span[normalize-space()='Design']]");
-        await design.waitForClickable({ timeout: 50000 });
-        await design.click();
+                console.log("URL :", await link.getText());
 
-        const modifiedBy = await $(`//bdi[.//text()='Modified By']/following::input[1]`);
-        await modifiedBy.waitForDisplayed({ timeout: 50000 });
-        await console.log(await modifiedBy.getText());
+                const Comments = await $(`//bdi[.//text()='Comments']/following::textarea[1]`);
+                await Comments.waitForDisplayed({ timeout: 50000 });
+                await console.log(await Comments.getText());
+                await utils.setValueWithWait(Comments, "updated comments for link document");
+                if (await Comments.getText() !== "updated comments for link document") {
+                    throw new Error("Failed to update comments for link document");
+                }
+                const saveBtn = await $("//button[.//bdi[normalize-space()='Save']]");
+                await saveBtn.waitForClickable({ timeout: 50000 });
+                await saveBtn.click();
+                await utils.waitForBusyIndicatorToDisappear();
+                await utils.clickWithWait(this.documentHdOkBtn);
+                console.log("Success dialog acknowledged with OK");
+            } else {
 
-        const saveBtn = await $("//button[.//bdi[normalize-space()='Save']]");
-        await saveBtn.waitForClickable({ timeout: 50000 });
-        await saveBtn.click();
+                console.log("Link is not present");
+            }
+        }
+        else {
+            const dropdown = await $("//bdi[normalize-space()='Category']/ancestor::label/following::span[@role='button'][1]");
+            await dropdown.click();
+
+            const option = await $("//li[@role='option']//span[normalize-space()='Firmware']");
+            await option.waitForClickable({ timeout: 50000 });
+            await option.click();
+
+            const Phase = await $("//bdi[normalize-space()='Phase']/ancestor::label/following::span[@role='button'][1]");
+            await Phase.click();
+            const design = await $("//li[@role='option'][.//span[normalize-space()='Design']]");
+            await design.waitForClickable({ timeout: 50000 });
+            await design.click();
+
+            const modifiedBy = await $(`//bdi[.//text()='Modified By']/following::input[1]`);
+            await modifiedBy.waitForDisplayed({ timeout: 50000 });
+            await console.log(await modifiedBy.getText());
+
+            const saveBtn = await $("//button[.//bdi[normalize-space()='Save']]");
+            await saveBtn.waitForClickable({ timeout: 50000 });
+            await saveBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+            await utils.clickWithWait(this.documentHdOkBtn);
+            console.log("Success dialog acknowledged with OK");
+        }
+    }
+    async verifyAssignmentTabDetails(): Promise<void> {
+
+        console.log("Navigating to Assignment tab");
+
+        const assignmentTab = await $("//bdi[normalize-space()='Assignments']");
+
+        await assignmentTab.waitForClickable({ timeout: 50000 });
+        await assignmentTab.click();
+
         await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait(this.documentHdOkBtn);
-        console.log("Success dialog acknowledged with OK");
+        await browser.pause(2000);
+        // Equipment
+        const equipmentCount = await $("//h2/span[starts-with(normalize-space(),'Equipment (')]");
 
+        console.log(
+            "Equipment Count :",
+            await equipmentCount.getText()
+        );
+
+        // Functional Location
+        const flocCount = await $("//h2/span[starts-with(normalize-space(),'Functional Location (')]");
+
+        console.log(
+            "Functional Location Count :",
+            await flocCount.getText()
+        );
+
+        // Asset Inspections
+        const assetInspectionCount = await $("//h2/span[starts-with(normalize-space(),'Asset Inspections (')]");
+
+        console.log(
+            "Asset Inspection Count :",
+            await assetInspectionCount.getText()
+        );
+
+        // Asset Strategy
+        const assetStrategyCount = await $("//h2/span[starts-with(normalize-space(),'Asset Strategy (')]");
+
+        console.log(
+            "Asset Strategy Count :",
+            await assetStrategyCount.getText()
+        );
+
+        // Maintenance Order
+        const maintenanceOrderCount = await $("//h2/span[starts-with(normalize-space(),'Maintenance Order (')]");
+
+        console.log(
+            "Maintenance Order Count :",
+            await maintenanceOrderCount.getText()
+        );
     }
 
 }

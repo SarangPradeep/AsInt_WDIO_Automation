@@ -5,6 +5,7 @@ import equipmentDetailPage from "./equipment.detail.page";
 
 class EquipmentListviewPage {
     //equipment listview
+    public get appIframe() { return $('iframe[data-help-id="application-equipment-manage"]'); }
     get firstEquipmentInList() { return $('//tbody[contains(@class,"sapMTableTBody")]//tr[@role="row"][1]'); }
     // buttons
     private get createEquipmentBtn() { return $('button .sapUiIcon[data-sap-ui-icon-content=""]'); }

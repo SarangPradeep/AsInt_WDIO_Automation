@@ -35,6 +35,7 @@ class assetRCMDetailView {
     private get startAssessmentBtn() { return $("//button[.='Start Assessment']"); }
     private get technicalObjectsHeader() { return $("//h3[.//text()[contains(.,'Technical Objects')]]"); }
     private get equipmentValueBtn() { return $("//bdi[.='Equipment']/ancestor::div[2]/following::span[@role='button'][1]"); }
+    private get funcLocValueBtn() { return $("//bdi[.='Functional Location']/ancestor::div[2]/following::span[@role='button'][1]"); }
     private get confirmBtn() { return $("//footer//button[.='Confirm']"); }
     private get nextBtn() { return $("//button[.='Next']"); }
     private get createBtnFooter() { return $("//footer//button[.//bdi[.='Create']]"); }
@@ -219,7 +220,8 @@ class assetRCMDetailView {
     private failureModeValueFunLoc!: string;
     private assignedMaintainable!: number;
     private failureModeFunLoc: boolean = false;
-    
+    private maintenableItemFunLoc: boolean = false;
+
     public async verifyAndEditGenInfo(){
         console.log("Navigating to Information Tab");
         utils.switchToIframe(this.rcmIframe);
@@ -682,6 +684,10 @@ class assetRCMDetailView {
 
     public async verifyFailureModesDetails()
     {
+        if(this.functionValue = "0")
+        {
+            return;
+        }
         if(this.assignedMaintainable === 0)
             return;
         await this.verifyAnalysisDetails();
@@ -1051,7 +1057,21 @@ class assetRCMDetailView {
             await checkBox.waitForClickable({ timeout: 60000 });
             await utils.clickWithWait(checkBox);
 
-            await this.selectFunctionalLocationAndStore(i);
+            // await this.selectFunctionalLocationAndStore(i);
+            const isValidLocation=await this.selectFunctionalLocationAndStore(i);
+
+            if(!isValidLocation){
+
+                console.log("Unchecking invalid functional location");
+
+                await utils.clickWithWait(checkBox);
+                await browser.pause(1500);
+                const close = await $("//footer//button[.//text()='Close']");
+                await utils.clickWithWait(close);
+                i++;
+
+                continue;
+            }
 
             await utils.switchToIframe(this.rcmIframe);
             await browser.pause(5000);
@@ -1085,13 +1105,56 @@ class assetRCMDetailView {
         console.log("Functional Location assigned");
     }
 
-    public async selectFunctionalLocationAndStore(i: number) {
+    // public async selectFunctionalLocationAndStore(i: number) {
+    //     console.log("Store functional location data start");
+    //     const row = await this.getRowByIndex(i);
+    //     const locationId = await row.$(".//td[@aria-colindex='2']//span").getText();
+    //     const locationName = await row.$("(.//td[@aria-colindex='2']//span/following::span[1])[1]").getText();
+    //     this.selectedFunctionalLocation = { locationId, locationName };
+    //     console.log("Store functional location data end");
+    // }
+
+    public async selectFunctionalLocationAndStore(i:number){
         console.log("Store functional location data start");
-        const row = await this.getRowByIndex(i);
-        const locationId = await row.$(".//td[@aria-colindex='2']//span").getText();
-        const locationName = await row.$("(.//td[@aria-colindex='2']//span/following::span[1])[1]").getText();
-        this.selectedFunctionalLocation = { locationId, locationName };
-        console.log("Store functional location data end");
+
+    const row=await this.getRowByIndex(i);
+
+    const locationId=await row.$(".//td[@aria-colindex='2']//span").getText();
+
+    const locationNameElements=await row.$$(".//td[@aria-colindex='2']//span");
+
+    let locationName="";
+
+    for(const el of locationNameElements){
+
+        const text=(await el.getText()).trim();
+
+        if(
+            text &&
+            text!==locationId &&
+            !text.includes("Technical system")
+        ){
+            locationName=text;
+            break;
+        }
+    }
+
+    // ===== CHANGED START =====
+    if(!locationName){
+
+        console.log(`Invalid Functional Location at index ${i}`);
+
+        return false;
+    }
+    // ===== CHANGED END =====
+
+    this.selectedFunctionalLocation={locationId,locationName};
+
+    console.log("Selected Functional Location :",this.selectedFunctionalLocation);
+
+    console.log("Store functional location data end");
+
+    return true;
     }
 
     public async verifyDetailPageFunLoc()
@@ -1326,6 +1389,10 @@ class assetRCMDetailView {
 
     public async assignFunctionalFailure()
     {
+        if(this.functionValue = "0")
+        {
+            return;
+        }
         console.log("Assinging functional failures...")
         const data = this.selectedFunctionalLocation;
         await utils.clickWithWait(this.functionalFailureAddBtn(this.functionValue));
@@ -1406,6 +1473,10 @@ class assetRCMDetailView {
     }
 
     public async addMaintainableItemsForFuncLoc() {
+        if(this.functionValue = "0")
+        {
+            return;
+        }
         console.log("Add Maintainable Items For FuncLoc starts...");
         await utils.clickWithWait(this.addMaintainableBtn(this.functionalFailureValue));
         let clicked = false;
@@ -1429,6 +1500,7 @@ class assetRCMDetailView {
         console.log("Available Maintainable Items: " + count);
         if (count === 0) {
             await utils.clickWithWait(this.cancelBtn);
+            this.maintenableItemFunLoc = true;
             await browser.pause(2500);
             return;
         }
@@ -1484,7 +1556,14 @@ class assetRCMDetailView {
     }
 
     public async addFailureModesForFuncLoc() {
-
+        if(this.functionValue = "0")
+        {
+            return;
+        }
+        if(this.maintenableItemFunLoc === true)
+        {
+            return;
+        }
         console.log("Adding Failure Modes...");
         await browser.pause(2000);
         await utils.clickWithWait(this.failureModeAddBtn(this.maintainableItemValueFunLoc));

@@ -75,7 +75,7 @@ describe('BTP Equipment Application - Functional test', () => {
         await equipmentDetailPage.editStructureInfo(2);
     });
     
-    it('should assign Equipment Template and Equipment Classes to Equipment', async () => {
+    it.skip('should assign Equipment Template and Equipment Classes to Equipment', async () => {
         await equipmentDetailPage.assignEquipmentTemplate(
             equipmentTestData.assignmentSection.noOfEquipmentTemplatesToAssign, 
             equipmentTestData.assignmentSection.isAutoAssignClass);

@@ -9,6 +9,7 @@ class Utils {
     private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
     private get ASDIframe() { return $('iframe[data-help-id="application-assetstrategydevelopment-manage"]'); }
     private get CMLIframe() { return $('iframe[data-help-id="application-cml-manage"]'); }
+    private get documentIframe() { return $('iframe[data-help-id="application-documents-manage"]'); }
     private get backBtn() { return $("//a[@aria-label='Back']"); }
     private get settingsBtn() { return $("//span[text()='Settings']/preceding-sibling::span//span"); }
     private get tableSettingsBtn() { return $("//span[text()='Table Settings']/preceding-sibling::span//span"); }
@@ -19,7 +20,7 @@ class Utils {
     private get cancelAnalyticChartBtn() { return $("//button[@title='Cancel']"); }
     private get hazopIframe(): any { return $("iframe[data-help-id='application-hazop-manage']"); }
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
-    private get AssessmentTempIframe() { return $('iframe[data-help-id="application-assessmenttemp-manage"]'); }
+    private get mspIframe() { return $('iframe[data-help-id="application-msp-manage"]'); }
 
     async switchToIframe(frameElement: any): Promise<void> {
         console.log("---- Switching to iframe ----");
@@ -459,10 +460,10 @@ class Utils {
         return $("//input[@placeholder='Search']/following::bdi[contains(text(),'Adapt Filters')]");
     }
 
-    async addAllAdaptFilter(): Promise<void> {
+async addAllAdaptFilter(): Promise<void> {
         console.log("Trying to open Adapt filter");
         await browser.switchFrame(null);
-
+ 
         if (await this.funLocIframe.isExisting()) {
             await this.switchToIframe(this.funLocIframe);
         } else if (await this.equipmentIframe.isExisting()) {
@@ -473,60 +474,62 @@ class Utils {
             await this.switchToIframe(this.rcmIframe);
         }else if(await this.ASDIframe.isExisting()){
             await this.switchToIframe(this.ASDIframe);
+        }else if(await this.documentIframe.isExisting()){
+            await this.switchToIframe(this.documentIframe);
         }
-
+ 
         await this.adaptFilter.waitForClickable({ timeout: 200000 });
         await this.adaptFilter.click();
         await browser.pause(5000);
         console.log("Adapt filter opened");
         let prevCount: number = -1;
-
-        while (true) { 
+ 
+        while (true) {
             const checkboxes: any = await $$(`(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]//div[@role='checkbox' and @aria-checked='false']`);
             const uncheckedCount: number = checkboxes.length;
-
+ 
             if (uncheckedCount === 0) break;
-
+ 
             if (uncheckedCount === prevCount) {
                 await browser.pause(2000);
             }
-
+ 
             const checkbox = checkboxes[0];
             try {
                 await checkbox.click();
             } catch {
                 await browser.execute((el) => el.click(), checkbox);
             }
-
+ 
             prevCount = uncheckedCount;
         }
-
+ 
         const filterNames = await $$('//tr[@role="row"]//bdi');
         const expectedFilters: string[] = [];
-
+ 
         for (const el of filterNames) {
             const text = (await el.getText()) || (await el.getAttribute("innerText")) || "";
             if (text.trim()) expectedFilters.push(text.trim());
         }
-
+ 
         await this.clickWithWait($('//button//bdi[text()="OK"]'));
         await browser.pause(5000);
-
+ 
         const actualFiltersElements = await $$('//label//bdi');
         const actualFilters: string[] = [];
-
+ 
         for (const el of actualFiltersElements) {
             const text = (await el.getText()) || (await el.getAttribute("innerText")) || "";
             if (text.trim()) actualFilters.push(text.trim());
         }
-
+ 
         const missingFilters: string[] = [];
         for (const expected of expectedFilters) {
             if (!actualFilters.includes(expected)) {
                 missingFilters.push(expected);
             }
         }
-
+ 
         if (missingFilters.length > 0) {
             throw new Error(`Missing filters: ${missingFilters.join(', ')}`);
         }
@@ -555,6 +558,7 @@ class Utils {
         }
         console.log('All filters successfully reset');
     }
+
     async generateRandomEquipmentName(): Promise<string> {
         console.log(`AUTO-EQUIP-${Math.floor(Math.random() * 10000)}`);
         return `${Math.floor(Math.random() * 10000000)}-EQUIP-AUTO`;
@@ -1088,8 +1092,8 @@ class Utils {
             await this.switchToIframe(this.ASDIframe);
         }else if(await this.CMLIframe.isExisting()){
             await this.switchToIframe(this.CMLIframe);
-        }else if(await this.AssessmentTempIframe.isExisting()){
-            await this.switchToIframe(this.AssessmentTempIframe);
+        }else if(await this.mspIframe.isExisting()){
+            await this.switchToIframe(this.mspIframe);
         }
         await this.waitForBusyIndicatorToDisappear();
         const result: any = {};
@@ -1233,7 +1237,26 @@ class Utils {
             await browser.pause(2000);
 
             console.log("---- clickSuccessOkButton END ----");
-    };
+    }
+    async switchToVisibleAppFrame(): Promise<void> {
+        await browser.switchFrame(null);
+        const frames = await $$('//iframe');
+        for (const frame of frames) {
+            try {
+                await browser.switchFrame(frame);
+                // heuristics: page contains a search box or a heading
+                const search = await $('//input[@type="search" or @placeholder="Search"]');
+                const header = await $('//h1|//header//*[contains(text(),"Documents") or contains(.,"Documents")]');
+                if (await search.isExisting()) {
+                    return;
+                }
+                await browser.switchFrame(null);
+            } catch {
+                await browser.switchFrame(null);
+            }
+        }
+        // if not found, stay at top-level (tests will fail later clearly)
+    }
 
 }
 
