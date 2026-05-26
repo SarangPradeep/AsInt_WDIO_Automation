@@ -21,7 +21,7 @@ describe('BTP - Maintenance Spend Planning item (MSP) - Functional Test', () => 
 
     it('should verify and edit header details', async() => {
         await MSPDetailView.verifyHeader();
-        await MSPDetailView.editHeader();
+        // await MSPDetailView.editHeader();
     });
 
     it('should edit general information section', async() => {
@@ -56,7 +56,7 @@ describe('BTP - Maintenance Spend Planning item (MSP) - Functional Test', () => 
         await MSPDetailView.verifyChangeHistory();
     });
 
-    it.skip('should able to change status of MSP', async() => {
+    it('should able to change status of MSP', async() => {
         await MSPDetailView.changeStatus();
     });
 

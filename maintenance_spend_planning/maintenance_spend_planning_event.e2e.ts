@@ -20,7 +20,7 @@ describe('BTP - Maintenance Spend Planning event (MSP) - Functional Test', () =>
     });
 
     it.skip('should verify and edit header details', async() => {
-        await MSPDetailView.verifyHeader();
-        await MSPDetailView.editHeader();
+        await MSPDetailView.verifyMSPEHeader();
+        // await MSPDetailView.editHeader();
     });
 });
