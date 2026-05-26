@@ -18,5 +18,16 @@ export const rcaData = {
     recommendationShort: "This is a recommendation",
     recommendationLong: "This is the long description for recommendation",
 
-    updatedTaskDescription: "First why node updated"
+    updatedTaskDescription: "First why node updated",
+
+    eventTitle: "Fishbone Event",
+    eventDescription1: "This event is created for fishbone analysis",
+
+    probableCauseCategory: "Skill & Competency",
+    probableCauseDescription: "Operator did not receive proper training",
+
+    subCauseTitle: "This is the sub cause",
+    subCauseDescription: "This is the sub cause description",
+
+
 };

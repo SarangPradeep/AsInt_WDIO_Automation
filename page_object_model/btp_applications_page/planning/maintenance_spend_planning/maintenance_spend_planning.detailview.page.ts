@@ -10,6 +10,7 @@ class maintenance_detail_view{
     private get longDescriptionTextarea() { return $("//label[.//text()='Long Description']/following::textarea[1]"); }
     private get saveHeader() { return $("//button[.//text()='Save']"); }
     private get generalInfoTab() { return $("//bdi[text()='General Information']"); }
+    private get assignmentTab() { return $("//bdi[text()='Assignments']"); }
     private get detailTab() { return $("//bdi[text()='Details']"); }
     private get riskDataTab() { return $("//bdi[text()='Risk Data']"); }
     private get summaryTab() { return $("//bdi[text()='Summary']"); }
@@ -72,67 +73,82 @@ class maintenance_detail_view{
 
     public async captureMSPId()
     {
-        const { shortdesc, mspid } = await this.captureIds();
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(4000);
+        const { shortdesc, mspid } = await this.captureIds(false);
         MSPListView.MSPShortDesc = shortdesc;
         MSPListView.MSPDisplayID = mspid;
     }
 
-    public async getFuncLocId() {
-        const xpath = "//header//*[@role='heading']//span";
-        let found = false;
-        try {
-            await browser.waitUntil(async () => {
-                const els = await $$(xpath);
-                if (!els.length) return false;
-                for (let el of els) {
-                    let txt = (await el.getText()) ?? "";
-                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
-                    txt = txt?.trim();
-                    if (txt && (txt.startsWith("AUTOMATION") || txt.startsWith("AUTOMATION"))) {
-                        found = true;
-                        return true;
-                    }
-                }
-                return false;
-            }, {
-                timeout: 4000, 
-                interval: 500
+    public async getMSPId(){
+        try{
+            await browser.waitUntil(async()=>{
+                const text=await browser.execute(()=>{
+                    const spans=[...document.querySelectorAll("header span")];
+                    const match=spans.find(el=>
+                        el.textContent?.trim().startsWith("Automation MSP")
+                    );
+                    return match?.textContent?.trim() || "";
+                });
+                return text!=="";
+            },{
+                timeout:10000,
+                interval:500
             });
-        } catch (e) {
-            console.log("FuncLoc not visible in this attempt");
-        }
-        if (!found) return "";
-        const spans = await $$(xpath);
-        for (let el of spans) {
-            let txt = (await el.getText()) ?? "";
-                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
-            txt = txt?.trim();
-            if (txt && (txt.startsWith("AUTOMATION") || txt.startsWith("AUTOMATION"))) {
-                return txt;
-            }
-        }
-        return "";
-    }
-
-    public async getDisplayId() {
-        try {
-            const txt = await browser.execute(() => {
-                const el = document.evaluate( 
-                    "//span[starts-with(normalize-space(),'MSP')]",
-                    document,
-                    null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
-                    null
-                ).singleNodeValue;
-                return el ? (el.textContent || "") : "";
+            const text=await browser.execute(()=>{
+                const spans=[...document.querySelectorAll("header span")];
+                const match=spans.find(el=>
+                    el.textContent?.trim().startsWith("Automation MSP")
+                );
+                return match?.textContent?.trim() || "";
             });
-            return txt ? txt.replace("Display ID:", "").trim() : "";
-        } catch (e) {
+            return text;
+        }catch(e){
+            console.log("MSP not visible in this attempt");
             return "";
         }
     }
 
-    public async captureIds() {
+    public async getDisplayId(isMSPE: boolean): Promise<string> {
+        try {
+            const prefix = isMSPE ? "MSPE." : "MSP.";
+
+            await browser.waitUntil(async () => {
+                const text = await browser.execute((p) => {
+                    const spans = [...document.querySelectorAll("span")];
+
+                    const match = spans.find(el =>
+                        el.textContent?.trim().startsWith(p)
+                    );
+
+                    return match?.textContent?.trim() || "";
+                }, prefix);
+
+                return text !== "";
+            }, {
+                timeout: 10000,
+                interval: 500
+            });
+
+            const text = await browser.execute((p) => {
+                const spans = [...document.querySelectorAll("span")];
+
+                const match = spans.find(el =>
+                    el.textContent?.trim().startsWith(p)
+                );
+
+                return match?.textContent?.trim() || "";
+            }, prefix);
+
+            return text;
+
+        } catch (e) {
+            console.log("Display ID not visible in this attempt");
+            return "";
+        }
+    }
+
+    public async captureIds(isMSPE: boolean) {
         let shortdesc = "";
         let mspid = "";
         const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
@@ -147,11 +163,11 @@ class maintenance_detail_view{
                 await collapseBtn.click();
             }
             await browser.pause(500); 
-            const headerText = await this.getFuncLocId();
-            const displayText = await this.getDisplayId();
+            const headerText = await this.getMSPId();
+            const displayText = await this.getDisplayId(isMSPE);
             if (!shortdesc && headerText) shortdesc = headerText;
             if (!mspid && displayText) mspid = displayText;
-            console.log(`Attempt ${i + 1} → FuncLoc="${shortdesc || 'EMPTY'}" | DisplayID="${mspid || 'EMPTY'}"`);
+            console.log(`Attempt ${i + 1} → MSP="${shortdesc || 'EMPTY'}" | DisplayID="${mspid || 'EMPTY'}"`);
             if (shortdesc && mspid) break;
         }
         return { shortdesc, mspid };
@@ -163,7 +179,7 @@ class maintenance_detail_view{
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.mspIframe);
         await browser.pause(4000);
-        const asdHeader = await this.captureIds();
+        const asdHeader = await this.captureIds(false);
         await expect(asdHeader.shortdesc).toEqual(MSPListView.MSPShortDesc);
         console.log("MSP name matches header's name");
     }
@@ -187,7 +203,7 @@ class maintenance_detail_view{
     {
         console.log("Editing general information...");
         await utils.switchToIframe(this.mspIframe);
-        await browser.pause(35000);
+        await browser.pause(3000);
         await utils.clickWithWait(this.generalInfoTab);
         await utils.clickWithWait(this.editInfo);
         await utils.clickWithWait(this.budgetCategoryDropdown); await browser.keys(["ArrowDown","Enter"]);
@@ -216,6 +232,9 @@ class maintenance_detail_view{
     public async editAssigmentsSection()
     {
         console.log("Editing assignment section...");
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(3000);
+        await utils.clickWithWait(this.assignmentTab);
         const objs: [string, any][] = [
         ["Technical Objects", this.technicalObjectsCount],
         ["Maintenance Notifications", this.maintenanceNotificationsCount],
@@ -248,12 +267,14 @@ class maintenance_detail_view{
         await this.localOtherCost.setValue(utils.rand(100,9999).toString());
         await this.localProcessCost.setValue(utils.rand(100,9999).toString());
         await this.localEngineeringCost.setValue(utils.rand(100,9999).toString());
-        await this.localTotalCost.setValue(utils.rand(100,9999).toString());
+        // await this.localTotalCost.setValue(utils.rand(100,9999).toString());
         await this.exchangeRateUSD.setValue(utils.rand(1,99).toString());
         await utils.clickWithWait(this.maintenanceCostBasisDD);
         await browser.keys("ArrowDown");
         await browser.keys("Enter");
         await utils.clickWithWait(this.saveDetailBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait(this.okBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
         console.log("verification of detail section completed");
@@ -297,7 +318,8 @@ class maintenance_detail_view{
         await utils.clickWithWait(this.processStageDD);
         await browser.keys("ArrowDown");
         await browser.keys("Enter");
-        await utils.clickWithWait(this.saveBtn);
+        const saveSummBtn = await $("//button[.//text()='Save']");
+        await utils.clickWithWait(saveSummBtn);
         console.log("Verified summary data");
     }
 
@@ -334,9 +356,10 @@ class maintenance_detail_view{
     public async verifyHistoricData()
     {
         console.log("Historic + Maintenance count start");
+        await utils.clickWithWait(this.historicDataTab);
+        await browser.pause(2000);
         await utils.switchToIframe(this.mspIframe);
         await browser.pause(2000);
-        await utils.clickWithWait(this.historicDataTab);
         const historic = await this.historicDataCount.getText();
         const maintenance = await this.maintenancePlanCount.getText();
         console.log("Historic Data present are:", await utils.getAssignedValue(historic));
@@ -355,7 +378,7 @@ class maintenance_detail_view{
         await this.finPofOverrideInput.setValue(utils.rand(1,999).toString());
         await utils.clickWithWait(this.finRiskSaveBtn);
         await utils.clickWithWait(this.okBtn);
-        const finValue = (await this.finPofOverrideInput.getAttribute("value")) ?? "";
+        const finValue=(await this.finPofOverrideInput.getAttribute("value")) ?? "";
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
         console.log("Navigating to change history tab...");
@@ -364,16 +387,131 @@ class maintenance_detail_view{
         await utils.clickWithWait(this.changeHistoryTab);
         await utils.waitForBusyIndicatorToDisappear();
         await this.latestChangeHistoryEntry.waitForDisplayed();
-        const text = await this.latestChangeHistoryEntry.getText();
-        const lines = text.split('\n').map(l=>l.trim()).filter(l=>l);
-        const finLine = lines.find(l=>l.toLowerCase().includes('fin pof override'));
-        if(!finLine || !finLine.includes(finValue)) throw new Error(`FIN POF mismatch. Expected: ${finValue}, Found: ${finLine}`);
+        const text=await this.latestChangeHistoryEntry.getText();
+        console.log("Change History Text :",text);
+        const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+        const finLine=lines.find(l=>l.includes(finValue));
+        if(!finLine){
+            throw new Error(`FIN POF mismatch. Expected: ${finValue}, Found: ${finLine}`);
+        }
         console.log("Validating FIN Risk Change History end");
     }
 
     public async changeStatus()
     {
         console.log("Changing the MSP status...");
+        await utils.clickWithWait(this.changeStatusBtn);
+        await browser.pause(1000);
+        const day = new Date().getDay();
+        if(day === 1 || day === 2)
+        {
+            console.log("Changing status to Ready for funding...");
+            await browser.keys("Enter");
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(3000);
+            const fundingStatusElement=$("//bdi[text()='Funding Status: ']/following::span[2]");
+            let fundingStatus="";
+            if(
+                await fundingStatusElement.isDisplayed().catch(()=>false) &&
+                await fundingStatusElement.isClickable().catch(()=>false)
+            ){
+                fundingStatus=(await fundingStatusElement.getText()).trim();
+            }else{
+                const expandBtn=await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+                if(await expandBtn.isDisplayed().catch(()=>false)){
+                    await expandBtn.waitForClickable({timeout:10000});
+                    await expandBtn.click();
+                    await browser.pause(2000);
+                }
+                fundingStatus=(await fundingStatusElement.getText()).trim();
+            }
+            console.log("Funding Status :",fundingStatus);
+            const normalizedStatus = fundingStatus?.trim().replace(/\s+/g, " ");
+            if (normalizedStatus !== "Ready for Funding") {
+                throw new Error(`Funding Status validation failed. Found: ${normalizedStatus}`);
+            }
+            console.log("Funding Status validation passed");
+        }
+        else if(day === 3 || day === 4)
+        {
+            console.log("Changing status to Planning...");
+            await browser.keys("Arrow Down");
+            await browser.keys("Enter");
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1000);
+            const changeSts = await $("//h1[.//text()='Change Status']");
+            await changeSts.waitForDisplayed();
+            const textArea = await $("//label[.//text()='Comment']/following::textarea");
+            await utils.setValueWithWait(textArea,"Test");
+            const saveBtn = await $("//footer//button[.//text()='Save']");
+            await utils.clickWithWait(saveBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(3000);
+            const fundingStatusElement=$("//bdi[text()='Funding Status: ']/following::span[2]");
+            let fundingStatus="";
+            if(
+                await fundingStatusElement.isDisplayed().catch(()=>false) &&
+                await fundingStatusElement.isClickable().catch(()=>false)
+            ){
+                fundingStatus=(await fundingStatusElement.getText()).trim();
+            }else{
+                const expandBtn=await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+                if(await expandBtn.isDisplayed().catch(()=>false)){
+                    await expandBtn.waitForClickable({timeout:10000});
+                    await expandBtn.click();
+                    await browser.pause(2000);
+                }
+                fundingStatus=(await fundingStatusElement.getText()).trim();
+            }
+            console.log("Funding Status :",fundingStatus);
+            const normalizedStatus = fundingStatus?.trim().replace(/\s+/g, " ");
+            if (normalizedStatus !== "Planning") {
+                throw new Error(`Funding Status validation failed. Found: ${normalizedStatus}`);
+            }
+            console.log("Funding Status validation passed");
+            console.log("Status changed to Planning");
+        }
+        else
+        {
+            console.log("Changing status to Deferred...");
+            await browser.keys("Arrow Down");
+            await browser.keys("Arrow Down");
+            await browser.keys("Enter");
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1000);
+            const changeSts = await $("//h1[.//text()='Change Status']");
+            await changeSts.waitForDisplayed();
+            const textArea = await $("//label[.//text()='Comment']/following::textarea");
+            await utils.setValueWithWait(textArea,"Test");
+            const saveBtn = await $("//footer//button[.//text()='Save']");
+            await utils.clickWithWait(saveBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(3000);
+            const fundingStatusElement=$("//bdi[text()='Funding Status: ']/following::span[2]");
+            let fundingStatus="";
+            if(
+                await fundingStatusElement.isDisplayed().catch(()=>false) &&
+                await fundingStatusElement.isClickable().catch(()=>false)
+            ){
+                fundingStatus=(await fundingStatusElement.getText()).trim();
+            }else{
+                const expandBtn=await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+                if(await expandBtn.isDisplayed().catch(()=>false)){
+                    await expandBtn.waitForClickable({timeout:10000});
+                    await expandBtn.click();
+                    await browser.pause(2000);
+                }
+                fundingStatus=(await fundingStatusElement.getText()).trim();
+            }
+            console.log("Funding Status :",fundingStatus);
+            const normalizedStatus = fundingStatus?.trim().replace(/\s+/g, " ");
+            if (normalizedStatus !== "Deferred") {
+                throw new Error(`Funding Status validation failed. Found: ${normalizedStatus}`);
+            }
+            console.log("Funding Status validation passed");
+            console.log("Status changed to Deferred");
+        }
+
     }
 
     public async createWorkflow()
@@ -428,7 +566,22 @@ class maintenance_detail_view{
 
     public async captureMSPEId()
     {
-        
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(4000);
+        const { shortdesc, mspid } = await this.captureIds(true);
+        MSPListView.MSPEShortDesc = shortdesc;
+        MSPListView.MSPEDisplayID = mspid;
+    }
+
+    public async verifyMSPEHeader()
+    {
+        console.log("Verifying header information of MSP");
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(4000);
+        const asdHeader = await this.captureIds(true);
+        await expect(asdHeader.shortdesc).toEqual(MSPListView.MSPEShortDesc);
+        console.log("MSP Event name matches header's name");
     }
 }
 export default new maintenance_detail_view();

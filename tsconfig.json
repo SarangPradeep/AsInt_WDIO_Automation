@@ -35,6 +35,7 @@
         "reliability",
         "root_cause_analysis",
         "integrity_configuration",
+        "reliability/root_cause_analysis",
         "wdio.conf.ts"
     ]
 }

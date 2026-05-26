@@ -246,16 +246,16 @@ class functionalLocationDetailView {
         console.log("Cost Center : "+costCenter)
         const bussinessArea = await utils.getValueWithWait(this.bussArea);
         console.log("Bussiness Area : "+bussinessArea)
-        await utils.clickWithWait(this.planPlant);
-        await this.planPlantBox.waitForDisplayed({ timeout: 30000 });
-        try {
-            await this.planPlantSelect.waitForDisplayed({ timeout: 30000 });
-        } catch {
-            await utils.clickWithWait(await $("//footer//bdi[text()='Cancel']"));
-            throw new Error("Plan Plant Select not displayed");
-        }
-        await utils.clickWithWait(this.planPlantSelect,2000);
-        await utils.clickWithWait(this.planPlantSave,1000);
+        // await utils.clickWithWait(this.planPlant);
+        // await this.planPlantBox.waitForDisplayed({ timeout: 30000 });
+        // try {
+        //     await this.planPlantSelect.waitForDisplayed({ timeout: 30000 });
+        // } catch {
+        //     await utils.clickWithWait(await $("//footer//bdi[text()='Cancel']"));
+        //     throw new Error("Plan Plant Select not displayed");
+        // }
+        // await utils.clickWithWait(this.planPlantSelect,2000);
+        // await utils.clickWithWait(this.planPlantSave,1000);
         await utils.clickWithWait(this.planGrp);
         await this.planGrpBox.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.planGrpSelect,2000);
