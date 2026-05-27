@@ -25,7 +25,6 @@ export const config: WebdriverIO.Config = {
         './reliability/asset_strategy_analysis_for_classes/*.e2e.ts',
         './integrity/asset_strategy_development/*.e2e.ts',
         './integrity/inspection_templates/inspection_template.e2e.ts',
-        './root_cause_analysis/root_cause_analysis.e2e.ts',
         './documents/documents.e2e.ts',
         './integrity_configuration/cml_template/*.e2e.ts',
         './reliability/root_cause_analysis/*.e2e.ts',
