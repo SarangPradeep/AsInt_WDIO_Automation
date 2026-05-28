@@ -10,6 +10,7 @@ class Utils {
     private get ASDIframe() { return $('iframe[data-help-id="application-assetstrategydevelopment-manage"]'); }
     private get CMLIframe() { return $('iframe[data-help-id="application-cml-manage"]'); }
     private get documentIframe() { return $('iframe[data-help-id="application-documents-manage"]'); }
+    private get notificationIframe() { return $('iframe[data-help-id="application-notifications-manage"]'); }
     private get backBtn() { return $("//a[@aria-label='Back']"); }
     private get settingsBtn() { return $("//span[text()='Settings']/preceding-sibling::span//span"); }
     private get tableSettingsBtn() { return $("//span[text()='Table Settings']/preceding-sibling::span//span"); }
@@ -21,6 +22,7 @@ class Utils {
     private get hazopIframe(): any { return $("iframe[data-help-id='application-hazop-manage']"); }
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
     private get mspIframe() { return $('iframe[data-help-id="application-msp-manage"]'); }
+    private get reccWorkbenchIframe() { return $('iframe[data-help-id="application-recommendationworkbenchplus-manage"]'); }
 
     async switchToIframe(frameElement: any): Promise<void> {
         console.log("---- Switching to iframe ----");
@@ -167,13 +169,13 @@ class Utils {
     }
 
     async generateRandomFuncName(): Promise<string> {
-        console.log(`AUTOMATION-FUNC-LOC-${Math.floor(Math.random() * 10000)}`);
-    return `AUTOMATION-FUNC-LOC-${Math.floor(Math.random() * 10000)}`;
+        console.log(`AUTOMATION-FUNC-LOC-${Math.floor(Math.random() * 1000000)}`);
+    return `AUTOMATION-FUNC-LOC-${Math.floor(Math.random() * 1000000)}`;
     }
 
     async generateRandomFuncDescName(): Promise<string> {
-        console.log(`AUTOMATION-FUNC-LOC-DESC-${Math.floor(Math.random() * 10000)}`);
-    return `AUTOMATION-FUNC-LOC-DESC-${Math.floor(Math.random() * 10000)}`;
+        console.log(`AUTOMATION-FUNC-LOC-DESC-${Math.floor(Math.random() * 1000000)}`);
+    return `AUTOMATION-FUNC-LOC-DESC-${Math.floor(Math.random() * 1000000)}`;
     }
 
     async setValueWithDelay(element: any, value: string) {
@@ -474,6 +476,8 @@ async addAllAdaptFilter(): Promise<void> {
             await this.switchToIframe(this.rcmIframe);
         }else if(await this.ASDIframe.isExisting()){
             await this.switchToIframe(this.ASDIframe);
+        }else if(await this.notificationIframe.isExisting()){
+            await this.switchToIframe(this.notificationIframe);
         }else if(await this.documentIframe.isExisting()){
             await this.switchToIframe(this.documentIframe);
         }
@@ -1094,6 +1098,8 @@ async addAllAdaptFilter(): Promise<void> {
             await this.switchToIframe(this.CMLIframe);
         }else if(await this.mspIframe.isExisting()){
             await this.switchToIframe(this.mspIframe);
+        }else if(await this.reccWorkbenchIframe.isExisting()){
+            await this.switchToIframe(this.reccWorkbenchIframe);
         }
         await this.waitForBusyIndicatorToDisappear();
         const result: any = {};

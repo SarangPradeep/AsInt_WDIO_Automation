@@ -1,4 +1,4 @@
-import taskManagementListView from '../page_object_model/btp_applications_page/planning/task_management/task_management.listview.page';
+import taskManagementListView from '../../page_object_model/btp_applications_page/planning/task_management/task_management.listview.page';
 
 describe('BTP Task Management - Functional Test', () => {
     // Shared variables across tests

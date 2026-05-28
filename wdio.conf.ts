@@ -18,7 +18,7 @@ export const config: WebdriverIO.Config = {
         './functional_location/functional_location.e2e.ts',
         // './equipment/equipment.e2e.ts',
         './configuration/**/*.e2e.ts',
-        './task_management/task_management.e2e.ts',
+        './planning/task_management/task_management.e2e.ts',
         './reliability/asset_risk_and_criticality_analysis/asset_risk_and_criticality_analysis.e2e.ts',
         './reliability/asset_risk_and_criticality_template/asset_risk_and_criticality_template.e2e.ts',
         './reliability/asset_rcm_analysis/*.e2e.ts',
@@ -27,9 +27,12 @@ export const config: WebdriverIO.Config = {
         './integrity/inspection_templates/inspection_template.e2e.ts',
         './documents/documents.e2e.ts',
         './integrity_configuration/cml_template/*.e2e.ts',
+        './integrity/asset_cloning_suite/asset_cloning_suite.e2e.ts',
         './reliability/root_cause_analysis/*.e2e.ts',
-        './maintenance_spend_planning/*e2e.ts',
-
+        './planning/maintenance_spend_planning/*e2e.ts',
+        './planning/recommendation_workbench/*e2e.ts',
+        './planning/notifications/notifications.e2e.ts',
+ 
         // './integrity/cmls/cmls.e2e.ts',
         // './safety_group/safety.e2e.ts',
     ],

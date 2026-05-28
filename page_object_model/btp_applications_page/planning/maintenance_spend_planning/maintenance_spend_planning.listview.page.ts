@@ -1,5 +1,3 @@
-
-
 import utils from "utils/utils";
 class MSPListView {
 
@@ -11,7 +9,7 @@ class MSPListView {
     private get selectRecommendationPopup() { return $("//h1[.='Select Recommendation(s)']"); }
     private get firstRecommendationRow() { return $("(//tr[@role='row'])[2]"); }
     private get nextBtn() { return $("//button[.//text()='Next']"); }
-    private get mspItemHeader() { return $("//h3[.='MSP Item']"); }
+    private get mspItemHeader() { return $("//h1[.='Create MSP']"); }
     private get shortDescInput() { return $("//bdi[.='Short Description']/following::input[1]"); }
     private get longDescInput() { return $("//bdi[.='Long Description']/following::textarea[1]"); }
     private get createMSPBtn() { return $("//footer//button[.//text()='Create']"); }
@@ -82,12 +80,16 @@ class MSPListView {
         const dayOfMonth = new Date().getDate();
         if (dayOfMonth % 2 === 0) {
             console.log("Selecting recommendation...");
+            await browser.pause(4000);
             await utils.clickWithWait(this.openSelectRecommendation);
             await this.selectRecommendationPopup.waitForDisplayed();
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(4000);
             await utils.clickWithWait(this.firstRecommendationRow);
             await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
             await utils.clickWithWait(this.nextBtn);
-            await this.mspItemHeader.waitForDisplayed();
+            await this.mspItemHeader.waitForDisplayed({timeout:10000});
             this.MSPShortDesc = `${this.getRandomTxt("Automation MSP item ")} ${Math.floor(Math.random()*100000)}`;
             this.MSPLongDesc = `${this.getRandomTxt("Automation MSP item long desc")} ${Math.floor(Math.random()*100000)}`;
             await this.shortDescInput.setValue(this.MSPShortDesc);
@@ -130,12 +132,11 @@ class MSPListView {
             await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
             await utils.clickWithWait(this.nextBtn);
         }
+        await browser.pause(2000);
         await utils.clickWithWait(this.createMSPBtn);
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        if (await this.okBtn.isDisplayed().catch(() => false)) {
-            await this.okBtn.click();
-        }
+        await browser.pause(4000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
         await this.searchNewlyCreated(this.MSPShortDesc);
@@ -253,9 +254,9 @@ class MSPListView {
         await utils.clickWithWait(this.importBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait(this.createMSPEventBtn);
-        if (await this.okBtn.isDisplayed().catch(() => false)) {
-            await this.okBtn.click();
-        }
+        await browser.pause(2000);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
         await this.searchNewlyCreated(this.MSPEShortDesc);
