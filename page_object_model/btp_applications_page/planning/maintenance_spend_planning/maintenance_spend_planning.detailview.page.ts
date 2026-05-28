@@ -401,7 +401,7 @@ class maintenance_detail_view{
     {
         console.log("Changing the MSP status...");
         await utils.clickWithWait(this.changeStatusBtn);
-        await browser.pause(1000);
+        await browser.pause(2000);
         const day = new Date().getDay();
         if(day === 1 || day === 2)
         {

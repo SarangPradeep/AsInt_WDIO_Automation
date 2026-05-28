@@ -1,6 +1,6 @@
-import MSPDetailView from '../page_object_model/btp_applications_page/planning/maintenance_spend_planning/maintenance_spend_planning.detailview.page.ts';
-import MSPListView from '../page_object_model/btp_applications_page/planning/maintenance_spend_planning/maintenance_spend_planning.listview.page.ts';
-import utils from "../utils/utils.ts";
+import MSPDetailView from '../../page_object_model/btp_applications_page/planning/maintenance_spend_planning/maintenance_spend_planning.detailview.page.ts';
+import MSPListView from '../../page_object_model/btp_applications_page/planning/maintenance_spend_planning/maintenance_spend_planning.listview.page.ts';
+import utils from "../../utils/utils.ts";
 describe('BTP - Maintenance Spend Planning item (MSP) - Functional Test', () => {
 
     it('should navigate to Maintenance Spend Planning list view', async () => {

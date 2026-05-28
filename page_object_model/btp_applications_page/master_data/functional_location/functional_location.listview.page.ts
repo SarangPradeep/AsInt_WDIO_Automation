@@ -69,7 +69,7 @@ class functionalLocationListView {
         }
         await utils.clickWithWait(this.selectParentAsset);
         await this.selectFuncLocBox.waitForDisplayed({ timeout: 30000 });
-        await browser.pause(8000);
+        await browser.pause(20000);
         await utils.switchToIframe(this.funLocIframe);
         await utils.clickWithWait(this.selectParentFuncLoc);
         await browser.pause(8000);
