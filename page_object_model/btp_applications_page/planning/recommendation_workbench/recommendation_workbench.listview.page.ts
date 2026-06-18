@@ -176,7 +176,7 @@ class RecommendationWorkbenchListView {
 
     public async verifyDeletionOfRecommendationWorkbench(){
         console.log("Verifying deletion of Recommendation workbench...");
-        await this.searchNewlyCreated(this.ReccWorkShortDesc);
+        await this.searchNewlyCreated(this.ReccWorkDisplayID);
         console.log("Waiting for table to refresh after search...");
         const noDataCell = '//td[text()="No data"]';
         const tableRows = '//table//tr[contains(@class,"sapMListTblRow")]';

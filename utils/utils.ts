@@ -11,6 +11,7 @@ class Utils {
     private get CMLIframe() { return $('iframe[data-help-id="application-cml-manage"]'); }
     private get documentIframe() { return $('iframe[data-help-id="application-documents-manage"]'); }
     private get notificationIframe() { return $('iframe[data-help-id="application-notifications-manage"]'); }
+    private get inspectionIframe() { return $("//*[@data-help-id='application-idms-manage']"); }
     private get backBtn() { return $("//a[@aria-label='Back']"); }
     private get settingsBtn() { return $("//span[text()='Settings']/preceding-sibling::span//span"); }
     private get tableSettingsBtn() { return $("//span[text()='Table Settings']/preceding-sibling::span//span"); }
@@ -23,6 +24,10 @@ class Utils {
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
     private get mspIframe() { return $('iframe[data-help-id="application-msp-manage"]'); }
     private get reccWorkbenchIframe() { return $('iframe[data-help-id="application-recommendationworkbenchplus-manage"]'); }
+    private get attachSuccMsg() { return $("//span[text()='Success']"); }
+    private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]]'); }
+    private get homeBtn() { return $('//li[@role="menuitem"]'); }
+    private get navigationBtn() { return $('//div[@title="Navigation menu"]'); }
 
     async switchToIframe(frameElement: any): Promise<void> {
         console.log("---- Switching to iframe ----");
@@ -137,7 +142,28 @@ class Utils {
         if (delayAfter > 0) await browser.pause(delayAfter);
     }
 
+    public async waitForLocalBusyToDisappear(timeoutInSeconds = 60): Promise<void> {
+        try {
+            await browser.waitUntil(async () => {
+                const indicators = await $$("//div[contains(@class,'sapUiLocalBusyIndicatorAnimation')]");
+                for (const el of indicators) {
+                    if (await el.isDisplayed().catch(() => false)) {
+                        return false;
+                    }
+                }
+                return true;
+            }, {
+                timeout: timeoutInSeconds * 1000,
+                interval: 300,
+                timeoutMsg: "Local busy indicator did not disappear"
+            });
+        } catch {
+            console.warn("Local busy indicator wait failed or timed out");
+        }
+    }
+
     public async waitForBusyIndicatorToDisappear(timeoutInSeconds = 60): Promise<void> {
+        await browser.pause(1000);
         const busy = $("#sapUiBusyIndicator");
         const anim = $(".sapUiLocalBusyIndicatorAnimation");
         try {
@@ -454,8 +480,8 @@ class Utils {
     }
 
     async getAssignedValue(text: string): Promise<number> {
-    const match = text.match(/\((\d+)\)/);
-    return match ? parseInt(match[1], 10) : 0;
+        const match = text.match(/\((\d+)\)/);
+        return match ? parseInt(match[1], 10) : 0;
     }
 
     private get adaptFilter() {
@@ -463,29 +489,12 @@ class Utils {
     }
 
 async addAllAdaptFilter(): Promise<void> {
-        console.log("Trying to open Adapt filter");
-        await browser.switchFrame(null);
- 
-        if (await this.funLocIframe.isExisting()) {
-            await this.switchToIframe(this.funLocIframe);
-        } else if (await this.equipmentIframe.isExisting()) {
-            await this.switchToIframe(this.equipmentIframe);
-        }else if(await this.hazopIframe.isExisting()){
-            await this.switchToIframe(this.hazopIframe);
-        }else if(await this.rcmIframe.isExisting()){
-            await this.switchToIframe(this.rcmIframe);
-        }else if(await this.ASDIframe.isExisting()){
-            await this.switchToIframe(this.ASDIframe);
-        }else if(await this.notificationIframe.isExisting()){
-            await this.switchToIframe(this.notificationIframe);
-        }else if(await this.documentIframe.isExisting()){
-            await this.switchToIframe(this.documentIframe);
-        }
- 
+        await console.log("Trying to open Adapt filter");
+        await this.switchToFrame();
         await this.adaptFilter.waitForClickable({ timeout: 200000 });
         await this.adaptFilter.click();
         await browser.pause(5000);
-        console.log("Adapt filter opened");
+        await console.log("Adapt filter opened");
         let prevCount: number = -1;
  
         while (true) {
@@ -564,16 +573,17 @@ async addAllAdaptFilter(): Promise<void> {
     }
 
     async generateRandomEquipmentName(): Promise<string> {
-        console.log(`AUTO-EQUIP-${Math.floor(Math.random() * 10000)}`);
-        return `${Math.floor(Math.random() * 10000000)}-EQUIP-AUTO`;
+        console.log(`Automation_Equipment_${Math.floor(Math.random() * 10000)}`);
+        return `Automation_Equipment_${Math.floor(Math.random() * 10000)}`;
     }
 
     async generateRandomHazopName(): Promise<string> {
-        console.log(`AUTOMATION-HAZOP-${Math.floor(Math.random() * 10000)}`);
-        return `AUTOMATION-HAZOP-${Math.floor(Math.random() * 10000)}`;
+        console.log(`Automation_Hazop_${Math.floor(Math.random() * 10000)}`);
+        return `Automation_Hazop_${Math.floor(Math.random() * 10000)}`;
     }
 
     public async verifyFieldsInListView(): Promise<void> {
+        await console.log("opening settings to verify fields in list view");
         await this.waitForBusyIndicatorToDisappear();
         await browser.switchFrame(null);
         if(await this.funLocIframe.isExisting()) await this.switchToIframe(this.funLocIframe);
@@ -857,22 +867,93 @@ async addAllAdaptFilter(): Promise<void> {
         .trim();
     }
 
- async getAdvFilterVariableName(): Promise<string> {
-
-    const options = ["Criticality", "Abc Indicator"];
-
-    for (const option of options) {
-        await browser.pause(3000);
-        const el = await $(`//li[@role='listitem'][.//div[text()='${option}']]`);
-
-        if (await el.isDisplayed()) {
-            await el.click();
-            return option;
+     async readExcelData(filePath: string): Promise<Record<string, string>[]> {
+        const xlsxModule: any = await import('xlsx');
+        const XLSX: any = xlsxModule.default ?? xlsxModule;
+        if (!fs.existsSync(filePath)) {
+            throw new Error(`Excel file not found: ${filePath}`);
         }
+        const workbook = XLSX.readFile(filePath);
+        const firstSheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheetName];
+        const rows: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        return rows.map(row => {
+            const normalised: Record<string, string> = {};
+            for (const key of Object.keys(row)) {
+                normalised[key.trim()] = String(row[key] ?? '').trim();
+            }
+            return normalised;
+        });
     }
 
-    throw new Error("Neither Criticality nor Abc Indicator found");
-}
+    async extractRowsFromXlsx(filePath: string, sheetName?: string): Promise<Record<string, string>[]> {
+        const xlsxModule: any = await import('xlsx');
+        const XLSX: any = typeof xlsxModule.readFile === 'function'
+            ? xlsxModule
+            : (xlsxModule.default ?? xlsxModule);
+        let workbook: any;
+        if (typeof XLSX.readFile === 'function') {
+            workbook = XLSX.readFile(filePath, { cellDates: true });
+        } else {
+            const fs = await import('fs');
+            const buffer = fs.readFileSync(filePath);
+            workbook = XLSX.read(buffer, { type: 'buffer', cellDates: true });
+        }
+        const targetSheet = sheetName && workbook.Sheets[sheetName]
+            ? workbook.Sheets[sheetName]
+            : workbook.Sheets[workbook.SheetNames[0]];
+        if (!targetSheet) {
+            throw new Error(`No sheet found in workbook at '${filePath}'`);
+        }
+        const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(targetSheet, {
+            defval: "",
+            raw: false,
+        });
+        return rows;
+    }
+
+    async compareExcelData(uploadedPath: string, downloadedPath: string): Promise<{ ok: boolean; diff: string[] }> {
+        const uploaded = await this.readExcelData(uploadedPath);
+        const downloaded = await this.readExcelData(downloadedPath);
+        const diff: string[] = [];
+
+        if (uploaded.length !== downloaded.length) {
+            diff.push(`Row count mismatch — uploaded: ${uploaded.length}, downloaded: ${downloaded.length}`);
+        }
+
+        const rowsToCheck = Math.min(uploaded.length, downloaded.length);
+        for (let i = 0; i < rowsToCheck; i++) {
+            const up = uploaded[i];
+            const dn = downloaded[i];
+            const columns = new Set([...Object.keys(up), ...Object.keys(dn)]);
+            for (const col of columns) {
+                const a = up[col] ?? '';
+                const b = dn[col] ?? '';
+                if (a !== b) {
+                    diff.push(`Row ${i + 1}, column "${col}": uploaded="${a}", downloaded="${b}"`);
+                }
+            }
+        }
+
+        return { ok: diff.length === 0, diff };
+    }
+
+    async getAdvFilterVariableName(): Promise<string> {
+
+        const options = ["Criticality", "Abc Indicator"];
+
+        for (const option of options) {
+            await browser.pause(3000);
+            const el = await $(`//li[@role='listitem'][.//div[text()='${option}']]`);
+
+            if (await el.isDisplayed()) {
+                await el.click();
+                return option;
+            }
+        }
+
+        throw new Error("Neither Criticality nor Abc Indicator found");
+    }
 
     async createNewAdvancedFilter(filterName?: string): Promise<string> {
         await console.log("Creating new advanced filter");
@@ -1041,11 +1122,25 @@ async addAllAdaptFilter(): Promise<void> {
  
     async applyAdvancedFilter(): Promise<void> {
         await browser.pause(2000);
+        const dialogHeader = await $(`//h1//span[starts-with(normalize-space(),'Advanced Filters')]`);
         const firstFilterCheckbox = await $(`(//tr[@role='row'])[2]//div[@role='checkbox']`);
-        await firstFilterCheckbox.waitForDisplayed();
+        let isOpen = await dialogHeader.isDisplayed().catch(() => false)
+            || await firstFilterCheckbox.isDisplayed().catch(() => false);
+        if (!isOpen) {
+            console.log("Advanced Filters dialog not open → opening via Advanced Filter button");
+            const advancedFilterBtn = await $('//button[@aria-label="Advanced Filter"]');
+            await this.clickWithWait(advancedFilterBtn);
+            await browser.pause(2000);
+        }
+        await firstFilterCheckbox.waitForDisplayed({ timeout: 60000 });
         await firstFilterCheckbox.click();
         await this.clickWithWait($('//button//bdi[text()="Apply"]'));
         await this.waitForBusyIndicatorToDisappear();
+        const expandHeader = await $(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`);
+        if (await expandHeader.isExisting() && await expandHeader.isDisplayed().catch(() => false)) {
+            await this.clickWithWait(expandHeader);
+            await browser.pause(500);
+        }
         await this.clickWithWait($('//button//bdi[text()="Go"]'));
         console.log("Applied advanced filter");
         const criticalityElement = await $(`(//tr[@aria-rowindex='2']/preceding::span[text()='Criticality']/following::span[text()='A'])[1]`);
@@ -1083,65 +1178,148 @@ async addAllAdaptFilter(): Promise<void> {
         console.log('All filters successfully reset');
     }
 
-    public async captureHeaderDetails() : Promise<Record<string, string>>   {
-        if (await this.funLocIframe.isExisting()) {
-            await this.switchToIframe(this.funLocIframe);
-        } else if (await this.equipmentIframe.isExisting()) {
-            await this.switchToIframe(this.equipmentIframe);
-        }else if(await this.hazopIframe.isExisting()){
-            await this.switchToIframe(this.hazopIframe);
-        }else if(await this.rcmIframe.isExisting()){
-            await this.switchToIframe(this.rcmIframe);
-        }else if(await this.ASDIframe.isExisting()){
-            await this.switchToIframe(this.ASDIframe);
-        }else if(await this.CMLIframe.isExisting()){
-            await this.switchToIframe(this.CMLIframe);
-        }else if(await this.mspIframe.isExisting()){
-            await this.switchToIframe(this.mspIframe);
-        }else if(await this.reccWorkbenchIframe.isExisting()){
-            await this.switchToIframe(this.reccWorkbenchIframe);
-        }
+    public async captureHeaderDetails(): Promise<Record<string, string>> {
+        console.log("Capturing header details");
+        await this.switchToFrame();
         await this.waitForBusyIndicatorToDisappear();
-        const result: any = {};
-        const blocks = await $$(`//div[contains(@class,'sapFDynamicPageHeaderContent')]//*`);
-        for (const block of blocks) {
-            const titleEl = await block.$(`.//span[contains(@class,'sapMObjStatusTitle')]`);
-            if (await titleEl.isExisting()) {
-                const key = (await titleEl.getText()).trim();
-                const valueEl = await block.$(`.//span[contains(@class,'sapMObjStatusText')]`);
-                if (await valueEl.isExisting()) {
-                    result[key] = (await valueEl.getText()).trim();
-                }
-                continue;
-            }
-            const labelEl = await block.$(`.//span[contains(@class,'sapMLabelTextWrapper')]`);
-            if (await labelEl.isExisting()) {
-                const key = (await labelEl.getText()).replace(":", "").trim();
-                let value = "";
-                const link = await block.$(`.//a`);
-                if (await link.isExisting() && await link.isDisplayed()) {
-                    value = await link.getText();
-                }
-                if (!value) {
-                    const text = await block.$(`.//span[contains(@class,'sapMText')]`);
-                    if (await text.isExisting() && await text.isDisplayed()) {
-                        value = await text.getText();
-                    }
-                }
-                if (!value) {
-                    const exText = await block.$(`.//span[contains(@class,'sapMExTextString')]`);
-                    if (await exText.isExisting() && await exText.isDisplayed()) {
-                        value = await exText.getText();
-                    }
-                }
-                if (key && value) {
-                    result[key] = value.trim();
-                }
-            }
+        const result: Record<string, string> = {};
+
+        const headerSection = await $(`//button[@aria-label='Collapse Header' or @aria-label='Expand Header']/ancestor::section[1]`);
+        if (!(await headerSection.isExisting())) {
+            console.log("Header section not found");
+            await browser.switchToParentFrame();
+            return result;
         }
+
+        const fieldBlocks = await headerSection.$$(`./div/div`);
+        for (const block of fieldBlocks) {
+            try {
+                const statusTitles = await block.$$(`.//span[@data-colon=':' and normalize-space(text())]`);
+                let consumed = false;
+                for (const titleEl of statusTitles) {
+                    const key = (await titleEl.getText()).replace(/:$/, "").trim();
+                    if (!key) continue;
+                    let value = "";
+                    const valueEl = await titleEl.$(`./following-sibling::span[1]`);
+                    if (await valueEl.isExisting()) value = (await valueEl.getText()).trim();
+                    result[key] = value;
+                    consumed = true;
+                }
+                if (consumed) continue;
+
+                const bdiEl = await block.$(`.//bdi[normalize-space(text())]`);
+                if (!(await bdiEl.isExisting())) continue;
+                const key = (await bdiEl.getText()).replace(/:$/, "").trim();
+                if (!key) continue;
+
+                const parts: string[] = [];
+                const links = await block.$$(`.//a`);
+                for (const link of links) {
+                    if (!(await link.isDisplayed().catch(() => false))) continue;
+                    const t = (await link.getText()).trim();
+                    if (t && !parts.includes(t)) parts.push(t);
+                }
+                const autoEls = await block.$$(`.//*[@dir='auto']`);
+                for (const el of autoEls) {
+                    if (!(await el.isDisplayed().catch(() => false))) continue;
+                    const t = (await el.getText()).trim();
+                    if (t && !parts.includes(t)) parts.push(t);
+                }
+                result[key] = parts.join(" ").trim();
+            } catch { /* skip malformed block */ }
+        }
+
         console.log(result);
         await browser.switchToParentFrame();
         return result;
+    }
+
+    public async getEntityNameAndId(): Promise<{ name: string; id: string }> {
+        const idPrefixes = ["ASDA", "MSPE", "MSP", "PMPL", "PMNO", "PMWO", "TASK", "RECO_ASINT_", "OPTA", "ASMT", "OBJT", "INSP", "CML", "DOCU", "FLOC", "EQUI", "RCM", "HAZOP"];
+        let name = "";
+        let id = "";
+        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+        for (let i = 0; i < 3; i++) {
+            try {
+                if (i === 0 && await expandBtn.isDisplayed()) {
+                    await expandBtn.waitForClickable({ timeout: 5000 });
+                    await expandBtn.click();
+                } else if (i === 1 && await collapseBtn.isDisplayed()) {
+                    await collapseBtn.waitForClickable({ timeout: 5000 });
+                    await collapseBtn.click();
+                }
+            } catch { /* expand/collapse not present */ }
+            await browser.pause(500);
+            if (!name) name = await this.getEntityName();
+            if (!id) id = await this.getEntityId(idPrefixes);
+            console.log(`Attempt ${i + 1} → name="${name || 'EMPTY'}" | id="${id || 'EMPTY'}"`);
+            if (name && id) break;
+        }
+        console.log(`Captured entity → name="${name}" | id="${id}"`);
+        return { name, id };
+    }
+
+    public async getEntityName(): Promise<string> {
+        const xpath = "//header[.//@role='heading']//div[@role='heading']//span";
+        try {
+            await browser.waitUntil(async () => {
+                const found = await $$(xpath);
+                return (await found.length) > 0;
+            }, { timeout: 5000, interval: 500 });
+        } catch { /* no elements yet */ }
+        const els = await $$(xpath);
+        for (const el of els) {
+            try {
+                if (!(await el.isDisplayed())) continue;
+                let txt = (await el.getText()) ?? "";
+                if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
+                txt = txt.trim();
+                if (txt) return txt;
+            } catch { /* stale, continue */ }
+        }
+        return "";
+    }
+
+    public async getEntityId(idPrefixes: string[]): Promise<string> {
+        const displayIdXpath = "//span[starts-with(normalize-space(),'Display ID')]";
+        const displayIdEls = await $$(displayIdXpath);
+        for (const el of displayIdEls) {
+            try {
+                if (!(await el.isDisplayed())) continue;
+                const raw = ((await el.getText()) ?? "").trim();
+                const stripped = raw.replace(/^Display ID\s*:?\s*/i, "").trim();
+                if (stripped) return stripped;
+                const siblingVal = await el.$(`./following-sibling::*[normalize-space(text())][1]`);
+                if (await siblingVal.isExisting()) {
+                    const sibTxt = ((await siblingVal.getText()) ?? "").trim();
+                    if (sibTxt) return sibTxt;
+                }
+                const parentNext = await el.$(`./parent::*/following-sibling::*[normalize-space(.)][1]`);
+                if (await parentNext.isExisting()) {
+                    const pTxt = ((await parentNext.getText()) ?? "").trim();
+                    if (pTxt) return pTxt.split(/\s+/)[0];
+                }
+            } catch { /* continue */ }
+        }
+        for (const prefix of idPrefixes) {
+            const matchToken = prefix.endsWith("_") ? prefix : `${prefix}.`;
+            const tags = prefix === "CML" ? ["bdi", "span"] : ["span", "bdi"];
+            for (const tag of tags) {
+                const xpath = `//${tag}[starts-with(normalize-space(text()),'${matchToken}')]`;
+                const els = await $$(xpath);
+                for (const el of els) {
+                    try {
+                        if (!(await el.isDisplayed())) continue;
+                        let txt = (await el.getText()) ?? "";
+                        if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
+                        txt = txt.trim();
+                        if (txt && txt.startsWith(matchToken)) return txt;
+                    } catch { /* continue */ }
+                }
+            }
+        }
+        return "";
     }
 
     public selectFromDropdown = async (el: any, downCount: number) => {
@@ -1220,37 +1398,62 @@ async addAllAdaptFilter(): Promise<void> {
         if (!s.includes("'")) {
             return `'${s}'`;
         }
-        // Contains both quote types — build via concat().
         const parts = s.split('"').map(p => `"${p}"`).join(`, '"', `);
         return `concat(${parts})`;
     }
     
-    public clickSuccessOkButton = async () => {
-            console.log("---- clickSuccessOkButton START ----");
-
+    public clickSuccessOkButton = async (timeoutMs: number = 15000) => {
             const successOk = $(`//header[.//text()='Success']/following::button[.//text()='OK']`);
-
-            if (await successOk.isDisplayed().catch(()=>false)) {
-                console.log("Success popup OK found → clicking");
-                await successOk.click();
-            } else {
-                console.log("No OK button found");
-                
+            const deadline = Date.now() + timeoutMs;
+            let clicked = false;
+            while (Date.now() < deadline) {
+                try {
+                    if (await successOk.isDisplayed() && await successOk.isClickable()) {
+                        console.log("Success popup OK found → clicking");
+                        await successOk.click();
+                        clicked = true;
+                        break;
+                    }
+                } catch { /* not yet rendered */ }
+                await browser.pause(500);
             }
-
+            if (!clicked) {
+                console.log("No OK button found within timeout");
+            }
             console.log("Waiting for busy indicator after OK...");
             await this.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
-
-            console.log("---- clickSuccessOkButton END ----");
     }
+
+    public clickInformationOkButton = async (timeoutMs: number = 15000) => {
+            const informationOk = $(`//header[.//text()='Information']/following::button[.//text()='OK']`);
+            const deadline = Date.now() + timeoutMs;
+            let clicked = false;
+            while (Date.now() < deadline) {
+                try {
+                    if (await informationOk.isDisplayed() && await informationOk.isClickable()) {
+                        console.log("Information popup OK found → clicking");
+                        await informationOk.click();
+                        clicked = true;
+                        break;
+                    }
+                } catch { /* not yet rendered */ }
+                await browser.pause(500);
+            }
+            if (!clicked) {
+                console.log("No Information OK button found within timeout");
+            }
+            console.log("Waiting for busy indicator after Information OK...");
+            await this.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+    }
+
     async switchToVisibleAppFrame(): Promise<void> {
         await browser.switchFrame(null);
         const frames = await $$('//iframe');
         for (const frame of frames) {
             try {
                 await browser.switchFrame(frame);
-                // heuristics: page contains a search box or a heading
                 const search = await $('//input[@type="search" or @placeholder="Search"]');
                 const header = await $('//h1|//header//*[contains(text(),"Documents") or contains(.,"Documents")]');
                 if (await search.isExisting()) {
@@ -1261,9 +1464,265 @@ async addAllAdaptFilter(): Promise<void> {
                 await browser.switchFrame(null);
             }
         }
-        // if not found, stay at top-level (tests will fail later clearly)
     }
 
+    public async addDocument() {
+        await this.switchToFrame();
+        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
+        await this.attachmentsSection.click();
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
+        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+        await this.clickWithWait(addLinkBtn,1000);
+        await browser.pause(2000);
+        const documentOption = await $('//li[contains(.,"Add Document")]');
+        await this.clickWithWait(documentOption);
+        await browser.pause(2000);
+        await this.uploadDocument('vessel-1.png');
+        await browser.pause(2000);
+        console.log("Document uploaded successfully, now filling the details to assign document");
+        const docShortDescInput = await $(`//label[.//bdi[text()='Short Description']]//following::input[1]`);
+        await docShortDescInput.waitForDisplayed({ timeout: 10000 });
+        await docShortDescInput.setValue("Test Document");
+        console.log("Document Short Description entered");
+
+        const saveDocBtn = await $(`//footer//button[.//text()='Save']`);
+        await this.clickWithWait(saveDocBtn);
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        await this.handleUploadErrorIfAny("Failed to upload document");
+        await this.clickSuccessOkButton();
+        await browser.pause(2000);
+    }
+
+    public async handleUploadErrorIfAny(errorText: string): Promise<void> {
+        const errorHeader = await $(`//header[.//text()='Error']`);
+        const exactMsg = await $(`//span[text()='${errorText}']`);
+        const partialMsg = await $(`//span[contains(text(),'Failed to upload')]`);
+
+        const isHeaderVisible = await errorHeader.isDisplayed().catch(() => false);
+        const isExact = await exactMsg.isDisplayed().catch(() => false);
+        const isPartial = await partialMsg.isDisplayed().catch(() => false);
+
+        if (!isHeaderVisible && !isExact && !isPartial) return;
+
+        let detectedText = errorText;
+        try {
+            if (isExact) detectedText = (await exactMsg.getText()).trim() || errorText;
+            else if (isPartial) detectedText = (await partialMsg.getText()).trim() || errorText;
+            else {
+                const headerMsg = await $(`//header[.//text()='Error']/following::span[normalize-space()][1]`);
+                if (await headerMsg.isDisplayed().catch(() => false)) {
+                    detectedText = (await headerMsg.getText()).trim() || errorText;
+                }
+            }
+        } catch { /* keep default */ }
+        console.log(`Error popup detected: '${detectedText}'`);
+
+        const errorOk = await $(`//header[.//text()='Error']/following::button[.//text()='OK']`);
+        const errorClose = await $(`//header[.//text()='Error']/following::button[.//text()='Close']`);
+        if (await errorOk.isDisplayed().catch(() => false)) {
+            await errorOk.click();
+            await this.waitForBusyIndicatorToDisappear();
+        } else if (await errorClose.isDisplayed().catch(() => false)) {
+            await errorClose.click();
+            await this.waitForBusyIndicatorToDisappear();
+        }
+        await browser.pause(1000);
+        await this.closeOpenDialogViaCancel();
+        throw new Error(`Operation failed: ${detectedText}`);
+    }
+
+    public async closeOpenDialogViaCancel(): Promise<void> {
+        const cancelSelectors = [
+            `//header[.//text()='Add Document']/following::button[.//bdi[text()='Cancel'] or .//text()='Cancel']`,
+            `//header[.//text()='Add Link']/following::button[.//bdi[text()='Cancel'] or .//text()='Cancel']`,
+            `//div[@role='dialog' and not(@aria-hidden='true')]//footer//button[.//bdi[text()='Cancel'] or .//text()='Cancel']`,
+            `//footer//button[.//bdi[text()='Cancel'] or .//text()='Cancel']`
+        ];
+        for (const xpath of cancelSelectors) {
+            const candidates = await $$(xpath);
+            for (const btn of candidates) {
+                try {
+                    if (!(await btn.isDisplayed())) continue;
+                    if (!(await btn.isClickable())) continue;
+                    console.log(`Closing open dialog via Cancel (selector: ${xpath})`);
+                    await this.clickWithWait(btn, 1000);
+                    await this.waitForBusyIndicatorToDisappear();
+                    await browser.pause(500);
+                    return;
+                } catch { /* try next */ }
+            }
+        }
+        console.log("No Cancel button found to close dialog");
+    }
+
+    async addLink() {
+        await this.switchToFrame();
+        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
+        await this.attachmentsSection.click();
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
+        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+        await this.clickWithWait(addLinkBtn);
+        await browser.pause(2000);
+        const link = await $('//li[contains(.,"Add Link")]');
+        await this.clickWithWait(link);
+        await browser.pause(2000);
+        console.log("Filling the details to assign link");
+        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
+        await displayNameInput.waitForDisplayed({ timeout: 10000 });
+        await displayNameInput.setValue("Test Link");
+        console.log("Display Name entered");
+        console.log("Entering URL for the link");
+        const linkInput = await $(`//label[.//bdi[text()='Link']]//following::input[1]`);
+        await linkInput.setValue("https://testlink.com");
+        await this.clickWithWait($('//button[.//bdi[text()="Save"]]'));
+        await this.waitForBusyIndicatorToDisappear();
+        await this.handleUploadErrorIfAny("Failed to upload document");
+        await this.attachSuccMsg.waitForDisplayed({
+            timeout: 20000,
+            timeoutMsg: 'Link assign success message not displayed'
+        });
+
+        console.log("Link assign success message displayed");
+        await this.clickSuccessOkButton();
+        await browser.pause(2000);
+    }
+
+    public async gotoAttachmentsTabAndAssignAttachment() {
+        console.log("Navigating to Attachment tab to assign attachment");
+        await browser.pause(4000);
+        await this.switchToFrame();
+        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
+        await this.attachmentsSection.click();
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
+        const addAttachmentBtn = await $('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
+        const addAttachmentBtn2 = await $('//header[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
+        if(await addAttachmentBtn.isExisting()){
+            await this.clickWithWait(addAttachmentBtn,2000);
+        }
+        else if(await addAttachmentBtn2.isExisting()){
+            await this.clickWithWait(addAttachmentBtn2,2000);
+        }
+        await browser.pause(2000);
+        await this.selectCheckboxes(2);
+        await this.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'),1000);
+
+        await this.attachSuccMsg.waitForDisplayed({
+            timeout: 20000,
+            timeoutMsg: 'Document assign success message not displayed'
+        });
+
+        console.log("Document assign success message displayed");
+        await this.clickSuccessOkButton();
+        console.log("Attachment assigned successfully");
+    }
+
+    public async deleteAttachmentAndVerify() {
+        console.log("Deleting assigned attachment and verifying");
+        await this.switchToFrame();
+        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
+        await this.attachmentsSection.click();
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
+        let selectAllCheckbox: any = null;
+        try {
+            await browser.waitUntil(async () => {
+                const candidates = await $$(`//div[@role='checkbox' and @aria-label='Select all rows']`);
+                for (const el of candidates) {
+                    try {
+                        if (await el.isDisplayed()) {
+                            selectAllCheckbox = el;
+                            return true;
+                        }
+                    } catch { /* stale, continue */ }
+                }
+                return false;
+            }, { timeout: 30000, interval: 500, timeoutMsg: "Select all rows checkbox not displayed" });
+        } catch (e) {
+            console.log("Select all checkbox not found, nothing to delete");
+            return;
+        }
+        await this.clickWithWait(selectAllCheckbox, 2000);
+        const selectedState = await selectAllCheckbox.getAttribute("aria-checked");
+        if (selectedState !== "true") {
+            console.log("No attachment got selected for deletion");
+            return;
+        }
+        console.log("All attachments selected for deletion");
+        await this.clickWithWait($('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Delete"]/ancestor::button'),1000);
+        await this.waitForBusyIndicatorToDisappear();
+        await this.clickWithWait($('//button[.//bdi[text()="Yes"]]'),1000);
+        await this.waitForBusyIndicatorToDisappear();
+        await this.clickSuccessOkButton();
+        await browser.pause(2000);
+        console.log("Attachment deleted successfully");
+    }
+
+    public async verifyAttachmentSection() {
+        const steps: { name: string; fn: () => Promise<void> }[] = [
+            { name: "gotoAttachmentsTabAndAssignAttachment", fn: () => this.gotoAttachmentsTabAndAssignAttachment() },
+            { name: "addDocument", fn: () => this.addDocument() },
+            { name: "addLink", fn: () => this.addLink() },
+            { name: "deleteAttachmentAndVerify", fn: () => this.deleteAttachmentAndVerify() }
+        ];
+        const errors: string[] = [];
+        for (const step of steps) {
+            try {
+                console.log(`Running attachment step: ${step.name}`);
+                await step.fn();
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                console.log(`Attachment step '${step.name}' failed: ${msg}`);
+                errors.push(`[${step.name}] ${msg}`);
+            }
+        }
+        if (errors.length > 0) {
+            throw new Error(`Attachment section verification failed in ${errors.length} step(s):\n - ${errors.join("\n - ")}`);
+        }
+        console.log("Attachment section verified successfully");
+    }
+
+    public async switchToFrame()
+    {
+        await browser.switchFrame(null);
+        if (await this.funLocIframe.isExisting()) {
+            await this.switchToIframe(this.funLocIframe);
+        } else if (await this.equipmentIframe.isExisting()) {
+            await this.switchToIframe(this.equipmentIframe);
+        }else if(await this.hazopIframe.isExisting()){
+            await this.switchToIframe(this.hazopIframe);
+        }else if(await this.rcmIframe.isExisting()){
+            await this.switchToIframe(this.rcmIframe);
+        }else if(await this.ASDIframe.isExisting()){
+            await this.switchToIframe(this.ASDIframe);
+        }else if(await this.CMLIframe.isExisting()){
+            await this.switchToIframe(this.CMLIframe);
+        }else if(await this.mspIframe.isExisting()){
+            await this.switchToIframe(this.mspIframe);
+        }else if(await this.reccWorkbenchIframe.isExisting()){
+            await this.switchToIframe(this.reccWorkbenchIframe);
+        }else if(await this.notificationIframe.isExisting()){
+            await this.switchToIframe(this.notificationIframe);
+        }else if(await this.documentIframe.isExisting()){
+            await this.switchToIframe(this.documentIframe);
+        }else if(await this.inspectionIframe.isExisting()){
+            await this.switchToIframe(this.inspectionIframe);
+        }
+    }
+
+    public async navigateToHomePage()
+    {
+        await console.log("Navigating back to Home Page...");
+        await browser.switchFrame(null);
+        await this.clickWithWait(this.navigationBtn);
+        await this.waitForBusyIndicatorToDisappear();
+        await this.clickWithWait(this.homeBtn);
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(5000);
+    }
 }
 
 export default new Utils();

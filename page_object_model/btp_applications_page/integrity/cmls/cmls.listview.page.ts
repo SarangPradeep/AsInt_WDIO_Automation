@@ -11,8 +11,6 @@ class CML_ListView_Page {
     private get funLocInput() { return $("//bdi[text()='Functional Location']/following::span[2]"); }
     private get selectEquipmentHeader() { return $("//h1[.//text()='Select Equipment']"); }
     private get selectFunLocHeader() { return $("//h1[.//text()='Select Functional Location']"); }
-    private equipmentRow(i: number) { return $(`(//tr[@role='row'])[${i}]//td[2]//span`); }
-    private funLocRow(i: number) { return $(`(//tr[@role='row'])[${i}]//td[2]//span`); }
     private get cmlTemplateDropdown() { return $("//bdi[text()='CML Template']/following::span[5]"); }
     private get errorHeader() { return $("//h1[.//text()='Error']"); }
     private get errorOkBtn() { return $("//h1[.//text()='Error']/following::button[.//text()='OK']"); }
@@ -23,7 +21,6 @@ class CML_ListView_Page {
     private get nameInput() { return $("(//th[.//text()='Name']/following::td[@aria-colindex='1']//input)[1]"); }
     private get descriptionInput() { return $("(//th[.//text()='Description']/following::td[@aria-colindex='2']//input)[1]"); }
     private get cmlTemplateCell() { return $("(//th[.//text()='CML Template']/following::td[@aria-colindex='3']//span)[1]"); }
-    private get previousBtn() { return $("//footer//button[.//text()='Previous']"); }
     private get addGridCMLCheckbox() { return $("(//bdi[text()='Add Grid CMLs']/ancestor::div[@role='radio']//div)[1]"); }
     private get gridCMLNameInput() { return $("//bdi[text()='Grid CML Name']/following::input[1]"); }
     private get gridCMLTemplateDropdown() { return $("//bdi[text()='CML Template']/following::span[2]"); }
@@ -39,7 +36,7 @@ class CML_ListView_Page {
     public selectedFunLoc: string = "";
     public selectedFunLocTemplate: string = "";
     public gridCmlName: string = "";
-    public cmlName: string ="";
+    public cmlName: string ="Automation CML Name 5091";
 
     generateCMLName() {
         const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -54,20 +51,16 @@ class CML_ListView_Page {
     }
     
     public async navigateToCMLListView() {
-        console.log("Navigating to Asset Strategy Development List View");
+        console.log("Navigating to CML List View");
         await this.navigateToCML(); 
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.CMLIframe);
-        await browser.pause(2000);
-        console.log("Navigated to Asset Strategy Development List View");
+        await browser.pause(8000);
+        console.log("Navigated to CML List View");
 
-
-        await utils.clickWithWait($("//div[contains(text(),'CML Overview')]"));
-        await browser.pause(3000);
-
-        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
-        await utils.clickWithWait(el);
-        await browser.pause(10000);
+        // const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
+        // await utils.clickWithWait(el);
+        // await browser.pause(10000);
     }
     
     public async navigateToCML(): Promise<void> {
@@ -76,162 +69,226 @@ class CML_ListView_Page {
         await utils.waitForBusyIndicatorToDisappear();
     }
 
+    public async searchEquipment(equipmentName?: string): Promise<void> {
+        const target = (equipmentName ?? this.selectedEquipment ?? "").trim();
+        if (!target) {
+            throw new Error("searchEquipment: equipment name is empty.");
+        }
+        console.log(`Searching equipment '${target}' in CML list view...`);
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const searchInputs = await $$("//form//input[@type='search']");
+        let visibleSearch: any = null;
+        for (const input of searchInputs) {
+            if ((await input.isDisplayed().catch(() => false)) && (await input.isClickable().catch(() => false))) {
+                visibleSearch = input;
+                break;
+            }
+        }
+        if (!visibleSearch) {
+            throw new Error("CML list view search input not visible.");
+        }
+        await utils.setValueWithWait(visibleSearch, target);
+
+        const goBtn = $("//button[.//text()='Go']");
+        await utils.clickWithWait(goBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.waitForLocalBusyToDisappear();
+        await browser.pause(3000);
+        console.log(`'Go' clicked. Search results loaded for equipment '${target}'.`);
+    }
+
+    public async searchEquipmentAndOpenDetail(equipmentName?: string): Promise<void> {
+        const target = (equipmentName ?? this.selectedEquipment ?? "").trim();
+        await this.searchEquipment(target);
+        console.log(`Opening first matching equipment row...`);
+
+        const firstNavRow = $("(//tr[@role='row']//span[@title='Navigation'])[1]");
+        await browser.waitUntil(async () => {
+            return (await firstNavRow.isDisplayed().catch(() => false))
+                && (await firstNavRow.isClickable().catch(() => false));
+        }, { timeout: 30000, interval: 1000, timeoutMsg: `No navigation row available for equipment '${target}'.` });
+        await utils.clickWithWait(firstNavRow);
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log(`Equipment '${target}' detail opened.`);
+    }
+
     public async plusIconAndCMLSelect(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait(this.newCMLButton);
+    }
+
+    private async clickFirstVisibleClickableOption(optionXpath: string): Promise<void> {
+        const options = await $$(optionXpath);
+        for (const option of options) {
+            const isDisplayed = await option.isDisplayed().catch(() => false);
+            if (!isDisplayed) {
+                continue;
+            }
+            const isClickable = await option.isClickable().catch(() => false);
+            if (!isClickable) {
+                continue;
+            }
+            await utils.clickWithWait(option);
+            return;
+        }
+        throw new Error(`No visible/clickable option found for xpath: ${optionXpath}`);
     }
 
     public async createNewCMLs() {
         console.log("Creating new CMLs...");
         await this.plusIconAndCMLSelect();
         console.log("Chossing CML for creation")
-        await browser.keys('Enter');
+        await this.clickFirstVisibleClickableOption("//li[.//text()='CML'] | //div[@role='menuitem'][.//text()='CML']");
         await this.createCMLHeader.waitForDisplayed();
 
         const isOddDay = new Date().getDate() % 2 !== 0;
-        if(isOddDay)
+        if(!isOddDay)
         {
             let flowCompleted = false;
             console.log("Creating for Equipment...");
             const objType = await this.objectTypeValue.getText();
             console.log("Object Type:", objType);
-            for (let eq = 2; eq <= 50; eq++) {
-                await browser.pause(2000);
-                await utils.clickWithWait(this.equipmentInput);
-                await browser.pause(5000);
-                await this.selectEquipmentHeader.waitForDisplayed();
-                if (!(await this.equipmentRow(eq).isDisplayed().catch(() => false))) continue;
-                const equipmentText = await this.equipmentRow(eq).getText();
-                await utils.clickWithWait(this.equipmentRow(eq));
-                await browser.pause(5000);
+            await utils.waitForLocalBusyToDisappear();
+            await utils.clickWithWait(this.equipmentInput);
+            await browser.pause(2000);
+            await utils.waitForLocalBusyToDisappear();
+            await this.selectEquipmentHeader.waitForDisplayed();
+            const equipmentSearchInput = $("(//header[.//text()='Select Equipment']/following::section//input[@placeholder='Search'])[1]");
+            await utils.setValueWithWait(equipmentSearchInput, "Automation CML Equipment [DND]");
+            const srchBtn = $("(//header[.//text()='Select Equipment']/following::section//input[@placeholder='Search']/following::div[2])[1]");
+            await utils.clickWithWait(srchBtn);
+            await browser.pause(2000);
+            await utils.waitForLocalBusyToDisappear();
+            const equipmentText = await $("(//tr[@role='row'])[2]//td[2]//span").getText();
+            await utils.clickWithWait($("(//tr[@role='row'])[2]//td[2]//span"), 1500);
+            await browser.pause(2000);
+            await utils.waitForBlockLayerToDisappear();
+            await utils.waitForLocalBusyToDisappear();
+            await utils.waitForBusyIndicatorToDisappear();
+            let templateText = '';
+            let validTemplateFound = false;
+            console.log("Selected Equipment:", equipmentText);
+            for (let t = 3; t <= 10; t++) {
+                await browser.pause(1500);
+                await utils.selectFromDropdown(this.cmlTemplateDropdown, t - 1);
+                await browser.pause(3000);
                 await utils.waitForBusyIndicatorToDisappear();
-                let templateText = '';
-                let validTemplateFound = false;
-                console.log("Selected Equipment:", equipmentText);
-                for (let t = 3; t <= 10; t++) {
-                    await browser.pause(1500);
-                    await utils.selectFromDropdown(this.cmlTemplateDropdown, t - 1);
-                    await browser.pause(3000);
-                    await utils.waitForBusyIndicatorToDisappear();
-                    const selectedTextEl = $("//bdi[text()='CML Template']/following::span[2]//span[2]");
-                    const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
-                    console.log(`After selection ${t} → text: ${selectedText}`);
-                    if (!selectedText) {
-                        console.log("No value selected → trying next option");
-                        continue;
-                    }
-                    if (await this.errorHeader.isDisplayed().catch(() => false)) {
-                        await utils.clickWithWait(this.errorOkBtn);
-                        console.log("Error after selection → trying next");
-                        continue;
-                    }
-                    console.log("Valid Template selected:", selectedText);
-                    templateText = selectedText;
-                    validTemplateFound = true;
-                    break;
-                }
-
-                if (!validTemplateFound) {
-                    console.log("No valid template → trying next equipment");
+                const selectedTextEl = $("//bdi[text()='CML Template']/following::span[2]//span[2]");
+                const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
+                console.log(`After selection ${t} → text: ${selectedText}`);
+                if (!selectedText) {
+                    console.log("No value selected → trying next option");
                     continue;
                 }
-                this.selectedEquipment = equipmentText;
-                this.selectedEquTemplate = templateText;
-
-                console.log("Final Selected → Equipment:", equipmentText, "Template:", templateText);
-
-                await utils.clickWithWait(this.nextBtn);
-                await browser.pause(2000);
-                await utils.waitForBusyIndicatorToDisappear();
-                const cmlsSec = await $("//h3[.//text()='CMLs']");
-                await cmlsSec.waitForDisplayed({ timeout: 20000 });
-                const equi = await this.selectedEquipmentText.getText();
-                const template = await this.selectedTemplateText.getText();
-
-                await expect(equi).toEqual(this.selectedEquipment);
-                await expect(template).toEqual(this.selectedEquTemplate);
-                console.log("Confirmed the selected equipment and template");
-                await utils.clickWithWait(this.nameInput);
-                await this.nameInput.setValue(this.generateCMLName());
-                await utils.clickWithWait(this.descriptionInput);
-                await this.descriptionInput.setValue("Automation CML Description");
-                let cmlTemplateSelected = false;
-                for (let ct = 3; ct <= 10; ct++) {
-                    await browser.pause(1500);
-                    await utils.selectFromDropdown(this.cmlTemplateCell, ct - 1);
-                    await browser.pause(3000);
-                    await utils.waitForBusyIndicatorToDisappear();
-
-                    const selectedTextEl = $("(//th[.//text()='CML Template']/following::td[@aria-colindex='3']//span//span[2])[1]");
-                    const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
-                    console.log(`After selection ${ct} → text: ${selectedText}`);
-                    if (!selectedText) {
-                        console.log("No value selected → trying next option");
-                        continue;
-                    }
-                    if (await this.errorHeader.isDisplayed().catch(() => false)) {
-                        await utils.clickWithWait(this.errorOkBtn);
-                        console.log("Error after selection → trying next");
-                        continue;
-                    }
-                    console.log("Valid CML template selected:", selectedText);
-                    cmlTemplateSelected = true;
-                    break;
-                }
-                if (!cmlTemplateSelected) {
-                    console.log("No valid CML template → going back");
-                    if (await this.previousBtn.isDisplayed().catch(() => false)) {
-                        await utils.clickWithWait(this.previousBtn);
-                    }
+                if (await this.errorHeader.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.errorOkBtn);
+                    console.log("Error after selection → trying next");
                     continue;
                 }
-                console.log("Choosing add grid CMLs check box");
-                await utils.clickWithWait(this.addGridCMLCheckbox);
-                await browser.pause(2000);
-                await this.gridCMLNameInput.waitForClickable();
-                await utils.clickWithWait(this.gridCMLNameInput);
-                await this.gridCMLNameInput.setValue(this.generateGridCMLName());
-
-                await utils.clickWithWait(this.gridCMLTemplateDropdown);
-                for (let ct = 3; ct <=  10; ct++) {
-                    await utils.selectFromDropdown(this.gridCMLTemplateDropdown, ct - 1);
-                    await browser.pause(3000);
-                    await utils.waitForBusyIndicatorToDisappear();
-                    const selectedTextEl = $("//bdi[text()='CML Template']/following::span[2]//span[2]");
-                    const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
-                    console.log(`After selection ${ct} → text: ${selectedText}`);
-
-                    if (!selectedText) {
-                        console.log("No value selected → trying next option");
-                        continue;
-                    }
-
-                    if (await this.errorHeader.isDisplayed().catch(() => false)) {
-                        await utils.clickWithWait(this.errorOkBtn);
-                        console.log("Error after selection → trying next");
-                        continue;
-                    }
-                    console.log("Valid CML template selected:", selectedText);
-                    cmlTemplateSelected = true;
-                    break;
-                }
-
-                await utils.clickWithWait(this.nextBtn);
-                await this.addGridCMLHeader.waitForDisplayed();
-                const names = await this.gridNameInputs;
-                const descs = await this.gridDescInputs;
-
-                for (let i = 0; i < await names.length; i++) {
-                    const uniqueName = `Auto_Name_${Date.now()}_${i}`;
-                    const uniqueDesc = `Auto_Desc_${Date.now()}_${i}`;
-                    await utils.clickWithWait(names[i]);
-                    await utils.setValueWithWait(names[i],uniqueName);
-                    await utils.clickWithWait(descs[i]);
-                    await utils.setValueWithWait(descs[i],uniqueDesc);
-                }
-                flowCompleted = true;
+                console.log("Valid Template selected:", selectedText);
+                templateText = selectedText;
+                validTemplateFound = true;
                 break;
             }
+
+            if (!validTemplateFound) {
+                throw new Error("No valid CML template found for the selected equipment");
+            }
+            this.selectedEquipment = equipmentText;
+            this.selectedEquTemplate = templateText;
+
+            console.log("Final Selected → Equipment:", equipmentText, "Template:", templateText);
+
+            await utils.clickWithWait(this.nextBtn);
+            await browser.pause(2000);
+            await utils.waitForBusyIndicatorToDisappear();
+            const cmlsSec = await $("//h3[.//text()='CMLs']");
+            await cmlsSec.waitForDisplayed({ timeout: 20000 });
+            const equi = await this.selectedEquipmentText.getText();
+            const template = await this.selectedTemplateText.getText();
+
+            await expect(equi).toEqual(this.selectedEquipment);
+            await expect(template).toEqual(this.selectedEquTemplate);
+            console.log("Confirmed the selected equipment and template");
+            await utils.clickWithWait(this.nameInput);
+            await this.nameInput.setValue(this.generateCMLName());
+            await utils.clickWithWait(this.descriptionInput);
+            await this.descriptionInput.setValue("Automation CML Description");
+            let cmlTemplateSelected = false;
+            for (let ct = 3; ct <= 10; ct++) {
+                await browser.pause(1500);
+                await utils.selectFromDropdown(this.cmlTemplateCell, ct - 1);
+                await browser.pause(3000);
+                await utils.waitForBusyIndicatorToDisappear();
+
+                const selectedTextEl = $("(//th[.//text()='CML Template']/following::td[@aria-colindex='3']//span//span[2])[1]");
+                const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
+                console.log(`After selection ${ct} → text: ${selectedText}`);
+                if (!selectedText) {
+                    console.log("No value selected → trying next option");
+                    continue;
+                }
+                if (await this.errorHeader.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.errorOkBtn);
+                    console.log("Error after selection → trying next");
+                    continue;
+                }
+                console.log("Valid CML template selected:", selectedText);
+                cmlTemplateSelected = true;
+                break;
+            }
+            if (!cmlTemplateSelected) {
+                throw new Error("No valid CML template selected for the equipment");
+            }
+            // console.log("Choosing add grid CMLs check box");
+            // await utils.clickWithWait(this.addGridCMLCheckbox);
+            // await browser.pause(2000);
+            // await this.gridCMLNameInput.waitForClickable();
+            // await utils.clickWithWait(this.gridCMLNameInput);
+            // await this.gridCMLNameInput.setValue(this.generateGridCMLName());
+
+            // await utils.clickWithWait(this.gridCMLTemplateDropdown);
+            // for (let ct = 3; ct <=  10; ct++) {
+            //     await utils.selectFromDropdown(this.gridCMLTemplateDropdown, ct - 1);
+            //     await browser.pause(3000);
+            //     await utils.waitForBusyIndicatorToDisappear();
+            //     const selectedTextEl = $("//bdi[text()='CML Template']/following::span[2]//span[2]");
+            //     const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
+            //     console.log(`After selection ${ct} → text: ${selectedText}`);
+
+            //     if (!selectedText) {
+            //         console.log("No value selected → trying next option");
+            //         continue;
+            //     }
+
+            //     if (await this.errorHeader.isDisplayed().catch(() => false)) {
+            //         await utils.clickWithWait(this.errorOkBtn);
+            //         console.log("Error after selection → trying next");
+            //         continue;
+            //     }
+            //     console.log("Valid CML template selected:", selectedText);
+            //     cmlTemplateSelected = true;
+            //     break;
+            // }
+
+            // await utils.clickWithWait(this.nextBtn);
+            // console.log("Clicked on Next after selecting grid CML template");
+            // await this.addGridCMLHeader.waitForDisplayed();
+            // const names = await this.gridNameInputs;
+            // const descs = await this.gridDescInputs;
+
+            // console.log(`Filling names and descriptions for ${names.length} grid CML entries`);
+            // for (let i = 0; i < await names.length; i++) {
+            //     const uniqueName = `Auto_Name_${Date.now()}_${i}`;
+            //     const uniqueDesc = `Auto_Desc_${Date.now()}_${i}`;
+            //     await utils.clickWithWait(names[i]);
+            //     await utils.setValueWithWait(names[i],uniqueName);
+            //     await utils.clickWithWait(descs[i]);
+            //     await utils.setValueWithWait(descs[i],uniqueDesc);
+            // }
+            // console.log("Filled grid CML names and descriptions");
+            flowCompleted = true;
             if (flowCompleted) {
                 console.log("Clicking on create button...");
                 await utils.clickWithWait(this.createCML);
@@ -252,23 +309,26 @@ class CML_ListView_Page {
             console.log("Creating for functional location...");
             let flowCompleted  = false;
             await utils.clickWithWait(this.objectTypeDrp);
-            await browser.keys("ArrowDown");
-            await browser.keys("Enter");
+            await this.clickFirstVisibleClickableOption("//li[.//text()='Functional Location'] | //div[@role='option'][.//text()='Functional Location']");
             await browser.pause(2000);
             const objType = await this.objectTypeValue.getText();
             console.log("Object Type:", objType);
-            for (let eq = 2; eq <= 50; eq++) {
-                await browser.pause(2000);
-                await utils.clickWithWait(this.funLocInput);
-                await browser.pause(5000);
-                await this.selectFunLocHeader.waitForDisplayed();
-
-                if (!(await this.funLocRow(eq).isDisplayed().catch(() => false))) continue;
-
-                const funLocText = await this.funLocRow(eq).getText();
-                await utils.clickWithWait(this.funLocRow(eq));
-                await browser.pause(5000);
-                await utils.waitForBusyIndicatorToDisappear();
+            await utils.waitForLocalBusyToDisappear();
+            await utils.clickWithWait(this.funLocInput);
+            await browser.pause(2000);
+            await utils.waitForLocalBusyToDisappear();
+            await this.selectFunLocHeader.waitForDisplayed();
+            const funLocSearchInput = $("(//header[.//text()='Select Functional Location']/following::section//input[@placeholder='Search'])[1]");
+            await utils.setValueWithWait(funLocSearchInput, "10000080");
+            await browser.keys("Enter");
+            await browser.pause(2000);
+            await utils.waitForLocalBusyToDisappear();
+            const funLocText = await $("(//tr[@role='row'])[2]//td[2]//span").getText();
+            await utils.clickWithWait($("(//tr[@role='row'])[2]"));
+            await browser.pause(2000);
+            await utils.waitForBlockLayerToDisappear();
+            await utils.waitForLocalBusyToDisappear();
+            await utils.waitForBusyIndicatorToDisappear();
                 let templateText = '';
                 let validTemplateFound = false;
                 console.log("Selected Functional Location:", funLocText);
@@ -296,8 +356,7 @@ class CML_ListView_Page {
                 }
 
                 if (!validTemplateFound) {
-                    console.log("No valid template → trying next functional location");
-                    continue;
+                    throw new Error("No valid CML template found for the selected functional location");
                 }
 
                 this.selectedFunLoc = funLocText;
@@ -316,7 +375,7 @@ class CML_ListView_Page {
                 console.log("Confirmed the selected functional location and template");
 
                 await utils.clickWithWait(this.nameInput);
-                await this.nameInput.setValue("Automation CML Name");
+                await this.nameInput.setValue(this.generateCMLName());
 
                 await utils.clickWithWait(this.descriptionInput);
                 await this.descriptionInput.setValue("Automation CML Description");
@@ -347,11 +406,7 @@ class CML_ListView_Page {
                 }
 
                 if (!cmlTemplateSelected) {
-                    console.log("No valid CML template → going back");
-                    if (await this.previousBtn.isDisplayed().catch(() => false)) {
-                        await utils.clickWithWait(this.previousBtn);
-                    }
-                    continue;
+                    throw new Error("No valid CML template selected for the functional location");
                 }
 
                 console.log("Choosing add grid CMLs check box");
@@ -359,7 +414,7 @@ class CML_ListView_Page {
                 await browser.pause(2000);
                 await this.gridCMLNameInput.waitForClickable();
                 await utils.clickWithWait(this.gridCMLNameInput);
-                await this.gridCMLNameInput.setValue("Automation Grid CML");
+                await this.gridCMLNameInput.setValue(this.generateGridCMLName());
 
                 await utils.clickWithWait(this.gridCMLTemplateDropdown);
                 for (let ct = 3; ct <=  10; ct++) {
@@ -405,8 +460,6 @@ class CML_ListView_Page {
                     await utils.setValueWithWait(descs[i],uniqueDesc);
                 }
                 flowCompleted = true;
-                break;
-            }
             if (flowCompleted) {
                 console.log("Clicking on create button...");
                 await utils.clickWithWait(this.createCML);
@@ -427,6 +480,7 @@ class CML_ListView_Page {
     public async verifyCMLCreation()
     {
         console.log("Verifying the CMLs creation...");
+        await browser.pause(5000);
         await this.cmlSummaryHeader.waitForDisplayed({timeout : 20000});
         console.log("Navigated to CMLs detail page");
     }

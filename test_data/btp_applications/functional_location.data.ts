@@ -47,5 +47,9 @@ export const funcLocTestData = {
     },
     classificationMDA :{
         noOfCharacteristics: 2
+    },
+    searchFunLoc: {
+        functionallocation1: 'Automation Regression Functional Location',
+        functionallocation2: 'ASIN-1001-PROD-RECT-RUPR-LP3'
     }
 } as const;

@@ -13,16 +13,10 @@ describe('BTP - Functional Location - Functional Test', () => {
         await utils.resetAllAdaptFilter();
     });
 
-    it('should create new advanced filter and verify', async () => {
+    it('should create, apply, reset and delete advanced filter', async () => {
         const createdFilterName = await utils.createNewAdvancedFilter();
         console.log(`Created filter for this run: ${createdFilterName}`);
-    });
- 
-    it('should apply the created advanced filter and verify', async () => {
         await utils.applyAdvancedFilter();
-    });
- 
-    it('should reset and delete the created advanced filter and verify', async () => {
         await utils.resetAdvancedFilter();
         await utils.deleteAdvancedFilter();
     });
@@ -91,11 +85,7 @@ describe('BTP - Functional Location - Functional Test', () => {
     });
 
     it('should verify attachment section' , async () => {
-        await functionalLocationDetailView.gotoAttachmentsTabAndAssignAttachment();
-//        await functionalLocationDetailView.addDocument();
-//        await functionalLocationDetailView.addLink();
-//        await functionalLocationDetailView.deleteAttachmentAndVerify();
-
+        await utils.verifyAttachmentSection();
     });
 
     it('should verify change history' , async () => {

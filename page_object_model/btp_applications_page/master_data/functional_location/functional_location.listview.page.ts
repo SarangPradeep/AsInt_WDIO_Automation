@@ -49,6 +49,10 @@ class functionalLocationListView {
         await utils.switchToIframe(this.funLocIframe);
         await browser.pause(2000);
         console.log("Navigated to Functional Location List View");
+
+        // const nav = this.funcLocSearched();
+        // await utils.clickWithWait(nav);
+        // await utils.waitForBusyIndicatorToDisappear();
     }
 
     public async createFunctionalLocation(assignCount: number = 0): Promise<void> {

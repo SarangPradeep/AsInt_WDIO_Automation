@@ -1,12 +1,18 @@
 import { $, browser } from '@wdio/globals';
+import * as path from 'path';
 import SapUtils from '../../../../utils/utils';
+
+export const PICKLIST_02_UPLOAD_FILE = path.join(
+    process.cwd(),
+    'test_data/btp_applications/configuration_data/picklist_02_data.xlsx'
+);
 
 class ConfigurationAppPage {
 
     /* ========================
        SELECTORS
     ======================== */
-
+ 
     private get header() { return $('//h1[contains(text(),"Configuration")]'); }
     private get picklistTile() { return $('//div[@role="button"][.//span[normalize-space()="Picklist"]]'); }
     private get iFrame() { return $('iframe[title="Application"]'); }
@@ -31,7 +37,13 @@ class ConfigurationAppPage {
     private get uploadFileButton() { return $('//bdi[text()="Upload File"]/ancestor::button'); }
     private get uploadOkButton() { return $('//bdi[text()="OK"]/ancestor::button'); }
     private get yesButton() { return $('//bdi[text()="Yes"]/ancestor::button'); }
-    private get downloadDataButton() {  return $('//bdi[text()="Download Data"]/ancestor::button'); }    
+    private get downloadDataButton() {  return $('//bdi[text()="Download Data"]/ancestor::button'); }
+    private get editDescriptionButton() { return $('//button[@title="Edit Description"]'); }
+    private get editDescriptionInput() { return $('//*[@role="dialog"]//input[@aria-required="true"]'); }
+    private get cancelButton() { return $('//button[.//bdi[normalize-space()="Cancel"]]'); }
+    private get picklistHeaderTitle() { return $('//button[@title="Edit Description"]/preceding::div[@role="heading" and @aria-level="2"][1]/span[@dir="auto"]'); }
+    private get newRevisionButton() { return $('//button[@title="New Revision"]'); }
+    private get picklistSearchInput() { return $('//input[@type="search" and @aria-label="Search"]'); }
 
     /* ========================
        ACTIONS
@@ -39,7 +51,6 @@ class ConfigurationAppPage {
 
     async navigateToPicklist(): Promise<void> {
         await SapUtils.waitForBusyIndicatorToDisappear();
-        await SapUtils.waitForSAPPopupAndClose();
         await SapUtils.switchToIframe(this.iFrame);
         await SapUtils.waitForBusyIndicatorToDisappear();
 
@@ -221,13 +232,7 @@ class ConfigurationAppPage {
         await SapUtils.clickWithWait(this.uploadDataButton);
         console.log('[ACTION] Upload Data button clicked');
 
-        const path = await import('path');
-        const filePath = path.join(
-            process.cwd(),
-            'test_data/btp_applications/configuration_data/picklist_02_data.xlsx'
-        );
-
-        const remoteFilePath = await browser.uploadFile(filePath);
+        const remoteFilePath = await browser.uploadFile(PICKLIST_02_UPLOAD_FILE);
 
         const input = await this.fileInput;
         await input.setValue(remoteFilePath);
@@ -259,6 +264,69 @@ class ConfigurationAppPage {
 
     async clickDownloadDataButton() {
         await SapUtils.clickWithWait(this.downloadDataButton, 0, 20000);
+    }
+
+    async clickEditDescription(): Promise<void> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+
+        await SapUtils.clickWithWait(this.editDescriptionButton);
+        console.log('[ACTION] Edit Description button clicked');
+
+        await SapUtils.waitForBusyIndicatorToDisappear();
+    }
+
+    async editPicklistName(newName: string): Promise<void> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+
+        await SapUtils.setValueWithWait(this.editDescriptionInput, newName);
+        console.log(`[ACTION] Picklist name updated to: ${newName}`);
+
+        await SapUtils.waitForBusyIndicatorToDisappear();
+    }
+
+    async clickSaveButton(): Promise<void> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+
+        await SapUtils.clickWithWait(this.saveButton);
+        console.log('[ACTION] Save button clicked');
+
+        await SapUtils.waitForBusyIndicatorToDisappear();
+    }
+
+    async clickCancelButton(): Promise<void> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+
+        await SapUtils.clickWithWait(this.cancelButton);
+        console.log('[ACTION] Cancel button clicked');
+
+        await SapUtils.waitForBusyIndicatorToDisappear();
+    }
+
+    async getPicklistHeaderText(): Promise<string> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+        const el = await this.picklistHeaderTitle;
+        await el.waitForDisplayed({ timeout: 20000 });
+        const text = (await el.getText()).trim();
+        console.log(`[ACTION] Picklist header text read: "${text}"`);
+        return text;
+    }
+
+    async clickNewRevisionButton(): Promise<void> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+
+        await SapUtils.clickWithWait(this.newRevisionButton);
+        console.log('[ACTION] New Revision button clicked');
+
+        await SapUtils.waitForBusyIndicatorToDisappear();
+    }
+
+    async searchForPicklist(name: string): Promise<void> {
+        await SapUtils.waitForBusyIndicatorToDisappear();
+
+        await SapUtils.setValueWithWait(this.picklistSearchInput, name);
+        console.log(`[ACTION] Searched for picklist: "${name}"`);
+
+        await SapUtils.waitForBusyIndicatorToDisappear();
     }
 }
 

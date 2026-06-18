@@ -30,12 +30,9 @@ class HomePage {
     }
     
     async clickEquipmentTile(): Promise<void> {
-        await utils.waitForSAPPopupAndClose();
         await this.navigateToEquipment();
-        await utils.waitForSAPPopupAndClose();
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.equipmentIframe);
-        await utils.waitForSAPPopupAndClose();
         console.log("Navigated to Equipment List View");
         await browser.pause(2000);
     }                              

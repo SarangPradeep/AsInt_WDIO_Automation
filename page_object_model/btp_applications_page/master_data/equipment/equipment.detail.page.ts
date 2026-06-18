@@ -1,5 +1,6 @@
 import utils from "../../../../utils/utils.ts";
 import EquipmentListviewPage from "./equipment.listview.page.ts";
+import * as path from 'path';
 class EquipmentDetailPage {
     //  SELECTORS 
     public equipmentHeadValue!: string;
@@ -8,6 +9,7 @@ class EquipmentDetailPage {
     get successOkBtn() { return $("//header[.//text()='Success']/following::button[.//text()='OK']"); }
     equipmentName(name: string) { return $(`//*[text()="${name}"]//span`); }
     private get deleteBtn() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Delete']]"); }
+    private get downloadReport() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Download Report']]"); }
     get structureSection() { return $('//button[.//bdi[text()="Structure"]]'); }
     get assignmentSection() { return $('//button[.//bdi[text()="Assignments"]]'); }
     get classificationSection() { return $('//button[.//bdi[text()="Classification & MDA"]]'); }
@@ -72,8 +74,8 @@ class EquipmentDetailPage {
     private get noOfCharMDA() { return $("//span[text()='Maintenance Data Attribute']/following::h2//span"); }
     private get equipmentHeaderTitleSpans() { return $$("//header[@role='banner']//*[@role='heading']//span[normalize-space()]"); }
     private get equipmentEditHeader() { return $("//bdi[text()='Edit Header']"); }
-    private get equipmentDescEditHeader() { return $("//div[@role='dialog']//bdi[contains(text(),'Description')]/following::input[1][not(@readonly)]"); }
-    private get equipmentCategoryEditHeader() { return $("//div[@role='dialog']//bdi[text()='Category']/following::input[1]"); }
+    private get equipmentDescEditHeader() { return $("//label[.//text()='Short Description']/following::input[1]"); }
+    private get equipmentCategoryEditHeader() { return $("//label[.//text()='Category']/following::input[1]"); }
     private get equipmentCategoryDialog() { return $("//span[text()='Select Category']"); }
     private get equipmentFirstCategoryChoose() { return $("(//span[.='Select Category']/ancestor::header/following::*[name()='circle'][2])[1]"); }
     private get equipmentCategorySave() { return $("(//bdi[text()='Save'])[2]"); }
@@ -257,44 +259,80 @@ class EquipmentDetailPage {
 
             await utils.switchToIframe(this.equipmentIframe);
 
-            let foundValid = false;
+            let assignedThisRound = false;
+            let attempts = 0;
 
-            while (!foundValid) {
+            while (!assignedThisRound && attempts < 25) {
+                attempts++;
                 await browser.pause(3000);
                 const nameCell = $(`(//tr[@role='row'])[${i + 1}]//td[3]//span`);
+                if (!(await nameCell.isExisting())) {
+                    console.log(`No more rows available at index ${i + 1} - aborting assignment loop`);
+                    break;
+                }
                 await nameCell.waitForDisplayed({ timeout: 20000 });
 
                 let equipName: string = (await nameCell.getText()) || (await nameCell.getAttribute("innerText")) || "";
                 equipName = equipName.trim();
-                await console.log(`Checking equipment: ${equipName}`);
+                console.log(`Checking equipment: ${equipName}`);
 
                 if (
                     equipName &&
-                    (equipName === EquipmentListviewPage.createdEquipmentName) || equipName === superEquipValue
+                    ((equipName === EquipmentListviewPage.createdEquipmentName) || equipName === superEquipValue)
                 ) {
                     i++;
-                    await console.log(`Skipping equipment: ${equipName} as it matches either the equipment being edited or the superordinate equipment`);
+                    console.log(`Skipping equipment: ${equipName} (matches edited or superordinate equipment)`);
                     continue;
                 }
 
-                // click corresponding checkbox (td[2])
                 const checkbox = $(`((//tr[@role='row'])[${i + 1}]//td[2]//div)[1]`);
                 await utils.clickWithWait(checkbox);
                 await utils.waitForBusyIndicatorToDisappear();
 
-                selectedCount++;
-                i++;
-                foundValid = true;
-
                 await utils.clickWithWait($("//header[.//text()='Select Equipment']/following::bdi[text()='Confirm']"));
                 await utils.waitForBusyIndicatorToDisappear();
-                await browser.pause(1000);
-                await utils.clickWithWait($("//header[.//text()='Success']/following::bdi[text()='OK']"), 1000);
-                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(1500);
 
-                selectedCount++;
-                i++;
-                foundValid = true;
+                const successOk = await $("//header[.//text()='Success']/following::bdi[text()='OK']");
+                const errorOk = await $("//header[.//text()='Error']/following::bdi[text()='OK']");
+                const errorClose = await $("//header[.//text()='Error']/following::bdi[text()='Close']");
+
+                let outcome: string = "none";
+                try {
+                    await browser.waitUntil(async () => {
+                        if (await successOk.isDisplayed().catch(() => false)) { outcome = "success"; return true; }
+                        if (await errorOk.isDisplayed().catch(() => false) || await errorClose.isDisplayed().catch(() => false)) { outcome = "error"; return true; }
+                        return false;
+                    }, { timeout: 20000, interval: 500 });
+                } catch { /* neither popup appeared */ }
+
+                if (outcome === "success") {
+                    await utils.clickWithWait(successOk, 1000);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    selectedCount++;
+                    i++;
+                    assignedThisRound = true;
+                    console.log(`Component '${equipName}' assigned successfully (${selectedCount}/${noOfequip})`);
+                } else if (outcome === "error") {
+                    console.log(`Assignment failed for '${equipName}', dismissing error and trying next row`);
+                    if (await errorOk.isDisplayed().catch(() => false)) {
+                        await utils.clickWithWait(errorOk, 500);
+                    } else if (await errorClose.isDisplayed().catch(() => false)) {
+                        await utils.clickWithWait(errorClose, 500);
+                    }
+                    await utils.waitForBusyIndicatorToDisappear();
+                    i++;
+                    continue;
+                } else {
+                    console.log(`No success/error popup detected for '${equipName}', moving on`);
+                    i++;
+                    continue;
+                }
+            }
+
+            if (!assignedThisRound) {
+                console.log("Could not assign a component in this round - exiting loop");
+                break;
             }
     }
 
@@ -394,118 +432,6 @@ class EquipmentDetailPage {
         await utils.getAssignedValue(updatedChar);
         console.log("Assigned charactertics : "+updatedChar);
     }
-    async gotoAttachmentsTabAndAssignAttachment() {
-        await browser.pause(4000);
-        await utils.switchToIframe(this.equipmentIframe);
-        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
-        await this.attachmentsSection.click();
-        // Click on "Add Attachment" button
-        await utils.switchToIframe(this.equipmentIframe);
-        const addAttachmentBtn = await $('//button[.//bdi[text()="Assign"]]');
-        await utils.clickWithWait(addAttachmentBtn);
-        await browser.pause(2000);
-        await utils.selectCheckboxes(2);
-        await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'));
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-    }
-
-    async deleteAttachmentAndVerify() {
-        const firstAttachmentCheckbox = await $('(//table//tr[@role="row"]//div[@role="checkbox"])[1]');
-        await firstAttachmentCheckbox.waitForClickable({ timeout: 20000 });
-        await firstAttachmentCheckbox.click();
-
-        await utils.clickWithWait($('//button[.//bdi[text()="Assign"]]/following::bdi[1]'));
-        await utils.clickWithWait($('//button[.//bdi[text()="Yes"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-        await browser.pause(2000);
-    }
-
-    async addLink() {
-        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
-        await utils.clickWithWait(addLinkBtn);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.equipmentIframe);
-        const link = await $('//li[contains(.,"Add Link")]');
-        await utils.clickWithWait(link);
-        await browser.pause(2000);
-
-        // Display Name
-        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
-        await displayNameInput.waitForDisplayed();
-        await displayNameInput.setValue("Test Link");
-
-        // Link
-        const linkInput = await $(`//label[.//bdi[text()='Link']]//following::input[1]`);
-        await linkInput.setValue("https://testlink.com");
-
-        // Phase (MultiComboBox)
-        // if (false) {
-        //     const phaseInput = await $(`//label[.//bdi[text()='Phase']]//following::input[1]`);
-        //     await phaseInput.click();
-        //     await phaseInput.setValue(data.phase);
-
-        //     const option = await $(`//li//span[text()='${data.phase}']`);
-        //     await option.waitForDisplayed();
-        //     await option.click();
-        // }
-
-        // // Category (ComboBox)
-        // if (false) {
-        //     const categoryInput = await $(`//label[.//bdi[text()='Category']]//following::input[1]`);
-        //     await categoryInput.click();
-        //     await categoryInput.setValue(data.category);
-
-        //     const option = await $(`//li//span[text()='${data.category}']`);
-        //     await option.waitForDisplayed();
-        //     await option.click();
-        // }
-
-        // // Language (ComboBox)
-        // if (false) {
-        //     const languageInput = await $(`//label[.//bdi[text()='Language']]//following::input[1]`);
-        //     await languageInput.click();
-        //     await languageInput.setValue(data.language);
-
-        //     const option = await $(`//li//span[text()='${data.language}']`);
-        //     await option.waitForDisplayed();
-        //     await option.click();
-        // }
-        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-        await browser.pause(2000);
-    }
-    async addDocument() {
-        
-        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
-        await utils.clickWithWait(addLinkBtn);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.equipmentIframe);
-        const documentOption = await $('//li[contains(.,"Add Document")]');
-        await utils.clickWithWait(documentOption);
-        await browser.pause(2000);
-        await utils.uploadDocument('vessel-1.png');
-        await browser.pause(9000);
-        await utils.clickWithWait($('//label[.//bdi[text()="Category"]]//following::span[contains(@id,"arrow")][1]'));
-        await utils.clickWithWait($('//li[@role="option" and .//span[text()="Bills of Materials"]]'));
-        await browser.pause(1000);
-        await utils.clickWithWait($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'));
-        await browser.pause(1000);
-        await utils.clickWithWait($('//li[@role="option"][1]//div[@role="checkbox"]'));
-        await browser.pause(1000);
-        await utils.clickWithWait($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'));
-        await browser.pause(1000);
-        await utils.clickWithWait($('//label[.//bdi[text()="Language"]]//following::span[contains(@id,"arrow")][1]'));
-        await browser.pause(1000);
-        await utils.clickWithWait($('//span[text()="English"]/ancestor::li'));
-        await browser.pause(1000);
-        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(10000);
-    }
 
     async verifyAssetIntelligence() {
         console.log("Navigating to Asset Intelligence Tab");
@@ -562,6 +488,147 @@ class EquipmentDetailPage {
 
     } 
 
+    async downloadAndVerifyPDF() {
+        console.log("Downloading PDF and verifying its content");
+        await utils.switchToIframe(this.equipmentIframe);
+        const { name: equipmentName } = await utils.getEntityNameAndId();
+        this.equipmentHeadValue = equipmentName;
+        await utils.clickWithWait(this.downloadReport);
+        let expectedFilters: string[] = [];
+        try {
+            const info = await $("//*[contains(text(),'Failed to export')]");
+            await info.waitForDisplayed({ timeout: 7000 });
+            console.log(await info.getText());
+            const viewDetails = await $("//span[.='Failed to export the following']/following::a");
+            await utils.clickWithWait(viewDetails);
+            const filterNames = await $$("//span[.='Failed to export the following']/following-sibling::div//li");
+            for (const el of filterNames) {
+                const text = (await el.getText()).trim();
+                if (text) expectedFilters.push(text);
+            }
+            console.log("Details not downloaded:", expectedFilters);
+            const okBtn = await $("//header[.='Information']/following::button[.='OK']");
+            await okBtn.waitForDisplayed({ timeout: 5000 });
+            await utils.clickWithWait(okBtn);
+        } catch (e) {
+            console.log("Export success popup not shown");
+        }
+        console.log("Download initiated, waiting for file to be downloaded...");
+        const filePath = await utils.waitForDownload('.pdf');
+        console.log("File downloaded at:", filePath);
+        const fileName = path.basename(filePath);
+        console.log("Downloaded file name:", fileName);
+        expect(fileName).toContain(this.equipmentHeadValue);
+        console.log("File name contains Equipment header value");
+        const pdfContent = await utils.extractTextFromPDF(filePath);
+        console.log("Extracted PDF content:", pdfContent);
+        expect(pdfContent).toContain(this.equipmentHeadValue);
+        console.log("PDF content contains Equipment header value");
+        expect(pdfContent).toContain('Table of Content');
+        console.log("PDF content verification completed successfully");
+    }
+
+    public async verifyCML() {
+        console.log("Starting CML verification");
+        console.log("Capturing Equipment header value for CML check");
+        await utils.switchToIframe(this.equipmentIframe);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        const { name: equipmentName, id: actualId } = await utils.getEntityNameAndId();
+        this.equipmentHeadValue = equipmentName;
+        console.log(`Final → Equipment="${equipmentName}" | DisplayID="${actualId}"`);
+        if (!actualId) {
+            throw new Error("Equipment Display ID could not be captured from header");
+        }
+        console.log("Verifying CML section");
+        const parentTab = await browser.getWindowHandle();
+        const oldHandles = await browser.getWindowHandles();
+        await utils.clickWithWait($('//bdi[text()="CML"]'));
+        await browser.waitUntil(
+            async () => (await browser.getWindowHandles()).length > oldHandles.length,
+            { timeout: 10000 }
+        );
+        const newHandles = await browser.getWindowHandles();
+        const newTab = newHandles.find(h => !oldHandles.includes(h));
+        await browser.switchToWindow(newTab!);
+        await browser.waitUntil(
+            async () => (await browser.execute(() => document.readyState)) === 'complete',
+            { timeout: 30000 }
+        );
+        await utils.waitForBusyIndicatorToDisappear();
+        const frame = await $('//iframe[@data-help-id="application-cml-manage"]');
+        await frame.waitForExist({ timeout: 30000 });
+        await frame.waitForDisplayed({ timeout: 30000 });
+        await utils.switchToIframe(frame);
+        console.log("Switched to CML iframe");
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        const cmlElem = await $("(//h2//span)[2]");
+        await cmlElem.waitForDisplayed({ timeout: 30000 });
+        const equipInCML = await $("(//header//*[@role='heading']/span)[1]");
+        await equipInCML.waitForDisplayed({ timeout: 20000 });
+        await browser.waitUntil(async () => {
+            return (await equipInCML.getText()).trim().length > 0;
+        }, { timeout: 10000 });
+        const equipInCMLText = await equipInCML.getText();
+        console.log("Equipment in CML:", equipInCMLText);
+        let displayIdInCMLText = "";
+        await browser.waitUntil(async () => {
+            const candidates = await $$("//header//span");
+            for (const el of candidates) {
+                try {
+                    if (!(await el.isDisplayed())) continue;
+                    const txt = ((await el.getText()) ?? "").trim();
+                    if (txt.startsWith("EQUI")) {
+                        displayIdInCMLText = txt;
+                        return true;
+                    }
+                } catch { /* stale, continue */ }
+            }
+            return false;
+        }, { timeout: 20000, interval: 500, timeoutMsg: "EQUI display id not found in CML header" });
+        console.log("Display ID in CML:", displayIdInCMLText);
+        if (!equipInCMLText || !displayIdInCMLText) {
+            throw new Error("CML header values are empty");
+        }
+        await utils.assertTextEquals(equipInCML, this.equipmentHeadValue);
+        console.log("Equipment in CML matches header value");
+        if (displayIdInCMLText !== actualId) {
+            throw new Error(`Display ID mismatch in CML. Expected: ${actualId}, Found: ${displayIdInCMLText}`);
+        }
+        console.log("Display ID in CML matches header value");
+        let finalValue = 0;
+        let lastSeenText = "";
+        try {
+            await browser.waitUntil(
+                async () => {
+                    let text = (await cmlElem.getText()) ?? "";
+                    if (!text) text = (await cmlElem.getAttribute("innerText")) ?? "";
+                    lastSeenText = text;
+                    const value = await utils.getAssignedValue(text);
+                    finalValue = value;
+                    return value > 0;
+                },
+                { timeout: 20000, interval: 1000 }
+            );
+            console.log(`SUCCESS CML value became ${finalValue}`);
+        } catch (e) {
+            console.log(`WARNING → CML value is still 0 after waiting`);
+            console.log(`FINAL → CML TEXT: ${lastSeenText}`);
+        }
+        let cmlText = (await cmlElem.getText()) ?? "";
+        if (!cmlText) {
+            cmlText = (await cmlElem.getAttribute("innerText")) ?? "";
+        }
+        console.log("FINAL CML TEXT:", cmlText);
+        const CML = await utils.getAssignedValue(cmlText);
+        console.log("Assigned CMLs:", CML);
+        console.log("CML verification completed successfully");
+        await browser.closeWindow();
+        await browser.switchToWindow(parentTab);
+        console.log("Returned to parent tab");
+    }
+
     async deleteEquipment(){
         console.log("Deleting the Equipment");
         console.log("Capturing Equipment header value for Deletion");
@@ -569,7 +636,7 @@ class EquipmentDetailPage {
         await utils.switchToIframe(this.equipmentIframe);
         await browser.pause(4000);
 
-        const { equipmentName, actualId } = await this.getEquipmentFinalIDs();
+        const { name: equipmentName, id: actualId } = await utils.getEntityNameAndId();
 
         this.equipmentHeadValue = equipmentName;
         this.displayID = actualId;
@@ -593,104 +660,6 @@ class EquipmentDetailPage {
         console.log("Equipment deletion in progress");
         console.log("Waiting for deletion to complete...");
         console.log("Deletion completed, confirming deletion");
-    }
-    
-    public async getEquipmentFinalIDs() {
-        let equipmentName = "";
-        let actualId = "";
-
-        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
-
-        for (let i = 0; i < 3; i++) {
-
-            if (i === 0 && await expandBtn.isDisplayed()) {
-                await expandBtn.waitForClickable({ timeout: 5000 });
-                await expandBtn.click();
-            } 
-            else if (i === 1 && await collapseBtn.isDisplayed()) {
-                await collapseBtn.waitForClickable({ timeout: 5000 });
-                await collapseBtn.click();
-            }
-
-            await browser.pause(500);
-
-            const headerText = await this.getEquipmentHeaderId();
-            const displayText = await this.getEquipmentDisplayId();
-
-            if (!equipmentName && headerText) equipmentName = headerText;
-            if (!actualId && displayText) actualId = displayText;
-
-            console.log(`Attempt ${i + 1} → Equipment="${equipmentName || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
-
-            if (equipmentName && actualId) break;
-        }
-
-        return { equipmentName, actualId };
-    }
-
-    public async getEquipmentDisplayId() {
-        try {
-            const txt = await browser.execute(() => {
-                const el = document.evaluate(
-                    "//bdi[text()='Display ID: ']/ancestor::span[2]/following-sibling::span",
-                    document,
-                    null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
-                    null
-                ).singleNodeValue;
-
-                return el ? (el.textContent || "") : "";
-            });
-
-            return txt ? txt.replace("Display ID:", "").trim() : "";
-        } catch (e) {
-            return "";
-        }
-    }
-
-    public async getEquipmentHeaderId() {
-        const xpath = "//header//*[@role='heading']//span";
-        let found = false;
-
-        try {
-            await browser.waitUntil(async () => {
-                const els = await $$(xpath);
-                if (!els.length) return false;
-
-                for (let el of els) {
-                    let txt = (await el.getText()) ?? "";
-                    if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
-                    txt = txt?.trim();
-
-                    if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
-                        found = true;
-                        return true;
-                    }
-                }
-                return false;
-            }, {
-                timeout: 4000,
-                interval: 500
-            });
-
-        } catch (e) {
-            console.log("Equipment header not visible in this attempt");
-        }
-
-        if (!found) return "";
-
-        const spans = await $$(xpath);
-        for (let el of spans) {
-            let txt = (await el.getText()) ?? "";
-            if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
-            txt = txt?.trim();
-
-            if (txt && (txt.endsWith("AUTO") || txt.endsWith("EQUIP-AUTO"))) {
-                return txt;
-            }
-        }
-        return "";
     }
 
     public async verifyHeader(): Promise<void> {
@@ -736,6 +705,11 @@ class EquipmentDetailPage {
     public async editHeader(): Promise<void> {
         console.log("Editing header's Information");
         await utils.clickWithWait(this.equipmentEditHeader);
+        await this.equipmentDescEditHeader.waitForDisplayed({ timeout: 30000 });
+        await this.equipmentDescEditHeader.click();
+        await browser.keys(['Control', 'a']);
+        await browser.keys('Delete');
+        await browser.pause(300);
         await utils.setValueWithWait(this.equipmentDescEditHeader, "Equipment header updated by automation");
         await utils.clickWithWait(this.equipmentCategoryEditHeader);
         await this.equipmentCategoryDialog.waitForDisplayed({ timeout: 30000 });

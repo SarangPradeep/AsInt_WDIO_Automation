@@ -1,6 +1,6 @@
 import assetRCMList from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.listview.page';
 import assetRCMDetailView from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.detailview.page';
-
+import utils from 'utils/utils';
 describe('BTP - RCM Analysis Application - Functional Test', () => {
 
     it('should navigate to Asset RCM list view', async () => {
@@ -56,7 +56,7 @@ describe('BTP - RCM Analysis Application - Functional Test', () => {
     });
 
     it('should verify attachment section' , async () => {
-        await assetRCMDetailView.gotoAttachmentsTabAndAssignAttachment();
+        await utils.verifyAttachmentSection();
     });
 
     it('should able to download and verify summary report', async () => {

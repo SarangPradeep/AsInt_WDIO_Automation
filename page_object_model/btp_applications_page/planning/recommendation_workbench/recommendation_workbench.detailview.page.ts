@@ -85,81 +85,9 @@ class RecommendationWorkbenchDetailView {
     public async captureReccWorkbenchId(){
         await utils.switchToIframe(this.reccWorkbenchIframe);
         await browser.pause(4000);
-        const { shortdesc, reco } = await this.captureIds();
-        recommendationWorkbenchListView.ReccWorkShortDesc = shortdesc;
-        recommendationWorkbenchListView.ReccWorkDisplayID = reco;
-    }
-
-    public async getRecoId(){
-        try{
-            await browser.waitUntil(async()=>{
-                const text=await browser.execute(()=>{
-                    const spans=[...document.querySelectorAll("header span")];
-                    const match=spans.find(el=>
-                        el.textContent?.trim().startsWith("Automation Recommendation")
-                    );
-                    return match?.textContent?.trim() || "";
-                });
-                return text!=="";
-            },{
-                timeout:10000,
-                interval:500
-            });
-            const text=await browser.execute(()=>{
-                const spans=[...document.querySelectorAll("header span")];
-                const match=spans.find(el=>
-                    el.textContent?.trim().startsWith("Automation Recommendation")
-                );
-                return match?.textContent?.trim() || "";
-            });
-            return text;
-        }catch(e){
-            console.log("Recommendation not visible in this attempt");
-            return "";
-        }
-    }
-
-    public async getDisplayId(): Promise<string> {
-        try {
-            const txt = await browser.execute(() => {
-                const el = document.evaluate( 
-                    "//span[starts-with(normalize-space(),'RECO_ASINT')]",
-                    document,
-                    null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
-                    null
-                ).singleNodeValue;
-                return el ? (el.textContent || "") : "";
-            });
-            return txt ? txt.replace("RECO ASINT ID:", "").trim() : "";
-        } catch (e) {
-            return "";
-        }
-    }
-
-    public async captureIds() {
-        let shortdesc = "";
-        let reco = "";
-        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
-        for (let i = 0; i < 3; i++) {
-            if (i === 0 && await expandBtn.isDisplayed()) {
-                await expandBtn.waitForClickable({ timeout: 5000 });
-                await expandBtn.click();
-            } 
-            else if (i === 1 && await collapseBtn.isDisplayed()) {
-                await collapseBtn.waitForClickable({ timeout: 5000 });
-                await collapseBtn.click();
-            }
-            await browser.pause(500); 
-            const headerText = await this.getRecoId();
-            const displayText = await this.getDisplayId();
-            if (!shortdesc && headerText) shortdesc = headerText;
-            if (!reco && displayText) reco = displayText;
-            console.log(`Attempt ${i + 1} → Recommendation="${shortdesc || 'EMPTY'}" | DisplayID="${reco || 'EMPTY'}"`);
-            if (shortdesc && reco) break;
-        }
-        return { shortdesc, reco };
+        const { name, id } = await utils.getEntityNameAndId();
+        recommendationWorkbenchListView.ReccWorkShortDesc = name;
+        recommendationWorkbenchListView.ReccWorkDisplayID = id;
     }
 
     public async editGeneralInformation(){
@@ -273,36 +201,6 @@ class RecommendationWorkbenchDetailView {
         await browser.pause(2000);
         console.log("Success OK button clicked in Risk Data section");
         console.log("Risk Data edited successfully");
-    }
-
-    public async addAttachments(){ 
-        console.log("Adding attachments...");
-        await utils.switchToIframe(this.reccWorkbenchIframe);
-        await browser.pause(4000);
-        await utils.clickWithWait(this.attachmentsTab);
-        console.log("Navigating to Attachment tab to assign attachment");
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
-        const addAttachmentBtn = await $('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
-        const addAttachmentBtn2 = await $('//header[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
-        if(await addAttachmentBtn.isExisting()){
-            await utils.clickWithWait(addAttachmentBtn,2000);
-        }
-        else if(await addAttachmentBtn2.isExisting()){
-            await utils.clickWithWait(addAttachmentBtn2,2000);
-        }
-        await browser.pause(2000);
-        await utils.selectCheckboxes(2);
-        await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'),1000);
-
-        await this.attachSuccMsg.waitForDisplayed({
-            timeout: 20000,
-            timeoutMsg: 'Document assign success message not displayed'
-        });
-
-        console.log("Document assign success message displayed");
-        await utils.clickWithWait(this.okBtn,1000);
-        console.log("Attachment assigned successfully");
     }
 
     public async verifyHistoricData(){
@@ -450,13 +348,13 @@ class RecommendationWorkbenchDetailView {
     }
 
     public async verifyHeader(){
-        console.log("Verifying header information of MSP");
+        console.log("Verifying header information of Recommendation Workbench");
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.reccWorkbenchIframe);
         await browser.pause(4000);
-        const asdHeader = await this.captureIds();
-        await expect(asdHeader.shortdesc).toEqual(recommendationWorkbenchListView.ReccWorkShortDesc);
-        console.log("MSP Event name matches header's name");
+        const { name } = await utils.getEntityNameAndId();
+        await expect(name).toEqual(recommendationWorkbenchListView.ReccWorkShortDesc);
+        console.log("Recommendation name matches header's name");
     }
 
     public async editHeader(){
@@ -501,7 +399,7 @@ class RecommendationWorkbenchDetailView {
         await utils.clickWithWait(this.okBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
-        console.log("RCM deleted successfully");
+        console.log("Recommendation deleted successfully");
     }
 
 }export default new RecommendationWorkbenchDetailView();
