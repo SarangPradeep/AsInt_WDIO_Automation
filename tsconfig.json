@@ -38,6 +38,8 @@
         "integrity_configuration",
         "reliability/root_cause_analysis",
         "integrity",
-        "wdio.conf.ts"
-, "planning/recommendation_workbench"    ]
+        "planning/maintenance_orders",
+        "wdio.conf.ts",
+        "planning/recommendation_workbench"    
+    ]
 }

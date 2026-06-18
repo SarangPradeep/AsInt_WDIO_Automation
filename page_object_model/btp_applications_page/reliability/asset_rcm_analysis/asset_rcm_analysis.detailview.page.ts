@@ -3,6 +3,7 @@ import assetRCMListView from "./asset_rcm_analysis.listview.page";
 import assetRcmData from "../../../../test_data/btp_applications/reliability/asset_rcm.data";
 import * as path from 'path';
 import { url } from 'inspector';
+import console from 'console';
 class assetRCMDetailView {
 
     private get infoTab() { return $("//bdi[text()='Information']"); }
@@ -132,12 +133,26 @@ class assetRCMDetailView {
     private get strategiesTexts() { return $$("//div[@role='heading']//following::span[contains(text(),'Strategies')]"); }
     private get strategiesCreateBtn() { return $("(//div[@role='heading']//following::span[contains(text(),'Causes')])[1]/following::button[.='Create']"); }
     private get createStrategyHeader() { return $("//h1[normalize-space()='Create Strategy']"); }
-    private get strategyDescInput() { return $("//bdi[text()='Description']/following::input[1]"); }
+    private get strategyDescInput() { return $("//bdi[text()='Description']/following::textarea[1]"); }
     private get strategyLongDesc() { return $("//bdi[text()='Long Description']/following::textarea"); }
     private get strategyTypeDropdown() { return $("//bdi[text()='Type']/following::span[@role='button'][1]"); }
+    private get strategyInspTypDrp() { return $("//bdi[text()='Inspection Type ']/following::span[@role='button'][1]"); }
+    private get strategyInspStageDrp() { return $("//bdi[text()='Inspection Stage']/following::span[@role='button'][1]"); }
+    private get MDAwindowBtn() { return $("//bdi[text()='MDA']/following::span[@role='button'][1]"); }
+    private get MDAheader() { return $("//h1[normalize-space()='Select Maintenance Data Attribution']"); }
+    private get MDAcheckbox() { return $("//h1[normalize-space()='Select Maintenance Data Attribution']/following::tr[3]//div[@role='checkbox']"); }
+    private get saveMDABtn() { return $("//h1[normalize-space()='Select Maintenance Data Attribution']/following::button[.//text()='Save']"); }
+    private get sheMRvalues() { return $("//bdi[text()='SHE MR at Due Date']/following::input[1]"); }
+    private get finMRvalues() { return $("//bdi[text()='FIN MR at Due Date']/following::input[1]"); }
+    private get mitigatedRiskValue() { return $("//bdi[text()='Mitigated FIN Consequence ($K)']/following::input[1]"); }
+    private get mitigatedPofValue() { return $("//bdi[text()='Mitigated FIN POF']/following::input[1]"); }
     private get strategyStartDate() { return $("//bdi[text()='Start Date']/following::input[1]"); }
     private get strategyDueDate() { return $("//bdi[text()='Due Date']/following::input[1]"); }
     private get strategyCreateBtn() { return $("//footer//button[.//bdi[.='Create']]"); }
+    private get strategySaveBtn() { return $("//footer//button[.//bdi[.='Save']]"); }
+    private get strategyFirstRow() { return (description: string) => $$(`//tr[@role='row']//span[contains(text(),'${description}')]/following::div[@title="Click to Select"][1]`); }
+    private get strategyEditBtn() { return $("(//div[@role='heading']//following::span[contains(text(),'Causes')])[1]/following::button[.='Edit & Update']"); }
+    private get selectAllStrategyCheckbox() { return $$("//div[@role='form' and .//*[contains(text(),'Strategies')]]//div[@title='Select All']"); }
     private get riskInformationSections() { return $$("//bdi[normalize-space()='Risk Information']"); }
     private get riskSearchInput() { return $("//input[@placeholder='Search by Transition , Last transition date , FIN Risk , SHE Risk   ']"); }
     private get editRiskBtn() { return $("//button[@title='Edit']"); }
@@ -219,8 +234,12 @@ class assetRCMDetailView {
     private maintainableItemValueFunLoc!: string;
     private failureModeValueFunLoc!: string;
     private assignedMaintainable!: number;
+    private maintainableItemEquip: boolean = false;
+    private failureModeEquip: boolean = false;
     private failureModeFunLoc: boolean = false;
     private maintenableItemFunLoc: boolean = false;
+    public createdStrategies: any[] = [];
+    public commonStrategyValues: any = {};
 
     public async verifyAndEditGenInfo(){
         console.log("Navigating to Information Tab");
@@ -553,6 +572,7 @@ class assetRCMDetailView {
         {
             console.log("No maintainable values are present");
             await utils.clickWithWait(this.cancelBtn);
+            this.maintainableItemEquip = true;
             return;
         }
         else
@@ -656,6 +676,7 @@ class assetRCMDetailView {
         const count = await utils.getAssignedValue(fmText);
         console.log("Failure Modes count: " + count);
         if (count === 0) {
+            this.failureModeEquip = true;
             await utils.clickWithWait(this.cancelBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
@@ -683,8 +704,8 @@ class assetRCMDetailView {
     }
 
     public async verifyFailureModesDetails()
-    {
-        if(this.functionValue = "0")
+    { 
+        if(this.functionValue === "0")
         {
             return;
         }
@@ -846,56 +867,305 @@ class assetRCMDetailView {
         }
         txt = await this.causesText.getText();
         console.log("Causes after: " + await utils.getAssignedValue(txt));
-        // for (const el of await this.strategiesTexts) {
-        //     if (await el.isDisplayed()) {
-        //         console.log("Strategies: " + await utils.getAssignedValue(await el.getText()));
-        //     }
-        // }
-        // await browser.pause(5000);
-        // await utils.clickWithWait(this.strategiesCreateBtn);
-        // await browser.pause(2000);
-        // await expect(this.createStrategyHeader).toBeDisplayed();
-        // await browser.pause(5000);
-        // //await utils.setValueWithWait(this.strategyDescInput,'Strategies for RCM Automation')
-        // // await this.strategyDescInput.waitForDisplayed();
-        // // await this.strategyDescInput.click();
-        // // await this.strategyDescInput.clearValue();
-        // // await this.strategyDescInput.setValue("Strategies for RCM Automation");
-        // await this.strategyDescInput.waitForDisplayed({ timeout: 60000 });
-        // await browser.execute((el, value) => {
-        //     const input = el.tagName === 'INPUT' ? el : el.querySelector('input');
-        //     if (input) {
-        //         const inp = input as HTMLInputElement;
-        //         inp.focus();
-        //         inp.value = value;
-        //         inp.dispatchEvent(new Event('input', { bubbles: true }));
-        //         inp.dispatchEvent(new Event('change', { bubbles: true }));
-        //         inp.dispatchEvent(new Event('blur', { bubbles: true }));
-        //     }
-        // }, await this.strategyDescInput, "Strategies for RCM Automation");
-        
-        // await browser.pause(2000);
-        // await this.strategyLongDesc.setValue("Test Long Desc");
-        // await browser.pause(2000);
-        // await utils.clickWithWait(this.strategyTypeDropdown);
-        // await browser.keys("ArrowDown");
-        // await browser.keys("Enter");
-        // const today = new Date();
-        // const tomorrow = new Date();
-        // tomorrow.setDate(today.getDate() + 1);
-        // const format = (d: Date): string => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-        // await this.strategyStartDate.setValue(format(today));
-        // await this.strategyDueDate.setValue(format(tomorrow));
-        // await utils.clickWithWait(this.strategyCreateBtn);
-        // await utils.waitForBusyIndicatorToDisappear();
-        // await browser.pause(2000);
-        // for (const el of await this.strategiesTexts) {
-        //     if (await el.isDisplayed()) {
-        //         console.log("Strategies after: " + await utils.getAssignedValue(await el.getText()));
-        //     }
-        // }
-
+        await this.createEditStrategy();
         console.log("Failure Mode Flow ends");
+    }
+
+    public async createEditStrategy()
+    {
+        await this.createStrategy();
+        await this.editStrategies();
+    }
+
+    public async createStrategy()
+    {
+        console.log("Creating strategy for failure mode...");
+        const alreadyAssignedStrategies = await this.strategiesTexts;
+        for(const strategy of alreadyAssignedStrategies){
+            const text = await strategy.getText();
+            console.log("Already assigned strategy: "+await utils.getAssignedValue(text));
+        }
+        console.log("Creating 3 strategies for failure mode...");
+        this.createdStrategies = [];
+        for (let i = 1; i <= 3; i++) {
+            await utils.clickWithWait(this.strategiesCreateBtn);
+            await expect(this.createStrategyHeader).toBeDisplayed();
+            await browser.pause(2000);
+            const strategyDesc = `Strategies for RCM Automation ${i}`;
+            const strategyLongDesc = `Test Long Desc ${i}`;
+            await this.strategyDescInput.click();
+            await browser.waitUntil(
+                async () => await this.strategyDescInput.isEnabled(),
+                { timeout: 5000 }
+            );
+            await this.strategyDescInput.clearValue();
+            await this.strategyDescInput.setValue(strategyDesc);
+            console.log("After setValue:", await this.strategyDescInput.getValue());
+            await utils.setValueWithWait(this.strategyLongDesc,strategyLongDesc,1500);
+            await browser.execute((el, value) => {
+                const input = el.tagName === 'INPUT' ? el : el.querySelector('input');
+                if (input) {
+                    const inp = input as HTMLInputElement;
+                    inp.focus();
+                    inp.value = value;
+                    inp.dispatchEvent(new Event('input', { bubbles: true }));
+                    inp.dispatchEvent(new Event('change', { bubbles: true }));
+                    inp.dispatchEvent(new Event('blur', { bubbles: true }));
+                }
+            }, await this.strategyDescInput, strategyDesc);
+            await utils.clickWithWait(this.strategyTypeDropdown,1500);
+            await browser.keys("ArrowDown");
+            await browser.keys("Enter");
+
+            await utils.clickWithWait(this.strategyInspTypDrp,1500);
+            await browser.keys("ArrowDown");
+            await browser.keys("Enter");
+
+            await utils.clickWithWait(this.strategyInspStageDrp,1500);
+            await browser.keys("ArrowDown");
+            await browser.keys("Enter");
+
+            await browser.pause(1000);
+
+            const strategyType =
+                (await $("//bdi[normalize-space()='Type']/following::input[1]").getValue()).trim();
+
+            const inspectionType =
+                (await $("//bdi[normalize-space()='Inspection Type']/following::input[1]").getValue()).trim();
+
+            const inspectionStage =
+                (await $("//bdi[normalize-space()='Inspection Stage']/following::input[1]").getValue()).trim();
+
+            console.log("Selected strategy type: " + strategyType);
+            console.log("Selected inspection type: " + inspectionType);
+            console.log("Selected inspection stage: " + inspectionStage);
+            await utils.clickWithWait(this.MDAwindowBtn,1500);
+            await utils.waitForBusyIndicatorToDisappear();
+            await this.MDAheader.waitForDisplayed();
+            console.log("MDA window opened");
+            await utils.clickWithWait(this.MDAcheckbox,1500);
+            await utils.clickWithWait(this.saveMDABtn,1500);
+            console.log("MDA value selected and saved");
+            await utils.waitForBusyIndicatorToDisappear();
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+            const format = (d: Date): string =>
+                d.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: '2-digit',
+                    year: 'numeric'
+                });
+            console.log("Formatted dates");
+            const startDate = format(today);
+            const dueDate = format(tomorrow);
+            console.log("Start Date: " + startDate);
+            console.log("Due Date: " + dueDate);
+            await this.strategyStartDate.setValue(startDate);
+            await this.strategyDueDate.setValue(dueDate);
+            console.log("Start and Due dates set");
+            const sheMR =
+                assetRcmData.mrvalues[Math.floor(Math.random() * assetRcmData.mrvalues.length)];
+            const finMR =
+                assetRcmData.mrvalues[Math.floor(Math.random() * assetRcmData.mrvalues.length)];
+            const mitigatedRisk =
+                (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString();
+            const mitigatedPOF =
+                (Math.random()).toFixed(2);
+            console.log("Risk and MR values generated");
+            await utils.setValueWithWait(this.sheMRvalues, sheMR);
+            await utils.setValueWithWait(this.finMRvalues, finMR);
+            await utils.setValueWithWait(this.mitigatedRiskValue, mitigatedRisk);
+            await utils.setValueWithWait(this.mitigatedPofValue, mitigatedPOF);
+            console.log("Risk and MR values set in the form");
+            this.createdStrategies.push({
+                description: strategyDesc,
+                longDescription: strategyLongDesc,
+                strategyType,
+                inspectionType,
+                inspectionStage,
+                startDate,
+                dueDate,
+                sheMR,
+                finMR,
+                mitigatedRisk,
+                mitigatedPOF
+            });
+            await utils.clickWithWait(this.strategyCreateBtn,1500);
+            console.log("Strategy creation button clicked");
+            await utils.waitForBusyIndicatorToDisappear();
+            console.log(`Strategy ${i} created`);
+        }
+        console.log("Created Strategies:");
+        console.log(JSON.stringify(this.createdStrategies, null, 2));
+    }
+
+    public async editStrategies()
+    {
+        await this.editStrategy();
+        await this.editAllStrategies();
+    }
+
+    public async editStrategy()
+    {
+        console.log("Editing the first strategy...");
+        for (const btn of await this.strategyFirstRow(this.createdStrategies[0].description))
+        {
+            if (await btn.isDisplayed() && await btn.isClickable())
+            {
+                await utils.clickWithWait(btn,1500);
+                await browser.pause(2500);
+                break;
+            }
+        }
+        await utils.clickWithWait(this.strategyEditBtn,1500);
+        await browser.pause(3000);
+        const newDescription = `${this.createdStrategies[0].description} - Edited`;
+        await utils.setValueWithWait(this.strategyDescInput, newDescription);
+        await utils.clickWithWait(this.strategySaveBtn,1500);
+        await utils.waitForBusyIndicatorToDisappear();
+        this.createdStrategies[0].description = newDescription;
+        console.log("Updated Strategy:");
+        await utils.clickSuccessOkButton();
+        console.log(JSON.stringify(this.createdStrategies[0], null, 2));
+    }
+
+    public async editAllStrategies()
+    {
+        console.log("Editing all strategies...");
+        const checkboxes = await this.selectAllStrategyCheckbox;
+        for (const checkbox of checkboxes) {
+            const displayed = await checkbox.isDisplayed().catch(() => false);
+            const clickable = await checkbox.isClickable().catch(() => false);
+            if (displayed && clickable) {
+                await utils.clickWithWait(checkbox);
+                break;
+            }
+        }
+        await utils.clickWithWait(this.strategyEditBtn, 1500);
+        await $("//h1[.//text()='Edit Strategy']").waitForDisplayed({
+            timeout: 30000
+        });
+        console.log("Edit Strategy page opened for all strategies");
+        console.log("Capturing common values for all strategies...");
+        const getValue = async (xpath: string): Promise<string> => {
+            const el = await $(xpath);
+            await el.waitForExist({ timeout: 5000 });
+            const tagName = await el.getTagName();
+            if (tagName === "input" || tagName === "textarea") {
+                return ((await el.getValue()) || "").trim();
+            }
+            const valueAttr = await el.getAttribute("value");
+            if (valueAttr) {
+                return valueAttr.trim();
+            }
+            return ((await el.getText()) || "").trim();
+        };
+        this.commonStrategyValues = {
+            description: await getValue("//bdi[normalize-space()='Description']/following::textarea[1]"),
+            longDescription: await getValue("//bdi[normalize-space()='Long Description']/following::textarea[1]"),
+            type: await getValue("//bdi[normalize-space()='Type']/following::input[1]"),
+            inspectionType: await getValue("//bdi[normalize-space()='Inspection Type']/following::input[1]"),
+            inspectionStage: await getValue("//bdi[normalize-space()='Inspection Stage']/following::input[1]"),
+            startDate: await getValue("//bdi[normalize-space()='Start Date']/following::input[1]"),
+            dueDate: await getValue("//bdi[normalize-space()='Due Date']/following::input[1]"),
+            sheMR: await getValue("//bdi[normalize-space()='SHE MR at Due Date']/following::input[1]"),
+            finMR: await getValue("//bdi[normalize-space()='FIN MR at Due Date']/following::input[1]"),
+            mitigatedRisk: await getValue("//bdi[normalize-space()='Mitigated FIN Consequence ($K)']/following::input[1]"),
+            mitigatedPOF: await getValue("//bdi[normalize-space()='Mitigated FIN POF']/following::input[1]")
+        };
+
+        console.log("Common Values Captured for Edit All Strategies:");
+        console.log(JSON.stringify(this.commonStrategyValues, null, 2));
+        const failures: string[] = [];
+        const verifyCommon = (field: string, actual: string, values: string[]) => {
+            const unique = [...new Set(values.map(v => (v || "").trim()))];
+            if (unique.length === 1) {
+                if ((actual || "").trim() !== unique[0]) {
+                    failures.push(
+                        `${field} should be "${unique[0]}" but found "${actual}"`
+                    );
+                }
+            } else {
+                if ((actual || "").trim() !== "") {
+                    failures.push(
+                        `${field} should be blank because strategies have different values. Found "${actual}"`
+                    );
+                }
+            }
+        };
+        console.log("Verifying common values across all strategies...");
+        verifyCommon(
+            "Description",
+            this.commonStrategyValues.description,
+            this.createdStrategies.map(x => x.description)
+        );
+
+        verifyCommon(
+            "Long Description",
+            this.commonStrategyValues.longDescription,
+            this.createdStrategies.map(x => x.longDescription)
+        );
+        verifyCommon(
+            "Type",
+            this.commonStrategyValues.type,
+            this.createdStrategies.map(x => x.strategyType)
+        );
+        verifyCommon(
+            "Inspection Type",
+            this.commonStrategyValues.inspectionType,
+            this.createdStrategies.map(x => x.inspectionType)
+        );
+        verifyCommon(
+            "Inspection Stage",
+            this.commonStrategyValues.inspectionStage,
+            this.createdStrategies.map(x => x.inspectionStage)
+        );
+        verifyCommon(
+            "Start Date",
+            this.commonStrategyValues.startDate,
+            this.createdStrategies.map(x => x.startDate)
+        );
+        verifyCommon(
+            "Due Date",
+            this.commonStrategyValues.dueDate,
+            this.createdStrategies.map(x => x.dueDate)
+        );
+        verifyCommon(
+            "SHE MR",
+            this.commonStrategyValues.sheMR,
+            this.createdStrategies.map(x => x.sheMR)
+        );
+        verifyCommon(
+            "FIN MR",
+            this.commonStrategyValues.finMR,
+            this.createdStrategies.map(x => x.finMR)
+        );
+        if (failures.length > 0) {
+            throw new Error(
+                `Edit All Strategies Validation Failed\n\n${failures.join("\n")}`
+            );
+        }
+        if(failures.length === 0){
+            console.log("Only common values are getting reflected. Hence, All the checks passed")
+        }
+        console.log("Editing All the Strategies....");
+        await utils.setValueWithWait(this.strategyDescInput, "Edited All Strategies", 1500);
+        await utils.clickWithWait(this.saveBtnFooter);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickSuccessOkButton();
+        const expectedDescription = "Edited All Strategies";
+        const descriptions = await $$("//table[contains(@id,'table-fixed')]//div[@role='heading']/following-sibling::div//span");
+        const visibleDescriptions = [];
+        for (const description of descriptions) {
+            if (await description.isDisplayed()) {
+                visibleDescriptions.push(description);
+            }
+        }
+        for (const description of visibleDescriptions) {
+            await expect(description).toHaveText(expectedDescription);
+        }
+        console.log("Verification done for all the edited startegies");
     }
 
     public async verifyRiskInfoDetails()
@@ -903,13 +1173,13 @@ class assetRCMDetailView {
         console.log("Handle Risk Information starts...");
         for (const el of await this.riskInformationSections) {
             if (await el.isDisplayed()) {
-                await utils.clickWithWait(el);
+                await utils.clickWithWait(el,1500);
                 await browser.pause(1000);
                 break;
             }
         }
         await this.riskSearchInput.waitForClickable({ timeout: 60000 });
-        await utils.clickWithWait(this.editRiskBtn);
+        await utils.clickWithWait(this.editRiskBtn,1500);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
         const format = (d: Date): string => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
@@ -1116,45 +1386,29 @@ class assetRCMDetailView {
 
     public async selectFunctionalLocationAndStore(i:number){
         console.log("Store functional location data start");
-
-    const row=await this.getRowByIndex(i);
-
-    const locationId=await row.$(".//td[@aria-colindex='2']//span").getText();
-
-    const locationNameElements=await row.$$(".//td[@aria-colindex='2']//span");
-
-    let locationName="";
-
-    for(const el of locationNameElements){
-
-        const text=(await el.getText()).trim();
-
-        if(
-            text &&
-            text!==locationId &&
-            !text.includes("Technical system")
-        ){
-            locationName=text;
-            break;
+        const row=await this.getRowByIndex(i);
+        const locationId=await row.$(".//td[@aria-colindex='2']//span").getText();
+        const locationNameElements=await row.$$(".//td[@aria-colindex='2']//span");
+        let locationName="";
+        for(const el of locationNameElements){
+            const text=(await el.getText()).trim();
+            if(
+                text &&
+                text!==locationId &&
+                !text.includes("Technical system")
+            ){
+                locationName=text;
+                break;
+            }
         }
-    }
-
-    // ===== CHANGED START =====
-    if(!locationName){
-
-        console.log(`Invalid Functional Location at index ${i}`);
-
-        return false;
-    }
-    // ===== CHANGED END =====
-
-    this.selectedFunctionalLocation={locationId,locationName};
-
-    console.log("Selected Functional Location :",this.selectedFunctionalLocation);
-
-    console.log("Store functional location data end");
-
-    return true;
+        if(!locationName){
+            console.log(`Invalid Functional Location at index ${i}`);
+            return false;
+        }
+        this.selectedFunctionalLocation={locationId,locationName};
+        console.log("Selected Functional Location :",this.selectedFunctionalLocation);
+        console.log("Store functional location data end");
+        return true;
     }
 
     public async verifyDetailPageFunLoc()
@@ -1617,148 +1871,7 @@ class assetRCMDetailView {
         console.log("Added Failure Modes");
     }
 
-    async addDocument() {
-        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
-        await utils.clickWithWait(addLinkBtn,1000);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.rcmIframe);
-        const documentOption = await $('//li[contains(.,"Add Document")]');
-        await utils.clickWithWait(documentOption);
-        await browser.pause(2000);
-        await utils.uploadDocument('vessel-1.png');
-        await browser.pause(9000);
-        console.log("Document uploaded successfully, now filling the details to assign document");
-        console.log("Selecting Category, Phase and Language for the document");
-
-        await utils.openDropdown($('//label[.//bdi[text()="Category"]]//following::span[contains(@id,"arrow")][1]'));
-        await utils.waitForDropdownOpen();
-        await utils.waitForAnyUI5OptionActive();
-        const firstOption = await $('(//li[@role="option"])[1]');
-        await utils.clickWithWait(firstOption);
-        console.log("Category selected");
-
-        await utils.openDropdown($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'));
-        await utils.waitForDropdownOpen();
-        await utils.waitForAnyUI5OptionActive();
-        const phaseOption = await $('//li[@role="option"][1]//div[@role="checkbox"]');
-        await utils.clickWithWait(phaseOption);
-        console.log("Phase selected");
-
-        await utils.openDropdown($('//label[.//bdi[text()="Language"]]//following::span[contains(@id,"arrow")][1]'));
-        await utils.waitForDropdownOpen();
-        await utils.waitForAnyUI5OptionActive();
-        const languageOption = await $('//span[text()="English"]/ancestor::li');
-        await utils.clickWithWait(languageOption);
-        console.log("Language selected");
-
-        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await this.attachSuccMsg.waitForDisplayed({
-            timeout: 20000,
-            timeoutMsg: 'Document assign success message not displayed'
-        });
-
-        console.log("Document assign success message displayed");
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(10000);
-    }
-    
-    async addLink() {
-        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
-        await utils.clickWithWait(addLinkBtn);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.rcmIframe);
-        const link = await $('//li[contains(.,"Add Link")]');
-        await utils.clickWithWait(link);
-        await browser.pause(2000);
-        console.log("Filling the details to assign link");
-        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
-        await displayNameInput.waitForDisplayed({ timeout: 10000 });
-        await displayNameInput.setValue("Test Link");
-        console.log("Display Name entered");
-        console.log("Entering URL for the link");
-        const linkInput = await $(`//label[.//bdi[text()='Link']]//following::input[1]`);
-        await linkInput.setValue("https://testlink.com");
-        const phaseInput = await $(`//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]`);
-        await phaseInput.click();
-        console.log("Phase dropdown opened");
-        await utils.waitForDropdownOpen();
-        const phaseoption = await $(`//li[@role="option"][1]//div[@role="checkbox"]`);
-        await phaseoption.waitForDisplayed({ timeout: 10000 });
-        await phaseoption.click();
-        console.log("Phase selected");
-        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await this.attachSuccMsg.waitForDisplayed({
-            timeout: 20000,
-            timeoutMsg: 'Link assign success message not displayed'
-        });
-
-        console.log("Link assign success message displayed");
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-        await browser.pause(2000);
-    }
-
-    async gotoAttachmentsTabAndAssignAttachment() {
-        console.log("Navigating to Attachment tab to assign attachment");
-        await browser.pause(4000);
-        await utils.switchToIframe(this.rcmIframe);
-        await this.attachmentTab.waitForDisplayed({ timeout: 50000 });
-        await this.attachmentTab.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
-        const addAttachmentBtn = await $$('//button[.//text()="Assign"]');
-        for (const btn of await addAttachmentBtn) 
-        {   
-            if (await btn.isDisplayed() && await btn.isClickable()) 
-            { 
-                await utils.clickWithWait(btn); 
-                await browser.pause(2500); break; 
-            } 
-        }
-        await browser.pause(2000);
-        await utils.selectCheckboxes(2);
-        await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'),1000);
-
-        await this.attachSuccMsg.waitForDisplayed({
-            timeout: 20000,
-            timeoutMsg: 'Document assign success message not displayed'
-        });
-
-        console.log("Document assign success message displayed");
-        await utils.clickWithWait(this.okBtn,1000);
-        console.log("Attachment assigned successfully");
-    }
-
-    async deleteAttachmentAndVerify() {
-        console.log("Deleting assigned attachment and verifying");
-        await browser.pause(8000);
-        await utils.switchToIframe(this.rcmIframe);
-        await browser.pause(8000);
-        const attachmentCheckbox = await $('(//table//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"])[1]');
-        await attachmentCheckbox.waitForDisplayed({ timeout: 20000 });
-        await utils.clickWithWait(attachmentCheckbox,1000);
-        const selectAllAttachment = await $('(//table//tr[@role="row"]//div[@role="checkbox" and @aria-checked="true"])[1]');
-        if(await selectAllAttachment.isExisting()){
-            console.log("Selecting all attachments for deletion");
-            await selectAllAttachment.click();
-        }
-        else
-        {
-            console.log("No attachment is selected for deletion");    
-            return;
-        }
-        await utils.clickWithWait($('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Delete"]/ancestor::button'),1000);
-        await utils.clickWithWait($('//button[.//bdi[text()="Yes"]]'),1000);
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'),1000);
-        await browser.pause(2000);
-        console.log("Attachment deleted successfully");
-    }
-
     public async downloadSummaryReport() {
-
         console.log("Downloading Summary Report for RCM...");
         await (await this.summaryReportBtn).click();
         await (await this.downloadReportHeader).waitForDisplayed({ timeout: 20000 });
@@ -1768,7 +1881,6 @@ class assetRCMDetailView {
         await (await this.downloadReportOkBtn).click();
         await browser.pause(3000);
         await utils.waitForBusyIndicatorToDisappear();
-
         if (await (await this.confirmationYesBtn).isDisplayed().catch(() => false)) {
             await (await this.confirmationYesBtn).click();
         }
@@ -1776,49 +1888,48 @@ class assetRCMDetailView {
         await browser.pause(4000);
         await utils.clickWithWait(this.okBtn);
         await utils.waitForBusyIndicatorToDisappear();
-
-        const filePath = await utils.waitForDownload('.pdf');
+        const filePath = await utils.waitForDownload(".pdf");
         const pdfContent = await utils.extractTextFromPDF(filePath);
-
         console.log("----- PDF CONTENT START -----");
         console.log(pdfContent);
         console.log("----- PDF CONTENT END -----");
-
         const normalize = (val: string) =>
-            (val || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-
+            (val || "")
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, "");
         const content = normalize(pdfContent);
-
+        const failures: string[] = [];
         const verifyValue = (label: string, value: string) => {
             if (!value) {
                 console.log(`${label} skipped (empty)`);
                 return;
             }
-
             console.log(`\nVerifying ${label}: ${value}`);
-
             const norm = normalize(value);
-
             if (value.includes("(")) {
-                const match = value.match(/(.*)\((.*)\)/);
+                const match = value.match(/^(.*?)\s*\((.*?)\)$/);
                 if (match) {
-                    const name = normalize(match[1]);
-                    const id = normalize(match[2]);
-
+                    const name = normalize(match[1].trim());
+                    const id = normalize(match[2].trim());
                     const hasName = content.includes(name);
                     const hasId = content.includes(id);
-
                     console.log(`Name check (${name}): ${hasName}`);
                     console.log(`ID check (${id}): ${hasId}`);
-
-                    expect(hasName && hasId).toBe(true);
+                    if (!hasName || !hasId) {
+                        failures.push(
+                            `${label}: "${value}" | Name Found=${hasName}, ID Found=${hasId}`
+                        );
+                    }
                     return;
                 }
             }
-
-            const result = content.includes(norm);
-            console.log(`Check (${norm}): ${result}`);
-            expect(result).toBe(true);
+            const found = content.includes(norm);
+            console.log(`Check (${norm}): ${found}`);
+            if (!found) {
+                failures.push(
+                    `${label}: "${value}" not found in PDF`
+                );
+            }
         };
 
         verifyValue("techObj", this.techObj);
@@ -1828,7 +1939,17 @@ class assetRCMDetailView {
         verifyValue("functionValue", this.functionValue);
         verifyValue("functionalFailureValue", this.functionalFailureValue);
         verifyValue("maintainableItemValueFunLoc", this.maintainableItemValueFunLoc);
-
+        verifyValue("failureModeValueFunLoc", this.failureModeValueFunLoc);
+        if (failures.length > 0) {
+            console.log("\n===== PDF VALIDATION FAILURES =====");
+            failures.forEach((failure, index) => {
+                console.log(`${index + 1}. ${failure}`);
+            });
+            console.log("===================================\n");
+            throw new Error(
+                `PDF Summary Report Validation Failed:\n\n${failures.join("\n")}`
+            );
+        }
         console.log("PDF Summary report verification completed");
     }
 

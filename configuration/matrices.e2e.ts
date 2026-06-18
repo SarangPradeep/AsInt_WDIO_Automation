@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import { browser } from '@wdio/globals';
-//import BtpLoginPage from '../page_object_model/btp_applications_page/asset_integrity_configuration/configuration/btpLogin.page';
 import HomePage from '../page_object_model/btp_applications_page/integrity/configuration/home.page';
 import configurationMatricesPage from '../page_object_model/btp_applications_page/integrity/configuration/configurationMatrices.page';
 import SapUtils from '../utils/utils';
@@ -22,10 +21,10 @@ describe('BTP Configuration (Matrices) - Functional Test', () => {
     it('should navigate into the Matrices section', async () => {
 
         await SapUtils.waitForBusyIndicatorToDisappear();
-        await SapUtils.waitForSAPPopupAndClose();
+        await SapUtils.waitForSAPPopupAndClose(20);
         await configurationMatricesPage.navigateToMatrices();
         console.log('[SUCCESS] Matrices functionality reached');
-        
+        await SapUtils.waitForSAPPopupAndClose(20);
         await configurationMatricesPage.clickCreateButton();
         await configurationMatricesPage.createMatrix();
         await configurationMatricesPage.clickOkButton();
@@ -48,6 +47,8 @@ describe('BTP Configuration (Matrices) - Functional Test', () => {
 
     it('should add risk color', async () => {
 
+        await configurationMatricesPage.addRiskColor('colour1', 'rgb(255, 0, 0)');
+        await configurationMatricesPage.deleteRiskColor(0);
         await configurationMatricesPage.addRiskColor('colour1', 'rgb(255, 0, 0)');
         await configurationMatricesPage.addRiskColor('colour2', 'rgb(254, 224, 0)');
         await configurationMatricesPage.addRiskColor('colour3', 'rgb(255, 151, 0)');
@@ -85,25 +86,69 @@ describe('BTP Configuration (Matrices) - Functional Test', () => {
     it('should configure X-axis entirely', async () => {
 
         await configurationMatricesPage.configureXAxis('description', true);
-        await configurationMatricesPage.enterTextValue(0,'LOW');
-        await configurationMatricesPage.enterTextValue(1,'MEDIUM');
-        await configurationMatricesPage.enterTextValue(2,'HIGH');
+        await configurationMatricesPage.enterTextValue(0, '0',  'LOW',    '10');
+        await configurationMatricesPage.enterTextValue(1, '10', 'MEDIUM', '20');
+        await configurationMatricesPage.enterTextValue(2, '20', 'HIGH',   '30');
+
+        // Verify delete functionality on the X-axis, then re-create it
+        await configurationMatricesPage.deleteAxisEntry('description');
+        await configurationMatricesPage.configureXAxis('description', true);
+        await configurationMatricesPage.enterTextValue(0, '0',  'LOW',    '10');
+        await configurationMatricesPage.enterTextValue(1, '10', 'MEDIUM', '20');
+        await configurationMatricesPage.enterTextValue(2, '20', 'HIGH',   '30');
 
     });
 
     it('should configure Y-axis entirely', async () => {
 
         await configurationMatricesPage.configureYAxis('Y-Axis Label', true);
-        await configurationMatricesPage.enterYAxisRowValue(0,'LOW');
-        await configurationMatricesPage.enterYAxisRowValue(1,'MEDIUM');
-        await configurationMatricesPage.enterYAxisRowValue(2,'HIGH');
+        await configurationMatricesPage.enterYAxisRowValue(0, '20', 'HIGH',   '30');
+        await configurationMatricesPage.enterYAxisRowValue(1, '10', 'MEDIUM');
+        await configurationMatricesPage.enterYAxisRowValue(2, '0',  'LOW');
 
     });
 
     it('should add a risk line with specified coordinates and axes', async () => {
-        
-        await configurationMatricesPage.addRiskLine('Risk Line PS','#FEE000','0','0','0','0');
-        await configurationMatricesPage.publishMatrix();
-
+        await configurationMatricesPage.addRiskLine('Risk Line PS','#FEE000','3','3','13','13');
     });
+
+    it('should verify the matrix details before publishing', async () => {
+        await configurationMatricesPage.verifyMatrixDetails({
+            xAxisDescription: 'description',
+            xAxisSubLabels:   ['LOW', 'MEDIUM', 'HIGH'],
+            xAxisRangeLabels: ['0-10', '10-20', '20-30'],
+            yAxisLabel:       'Y-Axis Label',
+            yAxisSubLabels:   ['LOW', 'MEDIUM', 'HIGH']
+        });
+        console.log('[SUCCESS] Matrix axis labels and risk line verified');
+    });
+
+    it('should should publish the matrix', async () => {
+        await configurationMatricesPage.publishMatrix();
+    });
+
+    it('should create a new revision of the matrix', async () => {
+        await configurationMatricesPage.createNewRevision();
+    });
+
+    it('should verify the matrix row details on the listview after new revision', async () => {
+        // Same details as after publish; only Status flips to Unpublished and Version bumps to 2.
+        // If the Categories cell is empty, the verifier throws — that is the known regression.
+        await configurationMatricesPage.verifyMatrixListRow({
+            title:       'AutomationMatrixTest_007',
+            description: 'description',
+            rowSize:     '3',
+            colSize:     '3',
+            status:      'Unpublished',
+            version:     '2',
+            categories:  'Asset Strategy Development(ASD), HAZOP, LOPA'
+        });
+        console.log('[SUCCESS] Listview row verified after new revision');
+    });
+
+    it('should delete the created matrix', async () => {
+        await configurationMatricesPage.deleteMatrixByTitle('AutomationMatrixTest_007');
+        console.log('[SUCCESS] Matrix deleted successfully');
+    });
+
 });

@@ -36,6 +36,7 @@ class asset_strategy_development_listview_page {
     public selectedFuncLocsGlobal: string[] = [];
     public generalSelectionData: boolean = true;
     public singleCreate: boolean = true;
+    public assetEquipmentNumbers: string[] = [];
 
     public async navigateToASDListView() {
         console.log("Navigating to Asset Strategy Development List View");
@@ -77,7 +78,9 @@ class asset_strategy_development_listview_page {
         await utils.clickWithWait(this.equipmentComponentInput);
         await this.selectEquipmentHeader.waitForDisplayed({ timeout: 10000 });
         await utils.waitForBusyIndicatorToDisappear();
-        await this.equipmentSearchInput.setValue("10000162");
+        const equipmentNumber = "10000162";
+        await this.equipmentSearchInput.setValue(equipmentNumber);
+        this.assetEquipmentNumbers = [equipmentNumber];
         await browser.keys("Enter");
         await browser.pause(2000);
         await utils.waitForBusyIndicatorToDisappear();
@@ -136,65 +139,16 @@ class asset_strategy_development_listview_page {
         }
     }
 
-    public async getASDDescName() {
-        const xpath = "//header//*[@role='heading']//span";
-        let found = false;
-        try {
-            await browser.waitUntil(async () => {
-                const els = await $$(xpath);
-                if (!els.length) return false;
-
-                for (let el of els) {
-                    let txt = (await el.getText()) ?? "";
-                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
-                    txt = txt?.trim();
-
-                    if (txt && (txt.startsWith("AUTOMATION-") || txt.startsWith("Automation_"))) {
-                        found = true;
-                        return true;
-                    }
-                }
-                return false;
-            }, {
-                timeout: 4000,  
-                interval: 500
-            });
-
-        } catch (e) {
-            console.log("ASD not visible in this attempt");
+    public async captureASDNameAndId() {
+        const { name, id } = await utils.getEntityNameAndId();
+        if (name) {
+            if (this.singleCreate) this.assetASDDesc = name;
+            else this.assetASDFunLoc = name;
         }
-
-        if (!found) return "";
-        const spans = await $$(xpath);
-        for (let el of spans) {
-            let txt = (await el.getText()) ?? "";
-                    if (!txt) txt =  (await el.getAttribute("innerText")) ?? "";
-            txt = txt?.trim();
-
-            if (txt && (txt.startsWith("AUTOMATION-") || txt.startsWith("Automation_"))) {
-                return txt;
-            }
-        }
-        return "";
+        if (id) this.assetASDDisplayID = id;
+        return { name, id };
     }
 
-    public async fetchASDDisplayID() {
-        console.log("Start: fetching ASD Display ID");
-        const xpath = `//header[.//span[normalize-space()='${this.assetASDDesc}']]//*[starts-with(normalize-space(),'ASDA.')]`;
-        await browser.waitUntil(async () => await (await $$(xpath)).length > 0, {
-            timeout: 20000,
-            timeoutMsg: "ASD Display ID not found"
-        });
-        const els = await $$(xpath);
-        for (const el of els) {
-            if (await el.isDisplayed() && await el.isEnabled()) {
-                this.assetASDDisplayID = await el.getText();
-                break;
-            }
-        }
-        console.log("End: fetched ASD Display ID -> " + this.assetASDDisplayID);
-    }
-    
     public async verifyASDDeletion()
     {
         console.log("Verifying deletion of ASD");

@@ -46,8 +46,9 @@ class assetRCMListView {
         console.log("Navigating to detail page of RCM...");
         await this.infoTab.waitForEnabled({timeout:100000});
         console.log("Navigated to detail view page of new ly created RCM");
-        await this.fetchRCMDisplayID();
-        await this.verifyHeader();
+        const { name, id } = await utils.getEntityNameAndId();
+        this.assetRCMDisplayID = id;
+        await expect(name).toEqual(this.assetRCMDesc);
         console.log("Header verification done");
         console.log("Capturing all header values");
         await utils.captureHeaderDetails();
@@ -56,37 +57,6 @@ class assetRCMListView {
         // await utils.clickWithWait(el);
         // await browser.pause(10000);
 
-    }
-
-    public async verifyHeader()
-    {
-        console.log("Verifying RCM detail page header");
-        const headers = await $$("//div[@role='heading' and @title]//span");
-        const headerTexts: string[] = [];
-        for (const h of headers) {
-            if (await h.isDisplayed()) headerTexts.push((await h.getText()).trim());
-        }
-        console.log("Captured headers:", headerTexts);
-        console.log("Verifying Description value with header text");
-        await expect(this.assetRCMDesc).toEqual(headerTexts[0]);
-        console.log("Description verification completed");
-    }
-
-    public async fetchRCMDisplayID() {
-        console.log("Start: fetching RCM Display ID");
-        const xpath = `//header[.//span[normalize-space()='${this.assetRCMDesc}']]//*[starts-with(normalize-space(),'RCM_')]`;
-        await browser.waitUntil(async () => await (await $$(xpath)).length > 0, {
-            timeout: 20000,
-            timeoutMsg: "RCM Display ID not found"
-        });
-        const els = await $$(xpath);
-        for (const el of els) {
-            if (await el.isDisplayed() && await el.isEnabled()) {
-                this.assetRCMDisplayID = await el.getText();
-                break;
-            }
-        }
-        console.log("End: fetched RCM Display ID -> " + this.assetRCMDisplayID);
     }
 
     public async verifyRCMDeletion()

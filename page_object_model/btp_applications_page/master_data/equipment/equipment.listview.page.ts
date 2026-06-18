@@ -53,30 +53,28 @@ class EquipmentListviewPage {
         await this.equipmentDescInput.waitForDisplayed({ timeout: 30000 });
         await this.equipmentDescInput.setValue(description);
         await browser.pause(2000);
-        await this.equipmentTemplateInput.click();
+        // await this.equipmentTemplateInput.click();
 
-        await browser.pause(2000);
+        // await browser.pause(2000);
+        // const compSearchBox = await $(`//div[@role="dialog"]//input[@placeholder="Search"]`);
+        // await utils.clickWithWait(compSearchBox);
 
-        // dynamic selector inside method
-        const compSearchBox = await $(`//div[@role="dialog"]//input[@placeholder="Search"]`);
-        await utils.clickWithWait(compSearchBox);
+        // await browser.keys(['Control', 'a']);
+        // await browser.keys('Backspace');
+        // await compSearchBox.setValue(equipmentTemplate);
+        // await browser.keys("Enter");
+        // await browser.pause(3000);
 
-        await browser.keys(['Control', 'a']);
-        await browser.keys('Backspace');
-        await compSearchBox.setValue(equipmentTemplate);
-        await browser.keys("Enter");
-        await browser.pause(3000);
+        // const template = await $(`//span[text()="${equipmentTemplate}"]/ancestor::tr//div[@role="checkbox"]`);
+        // const templateExists = await template.isExisting();
+        // if (!templateExists) {
+        //     throw new Error(`No row found for equipment template: ${equipmentTemplate}`);
+        // }
+        // await template.waitForDisplayed({ timeout: 30000 });
+        // await template.waitForClickable({ timeout: 30000 });
+        // await template.click();
 
-        const template = await $(`//span[text()="${equipmentTemplate}"]/ancestor::tr//div[@role="checkbox"]`);
-        const templateExists = await template.isExisting();
-        if (!templateExists) {
-            throw new Error(`No row found for equipment template: ${equipmentTemplate}`);
-        }
-        await template.waitForDisplayed({ timeout: 30000 });
-        await template.waitForClickable({ timeout: 30000 });
-        await template.click();
-
-        await this.confirmBtn.click();
+        // await this.confirmBtn.click();
 
         await this.parentAssetInput.click();
 
@@ -87,11 +85,16 @@ class EquipmentListviewPage {
         await parentEquipment.waitForDisplayed({ timeout: 30000 });
         await parentEquipment.click();
 
+        await utils.waitForBusyIndicatorToDisappear();
+        const copyFieldsHeader = await $("//h1[.//text()='Copy Fields from Parent']");
+        if (await copyFieldsHeader.isDisplayed().catch(() => false)) {
+            const cnfBtn = await $("//footer//button[.//text()='Confirm']");
+            await utils.clickWithWait(cnfBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+
         await this.createBtn.waitForClickable({ timeout: 30000 });
         await this.createBtn.click();
-
-        // await this.okBtn.waitForDisplayed({ timeout: 30000 });
-        // await this.okBtn.click();
         const okBtn = await $("//header[.//text()='Success']/following::button[.//text()='OK']");
         await utils.clickWithWait(okBtn);
 

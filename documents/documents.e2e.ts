@@ -1,9 +1,9 @@
-import HomePage from 'page_object_model/btp_applications_page/home.page';
-import documentsListviewPage from 'page_object_model/btp_applications_page/documents/documents.listview.page';
-import documentsDetailPage from 'page_object_model/btp_applications_page/documents/documents.detail.page';
-import utils from 'utils/utils';
+import HomePage from '../page_object_model/btp_applications_page/home.page';
+import documentsListviewPage from '../page_object_model/btp_applications_page/documents/documents.listview.page';
+import documentsDetailPage from '../page_object_model/btp_applications_page/documents/documents.detail.page';
+import utils from '../utils/utils';
 
-describe('Documents Application - Functional test', () => {
+describe('BTP - Documents Application - Functional test', () => {
 
 	it('should navigate to Documents list and verify page', async () => {
 		await documentsListviewPage.openDocumentsFromHome();

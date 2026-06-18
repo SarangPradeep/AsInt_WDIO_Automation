@@ -11,7 +11,7 @@ describe('BTP - Recommendation Workbench - Functional Test', () => {
         await recommendationWorkbenchListView.createReccWorkbench();
     });
 
-    it('should capture header details of newly created MSP items', async() => {
+    it('should capture header details of newly created Recommendation Workbench items', async() => {
         await utils.captureHeaderDetails();
     });
     
@@ -20,7 +20,7 @@ describe('BTP - Recommendation Workbench - Functional Test', () => {
         await recommendationWorkbenchDetailView.editHeader();
     });
 
-    it('should capture the MSP id', async() => {
+    it('should capture the Recommendation Workbench id', async() => {
         await recommendationWorkbenchDetailView.captureReccWorkbenchId();
     });
 
@@ -33,7 +33,7 @@ describe('BTP - Recommendation Workbench - Functional Test', () => {
     });
 
     it('should add attachments to the recommendation workbench', async() => {
-        await recommendationWorkbenchDetailView.addAttachments();
+        await utils.verifyAttachmentSection();
     });
 
     it('should verify historic data of the recommendation workbench', async() => {
@@ -62,5 +62,6 @@ describe('BTP - Recommendation Workbench - Functional Test', () => {
 
     it('should delete the recommendation workbench', async() => {
         await recommendationWorkbenchDetailView.deleteReccWorkbench();
+        await recommendationWorkbenchListView.verifyDeletionOfRecommendationWorkbench();
     });
 });

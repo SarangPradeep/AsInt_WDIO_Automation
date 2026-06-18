@@ -104,6 +104,7 @@ class asset_strategy_development_detailview_page {
     private get extCorrosionEquipmentTypeDrp() { return $("//bdi[.='Equipment Design allows Water to Pool?']/ancestor::div[2]/following::span[1]"); }
     private get extCorrosionComponentOrientationDrp() { return $("//bdi[.='Does Component enter soil or water?']/ancestor::div[2]/following::span[1]"); }
     private get extBasisForThicknessDrp() { return $("//bdi[.='Basis for Thickness']/ancestor::div[2]/following::span[1]"); } 
+    private get extCorrosionTypeDrp() { return $("//div[text()='External Corrosion']/following::bdi[.='Corrosion Type']/ancestor::div[2]/following::span[1]")}
     private get extCorrosionConfidenceDrp() { return $("(//bdi[.='Corrosion Rate Confidence']/ancestor::div[2]/following::span[1])[2]"); }
     private get extCorrosionALevelInput() { return $("(//bdi[.='A Level Inspection Count']/ancestor::div[2]/following::input[1])[2]"); }
     private get extCorrosionBLevelInput() { return $("(//bdi[.='B Level Inspection Count']/ancestor::div[2]/following::input[1])[2]"); }
@@ -227,7 +228,7 @@ class asset_strategy_development_detailview_page {
     private get longDescriptionTextarea() { return $("//label[.//text()='Long Description']/following::textarea[1]"); }
     private get okHeaderBtn() { return $("//h1[.//text()='Edit Header']/following::button[.//text()='Ok']"); }
     private get headerMoreBtn() { return $("//header//button[@aria-label='Additional Options']//span[@role='presentation']"); }
-    private get deleteBtn() { return $("//button[.//text()='Delete']"); }
+    private get deleteBtn() { return $("//body//button[.//text()='Delete']"); }
     private get reportBtn() { return $("//button[.//text()='Report']"); }
     private get deleteConfirmText() { return $("//span[.//text()='Are you sure want to delete the Assessment?']"); }
     private get confirmOkBtn() { return $("//header[.//text()='Confirmation']/following::button[.//text()='OK']"); }
@@ -261,10 +262,32 @@ class asset_strategy_development_detailview_page {
     private get skipAllReccSuccMsg() { return $("//span[.//text()='Assessment Published Successfully']"); }
     private get cancelBtn() { return $("//footer//button[.//text()='Cancel']"); }
     private get errorOkBtn() { return $("//header[.//text()='Error']/following::button[.//text()='OK']"); }
+    private get yesBtn() { return $("//header[.//text()='Confirmation']/following::button[.//text()='Yes']"); }
+    private get newStrategyBtn() { return $("//span[contains(text(),'Strategies')]/following::button[.//text()='New'][1]"); }
+    private get createNewStrategyHeader() { return $("//h1[.//text()='Create New Strategy']"); }
+    private get shortDescriptionDropdown() { return $("(//label[.//text()='Short Description']//following::span[2])[1]"); }
+    private get shortDescriptionOption() { return $("(//tr[@role='row' and @aria-rowindex='2']//td[@aria-colindex='1'])[1]"); }
+    private get strategyShortDescriptionInput() { return $("//label[.//text()='Short Description']//following::input[1]"); }
+    private get longDescriptionText() { return $("//label[.//text()='Long Description']//following::div[4]"); }
+    private get sectionDropdown() { return $("(//label[.//text()='Section']//following::span[2])[1]"); }
+    private get sectionSecondOption() { return $("(//tr[@role='row']//td[@aria-colindex='1'])[2]"); }
+    private get sectionInput() { return $("//label[.//text()='Section']//following::input[1]"); }
+    private get dueDateInput() { return $("//label[.//text()='Due Date']//following::input[1]"); }
+    private get createBtn() { return $("//footer//button[.//text()='Create']"); }
+    private get strategySearchInput() { return $("//span[contains(text(),'Strategies')]/following::input[@title='Search']"); }
+    private get strategySearchBtn() { return $("//span[contains(text(),'Strategies')]/following::input[@title='Search']/following::div[2]"); }
+    private get updateRecommendationsHeader() { return $("//h1[.//text()='Update Recommendations']"); }
+    private get updateRecommendationsSaveBtn() { return $("//h1[.//text()='Update Recommendations']/following::button[.//text()='Save'][1]"); }
+    private get editAndUpdateBtn() { return $("//span[contains(text(),'Strategies')]/following::button[.//text()='Edit & Update'][1]"); }
+    private get freezeStrategyBtn() { return $("//span[contains(text(),'Strategies')]/following::button[.//text()='Freeze'][1]"); }
+    private get deleteStartegyBtn() { return $("//span[contains(text(),'Strategies')]/following::button[.//text()='Delete'][1]"); }
+    private get equipmentSectionHeader() { return $("//span[starts-with(normalize-space(),'Equipment (')]"); }
+    private equipmentCell(equipNo: string) { return $(`//div[@tabindex='0']//span[normalize-space()='${equipNo}']`); }
 
     public selectedItemsGlobal:any = {};
     public calculateAnalysis :boolean = false;
     public publish :boolean = false;
+    public strategyData: any = {};
     
     public async verifyEditGenInfo() {
         console.log("Start: Verifying and editing general information section of ASD");
@@ -372,103 +395,11 @@ class asset_strategy_development_detailview_page {
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.ASDIframe);
         await browser.pause(4000);
-        const asdHeader = await this.getFinalIDs();
-        if(ASDListView.singleCreate === true)
-        {
-            await expect(asdHeader.ASD).toEqual(ASDListView.assetASDDesc);
-        }
-        else{
-            await expect(asdHeader.ASD).toEqual(ASDListView.assetASDFunLoc);
-        }
+        const { name, id } = await utils.getEntityNameAndId();
+        if (id) ASDListView.assetASDDisplayID = id;
+        const expected = ASDListView.singleCreate ? ASDListView.assetASDDesc : ASDListView.assetASDFunLoc;
+        await expect(name).toEqual(expected);
         console.log("Asset Strategy Development name matches header's name");
-    }
-
-    public async getFinalIDs() {
-        let ASD = "";
-        let actualId = "";
-
-        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
-
-        for (let i = 0; i < 3; i++) {
-
-            if (i === 0 && await expandBtn.isDisplayed().catch(() => false)) {
-                await expandBtn.waitForClickable({ timeout: 5000 });
-                await expandBtn.click();
-            } 
-            else if (i === 1 && await collapseBtn.isDisplayed().catch(() => false)) {
-                await collapseBtn.waitForClickable({ timeout: 5000 });
-                await collapseBtn.click();
-            }
-
-            // 🔥 wait for header to stabilize
-            await browser.pause(1000);
-
-            // 🔥 HARD WAIT for ASD to appear
-            try {
-                await browser.waitUntil(async () => {
-                    const txt = await this.getASDId();
-                    return !!txt;
-                }, { timeout: 10000, interval: 500 });
-            } catch {}
-
-            ASD = await this.getASDId();
-            actualId = await this.getDisplayId();
-
-            console.log(`Attempt ${i + 1} → ASD="${ASD || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
-
-            if (ASD && actualId) break;
-        }
-
-        return { ASD, actualId };
-    }
-
-
-    public async getASDId() {
-        const xpath = "//header//*[@role='heading']//span";
-
-        const spans = await $$(xpath);
-
-        for (let el of spans) {
-            let txt = (await el.getText().catch(() => "")) || "";
-            if (!txt) txt = (await el.getAttribute("innerText").catch(() => "")) || "";
-
-            txt = txt.trim();
-
-            if (txt && txt.includes("Automation_ASD")) {
-                return txt;
-            }
-        }
-
-        return "";
-    }
-
-
-    public async getDisplayId() {
-        try {
-            const txt = await browser.execute(() => {
-                const result = document.evaluate(
-                    "//header//span[contains(text(),'ASDA')]",
-                    document,
-                    null,
-                    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-                    null
-                );
-
-                for (let i = 0; i < result.snapshotLength; i++) {
-                    const el = result.snapshotItem(i);
-                    if (el && el.textContent && el.textContent.trim()) {
-                        return el.textContent;
-                    }
-                }
-
-                return "";
-            });
-
-            return txt ? txt.replace("Display ID:", "").trim() : "";
-        } catch (e) {
-            return "";
-        }
     }
 
     public async editHeader()
@@ -547,27 +478,27 @@ class asset_strategy_development_detailview_page {
         await utils.setValueWithWait(this.componentTypeInput, "shell");
         await utils.selectFromDropdown(this.componentGeometryDrp, 2);
         await utils.setValueWithWait(this.designPressureInput, "4");
-        await utils.setValueWithWait(this.designTemperatureInput, utils.rand(1, 50).toString());
-        await utils.setValueWithWait(this.operatingPressureInput, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.operatingTemperatureInput, utils.rand(1, 50).toString());
+        await utils.setValueWithWait(this.designTemperatureInput, "1");
+        await utils.setValueWithWait(this.operatingPressureInput, "2");
+        await utils.setValueWithWait(this.operatingTemperatureInput, "9");
         await utils.selectFromDropdown(this.representativeFluidDrp, 2);
         await utils.selectFromDropdown(this.initialFluidPhaseDrp, 2);
         await utils.selectFromDropdown(this.materialCodeDrp, 2);
-        await utils.setValueWithWait(this.materialCodeYearInput, "1998");
+        await utils.setValueWithWait(this.materialCodeYearInput, "1998.0");
         await utils.selectFromDropdown(this.materialSpecDrp, 2);
         await utils.selectFromDropdown(this.materialGradeDrp, 2);
-        await utils.setValueWithWait(this.weldJointEfficiencyInput, utils.rand(10, 30).toString());
-        await utils.setValueWithWait(this.originalThicknessInput, utils.rand(1, 10).toString());
-        await utils.setValueWithWait(this.yieldStrengthOverrideInput, utils.rand(30000, 40000).toString());
-        await utils.setValueWithWait(this.allowableStressOverrideInput, utils.rand(15000, 18000).toString());
-        await utils.setValueWithWait(this.tensileStrengthOverrideInput, utils.rand(60000, 75000).toString());
+        await utils.setValueWithWait(this.weldJointEfficiencyInput, "24");
+        await utils.setValueWithWait(this.originalThicknessInput, "7");
+        await utils.setValueWithWait(this.yieldStrengthOverrideInput, "30699");
+        await utils.setValueWithWait(this.allowableStressOverrideInput, "15692");
+        await utils.setValueWithWait(this.tensileStrengthOverrideInput, "71123");
         await utils.selectFromDropdown(this.mixedToxicFluidDrp, 2);
-        await utils.setValueWithWait(this.percentMixedToxicInput, utils.rand(0, 4).toString());
+        await utils.setValueWithWait(this.percentMixedToxicInput, "1");
         await utils.selectFromDropdown(this.isolatedInventoryDrp, 2);
-        await utils.setValueWithWait(this.diameterInput, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.largestDiameterInput, utils.rand(0, 2).toString());
-        await utils.setValueWithWait(this.assessmentDateInput, utils.formatDate(10));
-        await utils.setValueWithWait(this.serviceDateInput, utils.formatDate(8));
+        await utils.setValueWithWait(this.diameterInput, "4");
+        await utils.setValueWithWait(this.largestDiameterInput, "0");
+        await utils.setValueWithWait(this.assessmentDateInput, utils.formatDate(1));
+        await utils.setValueWithWait(this.serviceDateInput, utils.formatDate(2));
 
         console.log("Checking if all the mandatory fields in Process and Design Construction Data are filled");
         await utils.verifyProgressBar(this.progBarForProcAndDes, "Process and Design Construction Data");
@@ -608,21 +539,20 @@ class asset_strategy_development_detailview_page {
         if (expanded === "false") {
             await this.thinningExpandBtn.click();
         }
-        const corrosionRate = (Math.random() * 0.5).toFixed(3);
-        await utils.setValueWithWait(this.corrosionRateInput, corrosionRate);
-        await utils.setValueWithWait(this.lastInternalInspectionDateInput, utils.formatDate(30));
+        await utils.setValueWithWait(this.corrosionRateInput, "0.003");
+        await utils.setValueWithWait(this.lastInternalInspectionDateInput, utils.formatDate(15));
         await utils.selectFromDropdown(this.corrosionRateDeterminedDrp, 2);
         await utils.selectFromDropdown(this.thinningCorrTypeDrp, 2);
         await utils.selectFromDropdown(this.corrRateConfiDrp, 2);
-        await utils.setValueWithWait(this.thinningALvlInspInput, utils.rand(-5, 5).toString());
-        await utils.setValueWithWait(this.thinningBLvlInspInput, utils.rand(0, 5).toString());
-        await utils.setValueWithWait(this.thinningCLvlInspInput, utils.rand(0, 5).toString());
-        await utils.setValueWithWait(this.thinningDLvlInspInput, utils.rand(0, 5).toString());
-        await utils.setValueWithWait(this.thinningELvlInspInput, utils.rand(0, 5).toString());
+        await utils.setValueWithWait(this.thinningALvlInspInput, "-2");
+        await utils.setValueWithWait(this.thinningBLvlInspInput, "5");
+        await utils.setValueWithWait(this.thinningCLvlInspInput, "2");
+        await utils.setValueWithWait(this.thinningDLvlInspInput, "1");
+        await utils.setValueWithWait(this.thinningELvlInspInput, "3");
         await utils.selectFromDropdown(this.thinningInspEffDrp, 2);
         await utils.selectFromDropdown(this.thinningIterTimeLenDrp, 2);
-        await utils.setValueWithWait(this.thinningMaxInspIntInp, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.thinningMeasWallThickInp, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.thinningMaxInspIntInp, "2");
+        await utils.setValueWithWait(this.thinningMeasWallThickInp, "2");
         await utils.verifyProgressBar(this.thinningProgBar, "Thinning");
         console.log("Values Entered in Thinning");
     }
@@ -636,23 +566,24 @@ class asset_strategy_development_detailview_page {
             await this.externalCorrosionExpandBtn.click();
         }
         await utils.setValueWithWait(this.extCorrosionLastInspectionDateInput, utils.formatDate(20));
-        await utils.setValueWithWait(this.extCorrosionMeasuredThicknessInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.extCorrosionMeasuredThicknessInput, "3");
 
         await utils.selectFromDropdown(this.extCorrosionEquipmentTypeDrp, 2);
         await utils.selectFromDropdown(this.extCorrosionComponentOrientationDrp, 2);
         await utils.selectFromDropdown(this.extBasisForThicknessDrp, 2);
+        await utils.selectFromDropdown(this.extCorrosionTypeDrp,3);
         await utils.selectFromDropdown(this.extCorrosionConfidenceDrp, 2);
 
-        await utils.setValueWithWait(this.extCorrosionALevelInput, utils.rand(0, 5).toString());
-        await utils.setValueWithWait(this.extCorrosionBLevelInput, utils.rand(0, 5).toString());
-        await utils.setValueWithWait(this.extCorrosionCLevelInput, utils.rand(0, 5).toString());
-        await utils.setValueWithWait(this.extCorrosionDLevelInput, utils.rand(0, 5).toString());
-        await utils.setValueWithWait(this.extCorrosionELevelInput, utils.rand(0, 5).toString());
+        await utils.setValueWithWait(this.extCorrosionALevelInput, "3");
+        await utils.setValueWithWait(this.extCorrosionBLevelInput, "4");
+        await utils.setValueWithWait(this.extCorrosionCLevelInput, "0");
+        await utils.setValueWithWait(this.extCorrosionDLevelInput, "2");
+        await utils.setValueWithWait(this.extCorrosionELevelInput, "3");
 
         await utils.selectFromDropdown(this.extCorrosionInspectionEffectivenessDrp, 2);
         await utils.selectFromDropdown(this.extCorrosionIterationTimeDrp, 2);
 
-        await utils.setValueWithWait(this.extCorrosionMaxIntervalInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.extCorrosionMaxIntervalInput, "3");
         await utils.verifyProgressBar(this.externalCorrosionProgBar, "External Corrosion");
         console.log("Values Entered in External Corrosion");
     }
@@ -668,9 +599,7 @@ class asset_strategy_development_detailview_page {
         await utils.selectFromDropdown(this.cuiIsOperatingBetweenDrp, 2);
         await utils.setValueWithWait(this.cuiLastInspectionDateInput, utils.formatDate(15));
         await utils.selectFromDropdown(this.cuiAtmosphericConditionsDrp, 2);
-        //await utils.verifyProgressBar(this.cuiProgBar, "Corrosion Under Insulation (CUI)");
         console.log("Values Entered in CUI");
-
     }
 
     public async causticSccDfData() {
@@ -685,18 +614,18 @@ class asset_strategy_development_detailview_page {
         await utils.selectFromDropdown(this.causticWasCrackingRemovedDrp, 2);
         await utils.selectFromDropdown(this.causticMaterialAlloyDrp, 2);
         await utils.selectFromDropdown(this.causticEquipStressReliefDrp, 2);
-        await utils.setValueWithWait(this.causticMaxOperatingTempInput, utils.rand(50, 150).toString());
+        await utils.setValueWithWait(this.causticMaxOperatingTempInput, "129");
         await utils.selectFromDropdown(this.causticIsEquipmentHeatedDrp, 2);
         await utils.selectFromDropdown(this.causticIsEquipmentSteamedDrp, 2);
 
-        await utils.setValueWithWait(this.causticConcentrationInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.causticConcentrationInput, "5");
         await utils.selectFromDropdown(this.causticNACEDrp, 2);
 
         await utils.setValueWithWait(this.causticLastInspectionDateInput, utils.formatDate(10));
         await utils.selectFromDropdown(this.causticInspectionEffectivenessDrp, 2);
         await utils.selectFromDropdown(this.causticIterationTimeDrp, 2);
 
-        await utils.setValueWithWait(this.causticMaxInspectionIntervalInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.causticMaxInspectionIntervalInput, "2");
         await utils.verifyProgressBar(this.causticSccDfProgBar, "Caustic SCC DF");
         console.log("Values Entered in Caustic SCC DF");
 
@@ -713,14 +642,14 @@ class asset_strategy_development_detailview_page {
         await utils.selectFromDropdown(this.chlorideMaterialDrp, 2);
         await utils.selectFromDropdown(this.chlorideProcessPhDrp, 2);
 
-        await utils.setValueWithWait(this.chlorideConcentrationInput, utils.rand(10, 100).toString());
+        await utils.setValueWithWait(this.chlorideConcentrationInput, "12");
         await utils.setValueWithWait(this.chlorideLastInspectionDateInput, utils.formatDate(5));
 
         await utils.selectFromDropdown(this.chlorideWasFoundDrp, 2);
-        await utils.setValueWithWait(this.chlorideInternalCountInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.chlorideInternalCountInput, "4");
 
         await utils.selectFromDropdown(this.chlorideEffectivenessDrp, 2);
-        await utils.setValueWithWait(this.chlorideMaxIntervalInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.chlorideMaxIntervalInput, "2");
         await utils.selectFromDropdown(this.chlorideIterationTimeDrp, 2);
         await utils.verifyProgressBar(this.chlorideSccDfProgBar, "Chloride SCC DF");
         console.log("Values Entered in Chloride SCC DF");
@@ -735,7 +664,7 @@ class asset_strategy_development_detailview_page {
         if (expanded === "false") {
             await this.internalCoatingLiningExpandBtn.click();
         }
-        await utils.setValueWithWait(this.coatingInstallDateInput, utils.formatDate(100));
+        await utils.setValueWithWait(this.coatingInstallDateInput, utils.formatDate(30));
         await utils.selectFromDropdown(this.coatingConditionDrp, 2);
         await utils.selectFromDropdown(this.coatingQualityDrp, 2);
         await utils.verifyProgressBar(this.internalCoatingLiningProgBar, "Internal Coating/Lining");
@@ -751,7 +680,7 @@ class asset_strategy_development_detailview_page {
         if (expanded === "false") {
             await this.externalCoatingExpandBtn.click();
         }   
-        await utils.setValueWithWait(this.extCoatingInstallDateInput, utils.formatDate(200));
+        await utils.setValueWithWait(this.extCoatingInstallDateInput, utils.formatDate(31));
         await utils.selectFromDropdown(this.extCoatingQualityDrp, 2);
         await utils.selectFromDropdown(this.extCoatingConditionDrp, 2);
         await utils.verifyProgressBar(this.externalCoatingProgBar, "External Coating");
@@ -800,10 +729,10 @@ class asset_strategy_development_detailview_page {
         }
         await utils.selectFromDropdown(this.hydrogenMaterialDrp, 2);
         await utils.setValueWithWait(this.hydrogenInspectionDateInput, utils.formatDate(3));
-        await utils.setValueWithWait(this.hydrogenInspectionCountInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.hydrogenInspectionCountInput, "1");
 
         await utils.selectFromDropdown(this.hydrogenEffectivenessDrp, 2);
-        await utils.setValueWithWait(this.hydrogenMaxIntervalInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.hydrogenMaxIntervalInput, "4");
         await utils.selectFromDropdown(this.hydrogenIterationTimeDrp, 2);
         await utils.verifyProgressBar(this.hydrogenStressCrackingDfProgBar, "Hydrogen Stress Cracking DF");
         console.log("Values Entered in Hydrogen Stress Cracking DF");
@@ -843,7 +772,7 @@ class asset_strategy_development_detailview_page {
         await utils.setValueWithWait(this.amineLastInspectionDateInput, utils.formatDate(10));
 
         await utils.setValueWithWait(this.amineMaxTempInput, "1");
-        await utils.selectFromDropdown(this.amineInspectionEffDrp, 2);
+        // await utils.selectFromDropdown(this.amineInspectionEffDrp, 2);
 
         await utils.setValueWithWait(this.amineMaxIntervalInput, "1");
         await utils.setValueWithWait(this.amineNoOfInspectionsInput, "2");
@@ -866,20 +795,20 @@ class asset_strategy_development_detailview_page {
         if (expanded === "false") {
             await this.ammoniaSccDfExpandBtn.click();
         }
-        await utils.setValueWithWait(this.ammoniaStressRelievedInput, utils.rand(0, 1).toString());
-        await utils.setValueWithWait(this.ammoniaConcentrationInput, utils.rand(1, 10).toString());
-        await utils.setValueWithWait(this.ammoniaMaterialInput, utils.rand(0, 1).toString());
-        await utils.setValueWithWait(this.ammoniaSccFoundInput, utils.rand(1, 20).toString());
-        await utils.setValueWithWait(this.ammoniaSccFoundLastInput, utils.rand(0, 1).toString());
-        await utils.setValueWithWait(this.ammoniaMaxTempInput, utils.rand(1, 10).toString());
-        await utils.setValueWithWait(this.ammoniaInspectionEffInput, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.ammoniaSteamedOutInput, utils.rand(0, 1).toString());
-        await utils.setValueWithWait(this.ammoniaIterationInput, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.ammoniaLastInspectionDateInput, utils.formatDate(utils.rand(5, 20)));
-        await utils.setValueWithWait(this.ammoniaNoOfInspectionsInput, utils.rand(1, 6).toString());
-        await utils.setValueWithWait(this.ammoniaMaxIntervalInput, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.ammoniaCrackRemovedInput, utils.rand(0, 1).toString());
-        await utils.setValueWithWait(this.ammoniaHeatedInput, utils.rand(0, 1).toString());
+        await utils.setValueWithWait(this.ammoniaStressRelievedInput, "1");
+        await utils.setValueWithWait(this.ammoniaConcentrationInput, "10");
+        await utils.setValueWithWait(this.ammoniaMaterialInput, "0");
+        await utils.setValueWithWait(this.ammoniaSccFoundInput, "14");
+        await utils.setValueWithWait(this.ammoniaSccFoundLastInput, "1");
+        await utils.setValueWithWait(this.ammoniaMaxTempInput, "6");
+        await utils.setValueWithWait(this.ammoniaInspectionEffInput, "2");
+        await utils.setValueWithWait(this.ammoniaSteamedOutInput, "0");
+        await utils.setValueWithWait(this.ammoniaIterationInput, "2");
+        await utils.setValueWithWait(this.ammoniaLastInspectionDateInput, utils.formatDate(5));
+        await utils.setValueWithWait(this.ammoniaNoOfInspectionsInput, "3");
+        await utils.setValueWithWait(this.ammoniaMaxIntervalInput, "4");
+        await utils.setValueWithWait(this.ammoniaCrackRemovedInput, "0");
+        await utils.setValueWithWait(this.ammoniaHeatedInput, "0");
         await utils.verifyProgressBar(this.ammoniaSccDfProgBar, "Ammonia SCC DF");
         console.log("Values Entered in Ammonia SCC DF");
     }
@@ -892,13 +821,13 @@ class asset_strategy_development_detailview_page {
         if (expanded === "false") {
             await this.planningExpandBtn.click();
         }
-        await utils.setValueWithWait(this.planningInServiceDateInput, utils.formatDate(3000));
-        await utils.setValueWithWait(this.planningNominalThicknessInput, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.planningMeasuredThicknessInput, utils.rand(1, 5).toString());
+        await utils.setValueWithWait(this.planningInServiceDateInput, utils.formatDate(2000));
+        await utils.setValueWithWait(this.planningNominalThicknessInput, "2");
+        await utils.setValueWithWait(this.planningMeasuredThicknessInput, "1");
 
-        await utils.setValueWithWait(this.planningCorrosionAllowanceInput, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.planningDeteriorationRateInput, utils.rand(1, 5).toString());
-        await utils.setValueWithWait(this.planningIntervalInput, utils.rand(1, 10).toString());
+        await utils.setValueWithWait(this.planningCorrosionAllowanceInput, "4");
+        await utils.setValueWithWait(this.planningDeteriorationRateInput, "1");
+        await utils.setValueWithWait(this.planningIntervalInput, "3");
 
         await utils.setValueWithWait(this.planningLastInspectionDateInput, utils.formatDate(10));
         await utils.verifyProgressBar(this.planningProgBar, "Planning");
@@ -1120,13 +1049,198 @@ class asset_strategy_development_detailview_page {
             console.log("Error popup handled → OK clicked");
             return;
         }
-        const riskInfo = utils.getAssignedValue(await this.riskInformationValue.getText());
-        const strategies = utils.getAssignedValue(await this.strategiesValue.getText());
-        const recommendations = utils.getAssignedValue(await this.recommendationsValue.getText());
+        const riskInfo = await utils.getAssignedValue(await this.riskInformationValue.getText());
+        const strategies = await utils.getAssignedValue(await this.strategiesValue.getText());
+        const recommendations = await utils.getAssignedValue(await this.recommendationsValue.getText());
         console.log("Risk Information:"+ riskInfo);
+        await this.verifyEquipmentInfo();
         console.log("Strategies:"+ strategies);
+        await this.createEditFreezeDeleteStrategy();
         console.log("Recommendations:"+ recommendations);
         console.log("Risk information of ASD verified successfully");
+    }
+
+    public async verifyEquipmentInfo()
+    {
+        console.log("Verifying equipment count and equipment numbers in Risk Information...");
+        const expectedEquipmentNumbers = ASDListView.assetEquipmentNumbers || [];
+        const expectedCount = expectedEquipmentNumbers.length;
+        await this.equipmentSectionHeader.waitForDisplayed({ timeout: 15000 });
+        const headerText = (await this.equipmentSectionHeader.getText()).trim();
+        const actualCount = await utils.getAssignedValue(headerText);
+        console.log(`Equipment header text: '${headerText}' → actual count: ${actualCount}, expected: ${expectedCount}`);
+        if (actualCount !== expectedCount) {
+            throw new Error(`Equipment count mismatch: expected ${expectedCount}, found ${actualCount}`);
+        }
+        for (const equipNo of expectedEquipmentNumbers) {
+            const cell = await this.equipmentCell(equipNo);
+            await cell.waitForDisplayed({ timeout: 15000 });
+            if (!(await cell.isDisplayed())) {
+                throw new Error(`Equipment '${equipNo}' not found in Risk Information section`);
+            }
+            console.log(`Equipment '${equipNo}' confirmed present in Risk Information section`);
+        }
+        console.log("Equipment count and equipment numbers verified successfully");
+    }
+
+    public async createEditFreezeDeleteStrategy()
+    {
+        await this.createStartegy();
+        await this.editStrategy();
+        await this.freezeStrategy();
+        await this.deleteStrategy();
+    }
+
+    public async createStartegy()
+    {
+        console.log("Creating new startegy in risk information...");
+        await utils.clickWithWait(this.newStrategyBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await this.createNewStrategyHeader.waitForDisplayed();
+        await utils.clickWithWait(this.shortDescriptionDropdown);
+        await utils.clickWithWait(this.shortDescriptionOption);
+        this.strategyData.shortDescription = await this.strategyShortDescriptionInput.getAttribute("value");
+        this.strategyData.longDescription = (await this.longDescriptionText.getText()).trim();
+        await utils.clickWithWait(this.sectionDropdown);
+        await browser.keys("ArrowDown");
+        await browser.keys("Enter");
+        this.strategyData.section = await this.sectionInput.getAttribute("value");
+        await utils.setValueWithWait(
+            this.dueDateInput,
+            utils.formatDatePlus(30),
+            1000
+        );
+        await utils.clickWithWait(this.createBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickSuccessOkButton(5000);
+        console.log("Short Description: " + this.strategyData.shortDescription);
+        console.log("Long Description: " + this.strategyData.longDescription);
+        console.log("Section: " + this.strategyData.section);
+        console.log("New startegy in risk information created");
+    }
+
+    public async editStrategy()
+    {
+        console.log("Editing newly created strategy...");
+        const searchText = (this.strategyData.shortDescription || "").trim();
+        const sectionText = (this.strategyData.section || "").trim();
+        const searchInput = await this.strategySearchInput;
+        await searchInput.waitForDisplayed({ timeout: 30000 });
+        await searchInput.click();
+        // Hard-clear any pre-existing text (UI5 search field sometimes retains prior value)
+        try { await searchInput.clearValue(); } catch { /* ignore */ }
+        await browser.keys(["Control", "a"]);
+        await browser.keys("Backspace");
+        // Type the strategy name exactly once
+        await searchInput.addValue(searchText);
+        const typedValue = await searchInput.getAttribute("value");
+        console.log(`Strategies search input value after typing: '${typedValue}'`);
+        await utils.clickWithWait(this.strategySearchBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        await this.selectStrategyRowByDetails(searchText, sectionText);
+
+        await utils.clickWithWait(this.editAndUpdateBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await this.updateRecommendationsHeader.waitForDisplayed({ timeout: 30000 });
+        const updatedShortDescription = `Updated ${this.strategyData.shortDescription}`;
+        await utils.setValueWithWait(
+            this.strategyShortDescriptionInput,
+            updatedShortDescription,
+            1000
+        );
+        this.strategyData.shortDescription = updatedShortDescription;
+        await utils.clickWithWait(this.updateRecommendationsSaveBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickSuccessOkButton(5000);
+        console.log("Newly created strategy edited successfully");
+    }
+
+    private async selectStrategyRowByDetails(shortDescription: string, section: string): Promise<void> {
+        console.log(`Locating strategy row with Short Description='${shortDescription}' and Section='${section}'...`);
+        const candidateRows = await $$(
+            `//tr[@data-sap-ui-rowindex and .//h5//span[normalize-space()=${this.xpathLiteral(shortDescription)}]]`
+        );
+        let matchedRowIndex: string | null = null;
+        for (const row of candidateRows) {
+            const rowIndex = await row.getAttribute("data-sap-ui-rowindex");
+            if (rowIndex === null) continue;
+            const twinRows = await $$(
+                `//tr[@data-sap-ui-rowindex='${rowIndex}' and .//td[@aria-colindex='6']]`
+            );
+            let sectionCellText = "";
+            for (const twin of twinRows) {
+                const cell = await twin.$(`.//td[@aria-colindex='6']//span`);
+                if (await cell.isExisting()) {
+                    const txt = (await cell.getText().catch(() => "")).trim();
+                    if (txt) { sectionCellText = txt; break; }
+                }
+            }
+            console.log(`  Row #${rowIndex}: shortDesc='${shortDescription}', section='${sectionCellText}'`);
+            if (!section || sectionCellText === section) {
+                matchedRowIndex = rowIndex;
+                break;
+            }
+        }
+        if (matchedRowIndex === null) {
+            throw new Error(`Could not find strategy row matching shortDescription='${shortDescription}' and section='${section}'.`);
+        }
+        const rowSelector = await $(`//div[@id='idNewTable-rowsel${matchedRowIndex}']`);
+        await rowSelector.waitForDisplayed({ timeout: 10000 });
+        await utils.clickWithWait(rowSelector);
+        console.log(`Selected strategy row index ${matchedRowIndex}.`);
+    }
+
+    private xpathLiteral(value: string): string {
+        if (!value.includes("'")) return `'${value}'`;
+        if (!value.includes('"')) return `"${value}"`;
+        const parts = value.split("'");
+        return "concat(" + parts.map((p, i) => `'${p}'${i < parts.length - 1 ? ", \"'\", " : ""}`).join("") + ")";
+    }
+
+    public async freezeStrategy()
+    {
+        console.log("Freezing newly created strategy...");
+        
+    }
+
+    public async deleteStrategy()
+    {
+        console.log("Deleting newly created strategy...");
+        const searchText = (this.strategyData.shortDescription || "").trim();
+        const sectionText = (this.strategyData.section || "").trim();
+        await this.searchStrategy(searchText);
+        await this.selectStrategyRowByDetails(searchText, sectionText);
+        await utils.clickWithWait(this.deleteStartegyBtn);
+        await browser.pause(1500);
+        await this.yesBtn.waitForDisplayed({ timeout: 15000 });
+        await utils.clickWithWait(this.yesBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickSuccessOkButton(5000);
+        await browser.pause(2000);
+        await this.searchStrategy(searchText);
+        const remainingRows = await $$(
+            `//tr[@data-sap-ui-rowindex and .//h5//span[normalize-space()=${this.xpathLiteral(searchText)}]]`
+        );
+        const remainingCount = await remainingRows.length;
+        if (remainingCount > 0) {
+            throw new Error(`Strategy '${searchText}' still present after delete (found ${remainingCount} row(s)).`);
+        }
+        console.log(`Strategy '${searchText}' confirmed deleted (not present after re-search).`);
+    }
+
+    private async searchStrategy(searchText: string): Promise<void> {
+        const searchInput = await this.strategySearchInput;
+        await searchInput.waitForDisplayed({ timeout: 30000 });
+        await searchInput.click();
+        try { await searchInput.clearValue(); } catch { /* ignore */ }
+        await browser.keys(["Control", "a"]);
+        await browser.keys("Backspace");
+        await searchInput.addValue(searchText);
+        console.log(`Strategies search input value after typing: '${await searchInput.getAttribute("value")}'`);
+        await utils.clickWithWait(this.strategySearchBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
     }
 
     public async verifyMaintenanceAndServiceInfo()
@@ -1134,156 +1248,13 @@ class asset_strategy_development_detailview_page {
         console.log("Start: Verifying maintenance and service information of ASD");
         await utils.clickWithWait(this.maintenanceAndServiceTab);
         await browser.pause(2000);
-        const maintenanceNotification = utils.getAssignedValue(await this.maintenanceNotificationValue.getText());
-        const maintenanceOrders = utils.getAssignedValue(await this.maintenanceOrdersValue.getText());
-        const maintenancePlans = utils.getAssignedValue(await this.maintenancePlansValue.getText());
+        const maintenanceNotification = await utils.getAssignedValue(await this.maintenanceNotificationValue.getText());
+        const maintenanceOrders = await utils.getAssignedValue(await this.maintenanceOrdersValue.getText());
+        const maintenancePlans = await utils.getAssignedValue(await this.maintenancePlansValue.getText());
         console.log("Maintenance Notification:", maintenanceNotification);
         console.log("Maintenance Orders:", maintenanceOrders);
         console.log("Maintenance Plans:", maintenancePlans);
         console.log("Maintenance and service information of ASD verified successfully");
-    }
-
-    async addDocument() {
-        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
-        await utils.clickWithWait(addLinkBtn,1000);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.ASDIframe);
-        const documentOption = await $('//li[contains(.,"Add Document")]');
-        await utils.clickWithWait(documentOption);
-        await browser.pause(2000);
-        await utils.uploadDocument('vessel-1.png');
-        await browser.pause(9000);
-        console.log("Document uploaded successfully, now filling the details to assign document");
-        console.log("Selecting Category, Phase and Language for the document");
-
-        await utils.openDropdown($('//label[.//bdi[text()="Category"]]//following::span[contains(@id,"arrow")][1]'));
-        await utils.waitForDropdownOpen();
-        await utils.waitForAnyUI5OptionActive();
-        const firstOption = await $('(//li[@role="option"])[1]');
-        await utils.clickWithWait(firstOption);
-        console.log("Category selected");
-
-        await utils.openDropdown($('//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]'));
-        await utils.waitForDropdownOpen();
-        await utils.waitForAnyUI5OptionActive();
-        const phaseOption = await $('//li[@role="option"][1]//div[@role="checkbox"]');
-        await utils.clickWithWait(phaseOption);
-        console.log("Phase selected");
-
-        await utils.openDropdown($('//label[.//bdi[text()="Language"]]//following::span[contains(@id,"arrow")][1]'));
-        await utils.waitForDropdownOpen();
-        await utils.waitForAnyUI5OptionActive();
-        const languageOption = await $('//span[text()="English"]/ancestor::li');
-        await utils.clickWithWait(languageOption);
-        console.log("Language selected");
-
-        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await this.attachSuccMsg.waitForDisplayed({
-            timeout: 20000,
-            timeoutMsg: 'Document assign success message not displayed'
-        });
-
-        console.log("Document assign success message displayed");
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(10000);
-    }
-
-    async addLink() {
-        const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
-        await utils.clickWithWait(addLinkBtn);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.ASDIframe);
-        const link = await $('//li[contains(.,"Add Link")]');
-        await utils.clickWithWait(link);
-        await browser.pause(2000);
-        console.log("Filling the details to assign link");
-        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
-        await displayNameInput.waitForDisplayed({ timeout: 10000 });
-        await displayNameInput.setValue("Test Link");
-        console.log("Display Name entered");
-        console.log("Entering URL for the link");
-        const linkInput = await $(`//label[.//bdi[text()='Link']]//following::input[1]`);
-        await linkInput.setValue("https://testlink.com");
-        const phaseInput = await $(`//label[.//bdi[text()="Phase"]]//following::span[contains(@id,"arrow")][1]`);
-        await phaseInput.click();
-        console.log("Phase dropdown opened");
-        await utils.waitForDropdownOpen();
-        const phaseoption = await $(`//li[@role="option"][1]//div[@role="checkbox"]`);
-        await phaseoption.waitForDisplayed({ timeout: 10000 });
-        await phaseoption.click();
-        console.log("Phase selected");
-        // const categoryInput = await $(`//label[.//bdi[text()="Category"]]//following::span[contains(@id,"arrow")][1]`);
-        // await categoryInput.click();
-        // const categoryoption = await $(`(//ul[@role="listbox"]//li[@role="option"])[2]`);
-        // await utils.clickWithWait(categoryoption,1000);
-        await utils.clickWithWait($('//button[.//bdi[text()="Save"]]'));
-        await utils.waitForBusyIndicatorToDisappear();
-        await this.attachSuccMsg.waitForDisplayed({
-            timeout: 20000,
-            timeoutMsg: 'Link assign success message not displayed'
-        });
-
-        console.log("Link assign success message displayed");
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'));
-        await browser.pause(2000);
-    }
-
-    async gotoAttachmentsTabAndAssignAttachment() {
-        console.log("Navigating to Attachment tab to assign attachment");
-        await browser.pause(4000);
-        await utils.switchToIframe(this.ASDIframe);
-        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
-        await this.attachmentsSection.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
-        const addAttachmentBtn = await $('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
-        const addAttachmentBtn2 = await $('//header[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
-        if(await addAttachmentBtn.isExisting()){
-            await utils.clickWithWait(addAttachmentBtn,2000);
-        }
-        else if(await addAttachmentBtn2.isExisting()){
-            await utils.clickWithWait(addAttachmentBtn2,2000);
-        }
-        await browser.pause(2000);
-        await utils.selectCheckboxes(2);
-        await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'),1000);
-
-        await this.attachSuccMsg.waitForDisplayed({
-            timeout: 20000,
-            timeoutMsg: 'Document assign success message not displayed'
-        });
-
-        console.log("Document assign success message displayed");
-        await utils.clickWithWait(this.okBtn,1000);
-        console.log("Attachment assigned successfully");
-    }
-
-    async deleteAttachmentAndVerify() {
-        console.log("Deleting assigned attachment and verifying");
-        await browser.pause(8000);
-        await utils.switchToIframe(this.ASDIframe);
-        await browser.pause(8000);
-        const attachmentCheckbox = await $('(//table//tr[@role="row"]//div[@role="checkbox" and @aria-checked="false"])[1]');
-        await attachmentCheckbox.waitForDisplayed({ timeout: 20000 });
-        await utils.clickWithWait(attachmentCheckbox,1000);
-        const selectAllAttachment = await $('(//table//tr[@role="row"]//div[@role="checkbox" and @aria-checked="true"])[1]');
-        if(await selectAllAttachment.isExisting()){
-            console.log("Selecting all attachments for deletion");
-            await selectAllAttachment.click();
-        }
-        else
-        {
-            console.log("No attachment is selected for deletion");    
-            return;
-        }
-        await utils.clickWithWait($('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Delete"]/ancestor::button'),1000);
-        await utils.clickWithWait($('//button[.//bdi[text()="Yes"]]'),1000);
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait($('//button[.//bdi[text()="OK"]]'),1000);
-        await browser.pause(2000);
-        console.log("Attachment deleted successfully");
     }
 
     public async downloadAndVerifyReport() {
@@ -1293,8 +1264,7 @@ class asset_strategy_development_detailview_page {
             await utils.clickWithWait(this.headerMoreBtn);
             await browser.pause(1000);
         }
-        ASDListView.assetASDDesc = await ASDListView.getASDDescName();
-        await ASDListView.fetchASDDisplayID();
+        await ASDListView.captureASDNameAndId();
         await utils.clickWithWait(this.reportBtn);
         await browser.pause(2000);
         await browser.keys("ArrowDown");
@@ -1411,7 +1381,7 @@ class asset_strategy_development_detailview_page {
             return;
         }
         console.log("Deleting the ASD...");
-        await ASDListView.fetchASDDisplayID();
+        await ASDListView.captureASDNameAndId();
         console.log("Deleting :" + ASDListView.assetASDDisplayID);
         if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
             await utils.clickWithWait(this.headerMoreBtn);
@@ -1419,12 +1389,10 @@ class asset_strategy_development_detailview_page {
         }
         await utils.clickWithWait(this.deleteBtn);
         await browser.pause(2000);
-        await this.deleteConfirmText.waitForDisplayed({ timeout: 60000 });
-        const yesBtn = await $("//header[.//text()='Confirmation']/following::button[.//text()='Yes']");
-        await utils.clickWithWait(yesBtn);
+        await utils.clickWithWait(this.yesBtn);
         await browser.pause(4000);
         await this.okBtn.waitForDisplayed({ timeout: 60000 });
-        await utils.clickWithWait(this.okBtn);
+        await utils.clickSuccessOkButton();
         console.log("ASD deleted successfully");
     }
 

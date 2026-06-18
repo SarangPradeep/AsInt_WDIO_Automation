@@ -1,6 +1,6 @@
     import { $ } from '@wdio/globals';
     import utils from '../../../../utils/utils';
-    import { rcaData } from '../../../../test_data/btp_applications/root_cause_analysis_data';
+    import { rcaData } from '../../../../test_data/btp_applications/reliability/root_cause_analysis_data';
     import { clear } from 'node:console';
 
     class rcaWhyWhyPage {
@@ -86,6 +86,7 @@
         private get RCAChngHist() { return $("//bdi[text()='Change History']"); }
         private get rcaDescriptionField() { return $("//bdi[normalize-space()='RCA Description']/following::input[1]"); }
         private get okButton5() { return $("//button[.//bdi[normalize-space()='OK']]"); }
+        get closeButton2() { return $('//button[.//bdi[text()="Cancel"]]'); }
         private get manageButton() { return $("//button[.//bdi[normalize-space()='Manage']]"); }
         private get yesButton() { return $("//button[.//bdi[normalize-space()='Yes']]"); }
 
@@ -679,6 +680,13 @@
             if (!newVal.includes(enteredDesc)) {
                 throw new Error(`New value mismatch. Expected: ${enteredDesc} Found: ${newVal}`);
             }
+        }
+
+        async closeChnageHistory() {
+                    await utils.clickWithWait(this.closeButton2);
+                    await browser.pause(2000);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    console.log("Change History popup closed successfully");
         }
 
         async deleteassessment(){

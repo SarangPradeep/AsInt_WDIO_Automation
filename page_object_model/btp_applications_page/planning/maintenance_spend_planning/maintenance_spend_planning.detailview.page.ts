@@ -75,102 +75,9 @@ class maintenance_detail_view{
     {
         await utils.switchToIframe(this.mspIframe);
         await browser.pause(4000);
-        const { shortdesc, mspid } = await this.captureIds(false);
-        MSPListView.MSPShortDesc = shortdesc;
-        MSPListView.MSPDisplayID = mspid;
-    }
-
-    public async getMSPId(){
-        try{
-            await browser.waitUntil(async()=>{
-                const text=await browser.execute(()=>{
-                    const spans=[...document.querySelectorAll("header span")];
-                    const match=spans.find(el=>
-                        el.textContent?.trim().startsWith("Automation MSP")
-                    );
-                    return match?.textContent?.trim() || "";
-                });
-                return text!=="";
-            },{
-                timeout:10000,
-                interval:500
-            });
-            const text=await browser.execute(()=>{
-                const spans=[...document.querySelectorAll("header span")];
-                const match=spans.find(el=>
-                    el.textContent?.trim().startsWith("Automation MSP")
-                );
-                return match?.textContent?.trim() || "";
-            });
-            return text;
-        }catch(e){
-            console.log("MSP not visible in this attempt");
-            return "";
-        }
-    }
-
-    public async getDisplayId(isMSPE: boolean): Promise<string> {
-        try {
-            const prefix = isMSPE ? "MSPE." : "MSP.";
-
-            await browser.waitUntil(async () => {
-                const text = await browser.execute((p) => {
-                    const spans = [...document.querySelectorAll("span")];
-
-                    const match = spans.find(el =>
-                        el.textContent?.trim().startsWith(p)
-                    );
-
-                    return match?.textContent?.trim() || "";
-                }, prefix);
-
-                return text !== "";
-            }, {
-                timeout: 10000,
-                interval: 500
-            });
-
-            const text = await browser.execute((p) => {
-                const spans = [...document.querySelectorAll("span")];
-
-                const match = spans.find(el =>
-                    el.textContent?.trim().startsWith(p)
-                );
-
-                return match?.textContent?.trim() || "";
-            }, prefix);
-
-            return text;
-
-        } catch (e) {
-            console.log("Display ID not visible in this attempt");
-            return "";
-        }
-    }
-
-    public async captureIds(isMSPE: boolean) {
-        let shortdesc = "";
-        let mspid = "";
-        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
-        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
-        for (let i = 0; i < 3; i++) {
-            if (i === 0 && await expandBtn.isDisplayed()) {
-                await expandBtn.waitForClickable({ timeout: 5000 });
-                await expandBtn.click();
-            } 
-            else if (i === 1 && await collapseBtn.isDisplayed()) {
-                await collapseBtn.waitForClickable({ timeout: 5000 });
-                await collapseBtn.click();
-            }
-            await browser.pause(500); 
-            const headerText = await this.getMSPId();
-            const displayText = await this.getDisplayId(isMSPE);
-            if (!shortdesc && headerText) shortdesc = headerText;
-            if (!mspid && displayText) mspid = displayText;
-            console.log(`Attempt ${i + 1} → MSP="${shortdesc || 'EMPTY'}" | DisplayID="${mspid || 'EMPTY'}"`);
-            if (shortdesc && mspid) break;
-        }
-        return { shortdesc, mspid };
+        const { name, id } = await utils.getEntityNameAndId();
+        MSPListView.MSPShortDesc = name;
+        MSPListView.MSPDisplayID = id;
     }
 
     public async verifyHeader()
@@ -179,8 +86,8 @@ class maintenance_detail_view{
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.mspIframe);
         await browser.pause(4000);
-        const asdHeader = await this.captureIds(false);
-        await expect(asdHeader.shortdesc).toEqual(MSPListView.MSPShortDesc);
+        const { name } = await utils.getEntityNameAndId();
+        await expect(name).toEqual(MSPListView.MSPShortDesc);
         console.log("MSP name matches header's name");
     }
     
@@ -321,36 +228,6 @@ class maintenance_detail_view{
         const saveSummBtn = await $("//button[.//text()='Save']");
         await utils.clickWithWait(saveSummBtn);
         console.log("Verified summary data");
-    }
-
-    async gotoAttachmentsTabAndAssignAttachment() {
-        console.log("Navigating to Attachment tab to assign attachment");
-        await browser.pause(4000);
-        await utils.switchToIframe(this.mspIframe);
-        await this.attachmentsTab.waitForDisplayed({ timeout: 50000 });
-        await this.attachmentsTab.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
-        const addAttachmentBtn = await $('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
-        const addAttachmentBtn2 = await $('//header[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
-        if(await addAttachmentBtn.isExisting()){
-            await utils.clickWithWait(addAttachmentBtn,2000);
-        }
-        else if(await addAttachmentBtn2.isExisting()){
-            await utils.clickWithWait(addAttachmentBtn2,2000);
-        }
-        await browser.pause(2000);
-        await utils.selectCheckboxes(2);
-        await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'),1000);
-
-        await this.attachSuccMsg.waitForDisplayed({
-            timeout: 20000,
-            timeoutMsg: 'Document assign success message not displayed'
-        });
-
-        console.log("Document assign success message displayed");
-        await utils.clickWithWait(this.okBtn,1000);
-        console.log("Attachment assigned successfully");
     }
 
     public async verifyHistoricData()
@@ -568,9 +445,9 @@ class maintenance_detail_view{
     {
         await utils.switchToIframe(this.mspIframe);
         await browser.pause(4000);
-        const { shortdesc, mspid } = await this.captureIds(true);
-        MSPListView.MSPEShortDesc = shortdesc;
-        MSPListView.MSPEDisplayID = mspid;
+        const { name, id } = await utils.getEntityNameAndId();
+        MSPListView.MSPEShortDesc = name;
+        MSPListView.MSPEDisplayID = id;
     }
 
     public async verifyMSPEHeader()
@@ -579,8 +456,8 @@ class maintenance_detail_view{
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.mspIframe);
         await browser.pause(4000);
-        const asdHeader = await this.captureIds(true);
-        await expect(asdHeader.shortdesc).toEqual(MSPListView.MSPEShortDesc);
+        const { name } = await utils.getEntityNameAndId();
+        await expect(name).toEqual(MSPListView.MSPEShortDesc);
         console.log("MSP Event name matches header's name");
     }
 }

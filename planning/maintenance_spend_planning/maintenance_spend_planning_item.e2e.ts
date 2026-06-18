@@ -45,7 +45,7 @@ describe('BTP - Maintenance Spend Planning item (MSP) - Functional Test', () => 
     });
 
     it('should verify attachment section' , async () => {
-        await MSPDetailView.gotoAttachmentsTabAndAssignAttachment();
+        await utils.verifyAttachmentSection();
     });
 
     it('should verify historic data section', async() => {
