@@ -120,10 +120,10 @@ class CML_Detail_Page{
         console.log("CML was created and verified")
     }
 
-    public async searchCmlAndOpenDetail(cmlName?: string): Promise<void> {
+    public async searchCmlAndOpenDetailToVerifyAverage(cmlName?: string): Promise<void> {
         const target = (cmlName ?? CML_ListView_Page.cmlName ?? "").trim();
         if (!target) {
-            throw new Error("searchCmlAndOpenDetail: CML name is empty.");
+            throw new Error("Searched Cml And Open Detail To Verify Average: CML name is empty.");
         }
         console.log(`Searching CML '${target}' in equipment detail...`);
         await utils.waitForBusyIndicatorToDisappear();
@@ -161,6 +161,67 @@ class CML_Detail_Page{
     public async editVerifyBackgroundSection()
     {
         console.log("Editing and verifying background section...");
+        await this.openBackgroundTab();
+        await this.fillBackgroundDetails();
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait(this.calculateBtn, 1500);
+        await utils.waitForBusyIndicatorToDisappear();
+
+        // ---- Handle "Bulk Calculation of CMLs has been initiated" Information popup ----
+        console.log("Handling Bulk CML Calculation Information popup...");
+        await utils.clickInformationOkButton();
+
+        // Wait for backend bulk calculation to complete before checking the notification bell.
+        const waitForCalcMs = 30000;
+        console.log(`Waiting ${waitForCalcMs} ms for CML calculation to complete...`);
+        await browser.pause(waitForCalcMs);
+
+        // Notification bell lives in the FLP shell, not inside the CML iframe.
+        await browser.switchFrame(null);
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const notificationBell = $('(//a[@role="button"]//span)[3]');
+        await notificationBell.waitForExist({ timeout: 30000 });
+        await notificationBell.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(notificationBell);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        // Verify the "CML calculation is ready" notification entry is present.
+        const notificationEntry = $("//*[contains(normalize-space(.),'CML calculation is ready')]");
+        await notificationEntry.waitForExist({ timeout: 30000 });
+        const isPresent = await notificationEntry.isDisplayed();
+        if (!isPresent) {
+            throw new Error("'CML calculation is ready' notification was not found in the notification panel.");
+        }
+        console.log("'CML calculation is ready' notification verified successfully.");
+
+        // Switch back into the CML iframe to continue with the Background section.
+        await utils.switchToIframe(this.CMLIframe);
+        await utils.waitForBusyIndicatorToDisappear();
+
+        // ---- Re-visit Background tab; if details were lost, refill and re-Calculate ----
+        await this.openBackgroundTab();
+        const currentDescription = (await this.descriptionInput.getAttribute("value")) ?? "";
+        if (currentDescription.trim() === "") {
+            console.log("Background details are missing after notification flow -> refilling and re-calculating...");
+            await this.fillBackgroundDetails();
+            await utils.waitForBusyIndicatorToDisappear();
+            await utils.clickWithWait(this.calculateBtn, 1500);
+            await utils.waitForBusyIndicatorToDisappear();
+            await utils.clickInformationOkButton();
+        } else {
+            console.log(`Background details preserved (Description='${currentDescription}') -> no refill needed.`);
+        }
+
+        await utils.clickWithWait(this.saveBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickSuccessOkButton();
+        console.log("Edited and verified background section");
+    }
+
+    private async openBackgroundTab()
+    {
         await browser.waitUntil(async () => {
             await utils.clickWithWait(this.backgroundTab);
             await utils.waitForBusyIndicatorToDisappear();
@@ -170,6 +231,10 @@ class CML_Detail_Page{
             interval: 1500,
             timeoutMsg: "Description input did not become displayed and clickable after clicking Background tab."
         });
+    }
+
+    private async fillBackgroundDetails()
+    {
         await utils.clickWithWait(this.activeToggle);
         await utils.setValueWithWait(this.descriptionInput, "Background Description", 1500);
         await utils.clickWithWait(this.positionDropdown);
@@ -207,14 +272,6 @@ class CML_Detail_Page{
         await utils.clickWithWait(this.isInsulatedDropdown);
         await browser.keys("ArrowDown");
         await browser.keys("Enter");
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickWithWait(this.calculateBtn,1500);
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickSuccessOkButton();
-        await utils.clickWithWait(this.saveBtn);
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.clickSuccessOkButton();
-        console.log("Edited and verified backgroud section");
     }
 
     public async editVerifyPressureTminSection()

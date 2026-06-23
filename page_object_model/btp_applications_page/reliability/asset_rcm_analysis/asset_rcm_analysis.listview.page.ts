@@ -17,6 +17,18 @@ class assetRCMListView {
     public assetRCMDisplayID!: string;
     public assetRCMDesc!: string;
 
+    public async verifyHeader(){
+        console.log("Verifying header description value...");
+        const headerDescSpan = $("//bdi[.='Description']/ancestor::div[1]/following::span[1]");
+        await headerDescSpan.waitForExist({ timeout: 30000 });
+        await headerDescSpan.waitForDisplayed({ timeout: 30000 });
+        const headerDescText = (await headerDescSpan.getText()).trim();
+        console.log(`Header description text: '${headerDescText}'`);
+        console.log(`Expected description (assetRCMDesc): '${this.assetRCMDesc}'`);
+        await expect(headerDescText).toEqual(this.assetRCMDesc);
+        console.log("Header description matches expected value");
+    }
+
     public async navigateToAssetRCM(){
         console.log("Navigating to Asset RCM - start");
         await utils.waitForBusyIndicatorToDisappear();

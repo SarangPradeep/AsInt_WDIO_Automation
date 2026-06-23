@@ -1,71 +1,71 @@
-import {funcLocTestData} from '../../../../test_data/btp_applications/functional_location.data.ts';
+import {equipmentTestData} from '../../../../test_data/btp_applications/equipment.data';
 import utils from '../../../../utils/utils';
-class FunctionalLocationRegressionPage {
 
-    private funcLocSearched() { return $("(//tr[@role='row']//span[@title='Navigation'])[1]"); }
-    private get funLocGeneralInfoTab() { return $("//bdi[text()='General Information']/ancestor::button"); }
-    private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
-    private get funLocAssetIntTab() { return $("//bdi[text()='Asset Intelligence']"); }
+class EquipmentRegressionPage {
+
+    private equipmentSearched() { return $("(//tr[@role='row']//span[@title='Navigation'])[1]"); }
+    private get equipmentGeneralInfoTab() { return $("//bdi[text()='General Information']/ancestor::button"); }
+    private get equipmentIframe() { return $('iframe[data-help-id="application-equipment-manage"]'); }
+    private get equipmentAssetIntTab() { return $("//bdi[text()='Asset Intelligence']"); }
     private get assetInsp() { return $("//div[text()='Asset Inspection']/following::span[1]"); }
     private get inspectionAssessment() { return $("//div[contains(text(),'Inspection')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//a"); }
     private get inspectionAssessmentDesc() { return $("//div[contains(text(),'Inspection')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//span"); }
-    private get inspectionEquipment() { return $("//div[contains(text(),'Inspection')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='2']//div[1]"); }
-    private get inspectionFunctionalLocation() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='3']//span)[1]"); }
-    private get inspectionFunctionalLocationDesc() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='3']//span)[2]"); }
-    private get inspectionAssessmentTemplate() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[1]"); }
-    private get inspectionAssessmentTemplateDesc() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[2]"); }
-    private get inspectionStatus() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Status']/following::tr//td[@aria-colindex='5']//span)[1]"); }
-    private get inspectionCreatedOn() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[1]"); }
-    private get inspectionCreatedBy() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[2]"); }
+    private get inspectionEquipment() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='2']//span)[1]"); }
+    private get inspectionEquipmentDesc() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='2']//span)[2]"); }
+    private get inspectionAssessmentTemplate() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='3']//span)[1]"); }
+    private get inspectionAssessmentTemplateDesc() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='3']//span)[2]"); }
+    private get inspectionStatus() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Status']/following::tr//td[@aria-colindex='4']//span)[1]"); }
+    private get inspectionCreatedOn() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='5']//span)[1]"); }
+    private get inspectionCreatedBy() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='5']//span)[2]"); }
     private get inspectionIframe() { return $("//*[@data-help-id='application-idms-manage']"); }
-    private get inspectionHeaderFunctionalLocation() { return $("//bdi[text()='Functional Location: ']/following::a[1]"); }
-    private get inspectionHeaderFunctionalLocationDesc() { return $("//bdi[text()='Functional Location: ']/following::span[2]"); }
+    private get inspectionHeaderEquipment() { return $("//bdi[text()='Equipment: ']/following::a[1]"); }
+    private get inspectionHeaderEquipmentDesc() { return $("//bdi[text()='Equipment: ']/following::span[2]"); }
     private get inspectionHeaderStatus() { return $("//section//span[text()='Status']/following::span[1]"); }
     private get inspectionHeaderModifiedOn() { return $("//span[contains(text(),'Modified On')]"); }
     private get inspectionHeaderAssignedTo() { return $("//section//span[contains(text(),'Assigned To')]"); }
     private get findings() { return $("//div[text()='Findings']/following::span[1]"); }
-    private get findingsEquipment() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='1']//div)[1]"); }
-    private get findingsFunctionalLocation() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='2']//span)[1]"); }
-    private get findingsFunctionalLocationDesc() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='2']//span)[2]"); }
-    private get findingsDisplayeId() { return $("//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//a"); }
-    private get findingsDisplayeIdDesc() { return $("//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//span"); }
+    private get findingsEquipment() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='1']//span)[1]"); }
+    private get findingsEquipmentDesc() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='1']//span)[2]"); }
+    private get findingsDisplayeId() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='2']//a)[1]"); }
+    private get findingsDisplayeIdDesc() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='2']//span)[1]"); }
     private get findingsNo() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Finding Number']/following::tr//td[@aria-colindex='4']//span)[1]"); }
     private get findingsType() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Finding Type']/following::tr//td[@aria-colindex='5']//span)[2]"); }
-    private get findingsStatus() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Status']/following::tr//td[@aria-colindex='6']//span)[1]"); }
-    private get findingsAssignedTo() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Assigned To']/following::tr//td[@aria-colindex='8']//span)[1]"); }
-    private get findingsHeaderFunctionalLocation() { return $("//bdi[text()='Functional Location: ']/following::a[1]"); }
-    private get findingsHeaderFunctionalLocationDesc() { return $("//bdi[text()='Functional Location: ']/following::span[2]"); }
+    private get findingsStatus() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Status']/following::tr//td[@aria-colindex='5']//span)[1]"); }
+    private get findingsAssignedTo() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Assigned To']/following::tr//td[@aria-colindex='7']//span)[1]"); }
+    private get findingsHeaderEquipment() { return $("//bdi[text()='Equipment: ']/following::a[1]"); }
+    private get findingsHeaderEquipmentDesc() { return $("//bdi[text()='Equipment: ']/following::span[2]"); }
     private get findingsHeaderStatus() { return $("//section//span[text()='Status']/following::span[1]"); }
     private get findingsHeaderModifiedOn() { return $("//span[contains(text(),'Date Recorded')]"); }
     private get findingsHeaderAssignedTo() { return $("//bdi[text()='Assign Finding To']/following::span[2]"); }
     private get assetStrategyRCM() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]"); }
     private get recommendation() { return $("//div[text()='Recommendations']/following::span[1]"); }
-    private get assetStrategyAssessment() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//div//a)[1]"); }
-    private get assetStrategyAssessmentDesc() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//div//span)[1]"); }
-    private get assetStrategyAssessmentTemplate() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[1]"); }
-    private get assetStrategyAssessmentTemplateDesc() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[2]"); }
-    private get assetStrategyStatus() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Status']/following::tr//td[@aria-colindex='5']//span)[1]"); }
-    private get assetStrategyCreatedOn() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[1]"); }
-    private get assetStrategyCreatedBy() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[2]"); }
+    private get assetStrategyAssessment() { return $("(//div[contains(text(),'Asset Strategy')]/following::table)[1]//tbody/tr[1]//td[@aria-colindex='1']//a"); }
+    private get recoName() { return $("(//div[text()='Recommendations']/following::span[text()='Recommendation']/following::tr//td[@aria-colindex='1']//span)[1]"); }
+    private get recoDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Recommendation']/following::tr//td[@aria-colindex='1']//span)[2]"); }
+    private get recoLongDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Long Description']/following::tr//td[@aria-colindex='3']//span)[1]"); }
+    private get recoAssessmentLink() { return $("(//div[text()='Recommendations']/following::span[text()='Assessment']/following::tr//td[@aria-colindex='4']//a)[1]"); }
+    private get recoAssessmentDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Assessment']/following::tr//td[@aria-colindex='4']//span)[1]"); }
+    private get recoObjectType() { return $("(//div[text()='Recommendations']/following::span[text()='Object Type']/following::tr//td[@aria-colindex='5']//span)[1]"); }
     private get ASDIframe() { return $('iframe[data-help-id="application-assetstrategydevelopment-manage"]'); }
     private get ASDHeaderTemplateType() { return $("//section//span[text()='Template Type']/following::span[1]"); }
-    private get ASDHeaderFunctionalLocation() { return $("//section//bdi[text()='Functional Location: ']/following::a[1]"); }
+    private get ASDHeaderEquipment() { return $("//section//bdi[text()='Equipment: ']/following::a[1]"); }
     private get ASDHeaderStatus() { return $("//section//span[text()='Status']/following::span[1]"); }
     private get ASDHeaderModifiedOn() { return $("//section//span[text()='Modified On']/following::span[1]"); }
-    private rncRoot = "(//span[starts-with(normalize-space(),'Risk and Criticality (')]/ancestor::div[contains(@class,'sapMList')])[1]";
-    private get rncPanelTitle() { return $("(//span[starts-with(normalize-space(),'Risk and Criticality (')])[last()]"); }
-    private get rncTableRows() { return $$(`${this.rncRoot}//tbody/tr`); }
-    private get rncAssessmentDesc() { return $(`(${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='1']//div[contains(@class,'sapMObjectIdentifierTitle')]//span)[1]`); }
-    private get rncAssessmentId() { return $(`(${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='1']//div[contains(@class,'sapMObjectIdentifierText')]//span)[1]`); }
-    private get rncAssessmentLink() { return $(`(${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='1']//a | ${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='1']//div[contains(@class,'sapMObjectIdentifierText')]//span)[1]`); }
-    private get rncAssessmentTemplate() { return $(`(${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='2']//div[contains(@class,'sapMObjectIdentifierTitle')]//span)[1]`); }
-    private get rncAssessmentTemplateDesc() { return $(`(${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='2']//div[contains(@class,'sapMObjectIdentifierText')]//span)[1]`); }
-    private get rncTechnicalObject() { return $(`(${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='3']//div[contains(@class,'sapMObjectIdentifierTitle')]//span)[1]`); }
-    private get rncTechnicalObjectDesc() { return $(`(${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='3']//div[contains(@class,'sapMObjectIdentifierText')]//span)[1]`); }
-    private get rncStatus() { return $(`${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='4']`); }
-    private get rncRiskScore() { return $(`${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='5']`); }
-    private get rncCriticality() { return $(`${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='6']`); }
-    private get rncCreatedOn() { return $(`${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='7']`); }
+    private get asdRiskInformationTab() { return $("//bdi[normalize-space()='Risk Information']"); }
+    private get asdRecoSearchInput() { return $("(//div[text()='Recommendations']/following::input[@type='search'])[1]"); }
+    private get asdRecoFirstRowName() { return $("(//div[text()='Recommendations']/following::tr[@role='row']//a[starts-with(normalize-space(),'RECO_')])[1]"); }
+    private get asdRecoCountTitle() { return $("(//span[starts-with(normalize-space(),'Recommendations (')])[last()]"); }
+
+    private get rncAssessmentLink() { return $("//div[contains(text(),'Risk and Criticality')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//a"); }
+    private get rncAssessmentDesc() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//span)[1]"); }
+    private get rncAssessmentTemplate() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='2']//span)[1]"); }
+    private get rncAssessmentTemplateDesc() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='2']//span)[2]"); }
+    private get rncTechnicalObject() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Technical Object']/following::tr//td[@aria-colindex='3']//span)[1]"); }
+    private get rncTechnicalObjectDesc() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Technical Object']/following::tr//td[@aria-colindex='3']//span)[2]"); }
+    private get rncStatus() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Status']/following::tr//td[@aria-colindex='4']//span)[1]"); }
+    private get rncRiskScore() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Risk Score']/following::tr//td[@aria-colindex='5']//span)[1]"); }
+    private get rncCriticality() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Criticality']/following::tr//td[@aria-colindex='6']//span)[1]"); }
+    private get rncCreatedOn() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='7']//span)[1]"); }
 
     private get rncIframe() { return $('iframe[data-help-id="application-rca-manage"]'); }
     private get rncHeaderRiskType() { return $("//bdi[normalize-space()='Risk Type:']/following::span[2]"); }
@@ -80,6 +80,7 @@ class FunctionalLocationRegressionPage {
     private get rncAsgnAssessmentTemplateDesc() { return $("((//*[normalize-space()='Assessment Template']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='3']//span)[1]"); }
     private get rncAsgnRiskScore() { return $("((//*[normalize-space()='Risk Score']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='4']//span)[1]"); }
     private get rncAsgnCriticality() { return $("((//*[normalize-space()='Criticality']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='5']//span)[1]"); }
+
     private get rcmFleetTab() { return $("//div[contains(text(),'RCM/Fleet')]"); }
     private rcmFleetAssessmentRow() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM_')]])[1]"); }
     private rcmFleetAssessmentLink() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//a[starts-with(normalize-space(),'RCM_')]"); }
@@ -89,6 +90,7 @@ class FunctionalLocationRegressionPage {
     private get rcmHeaderStatusTag() { return $("(//div[@role='button' and @aria-roledescription='Object Tag']//span[not(@aria-hidden='true')])[1]"); }
     private get rcmHeaderTemplateType() { return $("//bdi[starts-with(normalize-space(),'Template Type')]/following::span[1]"); }
     private get rcmHeaderTechReview() { return $("//bdi[starts-with(normalize-space(),'Technical Review Completed')]/following::span[1]"); }
+
     private get rcmAssessmentTab() { return $("//*[(@role='tab' or self::div) and normalize-space(.)='Assessment']"); }
 
     public inspectionDetails: any = {};
@@ -99,12 +101,13 @@ class FunctionalLocationRegressionPage {
     public asdHeaderDetails: any = {};
     public rncDetails: any = {};
     public rncHeaderDetails: any = {};
-    public rncCount: number = 0;
     public rcmFleetDetails: any = {};
     public rcmHeaderDetails: any = {};
+    public recoDetails: any = {};
+    public recoAsdHeaderDetails: any = {};
 
-    public async searchFunctionalLocation(functionalLocation:string){
-        console.log("Searching for Functional Location with short description: " + functionalLocation);
+    public async searchEquipment(equipment: string) {
+        console.log("Searching for Equipment: " + equipment);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.waitUntil(
             async () => (await browser.execute(() => document.readyState)) === "complete",
@@ -112,21 +115,20 @@ class FunctionalLocationRegressionPage {
         );
 
         await browser.waitUntil(async () => {
-        const frames = await $$("//iframe");
-        for (const frame of frames) {
-            try {
-                await browser.switchFrame(frame);
-
-                const search = await $("//input[@type='search']");
-                if (await search.isExisting()) {
-                    return true; // correct frame
+            const frames = await $$("//iframe");
+            for (const frame of frames) {
+                try {
+                    await browser.switchFrame(frame);
+                    const search = await $("//input[@type='search']");
+                    if (await search.isExisting()) {
+                        return true;
+                    }
+                    await browser.switchFrame(null);
+                } catch (e) {
+                    await browser.switchFrame(null);
                 }
-                await browser.switchFrame(null);
-            } catch (e) {
-                await browser.switchFrame(null);
             }
-        }
-        return false;
+            return false;
         }, { timeout: 30000 });
 
         const getVisibleSearch = async () => {
@@ -148,13 +150,14 @@ class FunctionalLocationRegressionPage {
         if (!searchBox) {
             throw new Error("Visible search box not found");
         }
-        console.log("Visible search box found, searching for deleted Functional Location");
+        console.log("Visible search box found, searching for Equipment");
         await browser.execute((el, value) => {
             const input = el as unknown as HTMLInputElement;
             input.value = value as string;
             input.dispatchEvent(new Event('input', { bubbles: true }));
-        }, searchBox, functionalLocation);
-        console.log(`Searched for Functional Location with name: ${functionalLocation}`);
+        }, searchBox, equipment);
+        console.log(`Searched for Equipment with name: ${equipment}`);
+
         const getVisibleGo = async () => {
             const buttons = await $$("//bdi[text()='Go']");
             for (const btn of buttons) {
@@ -167,7 +170,7 @@ class FunctionalLocationRegressionPage {
 
         let goBtn: any;
         await browser.waitUntil(async () => {
-            goBtn = await getVisibleGo(); 
+            goBtn = await getVisibleGo();
             return goBtn !== null;
         }, {
             timeout: 20000,
@@ -178,165 +181,69 @@ class FunctionalLocationRegressionPage {
             throw new Error("Go button not found");
         }
 
-        console.log("Clicking Go button to search for Functional Location");
+        console.log("Clicking Go button to search for Equipment");
         await goBtn.waitForDisplayed({ timeout: 10000 });
         await goBtn.waitForClickable({ timeout: 10000 });
         await goBtn.click();
         await browser.pause(5000);
-        console.log("Search executed for: " + functionalLocation);
+        console.log("Search executed for: " + equipment);
     }
 
-    /**
-     * Searches the Functional Location list by Display Id.
-     *  1) Switches into the FL iframe
-     *  2) Opens the "Adapt Filters" dialog
-     *  3) Ticks the "Display Id" filter checkbox (if not already enabled) and confirms
-     *  4) Types `displayId` into the Display Id input and clicks Go
-     */
-    public async searchFunctionalLocationByDisplayId(displayId: string) {
-        console.log(`Searching Functional Location by Display Id: ${displayId}`);
+    public async navigateToSearchedEquipment() {
+        console.log("Navigating to Detail view page of Equipment");
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.waitUntil(
-            async () => (await browser.execute(() => document.readyState)) === "complete",
-            { timeout: 20000 }
-        );
-
-        // Enter the FL list-view iframe (the page hosts several iframes)
-        await browser.waitUntil(async () => {
-            const frames = await $$("//iframe");
-            for (const frame of frames) {
-                try {
-                    await browser.switchFrame(frame);
-                    const adapt = await $("//bdi[contains(text(),'Adapt Filters')]");
-                    if (await adapt.isExisting()) {
-                        return true;
-                    }
-                    await browser.switchFrame(null);
-                } catch (e) {
-                    await browser.switchFrame(null);
-                }
-            }
-            return false;
-        }, { timeout: 30000, timeoutMsg: "Adapt Filters button not found in any iframe" });
-
-        const displayIdLabel = "Display Id";
-        const filterInputXPath = `//label[.//bdi[text()='${displayIdLabel}']]/following::input[1]`;
-
-        const displayIdInputAlreadyVisible = await $(filterInputXPath).isExisting()
-            && await $(filterInputXPath).isDisplayed().catch(() => false);
-
-        if (!displayIdInputAlreadyVisible) {
-            console.log("Display Id filter not in filter bar — opening Adapt Filters");
-            const adaptBtn = await $("//bdi[contains(text(),'Adapt Filters')]");
-            await adaptBtn.waitForClickable({ timeout: 30000 });
-            await adaptBtn.click();
-            await browser.pause(3000);
-
-            const checkbox = await $(
-                `(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]` +
-                `//tr[@role='row' and .//bdi[normalize-space(text())='${displayIdLabel}']]//div[@role='checkbox']`
-            );
-            await checkbox.waitForExist({ timeout: 30000 });
-            const checked = await checkbox.getAttribute("aria-checked");
-            if (checked !== "true") {
-                try {
-                    await checkbox.click();
-                } catch {
-                    await browser.execute((el) => (el as HTMLElement).click(), checkbox);
-                }
-                await browser.pause(500);
-            }
-
-            const okBtn = await $('//button//bdi[text()="OK"]');
-            await okBtn.waitForClickable({ timeout: 30000 });
-            await okBtn.click();
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(3000);
-        }
-
-        const filterInput = await $(filterInputXPath);
-        await filterInput.waitForDisplayed({ timeout: 30000 });
-        await filterInput.click();
-        await filterInput.clearValue();
-        await filterInput.addValue(displayId);
-        await browser.pause(500);
-
-        const goBtn = await $('//button[.//bdi[normalize-space()="Go"]]');
-        await goBtn.waitForClickable({ timeout: 30000 });
-        await goBtn.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(5000);
-        console.log(`Search executed for Display Id: ${displayId}`);
-    }
-
-    public async navigateToSearchedFunctionalLocation(){
-        console.log("Navigating to Detail view page of Functional Location");
-        await utils.waitForBusyIndicatorToDisappear();
-        const nav = this.funcLocSearched();
+        const nav = this.equipmentSearched();
         await utils.clickWithWait(nav);
         await utils.waitForBusyIndicatorToDisappear();
-        await utils.switchToIframe(this.funLocIframe);
-        const el = await this.funLocGeneralInfoTab;
+        await utils.switchToIframe(this.equipmentIframe);
+        const el = await this.equipmentGeneralInfoTab;
         await el.waitForExist({ timeout: 90000 });
-        await browser.execute((element) => {element.scrollIntoView({ block: 'center' });}, el);
+        await browser.execute((element) => { element.scrollIntoView({ block: 'center' }); }, el);
         await browser.pause(2000);
-        await browser.execute((element) => {element.click();}, el);
+        await browser.execute((element) => { element.click(); }, el);
         console.log("Navigated to Detail View page successfully");
     }
 
-    public async navigateToAssetIntelligenceTab(){
+    public async navigateToAssetIntelligenceTab() {
         console.log("Navigating to Asset Intelligence Tab");
-        try {
-            await this.funLocAssetIntTab.waitForExist({ timeout: 30000 });
-            await utils.clickWithWait(this.funLocAssetIntTab);
-            await this.funLocAssetIntTab.waitForDisplayed({ timeout: 30000 });
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(2000);
-        } catch (e) {
-            throw new Error(`Failed to navigate to Asset Intelligence tab | ${(e as Error).message}`);
-        }
+        await utils.clickWithWait(this.equipmentAssetIntTab);
+        await this.equipmentAssetIntTab.waitForDisplayed({ timeout: 30000 });
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
         console.log("Navigated to Asset Intelligence Tab successfully");
     }
 
-    public async verifyAssetInspectionDetails(){
+    public async verifyAssetInspectionDetails() {
         console.log("Verifying Asset Inspection details");
-        await utils.switchToIframe(this.funLocIframe);
-        await browser.pause(2000);
         const astInsp = await this.assetInsp.getText();
         const ai1 = await utils.getAssignedValue(astInsp);
-        console.log("Assigned asset Inspection : "+ai1);
-        if(ai1 === 0)
-        {
+        console.log("Assigned asset Inspection : " + ai1);
+        if (ai1 === 0) {
             throw new Error("Assigned Asset Inspection is 0, expected value should be greater than 0");
         }
         console.log("Fetching Asset Inspection details...");
         await this.saveInspectionDetails();
         console.log(this.inspectionDetails.assessment);
-        console.log(this.inspectionDetails.functionalLocation);
+        console.log(this.inspectionDetails.equipment);
         console.log(this.inspectionDetails.assessmentTemplate);
         console.log(this.inspectionDetails.status);
-        console.log("Asset Inspection details stroed successfully");
+        console.log("Asset Inspection details stored successfully");
         console.log("Navigating to inspected Assessment details page");
         await this.openInspectedAssessment();
-        
-
     }
 
     public async saveInspectionDetails(): Promise<void> {
-
         this.inspectionDetails = {
             assessment: await this.inspectionAssessment.getText(),
             assessmentDesc: await this.inspectionAssessmentDesc.getText(),
             equipment: await this.inspectionEquipment.getText(),
-            functionalLocation: await this.inspectionFunctionalLocation.getText(),
-            functionalLocationDescription: await this.inspectionFunctionalLocationDesc.getText(),
+            equipmentDescription: await this.inspectionEquipmentDesc.getText(),
             assessmentTemplate: await this.inspectionAssessmentTemplate.getText(),
             assessmentTemplateDescription: await this.inspectionAssessmentTemplateDesc.getText(),
             status: await this.inspectionStatus.getText(),
             createdOn: await this.inspectionCreatedOn.getText(),
             createdBy: await this.inspectionCreatedBy.getText()
         };
-
         console.log(JSON.stringify(this.inspectionDetails, null, 2));
     }
 
@@ -362,38 +269,116 @@ class FunctionalLocationRegressionPage {
             await this.saveInspectionHeaderDetails();
             await this.verifyInspectionDetails();
         } finally {
-            await this.returnToParentWindow(parentWindow, this.funLocIframe);
+            await this.returnToParentWindow(parentWindow);
             console.log("Switched back to parent window successfully");
         }
+    }
+
+    public async getInspectionDesc() {
+        const xpath = "//header[.//@role='heading']//div[@role='heading']";
+        let found = false;
+        try {
+            await browser.waitUntil(async () => {
+                const els = await $$(xpath);
+                if (!els.length) return false;
+                for (let el of els) {
+                    let txt = (await el.getText()) ?? "";
+                    if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
+                    txt = txt?.trim();
+                    if (txt && (txt.startsWith("Automation") || txt.startsWith(""))) {
+                        found = true;
+                        return true;
+                    }
+                }
+                return false;
+            }, {
+                timeout: 4000,
+                interval: 500
+            });
+        } catch (e) {
+            console.log("Equipment header not visible in this attempt");
+        }
+
+        if (!found) return "";
+        const spans = await $$(xpath);
+        for (let el of spans) {
+            let txt = (await el.getText()) ?? "";
+            if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
+            txt = txt?.trim();
+            if (txt && (txt.startsWith("Automation") || txt.startsWith(""))) {
+                return txt;
+            }
+        }
+        return "";
     }
 
     private async returnToParentWindow(parentWindow: string, parentIframe?: ReturnType<typeof $>): Promise<void> {
         try {
             const handlesNow = await browser.getWindowHandles();
             if (handlesNow.length > 1) {
-                try { await browser.closeWindow(); } catch (e) { /* ignore */ }
+                try { await browser.closeWindow(); } catch (e) { }
             }
-        } catch (e) { /* ignore */ }
-        try { await browser.switchToWindow(parentWindow); } catch (e) { /* ignore */ }
-        try { await utils.waitForBusyIndicatorToDisappear(); } catch (e) { /* ignore */ }
+        } catch (e) { }
+        try { await browser.switchToWindow(parentWindow); } catch (e) { }
+        try { await utils.waitForBusyIndicatorToDisappear(); } catch (e) { }
         await browser.pause(5000);
         if (parentIframe) {
             try {
                 await utils.switchToIframe(parentIframe);
                 await browser.pause(2000);
-            } catch (e) { /* ignore */ }
+            } catch (e) { }
         }
     }
 
-    /**
-     * Thin wrapper around `utils.getEntityNameAndId()` so the existing callers
-     * (saveInspectionHeaderDetails / saveFindingsHeaderDetails / saveAssetStrategyHeaderDetails
-     * / saveRiskAndCriticalityHeaderDetails / saveRCMHeaderDetails) keep their
-     * `{ inspection, actualId }` shape without each method having to re-map.
-     */
+    public async getDisplayId() {
+        try {
+            const idPrefixes = [
+                "RECO_ASINT_", "RCM_", "RNC.", "RCM","RNC",
+                "ASDA", "MSPE", "MSP", "PMPL", "PMNO", "PMWO", "PMFI",
+                "TASK", "OPTA", "INSP", "CML", "DOCU", "FLOC", "EQUI",
+                "HAZOP", "OBJT", "ASMT"
+            ];
+            for (const prefix of idPrefixes) {
+                const txt = await browser.execute((p) => {
+                    const el = document.evaluate(
+                        `//span[starts-with(normalize-space(),'${p}')]`,
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    ).singleNodeValue;
+                    return el ? (el.textContent || "") : "";
+                }, prefix);
+                if (txt) return txt.replace("Display ID:", "").trim();
+            }
+            return "";
+        } catch (e) {
+            return "";
+        }
+    }
+
     public async getFinalIDs() {
-        const { name, id } = await utils.getEntityNameAndId();
-        return { inspection: name, actualId: id };
+        let inspection = "";
+        let actualId = "";
+        const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+        const collapseBtn = await $("(//span[text()='Collapse Header']/preceding-sibling::span//span)[2]");
+        for (let i = 0; i < 3; i++) {
+            if (i === 0 && await expandBtn.isDisplayed()) {
+                await expandBtn.waitForClickable({ timeout: 5000 });
+                await expandBtn.click();
+            } else if (i === 1 && await collapseBtn.isDisplayed()) {
+                await collapseBtn.waitForClickable({ timeout: 5000 });
+                await collapseBtn.click();
+            }
+            await browser.pause(500);
+            const headerText = await this.getInspectionDesc();
+            const displayText = await this.getDisplayId();
+            if (!inspection && headerText) inspection = headerText;
+            if (!actualId && displayText) actualId = displayText;
+            console.log(`Attempt ${i + 1} → Inspection="${inspection || 'EMPTY'}" | DisplayID="${actualId || 'EMPTY'}"`);
+            if (inspection && actualId) break;
+        }
+        return { inspection, actualId };
     }
 
     public async saveInspectionHeaderDetails(): Promise<void> {
@@ -401,8 +386,8 @@ class FunctionalLocationRegressionPage {
         this.inspectionHeaderDetails = {
             inspectedName: inspection,
             inspectedId: actualId,
-            functionalLocation: await this.inspectionHeaderFunctionalLocation.getText(),
-            functionalLocationDescription: await this.inspectionHeaderFunctionalLocationDesc.getText(),
+            equipment: await this.inspectionHeaderEquipment.getText(),
+            equipmentDescription: await this.inspectionHeaderEquipmentDesc.getText(),
             status: await this.inspectionHeaderStatus.getText(),
             modifiedOn: (await this.inspectionHeaderModifiedOn.getText()).replace("Modified On", "").trim(),
             assignedTo: (await this.inspectionHeaderAssignedTo.getText()).replace("Assigned To", "").trim()
@@ -411,108 +396,60 @@ class FunctionalLocationRegressionPage {
     }
 
     public async verifyInspectionDetails(): Promise<void> {
-
         const failures: string[] = [];
 
-        const compare = (
-            field: string,
-            expected: string,
-            actual: string
-        ) => {
+        const compare = (field: string, expected: string, actual: string) => {
             const exp = (expected || "").trim();
             const act = (actual || "").trim();
-
             if (exp !== act) {
-                failures.push(
-                    `${field} mismatch | Expected="${exp}" | Actual="${act}"`
-                );
+                failures.push(`${field} mismatch | Expected="${exp}" | Actual="${act}"`);
             }
         };
 
-        compare(
-            "Assessment ID",
-            this.inspectionDetails.assessment,
-            this.inspectionHeaderDetails.inspectedId
-        );
-
-        compare(
-            "Assessment Description",
-            this.inspectionDetails.assessmentDesc,
-            this.inspectionHeaderDetails.inspectedName
-        );
-
-        compare(
-            "Functional Location",
-            this.inspectionDetails.functionalLocation,
-            this.inspectionHeaderDetails.functionalLocation
-        );
-
-        compare(
-            "Functional Location Description",
-            this.inspectionDetails.functionalLocationDescription,
-            this.inspectionHeaderDetails.functionalLocationDescription
-        );
-
-        compare(
-            "Status",
-            this.inspectionDetails.status,
-            this.inspectionHeaderDetails.status
-        );
-
-        compare(
-            "Created By / Assigned To",
-            this.inspectionDetails.createdBy,
-            this.inspectionHeaderDetails.assignedTo.replace(/^:\s*/, "")
-        );
-
-        compare(
-            "Created On / Modified On",
-            this.inspectionDetails.createdOn,
-            this.inspectionHeaderDetails.modifiedOn.replace(/^:\s*/, "")
-        );
+        compare("Assessment ID", this.inspectionDetails.assessment, this.inspectionHeaderDetails.inspectedId);
+        compare("Assessment Description", this.inspectionDetails.assessmentDesc, this.inspectionHeaderDetails.inspectedName);
+        compare("Equipment", this.inspectionDetails.equipment, this.inspectionHeaderDetails.equipment);
+        compare("Equipment Description", this.inspectionDetails.equipmentDescription, this.inspectionHeaderDetails.equipmentDescription);
+        compare("Status", this.inspectionDetails.status, this.inspectionHeaderDetails.status);
+        compare("Created By / Assigned To", this.inspectionDetails.createdBy, this.inspectionHeaderDetails.assignedTo.replace(/^:\s*/, ""));
+        compare("Created On / Modified On", this.inspectionDetails.createdOn, this.inspectionHeaderDetails.modifiedOn.replace(/^:\s*/, ""));
 
         if (failures.length > 0) {
-            throw new Error(
-                `Inspection Details Verification Failed\n\n${failures.join("\n")}`
-            );
+            throw new Error(`Inspection Details Verification Failed\n\n${failures.join("\n")}`);
         }
 
         console.log("Inspection Details Verification Passed");
     }
 
     public async verifyFindingDetails() {
-        console.log("Verifying Findings details");  
+        console.log("Verifying Findings details");
         await browser.pause(2000);
-        await utils.switchToIframe(this.funLocIframe);
+        await utils.switchToIframe(this.equipmentIframe);
         const finding = await this.findings.getText();
         const f = await utils.getAssignedValue(finding);
-        console.log("Assigned findings : "+f);
-        if(f === 0)
-        {
+        console.log("Assigned findings : " + f);
+        if (f === 0) {
             throw new Error("Assigned Findings is 0, expected value should be greater than 0");
         }
-        console.log("Fetching Asset Inspection details...");
+        console.log("Fetching Findings details...");
         await this.saveFindingsDetails();
         console.log(this.findingsDetails.equipment);
-        console.log(this.findingsDetails.functionalLocation);
-        console.log(this.findingsDetails.functionalLocationDesc);
+        console.log(this.findingsDetails.equipmentDesc);
         console.log(this.findingsDetails.displayId);
         console.log(this.findingsDetails.displayIdDesc);
         console.log(this.findingsDetails.findingNo);
         console.log(this.findingsDetails.findingType);
         console.log(this.findingsDetails.status);
         console.log(this.findingsDetails.assignedTo);
-        console.log("Asset Inspection details stroed successfully");
-        console.log("Navigating to inspected Assessment details page");
+        console.log("Findings details stored successfully");
+        console.log("Navigating to Findings details page");
         await this.openInspectedFindings();
     }
 
     public async saveFindingsDetails(): Promise<void> {
-
         this.findingsDetails = {
             equipment: await this.findingsEquipment.getText(),
-            functionalLocation: await this.findingsFunctionalLocation.getText(),
-            functionalLocationDesc: await this.findingsFunctionalLocationDesc.getText(),
+            equipmentDesc: await this.findingsEquipmentDesc.getText(),
             displayId: await this.findingsDisplayeId.getText(),
             displayIdDesc: await this.findingsDisplayeIdDesc.getText(),
             findingNo: await this.findingsNo.getText(),
@@ -539,13 +476,13 @@ class FunctionalLocationRegressionPage {
             await browser.switchToWindow(childWindow!);
             await this.inspectionIframe.waitForExist({ timeout: 30000 });
             await utils.switchToIframe(this.inspectionIframe);
-            console.log("Switched to Assessment details page successfully");
+            console.log("Switched to Findings details page successfully");
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(5000);
             await this.saveFindingsHeaderDetails();
             await this.verifyFindingsDetails();
         } finally {
-            await this.returnToParentWindow(parentWindow, this.funLocIframe);
+            await this.returnToParentWindow(parentWindow);
             console.log("Switched back to parent window successfully");
         }
     }
@@ -555,8 +492,8 @@ class FunctionalLocationRegressionPage {
         this.findingsHeaderDetails = {
             findingName: inspection,
             inspectedId: actualId,
-            functionalLocation: await this.findingsHeaderFunctionalLocation.getText(),
-            functionalLocationDescription: await this.findingsHeaderFunctionalLocationDesc.getText(),
+            equipment: await this.findingsHeaderEquipment.getText(),
+            equipmentDescription: await this.findingsHeaderEquipmentDesc.getText(),
             status: await this.findingsHeaderStatus.getText(),
             modifiedOn: (await this.findingsHeaderModifiedOn.getText()).replace("Date Recorded", "").trim(),
             assignedTo: (await this.findingsHeaderAssignedTo.getText()).replace("Assign Finding To", "").trim()
@@ -564,69 +501,49 @@ class FunctionalLocationRegressionPage {
         console.log(JSON.stringify(this.findingsHeaderDetails, null, 2));
     }
 
-    public async verifyFindingsDetails(){
+    public async verifyFindingsDetails() {
         const failures: string[] = [];
 
-        const compare = (
-            field: string,
-            expected: string,
-            actual: string
-        ) => {
+        const compare = (field: string, expected: string, actual: string) => {
             const exp = (expected || "").trim();
             const act = (actual || "").trim();
-
             if (exp !== act) {
-                failures.push(
-                    `${field} mismatch | Expected="${exp}" | Actual="${act}"`
-                );
+                failures.push(`${field} mismatch | Expected="${exp}" | Actual="${act}"`);
             }
         };
 
-        compare(
-            "Functional Location",
-            this.findingsDetails.functionalLocation,
-            this.findingsHeaderDetails.functionalLocation
-        );
-
-        compare(
-            "Functional Location Description",
-            this.findingsDetails.functionalLocationDesc,
-            this.findingsHeaderDetails.functionalLocationDescription
-        );
-
-        compare(
-            "Status",
-            this.findingsDetails.status,
-            this.findingsHeaderDetails.status
-        );
-
-        compare(
-            "Created By / Assigned To",
-            this.findingsDetails.assignedTo,
-            this.findingsHeaderDetails.assignedTo.replace(/^:\s*/, "")
-        );
+        compare("Equipment", this.findingsDetails.equipment, this.findingsHeaderDetails.equipment);
+        compare("Equipment Description", this.findingsDetails.equipmentDesc, this.findingsHeaderDetails.equipmentDescription);
+        compare("Status", this.findingsDetails.status, this.findingsHeaderDetails.status);
+        compare("Created By / Assigned To", this.findingsDetails.assignedTo, this.findingsHeaderDetails.assignedTo.replace(/^:\s*/, ""));
 
         if (failures.length > 0) {
-            throw new Error(
-                `Inspection Details Verification Failed\n\n${failures.join("\n")}`
-            );
+            throw new Error(`Findings Details Verification Failed\n\n${failures.join("\n")}`);
         }
 
-        console.log("Inspection Details Verification Passed");
+        console.log("Findings Details Verification Passed");
     }
 
-    public async verifyAssetStrategyDetails(){
-        console.log("Verifying Asset Strategy details");
+    public async verifyAssetStrategyDetails() {
+        console.log("Verifying Asset Strategy (RBI) details");
+        await utils.switchToIframe(this.equipmentIframe);
+        await browser.pause(2000);
         const assetStraRCM = await this.assetStrategyRCM.getText();
         const as2 = await utils.getAssignedValue(assetStraRCM);
-        console.log("Assigned asset strategy RCM: "+as2);
-        if(as2 === 0)
-        {
+        console.log("Assigned asset strategy RCM: " + as2);
+        if (as2 === 0) {
             throw new Error("Assigned Asset Strategy RCM is 0, expected value should be greater than 0");
         }
         await this.saveAssetStrategyDetails();
         await this.openAssetStrategyAssessment();
-        console.log("Asset Strategy details stored successfully");
+        console.log("Asset Strategy (RBI) details verified successfully");
+    }
+
+    public async verifyAssetStrategyRCMFleetDetails() {
+        console.log("Verifying Asset Strategy (RCM/Fleet) details");
+        await utils.switchToIframe(this.equipmentIframe);
+        await browser.pause(2000);
+        await this.verifyRCMFleetDetails();
     }
 
     public async openAssetStrategyAssessment(): Promise<void> {
@@ -645,26 +562,63 @@ class FunctionalLocationRegressionPage {
             await browser.switchToWindow(childWindow!);
             await this.ASDIframe.waitForExist({ timeout: 30000 });
             await utils.switchToIframe(this.ASDIframe);
-            console.log("Switched to Assessment details page successfully");
+            console.log("Switched to Asset Strategy details page successfully");
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(5000);
             await this.saveAssetStrategyHeaderDetails();
             await this.verifyASDDetails();
         } finally {
-            await this.returnToParentWindow(parentWindow, this.funLocIframe);
+            await this.returnToParentWindow(parentWindow);
             console.log("Switched back to parent window successfully");
         }
     }
 
     public async saveAssetStrategyDetails(): Promise<void> {
+        const cells = await browser.execute(() => {
+            const heading = document.evaluate(
+                "//div[contains(text(),'Asset Strategy')]",
+                document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null
+            ).singleNodeValue as HTMLElement | null;
+            if (!heading) return null;
+
+            const tables = Array.from(document.querySelectorAll('table'));
+            const table = tables.find(t => heading.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING);
+            if (!table) return null;
+
+            const headerCells = Array.from(table.querySelectorAll('thead th, thead td')) as HTMLElement[];
+            const headers = headerCells.map(h => (h.innerText || '').trim());
+
+            const firstRow = table.querySelector('tbody tr');
+            if (!firstRow) return null;
+            const dataCells = Array.from(firstRow.querySelectorAll(':scope > td')) as HTMLElement[];
+
+            const byHeader: Record<string, string[]> = {};
+            dataCells.forEach((td, i) => {
+                const key = headers[i] || `col${i + 1}`;
+                const lines = (td.innerText || '')
+                    .split(/\r?\n+/)
+                    .map(s => s.trim())
+                    .filter(s => s.length > 0);
+                byHeader[key] = lines;
+            });
+            return byHeader;
+        }) as Record<string, string[]> | null;
+
+        const get = (header: string, idx: number) => {
+            if (!cells) return '';
+            const found = Object.keys(cells).find(k => k.toLowerCase().includes(header.toLowerCase()));
+            const lines = found ? cells[found] : [];
+            return lines[idx] || '';
+        };
+
         this.assetStrategyDetails = {
-            assessment: await this.assetStrategyAssessment.getText(),
-            assessmentDesc: await this.assetStrategyAssessmentDesc.getText(),
-            assessmentTemplate: await this.assetStrategyAssessmentTemplate.getText(),
-            assessmentTemplateDescription: await this.assetStrategyAssessmentTemplateDesc.getText(),
-            status: await this.assetStrategyStatus.getText(),
-            createdOn: await this.assetStrategyCreatedOn.getText(),
-            createdBy: await this.assetStrategyCreatedBy.getText()
+            assessment: get('Assessment', 0) || (await this.assetStrategyAssessment.getText()),
+            assessmentDesc: get('Assessment', 1),
+            assessmentTemplate: get('Assessment Template', 0),
+            assessmentTemplateDescription: get('Assessment Template', 1),
+            status: get('Status', 0),
+            createdOn: get('Created On', 0),
+            createdBy: get('Created On', 1)
         };
         console.log("Asset Strategy Details:");
         console.log(JSON.stringify(this.assetStrategyDetails, null, 2));
@@ -676,114 +630,159 @@ class FunctionalLocationRegressionPage {
             asdName: inspection,
             asdID: actualId,
             templateType: await this.ASDHeaderTemplateType.getText(),
-            functionalLocation: await this.ASDHeaderFunctionalLocation.getText(),
+            equipment: await this.ASDHeaderEquipment.getText(),
             status: await this.ASDHeaderStatus.getText(),
             modifiedOn: await this.ASDHeaderModifiedOn.getText()
-        }
+        };
         console.log("ASD Header Details:");
         console.log(JSON.stringify(this.asdHeaderDetails, null, 2));
     }
 
     public async verifyASDDetails(): Promise<void> {
         const failures: string[] = [];
-        const compare = (
-            field: string,
-            expected: string,
-            actual: string
-        ) => {
+        const compare = (field: string, expected: string, actual: string) => {
             const exp = (expected || "").trim();
             const act = (actual || "").trim();
             if (exp !== act) {
-                failures.push(
-                    `${field} mismatch | Expected="${exp}" | Actual="${act}"`
-                );
+                failures.push(`${field} mismatch | Expected="${exp}" | Actual="${act}"`);
             }
         };
 
-        compare(
-            "Assessment ID",
-            this.assetStrategyDetails.assessment,
-            this.asdHeaderDetails.asdID
-        );
-
-        compare(
-            "Assessment Description",
-            this.assetStrategyDetails.assessmentDesc,
-            this.asdHeaderDetails.asdName
-        );
-
-        compare(
-            "Assessment Template",
-            this.assetStrategyDetails.assessmentTemplateDescription,
-            this.asdHeaderDetails.templateType
-        );
-
-        compare(
-            "Functional Location",
-            funcLocTestData.searchFunLoc.functionallocation2,
-            this.asdHeaderDetails.functionalLocation
-        );
-
-        compare(
-            "Status",
-            this.assetStrategyDetails.status,
-            this.asdHeaderDetails.status
-        );
-
-        compare(
-            "Created On / Modified On",
-            this.assetStrategyDetails.createdOn,
-            this.asdHeaderDetails.modifiedOn
-        );
+        compare("Assessment ID", this.assetStrategyDetails.assessment, this.asdHeaderDetails.asdID);
+        compare("Assessment Description", this.assetStrategyDetails.assessmentDesc, this.asdHeaderDetails.asdName);
+        compare("Assessment Template", this.assetStrategyDetails.assessmentTemplateDescription, this.asdHeaderDetails.templateType);
+        compare("Equipment", equipmentTestData.searchEquipment.equipment, this.asdHeaderDetails.equipment);
+        compare("Status", this.assetStrategyDetails.status, this.asdHeaderDetails.status);
+        compare("Created On / Modified On", this.assetStrategyDetails.createdOn, this.asdHeaderDetails.modifiedOn);
 
         if (failures.length > 0) {
-            throw new Error(
-                `ASD Details Verification Failed\n\n${failures.join("\n")}`
-            );
+            throw new Error(`ASD Details Verification Failed\n\n${failures.join("\n")}`);
         }
 
         console.log("ASD Details Verification Passed");
     }
 
-    public async verifyRecommendationDetails(){
+    public async verifyRecommendationDetails() {
         console.log("Verifying Recommendation details");
-        await utils.switchToIframe(this.funLocIframe);
+        await utils.switchToIframe(this.equipmentIframe);
         await browser.pause(2000);
         const recommendation = await this.recommendation.getText();
         const recom = await utils.getAssignedValue(recommendation);
-        console.log(" Assigned recommendations: "+recom);
-        if(recom === 0)
-        {
+        console.log("Assigned recommendations: " + recom);
+        if (recom === 0) {
             throw new Error("Assigned Recommendations is 0, expected value should be greater than 0");
+        }
+        await this.recoName.waitForExist({ timeout: 30000 });
+        await this.recoName.scrollIntoView({ block: 'center' });
+        await browser.pause(1000);
+        await this.saveRecommendationDetails();
+        console.log("Recommendation details stored successfully");
+        await this.openRecommendationAssessment();
+    }
+
+    public async saveRecommendationDetails(): Promise<void> {
+        this.recoDetails = {
+            recoName: await this.recoName.getText(),
+            recoDesc: await this.recoDesc.getText(),
+            longDescription: await this.recoLongDesc.getText(),
+            assessment: await this.recoAssessmentLink.getText(),
+            assessmentDesc: await this.recoAssessmentDesc.getText(),
+            objectType: await this.recoObjectType.getText()
+        };
+        console.log("Recommendation Details:");
+        console.log(JSON.stringify(this.recoDetails, null, 2));
+    }
+
+    public async openRecommendationAssessment(): Promise<void> {
+        const parentWindow = await browser.getWindowHandle();
+        await this.recoAssessmentLink.click();
+        await browser.waitUntil(
+            async () => (await browser.getWindowHandles()).length > 1,
+            { timeout: 30000, timeoutMsg: "New tab did not open for Recommendation assessment" }
+        );
+        const allWindows = await browser.getWindowHandles();
+        const childWindow = allWindows.find(handle => handle !== parentWindow);
+        try {
+            await browser.switchToWindow(childWindow!);
+            await this.ASDIframe.waitForExist({ timeout: 30000 });
+            await utils.switchToIframe(this.ASDIframe);
+            console.log("Switched to ASD details page (from Recommendation) successfully");
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(5000);
+            await this.saveRecoAsdHeaderDetails();
+            await this.verifyRecoInAsd();
+        } finally {
+            await this.returnToParentWindow(parentWindow, this.equipmentIframe);
+            console.log("Switched back to parent window successfully");
         }
     }
 
-    // ============================================================
-    // Risk and Criticality
-    // ============================================================
-    public async verifyRiskAndCriticalityDetails() {
-        console.log("Verifying Risk and Criticality details");
-        await utils.switchToIframe(this.funLocIframe);
+    public async saveRecoAsdHeaderDetails(): Promise<void> {
+        const { inspection, actualId } = await this.getFinalIDs();
+        this.recoAsdHeaderDetails = {
+            asdName: inspection,
+            asdID: actualId,
+            templateType: await this.ASDHeaderTemplateType.getText(),
+            equipment: await this.ASDHeaderEquipment.getText(),
+            status: await this.ASDHeaderStatus.getText(),
+            modifiedOn: await this.ASDHeaderModifiedOn.getText()
+        };
+        console.log("Recommendation -> ASD Header Details:");
+        console.log(JSON.stringify(this.recoAsdHeaderDetails, null, 2));
+    }
+
+    public async verifyRecoInAsd(): Promise<void> {
+        const expectedReco = (this.recoDetails.recoName || "").trim();
+        if (!expectedReco) {
+            throw new Error("Recommendation name was not captured from Equipment Recommendations panel");
+        }
+        console.log(`Verifying Recommendation "${expectedReco}" inside ASD Risk Information`);
+
+        const tab = this.asdRiskInformationTab;
+        await tab.waitForExist({ timeout: 30000 });
+        await tab.scrollIntoView({ block: 'center' });
+        await utils.clickWithWait(tab);
+        await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
 
-        const title = this.rncPanelTitle;
-        await title.waitForExist({ timeout: 30000 });
-        const titleText = (await title.getText()).trim();
-        const match = titleText.match(/\((\d+)\)/);
-        this.rncCount = match ? parseInt(match[1], 10) : 0;
-        console.log(`Risk and Criticality panel title: "${titleText}" | count saved globally = ${this.rncCount}`);
+        const searchBox = this.asdRecoSearchInput;
+        await searchBox.waitForExist({ timeout: 30000 });
+        await searchBox.scrollIntoView({ block: 'center' });
+        await browser.pause(1000);
+        await searchBox.click();
+        await searchBox.setValue(expectedReco);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
 
-        if (this.rncCount === 0) {
-            throw new Error("Risk and Criticality count is 0, expected value should be greater than 0");
+        const countTitle = this.asdRecoCountTitle;
+        await countTitle.waitForExist({ timeout: 30000 });
+        const countText = (await countTitle.getText()).trim();
+        const match = countText.match(/\((\d+)\)/);
+        const count = match ? parseInt(match[1], 10) : -1;
+        console.log(`ASD Recommendations title after search: "${countText}" | count=${count}`);
+
+        if (count !== 1) {
+            throw new Error(`Recommendation "${expectedReco}" not found in ASD | Expected count=1 | Actual count=${count}`);
         }
 
-        const rows = await this.rncTableRows;
-        const rowsCount = await rows.length;
-        console.log(`Risk and Criticality visible table rows = ${rowsCount}`);
-        if (rowsCount !== this.rncCount) {
-            console.warn(`Title count (${this.rncCount}) does not match rendered row count (${rowsCount})`);
-        }
+        const firstRowName = this.asdRecoFirstRowName;
+        await firstRowName.waitForExist({ timeout: 30000 });
+        const actualReco = (await firstRowName.getText()).trim();
+        console.log(`ASD Recommendation first row: "${actualReco}"`);
 
+        this.recoAsdHeaderDetails.recoName = actualReco;
+
+        if (actualReco !== expectedReco) {
+            throw new Error(`Recommendation mismatch in ASD | Expected="${expectedReco}" | Actual="${actualReco}"`);
+        }
+        console.log("Recommendation Verification in ASD Passed");
+    }
+
+    public async verifyRiskAndCriticalityDetails() {
+        console.log("Verifying Risk and Criticality details");
+        await utils.switchToIframe(this.equipmentIframe);
+        await browser.pause(2000);
         await this.rncAssessmentLink.waitForExist({ timeout: 30000 });
         await this.rncAssessmentLink.scrollIntoView({ block: 'center' });
         await browser.pause(1000);
@@ -794,16 +793,16 @@ class FunctionalLocationRegressionPage {
 
     public async saveRiskAndCriticalityDetails(): Promise<void> {
         this.rncDetails = {
-            assessment: (await this.rncAssessmentId.getText()).trim(),
-            assessmentDesc: (await this.rncAssessmentDesc.getText()).trim(),
-            assessmentTemplate: (await this.rncAssessmentTemplate.getText()).trim(),
-            assessmentTemplateDesc: (await this.rncAssessmentTemplateDesc.getText()).trim(),
-            technicalObject: (await this.rncTechnicalObject.getText()).trim(),
-            technicalObjectDesc: (await this.rncTechnicalObjectDesc.getText()).trim(),
-            status: (await this.rncStatus.getText()).trim(),
-            riskScore: (await this.rncRiskScore.getText()).trim(),
-            criticality: (await this.rncCriticality.getText()).trim(),
-            createdOn: (await this.rncCreatedOn.getText()).trim()
+            assessment: await this.rncAssessmentLink.getText(),
+            assessmentDesc: await this.rncAssessmentDesc.getText(),
+            assessmentTemplate: await this.rncAssessmentTemplate.getText(),
+            assessmentTemplateDesc: await this.rncAssessmentTemplateDesc.getText(),
+            technicalObject: await this.rncTechnicalObject.getText(),
+            technicalObjectDesc: await this.rncTechnicalObjectDesc.getText(),
+            status: await this.rncStatus.getText(),
+            riskScore: await this.rncRiskScore.getText(),
+            criticality: await this.rncCriticality.getText(),
+            createdOn: await this.rncCreatedOn.getText()
         };
         console.log("Risk and Criticality Details:");
         console.log(JSON.stringify(this.rncDetails, null, 2));
@@ -811,15 +810,14 @@ class FunctionalLocationRegressionPage {
 
     public async openRiskAndCriticalityAssessment(): Promise<void> {
         const parentWindow = await browser.getWindowHandle();
-        try {
-            await this.rncAssessmentLink.click();
-            await browser.waitUntil(
-                async () => (await browser.getWindowHandles()).length > 1,
-                { timeout: 30000, timeoutMsg: "New tab did not open for Risk and Criticality assessment" }
-            );
-        } catch (e) {
-            throw new Error(`Unable to navigate to Risk and Criticality assessment tab | ${(e as Error).message}`);
-        }
+        await this.rncAssessmentLink.click();
+        await browser.waitUntil(
+            async () => (await browser.getWindowHandles()).length > 1,
+            {
+                timeout: 30000,
+                timeoutMsg: "New tab did not open"
+            }
+        );
         const allWindows = await browser.getWindowHandles();
         const childWindow = allWindows.find(handle => handle !== parentWindow);
         try {
@@ -832,7 +830,7 @@ class FunctionalLocationRegressionPage {
             await this.saveRiskAndCriticalityHeaderDetails();
             await this.verifyRNCDetails();
         } finally {
-            await this.returnToParentWindow(parentWindow, this.funLocIframe);
+            await this.returnToParentWindow(parentWindow, this.equipmentIframe);
             console.log("Switched back to parent window successfully");
         }
     }
@@ -868,15 +866,11 @@ class FunctionalLocationRegressionPage {
     public async navigateToRncAssignmentsTab(): Promise<void> {
         console.log("Navigating to RNC Assignments tab");
         const tab = this.rncAssignmentsTab;
-        try {
-            await tab.waitForExist({ timeout: 30000 });
-            await tab.scrollIntoView({ block: 'center' });
-            await utils.clickWithWait(tab);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(2000);
-        } catch (e) {
-            throw new Error(`Unable to navigate to RNC Assignments tab | ${(e as Error).message}`);
-        }
+        await tab.waitForExist({ timeout: 30000 });
+        await tab.scrollIntoView({ block: 'center' });
+        await utils.clickWithWait(tab);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
         console.log("Navigated to RNC Assignments tab");
     }
 
@@ -905,7 +899,7 @@ class FunctionalLocationRegressionPage {
             failures.push(`Criticality mismatch | Expected (starts with)="${actCrit}" | Actual="${expCrit}"`);
         }
 
-        compare("Allowed Objects", "Functional Location", this.rncHeaderDetails.allowedObjects);
+        compare("Allowed Objects", "Equipment", this.rncHeaderDetails.allowedObjects);
 
         if (failures.length > 0) {
             throw new Error(`Risk and Criticality Details Verification Failed\n\n${failures.join("\n")}`);
@@ -914,24 +908,16 @@ class FunctionalLocationRegressionPage {
         console.log("Risk and Criticality Details Verification Passed");
     }
 
-    // ============================================================
-    // Asset Strategy - RCM/Fleet
-    // ============================================================
-    public async verifyAssetStrategyRCMFleetDetails() {
-        console.log("Verifying Asset Strategy (RCM/Fleet) details");
-        await utils.switchToIframe(this.funLocIframe);
-        await browser.pause(2000);
+    
 
+    public async verifyRCMFleetDetails() {
+        console.log("Verifying Asset Strategy - RCM/Fleet details");
         const tab = this.rcmFleetTab;
-        try {
-            await tab.waitForExist({ timeout: 30000 });
-            await tab.scrollIntoView({ block: 'center' });
-            await utils.clickWithWait(tab);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(2000);
-        } catch (e) {
-            throw new Error(`Unable to navigate to RCM/Fleet tab | ${(e as Error).message}`);
-        }
+        await tab.waitForExist({ timeout: 30000 });
+        await tab.scrollIntoView({ block: 'center' });
+        await utils.clickWithWait(tab);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
 
         const row = this.rcmFleetAssessmentRow();
         await row.waitForExist({ timeout: 30000 });
@@ -1039,15 +1025,11 @@ class FunctionalLocationRegressionPage {
 
     public async openRCMAssessment(): Promise<void> {
         const parentWindow = await browser.getWindowHandle();
-        try {
-            await this.rcmFleetAssessmentLink().click();
-            await browser.waitUntil(
-                async () => (await browser.getWindowHandles()).length > 1,
-                { timeout: 30000, timeoutMsg: "New tab did not open for RCM assessment" }
-            );
-        } catch (e) {
-            throw new Error(`Unable to navigate to RCM assessment tab | ${(e as Error).message}`);
-        }
+        await this.rcmFleetAssessmentLink().click();
+        await browser.waitUntil(
+            async () => (await browser.getWindowHandles()).length > 1,
+            { timeout: 30000, timeoutMsg: "New tab did not open for RCM assessment" }
+        );
         const allWindows = await browser.getWindowHandles();
         const childWindow = allWindows.find(handle => handle !== parentWindow);
         try {
@@ -1060,10 +1042,10 @@ class FunctionalLocationRegressionPage {
 
             await this.saveRCMHeaderDetails();
             await this.verifyRCMHeader();
-            await this.verifyRCMTechnicalObjects();
+            await this.verifyRCMHierarchyAndTechnicalObjects();
         } finally {
-            await this.returnToParentWindow(parentWindow, this.funLocIframe);
-            console.log("Switched back to functional location tab successfully");
+            await this.returnToParentWindow(parentWindow, this.equipmentIframe);
+            console.log("Switched back to equipment tab successfully");
         }
     }
 
@@ -1099,10 +1081,16 @@ class FunctionalLocationRegressionPage {
         console.log("RCM Header Verification Passed");
     }
 
-    private async expandAllNodesInSection(sectionHeading: string): Promise<void> {
+    private async expandAllNodesInSection(sectionHeading: string, optionalLeafText?: string): Promise<void> {
         const maxRounds = 10;
         const sectionXPath = `//*[contains(normalize-space(.), ${JSON.stringify(sectionHeading)})]`;
         for (let i = 0; i < maxRounds; i++) {
+            if (optionalLeafText) {
+                const visible = await $(
+                    `${sectionXPath}/following::span[contains(normalize-space(), ${JSON.stringify(optionalLeafText)})]`
+                );
+                if (await visible.isExisting() && await visible.isDisplayed()) return;
+            }
             const closed = await $$(
                 `${sectionXPath}/following::*[@role='button' and @title='Expand/Collapse Node' and @aria-expanded='false']`
             );
@@ -1112,15 +1100,15 @@ class FunctionalLocationRegressionPage {
                     await btn.scrollIntoView({ block: 'center' });
                     await utils.clickWithWait(btn);
                     await browser.pause(400);
-                } catch (e) { /* ignore */ }
+                } catch (e) { }
             }
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(800);
         }
     }
 
-    public async verifyRCMTechnicalObjects(): Promise<void> {
-        console.log("Verifying RCM Technical Objects");
+    public async verifyRCMHierarchyAndTechnicalObjects(): Promise<void> {
+        console.log("Verifying RCM hierarchy & Technical Objects");
 
         try {
             const tab = this.rcmAssessmentTab;
@@ -1129,11 +1117,25 @@ class FunctionalLocationRegressionPage {
                 await utils.waitForBusyIndicatorToDisappear();
                 await browser.pause(1500);
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) { }
+
+        const leafText = "Unable to prevent contamination and loss of lubricant (201)";
+        await this.expandAllNodesInSection("Hierarchy", leafText);
+
+        const leaf = await $(
+            `//*[normalize-space()='Hierarchy']/following::span[normalize-space()=${JSON.stringify(leafText)}]`
+        );
+        await leaf.waitForExist({ timeout: 30000 });
+        await leaf.scrollIntoView({ block: 'center' });
+        await utils.clickWithWait(leaf);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
 
         await this.expandAllNodesInSection("Technical Objects");
 
-        const expectedFL = funcLocTestData.searchFunLoc.functionallocation1;
+        const expectedEquipId = equipmentTestData.searchEquipment.equipment;
+        const expectedItem = this.rcmFleetDetails.maintainableItem;
+        const expectedFailure = this.rcmFleetDetails.failureMode;
 
         const findSpanText = async (value: string): Promise<string> => {
             if (!value) return '';
@@ -1144,27 +1146,48 @@ class FunctionalLocationRegressionPage {
                         const txt = (await el.getText()).trim();
                         if (txt) return txt;
                     }
-                } catch (e) { /* ignore */ }
+                } catch (e) { }
             }
             for (const el of els) {
                 try {
                     const txt = (await el.getText()).trim();
                     if (txt) return txt;
-                } catch (e) { /* ignore */ }
+                } catch (e) { }
             }
             return '';
         };
 
-        const functionalLocation = await findSpanText(expectedFL);
-        console.log(`RCM Technical Objects -> Functional Location="${functionalLocation}"`);
+        const equipment = await findSpanText(expectedEquipId);
+        const maintainableItem = await findSpanText(expectedItem);
+        const failureMode = await findSpanText(expectedFailure);
 
-        this.rcmHeaderDetails.functionalLocation = functionalLocation;
+        const techObjects = { equipment, maintainableItem, failureMode };
+        console.log("RCM Technical Objects:");
+        console.log(JSON.stringify(techObjects, null, 2));
 
-        if (!functionalLocation.includes(expectedFL)) {
-            throw new Error(`RCM Technical Objects Verification Failed | Expected Functional Location to contain="${expectedFL}" | Actual="${functionalLocation}"`);
+        this.rcmHeaderDetails.equipment = equipment;
+        this.rcmHeaderDetails.maintainableItem = maintainableItem;
+        this.rcmHeaderDetails.failureMode = failureMode;
+
+        const failures: string[] = [];
+        if (!equipment.includes(expectedEquipId)) {
+            failures.push(`Equipment mismatch | Expected to contain="${expectedEquipId}" | Actual="${equipment}"`);
+        }
+        if (!expectedItem) {
+            failures.push("Maintainable Item was not captured from RCM/Fleet row");
+        } else if (!maintainableItem.includes(expectedItem)) {
+            failures.push(`Maintainable Item mismatch | Expected to contain="${expectedItem}" | Actual="${maintainableItem}"`);
+        }
+        if (!expectedFailure) {
+            failures.push("Failure Mode was not captured from RCM/Fleet row");
+        } else if (!failureMode.includes(expectedFailure)) {
+            failures.push(`Failure Mode mismatch | Expected to contain="${expectedFailure}" | Actual="${failureMode}"`);
+        }
+        if (failures.length > 0) {
+            throw new Error(`RCM Technical Objects Verification Failed\n\n${failures.join("\n")}`);
         }
         console.log("RCM Technical Objects Verification Passed");
     }
-
 }
-export default new FunctionalLocationRegressionPage();
+
+export default new EquipmentRegressionPage();

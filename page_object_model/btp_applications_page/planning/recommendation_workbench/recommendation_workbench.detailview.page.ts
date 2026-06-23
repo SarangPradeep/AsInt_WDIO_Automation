@@ -347,6 +347,65 @@ class RecommendationWorkbenchDetailView {
         await utils.clickWithWait(this.changeStatusBtn);
     }
 
+    private async selectStatusMenuItem(label: string){
+        const clicked = await browser.execute((text: string) => {
+            const candidates = Array.from(document.querySelectorAll<HTMLElement>(
+                "li[role='menuitem'], div[role='menuitem'], li[role='option'], div[role='option'], li, span, bdi"
+            ));
+            for (const el of candidates) {
+                const t = (el.innerText || el.textContent || "").trim();
+                if (t === text) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        el.click();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }, label);
+        if (!clicked) {
+            throw new Error(`Status menu item '${label}' not found in open menu`);
+        }
+    }
+
+    public async changeStatusToInProcess(){
+        console.log("Changing status to 'In Process'...");
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.switchToIframe(this.reccWorkbenchIframe);
+        await browser.pause(4000);
+        await utils.clickWithWait(this.changeStatusBtn);
+        await browser.pause(2000);
+        await this.selectStatusMenuItem("In Process");
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+        }
+        console.log("Status changed to 'In Process'");
+    }
+
+    public async changeStatusToForReview(){
+        console.log("Changing status to 'For Review' (via 'In Process' first)...");
+        await this.changeStatusToInProcess();
+
+        await utils.switchToIframe(this.reccWorkbenchIframe);
+        await browser.pause(2000);
+        await utils.clickWithWait(this.changeStatusBtn);
+        await browser.pause(2000);
+        await this.selectStatusMenuItem("For Review");
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1000);
+        }
+        console.log("Status changed to 'For Review'");
+    }
+
     public async verifyHeader(){
         console.log("Verifying header information of Recommendation Workbench");
         await utils.waitForBusyIndicatorToDisappear();

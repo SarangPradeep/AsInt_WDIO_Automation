@@ -1,4 +1,4 @@
-import { $$, browser } from '@wdio/globals';
+import { $, $$, browser } from '@wdio/globals';
 import * as console from 'console';
 import utils from './utils';
 
@@ -52,7 +52,7 @@ class adaptFilterHelper {
         .trim()
         .toLowerCase();
         const filterLabel = "Asset Manufacturer Name";
-        const filterInput = await $(`//label[.//bdi[text()='Asset Manufacturer Name']]/following::input[1]`);
+        const filterInput = await $(`//label[.//bdi[text()='Asset Manufacturer Name ']]/following::input[1]`);
         await filterInput.waitForDisplayed();
         await filterInput.click();
         await filterInput.clearValue();
@@ -62,15 +62,17 @@ class adaptFilterHelper {
 
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
-        await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+        await this.ensureFilterHeaderCollapsed();
         const rows = await $$(
             "//table[@role='grid' and @aria-roledescription='Responsive Table']//following-sibling::tr[@role='none'][.//div[@role='gridcell']]"
         );
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
+        const colHeader = await $(`//th[.//span[normalize-space()='${filterLabel}']]`);
+        const colIndex = (await colHeader.isExisting()) ? (await colHeader.getAttribute('aria-colindex') || '5') : '5';
         const fieldValues = await $$(
-            "//span[normalize-space()='Asset Manufacturer Name']/ancestor::div[1]/following-sibling::div/span"
+            `//td[@aria-colindex='${colIndex}']//span`
         );
 
         console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
@@ -90,7 +92,7 @@ class adaptFilterHelper {
             }
         }   
 
-        await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+        await this.ensureFilterHeaderExpanded();
         await browser.pause(500);
         await filterInput.clearValue();
         await browser.pause(500);
@@ -265,8 +267,10 @@ class adaptFilterHelper {
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
+        const critHeader = await $(`//th[.//span[normalize-space()='${fieldLabel}']]`);
+        const critColIndex = (await critHeader.isExisting()) ? (await critHeader.getAttribute('aria-colindex') || '6') : '6';
         const fieldValues = await $$(
-            `//span[normalize-space()='Criticality']/ancestor::div[1]/following-sibling::div/div/div/span[1]`
+            `//td[@aria-colindex='${critColIndex}']/div[@aria-roledescription='Object Tag']/div/span[1]`
         );
 
         console.log(`Total ${fieldLabel} Found: ${fieldValues.length}`);
@@ -277,7 +281,7 @@ class adaptFilterHelper {
             .trim()
             .toLowerCase();
 
-            const expectedValue = 'm';
+            const expectedValue = criticalityId.trim().toLowerCase();
             console.log(`Found ${fieldLabel}: ${actualValue}`);
 
             if (!actualValue.includes(expectedValue)) {
@@ -332,20 +336,27 @@ class adaptFilterHelper {
         await browser.pause(500);
     }
     async classAdaptFilter(className: string): Promise<void> {
-        const expectedValue = className.trim().toLowerCase();
         const filterLabel = "Class";
         const filterInput = await $(`//bdi[normalize-space()='Class']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`);
         await filterInput.waitForDisplayed();
         await filterInput.click();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
+
+        const rawCode = await $(
+            `//tr[.//span[normalize-space()='${className}']]//td[@role='gridcell'][2]//span[starts-with(normalize-space(),'(')]`
+        ).getText();
+        const classCode = rawCode.replace(/^\(|\)$/g, '').trim();
+        console.log(`Class code: ${classCode}`);
+        const expectedValue = className.trim().toLowerCase();
+
         await utils.clickWithWait($(`//tr[.//span[normalize-space()='${className}']]//div[@role='checkbox']`));
         await utils.clickWithWait($(`//button[.//bdi[text()="Confirm"]]`));
         await browser.pause(1000);
         await utils.clickWithWait($(`//button[.//bdi[text()="Go"]]`));
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
-                await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+        await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
 
         const rows = await $$(
             "//table[@role='grid' and @aria-roledescription='Responsive Table']//following-sibling::tr[@role='none'][.//div[@role='gridcell']]"
@@ -353,35 +364,33 @@ class adaptFilterHelper {
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
-        const fieldValues = await $$(
-            `//span[normalize-space()='Class']/ancestor::div[1]/following-sibling::div/div/span[1]`
-        );
+        const fieldValues = await $$(`//td[@aria-colindex='7']`);
 
-        console.log(`Total Class Found: ${fieldValues.length}`);
+        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
 
         for (const element of fieldValues) {
             const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
 
-            console.log(`Found Class: ${actualValue}`);
+            console.log(`Found ${filterLabel}: ${actualValue}`);
 
             if (!actualValue.includes(expectedValue)) {
                 throw new Error(
-                    `Expected Class: ${expectedValue}, but found: ${actualValue}`
+                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
                 );
             }
-        }   
+        }
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
 
-        await utils.clickWithWait($(`//span[normalize-space()='${className.toUpperCase()}']/following-sibling::span[@aria-label='Remove']`));
+        await utils.clickWithWait($(`//span[normalize-space()='${classCode}']/following-sibling::span[@aria-label='Remove']`));
         await browser.pause(500);
         await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
-        console.log(`Applied Class adapt filter with value: ${className}`);
+        console.log(`Applied ${filterLabel} adapt filter with value: ${className} (code: ${classCode})`);
     }
     async componentFlagAdaptFilter(totalCount: number,
         state: "Temporary Repair Component" | "Out of Service" | "All"
@@ -1048,8 +1057,10 @@ class adaptFilterHelper {
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
+        const colHeader = await $(`//th[.//span[normalize-space()='Created On / By' or normalize-space()='${filterLabel}']]`);
+        const colIndex = (await colHeader.isExisting()) ? (await colHeader.getAttribute('aria-colindex') || '9') : '9';
         const fieldValues = await $$(
-            `//td[@aria-colindex='6']//div[1]/div[2]/span`
+            `//td[@aria-colindex='${colIndex}']/div/div[2]/span`
         );
 
         console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
@@ -1100,8 +1111,10 @@ class adaptFilterHelper {
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
+        const colHeader = await $(`//th[.//span[normalize-space()='Created On / By' or normalize-space()='${filterLabel}']]`);
+        const colIndex = (await colHeader.isExisting()) ? (await colHeader.getAttribute('aria-colindex') || '9') : '9';
         const fieldValues = await $$(
-            `//td[@aria-colindex='6']//div[1]/div[1]/span`
+            `//td[@aria-colindex='${colIndex}']/div/div[1]/div/span`
         );
 
         console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
@@ -1153,7 +1166,7 @@ class adaptFilterHelper {
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
         const fieldValues = await $$(
-            `//td[@aria-colindex='7']//div[1]/div[2]/span`
+            `//span[normalize-space()='Modified On / By']/ancestor::div[1]/following-sibling::div/div/div[2]/span`
         );
 
         console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
@@ -1203,7 +1216,7 @@ class adaptFilterHelper {
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
         const fieldValues = await $$(
-            `//td[@aria-colindex='7']//div[1]/div[1]/span`
+            `//span[normalize-space()='Modified On / By']/ancestor::div[1]/following-sibling::div/div/div[1]/div/span`
         );
 
         console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
@@ -1575,6 +1588,235 @@ class adaptFilterHelper {
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${functionalLocationDesc}`);
+    }
+
+    // =====================================================================
+    // Functional Location list view specific adapt filters.
+    // Use these (rather than the equipment-table ones above) when running
+    // against the Functional Location list view, where FL is in column 1.
+    // =====================================================================
+
+    async functionalLocationAdaptFilterFL(functionalLocationDesc: string): Promise<void> {
+        const fieldLabel = "Functional Location";
+        await utils.clickWithWait($(`//bdi[normalize-space()='Functional Location']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${functionalLocationDesc}']]//div[@role='checkbox']`));
+
+        const functionalLocationValue = await $(
+            `//tr[.//span[normalize-space()='${functionalLocationDesc}']]//td[@role='gridcell'][2]/span[1]`
+        ).getText();
+        console.log(functionalLocationValue);
+
+        await utils.clickWithWait($(`//button[.//bdi[text()="Confirm"]]`));
+        await browser.pause(1000);
+        await utils.clickWithWait($(`//button[.//bdi[text()="Go"]]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+
+        const fieldValues = await $$(`//td[@aria-colindex='1']/div/div[1]//span`);
+        console.log(`Total ${fieldLabel} Found: ${fieldValues.length}`);
+        for (const element of fieldValues) {
+            const actualValue = (await element.getText()).replace(/\s+/g, ' ').trim().toLowerCase();
+            const expectedValue = functionalLocationValue.trim().toLowerCase();
+            console.log(`Found ${fieldLabel}: ${actualValue}`);
+            if (!actualValue.includes(expectedValue)) {
+                throw new Error(`Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`);
+            }
+        }
+        await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+        await browser.pause(500);
+        await utils.clickWithWait($(`//span[normalize-space()='${functionalLocationValue}']/following-sibling::span[@aria-label='Remove']`));
+        await browser.pause(500);
+        await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        console.log(`Applied Functional Location adapt filter with value: ${functionalLocationValue}`);
+    }
+
+    async functionalLocationDescriptionFilterFL(functionalLocationDesc: string): Promise<void> {
+        const expectedValue = functionalLocationDesc.trim().toLowerCase();
+        const filterLabel = "Functional Location Description";
+        const filterInput = await $(`//label[.//bdi[text()='Functional Location Description']]/following::input[1]`);
+        await filterInput.waitForDisplayed();
+        await filterInput.click();
+        await filterInput.clearValue();
+        await filterInput.addValue(functionalLocationDesc);
+        await browser.pause(500);
+        await utils.clickWithWait($('//button//bdi[text()="Go"]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+
+        const fieldValues = await $$(`//td[@aria-colindex='1']/div/div[2]//span`);
+        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
+        for (const element of fieldValues) {
+            const actualValue = (await element.getText()).replace(/\s+/g, ' ').trim().toLowerCase();
+            console.log(`Found ${filterLabel}: ${actualValue}`);
+            if (!actualValue.includes(expectedValue)) {
+                throw new Error(`Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`);
+            }
+        }
+        await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+        await browser.pause(500);
+        await filterInput.clearValue();
+        await browser.pause(500);
+        await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        console.log(`Applied ${filterLabel} adapt filter with value: ${functionalLocationDesc}`);
+    }
+
+    /** Generic text-input filter: types `value`, clicks Go, asserts input retains it, then clears. */
+    private async applyTextFilter(filterLabel: string, value: string): Promise<void> {
+        const filterInput = await $(`//label[.//bdi[text()='${filterLabel}']]/following::input[1]`);
+        await filterInput.waitForDisplayed();
+        await filterInput.click();
+        await filterInput.clearValue();
+        await filterInput.addValue(value);
+        await browser.pause(500);
+        await utils.clickWithWait($('//button//bdi[text()="Go"]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        const applied = (await filterInput.getValue() || '').trim();
+        if (!applied.toLowerCase().includes(value.trim().toLowerCase())) {
+            throw new Error(`Expected ${filterLabel} input to retain '${value}', but found: '${applied}'`);
+        }
+        await filterInput.clearValue();
+        await browser.pause(500);
+        await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        console.log(`Applied ${filterLabel} adapt filter with value: ${value}`);
+    }
+
+    /** Generic value-help filter: opens chooser, ticks `displayText` row, confirms, clicks Go, removes chip. */
+    private async applyValueHelpFilter(filterLabel: string, displayText: string, confirmLabel: 'Confirm' | 'Save' | 'OK' = 'OK'): Promise<void> {
+        await utils.clickWithWait($(`//bdi[normalize-space()='${filterLabel}']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${displayText}']]//div[@role='checkbox']`));
+        await utils.clickWithWait($(`//button[.//bdi[text()="${confirmLabel}"]]`));
+        await browser.pause(1000);
+        await utils.clickWithWait($(`//button[.//bdi[text()="Go"]]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        const chip = await $(`//span[normalize-space()='${displayText}']/following-sibling::span[@aria-label='Remove']`);
+        if (!(await chip.isExisting())) {
+            throw new Error(`Expected ${filterLabel} chip for '${displayText}' to be present after applying filter`);
+        }
+        await utils.clickWithWait(chip);
+        await browser.pause(500);
+        await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        console.log(`Applied ${filterLabel} adapt filter with value: ${displayText}`);
+    }
+
+    /** Make sure the filter bar header is expanded so labels/inputs are reachable. */
+    private async ensureFilterHeaderExpanded(): Promise<void> {
+        try {
+            const expand = await $(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`);
+            if (await expand.isExisting() && await expand.isDisplayed().catch(() => false)) {
+                await expand.click();
+                await browser.pause(400);
+            }
+        } catch { /* header already expanded */ }
+    }
+
+    private async ensureFilterHeaderCollapsed(): Promise<void> {
+        try {
+            const collapse = await $(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`);
+            if (await collapse.isExisting() && await collapse.isDisplayed().catch(() => false)) {
+                await collapse.click();
+                await browser.pause(400);
+            }
+        } catch { /* header already collapsed */ }
+    }
+
+    private async clearFilterTokens(filterLabel: string): Promise<void> {
+        const tokenRemoveXPath =
+            `//bdi[normalize-space()='${filterLabel}']/ancestor::label` +
+            `/following::div[contains(@class,'sapMTokenizer')][1]` +
+            `//*[@aria-label='Delete' or @aria-label='Remove' or contains(@class,'sapMTokenIcon')]`;
+        for (let i = 0; i < 10; i++) {
+            const tokens = await $$(tokenRemoveXPath);
+            if (!(await tokens.length)) break;
+            const first = tokens[0];
+            try {
+                if (await first.isDisplayed()) {
+                    await first.click();
+                    await browser.pause(250);
+                } else {
+                    break;
+                }
+            } catch { break; }
+        }
+    }
+
+    private async applyDropdownFilter(filterLabel: string, optionIndex: number): Promise<void> {
+        await this.ensureFilterHeaderExpanded();
+        await utils.clickWithWait($(`//bdi[normalize-space()='${filterLabel}']/ancestor::label/following::span[@role='button'][1]`));
+        await browser.pause(500);
+        for (let i = 0; i < optionIndex; i++) {
+            await browser.keys("ArrowDown");
+            await browser.pause(300);
+        }
+        await browser.keys("Enter");
+        await browser.keys("Escape");
+        await browser.pause(500);
+        await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+
+        await this.ensureFilterHeaderCollapsed();
+        await browser.pause(500);
+
+        await this.ensureFilterHeaderExpanded();
+        await this.clearFilterTokens(filterLabel);
+        await browser.pause(300);
+        await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log(`Applied ${filterLabel} dropdown adapt filter (option #${optionIndex}) and cleared tokens`);
+    }
+
+    async characteristicShortDescriptionAdaptFilter(value: string): Promise<void> {
+        await this.applyTextFilter('Characteristic Short Description', value);
+    }
+
+    async characteristicSourceSystemAdaptFilter(value: string): Promise<void> {
+        await this.applyTextFilter('Characteristic Source System', value);
+    }
+
+    async displayIdAdaptFilter(value: string): Promise<void> {
+        await this.applyTextFilter('Display Id', value);
+    }
+
+    async evergreeningStatusAdaptFilter(optionIndex: number = 1): Promise<void> {
+        await this.applyDropdownFilter('Evergreening Status', optionIndex);
+    }
+
+    /**
+     * Active filter on Functional Location list view.
+     * UI is a MultiComboBox with two options: "Yes" and "No".
+     * `Yes` => optionIndex 1, `No` => optionIndex 2.
+     */
+    async activeAdaptFilter(value: 'Yes' | 'No' = 'Yes'): Promise<void> {
+        const optionIndex = value === 'Yes' ? 1 : 2;
+        await this.applyDropdownFilter('Active', optionIndex);
+    }
+
+    async parentFunctionalLocationAdaptFilter(displayText: string): Promise<void> {
+        await this.applyValueHelpFilter('Parent Functional Location', displayText, 'Confirm');
+    }
+
+    async parentFunctionalLocationDescriptionAdaptFilter(value: string): Promise<void> {
+        await this.applyTextFilter('Parent Functional Location Description', value);
+    }
+
+    async plannerGroupAdaptFilter(displayText: string): Promise<void> {
+        await this.applyValueHelpFilter('Planner Group', displayText, 'Save');
     }
 
 }

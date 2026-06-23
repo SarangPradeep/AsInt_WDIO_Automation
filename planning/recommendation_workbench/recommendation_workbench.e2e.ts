@@ -3,12 +3,26 @@ import recommendationWorkbenchDetailView from '../../page_object_model/btp_appli
 import recommendationWorkbenchListView from '../../page_object_model/btp_applications_page/planning/recommendation_workbench/recommendation_workbench.listview.page.ts';
 describe('BTP - Recommendation Workbench - Functional Test', () => {
 
+    let abortSuite = false;
+
+    beforeEach(function () {
+        if (abortSuite) {
+            console.log(`Skipping '${this.currentTest?.title}' because recommendation creation failed.`);
+            this.skip();
+        }
+    });
+
     it('should navigate to functional location list view', async () => {
         await recommendationWorkbenchListView.navigateRecommendationWorkbenchListView();
     });
 
-    it('should create new recommendation workbench from list page', async() => {
-        await recommendationWorkbenchListView.createReccWorkbench();
+    it('should create new recommendation workbench from list page', async function () {
+        try {
+            await recommendationWorkbenchListView.createReccWorkbench();
+        } catch (err) {
+            abortSuite = true;
+            throw err;
+        }
     });
 
     it('should capture header details of newly created Recommendation Workbench items', async() => {

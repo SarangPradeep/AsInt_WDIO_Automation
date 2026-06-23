@@ -236,6 +236,11 @@ class asset_strategy_development_detailview_page {
     private get workflowHeader() { return $("//span[contains(text(),'Workflow Inbox')]") };
     private get createWorkflowBtn() { return $("//span[contains(text(),'Workflow Inbox')]/following::button[.//text()='Create']")};
     private get createWorkflowBtn2() { return $("//span[contains(text(),'Create Workflow')]/following::button[.//text()='Create']")};
+    private get reviewersInput() { return $("//label[.//text()='Reviewers']/following::input[1]"); }
+    private get selectUserPopupHeader() { return $("//header[.//text()='Select User']"); }
+    private get selectUserSearchInput() { return $("//header[.//text()='Select User']/following::input[@type='search'][1]"); }
+    private get selectUserFirstRowCheckbox() { return $("(//header[.//text()='Select User']/following::div[@role='checkbox'])[2]"); }
+    private get selectUserConfirmBtn() { return $("//header[.//text()='Select User']/following::button[.//text()='Confirm']"); }
     private get workflowSuccessMsg() { return $("//span[.//text()='Workflow Created Successfully']"); }
     private get calculationFailedMsg() { return $("//span[.//text()='Failed to calculate, Please try again']"); }
     private get failedOkBtn() { return $("//button[.//text()='OK']"); }
@@ -953,6 +958,7 @@ class asset_strategy_development_detailview_page {
     public async verifyRiskMatrixInfo()
     {
         console.log("Start: Verifying risk matrix information of ASD");
+        await utils.switchToIframe(this.ASDIframe);
         if (await this.riskMatrixTab.isExisting()) {
             await this.riskMatrixTab.waitForDisplayed({ timeout: 10000 });
             await utils.clickWithWait(this.riskMatrixTab);
@@ -1000,7 +1006,10 @@ class asset_strategy_development_detailview_page {
 
     public async verifyCMLSection()
     {
-        console.log("Start: Verifying CML section of ASD"); 
+        console.log("Start: Verifying CML section of ASD");
+        await utils.switchToIframe(this.ASDIframe);
+        await this.cmlTab.waitForExist({ timeout: 30000 });
+        await this.cmlTab.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.cmlTab);
         await browser.pause(2000);
         await this.noOfCML.waitForDisplayed({timeout: 10000});
@@ -1040,6 +1049,9 @@ class asset_strategy_development_detailview_page {
     public async verifyRiskInfo()
     {
         console.log("Start: Verifying risk information of ASD");
+        await utils.switchToIframe(this.ASDIframe);
+        await this.riskAndInfoTab.waitForExist({ timeout: 30000 });
+        await this.riskAndInfoTab.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.riskAndInfoTab);
         await browser.pause(2000);
         const isErrorPresent = await this.errorOkBtn.isDisplayed().catch(() => false);
@@ -1309,6 +1321,22 @@ class asset_strategy_development_detailview_page {
         console.log("PDF Detail report verification completed");
     }
 
+    private async selectReviewer(searchText: string) {
+        console.log(`Selecting reviewer '${searchText}'...`);
+        await utils.clickWithWait(this.reviewersInput);
+        await this.selectUserPopupHeader.waitForDisplayed({ timeout: 15000 });
+        await utils.clickWithWait(this.selectUserSearchInput);
+        await utils.setValueWithWait(this.selectUserSearchInput, searchText);
+        await browser.keys("Enter");
+        await browser.pause(1500);
+        await utils.waitForBusyIndicatorToDisappear();
+        await this.selectUserFirstRowCheckbox.waitForDisplayed({ timeout: 15000 });
+        await utils.clickWithWait(this.selectUserFirstRowCheckbox);
+        await utils.clickWithWait(this.selectUserConfirmBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log(`Reviewer '${searchText}' selected`);
+    }
+
     public async createWorkflow()
     {
         await utils.switchToIframe(this.ASDIframe);
@@ -1339,6 +1367,7 @@ class asset_strategy_development_detailview_page {
                 await browser.keys("ArrowDown");
                 await browser.keys("Enter");
                 await browser.pause(2000);
+                await this.selectReviewer("qa.automation");
                 await utils.clickWithWait(this.createWorkflowBtn2);
                 await this.workflowSuccessMsg.waitForDisplayed({ timeout: 10000 });
                 console.log("Technical Workflow created");
@@ -1381,6 +1410,10 @@ class asset_strategy_development_detailview_page {
             return;
         }
         console.log("Deleting the ASD...");
+        // captureHeaderDetails() exits to the parent frame at the end, so we
+        // must re-enter the ASD iframe before doing anything inside the app.
+        await utils.switchToIframe(this.ASDIframe);
+        await browser.pause(1000);
         await ASDListView.captureASDNameAndId();
         console.log("Deleting :" + ASDListView.assetASDDisplayID);
         if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {

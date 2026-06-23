@@ -32,6 +32,9 @@ export const equipmentTestData = {
         isAutoAssignClass: true,
         noOfEquipmentClassesToAssign: 2,
         noOfCharacteristicsToAssign: 2,
+    },
+    searchEquipment: {
+        equipment: '10000029'
     }
 
 } as const;

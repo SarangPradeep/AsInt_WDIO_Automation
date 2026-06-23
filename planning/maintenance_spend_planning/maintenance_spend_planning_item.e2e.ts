@@ -3,12 +3,26 @@ import MSPListView from '../../page_object_model/btp_applications_page/planning/
 import utils from "../../utils/utils.ts";
 describe('BTP - Maintenance Spend Planning item (MSP) - Functional Test', () => {
 
+    let abortSuite = false;
+
+    beforeEach(function () {
+        if (abortSuite) {
+            console.log(`Skipping '${this.currentTest?.title}' because MSP creation failed.`);
+            this.skip();
+        }
+    });
+
     it('should navigate to Maintenance Spend Planning list view', async () => {
         await MSPListView.navigateToMSPListView();
     });
 
-    it('should be able to create Maintenance Spend Planning items', async () => {
-        await MSPListView.createMSPItems();
+    it('should be able to create Maintenance Spend Planning items', async function () {
+        try {
+            await MSPListView.createMSPItems();
+        } catch (err) {
+            abortSuite = true;
+            throw err;
+        }
     });
 
     it('should capture header details of newly created MSP items', async() => {
@@ -21,7 +35,7 @@ describe('BTP - Maintenance Spend Planning item (MSP) - Functional Test', () => 
 
     it('should verify and edit header details', async() => {
         await MSPDetailView.verifyHeader();
-        // await MSPDetailView.editHeader();
+        await MSPDetailView.editHeader();
     });
 
     it('should edit general information section', async() => {

@@ -38,6 +38,9 @@ class MSPListView {
     private get secondMSPItemCheckbox(){return $("((//tr[@role='row'])[3]//td[@aria-colindex='1']//div)[1]");}
     private get importBtn(){return $("//footer//button[.//text()='Import']");}
     private get sectionMoreBtn() { return $("//section//button[@aria-label='Additional Options']//span[@role='presentation']"); }
+    private get errorDialog() { return $("//header[.//text()='Error']"); }
+    private get errorOkBtn() { return $("//header[.//text()='Error']/following::button[.//bdi[text()='OK']]"); }
+    private get cancelCreateMspBtn() { return $("//header[.//text()='Create MSP']/following::button[.//bdi[text()='Cancel']]"); }
 
 
     public MSPDisplayID!: string;
@@ -72,11 +75,65 @@ class MSPListView {
             await utils.clickWithWait(this.sectionMoreBtn);
             await browser.pause(1000);
         }
-        await utils.clickWithWait(this.createBtn);
+
+        let lastError: string | undefined;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            console.log(`Create MSP attempt #${attempt}`);
+            await utils.clickWithWait(this.createBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.keys("Enter");
+            const createMSPBox = await $("//header[.//text()='Create MSP']");
+            await createMSPBox.waitForDisplayed();
+
+            await this.fillCreateMspForm();
+
+            await browser.pause(2000);
+            await utils.clickWithWait(this.createMSPBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(4000);
+
+            // Detect the "Failed to Create Recommendation, Please try again later" error popup
+            if (await this.errorDialog.isDisplayed().catch(() => false)) {
+                lastError = "Create MSP returned 'Failed to Create Recommendation, Please try again later' error popup";
+                console.error(`\x1b[31m${lastError} — attempt #${attempt}\x1b[0m`);
+                if (await this.errorOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.errorOkBtn);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    await browser.pause(1000);
+                }
+                if (await this.cancelCreateMspBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.cancelCreateMspBtn);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    await browser.pause(1500);
+                }
+                if (attempt === 2) {
+                    throw new Error(
+                        `MSP creation failed twice. Last error: ${lastError}. Aborting maintenance_spend_planning_item spec.`
+                    );
+                }
+                console.log("Retrying MSP creation...");
+                continue;
+            }
+
+            // Success path
+            await utils.clickSuccessOkButton();
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            console.log("MSP item created successfully");
+            break;
+        }
+
+        await this.searchNewlyCreated(this.MSPShortDesc);
+        console.log("Created MSP Items");
+        console.log("Navigating to detail view page of newly created MSP item....");
+        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
+        await utils.clickWithWait(el);
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.keys("Enter");
-        const createMSPBox = await $("//header[.//text()='Create MSP']");
-        await createMSPBox.waitForDisplayed();
+        await browser.pause(10000);
+        console.log("Navigated to detail view page of newly created MSP item");
+    }
+
+    private async fillCreateMspForm() {
         const dayOfMonth = new Date().getDate();
         if (dayOfMonth % 2 === 0) {
             console.log("Selecting recommendation...");
@@ -94,13 +151,13 @@ class MSPListView {
             this.MSPLongDesc = `${this.getRandomTxt("Automation MSP item long desc")} ${Math.floor(Math.random()*100000)}`;
             await this.shortDescInput.setValue(this.MSPShortDesc);
             await this.longDescInput.setValue(this.MSPLongDesc);
-        } 
+        }
         else{
             console.log("Creating recommendation...");
             await browser.pause(4000);
             await utils.clickWithWait(this.createRecommendation);
             await browser.pause(2000);
-            const currentDay = new Date().getDay(); 
+            const currentDay = new Date().getDay();
             if ([1, 2, 3, 4].includes(currentDay)) {
                 await utils.clickWithWait(this.objectTypeDropdown);
                 await browser.keys(["ArrowDown", "Enter"]);
@@ -132,21 +189,6 @@ class MSPListView {
             await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
             await utils.clickWithWait(this.nextBtn);
         }
-        await browser.pause(2000);
-        await utils.clickWithWait(this.createMSPBtn);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
-        await utils.clickSuccessOkButton();
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        await this.searchNewlyCreated(this.MSPShortDesc);
-        console.log("Created MSP Items");
-        console.log("Navigating to detail view page of newly created MSP item....");
-        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
-        await utils.clickWithWait(el);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(10000);
-        console.log("Navigated to detail view page of newly created MSP item");
     }
 
     public async searchNewlyCreated(shortDesc:string)
@@ -229,6 +271,35 @@ class MSPListView {
         await goBtn.waitForClickable({ timeout: 10000 });
         await goBtn.click();
         await browser.pause(5000);
+    }
+
+    public async verifyMSPItemExists(shortDesc: string){
+        console.log(`Verifying MSP Item exists in list: ${shortDesc}`);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(2000);
+        await this.searchNewlyCreated(shortDesc);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        const noDataCell = '//td[normalize-space()="No data"]';
+        const matchingRow = `//tr[@role='row' and .//span[normalize-space()='${shortDesc}']]`;
+
+        await browser.waitUntil(async () => {
+            const noData = await $(noDataCell).isExisting();
+            const rowFound = (await $$(matchingRow).length) > 0;
+            return noData || rowFound;
+        }, {
+            timeout: 30000,
+            interval: 500,
+            timeoutMsg: "Search results never loaded for MSP Item"
+        });
+
+        const rowFound = (await $$(matchingRow).length) > 0;
+        if (!rowFound) {
+            throw new Error(`MSP Item '${shortDesc}' not found in the list view after search`);
+        }
+        console.log(`MSP Item '${shortDesc}' found in the list view`);
     }
 
     public async createMSPEvent()

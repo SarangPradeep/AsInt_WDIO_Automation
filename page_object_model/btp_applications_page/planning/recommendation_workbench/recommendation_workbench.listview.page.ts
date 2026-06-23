@@ -19,12 +19,21 @@ class RecommendationWorkbenchListView {
     private get createRecommendationHeader() { return $("//header[.//text()='Create Recommendation']"); }
     private get createReccWorkbenchBtn() { return $("//button[.//text()='Create ']"); }
     private get okBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
+    private get errorDialog() { return $("//header[.//text()='Error']"); }
+    private get errorOkBtn() { return $("//header[.//text()='Error']/following::button[.//bdi[text()='OK']]"); }
+    private get cancelCreateBtn() { return $("//header[.//text()='Create Recommendation']/following::button[.//bdi[text()='Cancel']]"); }
     private get reccWorkShortDescInput(){return $("//label[.//text()='Short Description']/following::input[1]");}
     private get reccWorkLongDescInput(){return $("//label[.//text()='Long Description']/following::textarea[1]");}
+    private get convertMSPDialog() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]"); }
+    private get convertMSPShortDescInput() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//label[.//text()='Short Description']/following::input[1]"); }
+    private get convertMSPLongDescInput() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//label[.//text()='Long Description']/following::textarea[1]"); }
+    private get convertBtn() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//button[.//bdi[normalize-space()='Convert']]"); }
 
     public ReccWorkDisplayID!: string;
     public ReccWorkShortDesc!: string;
-    public ReccWorkLongDesc!: string
+    public ReccWorkLongDesc!: string;
+    public MSPItemShortDesc!: string;
+    public MSPItemLongDesc!: string;
 
     public async navigateRecommendationWorkbenchListView(){
         console.log("Navigating to Recommendation Workbench - start");
@@ -40,12 +49,65 @@ class RecommendationWorkbenchListView {
         console.log("Creating new Recommendation workbench...");
         await utils.switchToIframe(this.reccWorkbenchIframe);
         await browser.pause(4000);
-        await utils.clickWithWait(this.createBtn);
+
+        let lastError: string | undefined;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            console.log(`Create Recommendation attempt #${attempt}`);
+            await utils.clickWithWait(this.createBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            await browser.keys(["Enter"]);
+            await this.createRecommendationHeader.waitForDisplayed({ timeout: 10000 });
+            await this.fillCreateRecommendationForm();
+            await utils.clickWithWait(this.createReccWorkbenchBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+
+            // Check for the error popup ("Failed to create APM recommendation.")
+            if (await this.errorDialog.isDisplayed().catch(() => false)) {
+                lastError = "Create Recommendation returned 'Failed to create APM recommendation.' error popup";
+                console.log(`${lastError} — attempt #${attempt}`);
+                // Click OK on the error popup
+                if (await this.errorOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.errorOkBtn);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    await browser.pause(1000);
+                }
+                // Cancel the open Create Recommendation dialog before retrying
+                if (await this.cancelCreateBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.cancelCreateBtn);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    await browser.pause(1500);
+                }
+                if (attempt === 2) {
+                    throw new Error(
+                        `Recommendation creation failed twice. Last error: ${lastError}. Aborting recommendation_workbench spec.`
+                    );
+                }
+                console.log("Retrying recommendation creation...");
+                continue;
+            }
+
+            // Success path — handle optional success OK
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
+                await this.okBtn.click();
+            }
+            console.log("Recommendation workbench created successfully.");
+            break;
+        }
+
+        await this.searchNewlyCreated(this.ReccWorkShortDesc);
+        console.log("Created Recommendation Items");
+        console.log("Navigating to detail view page of newly created Recommendation item....");
+        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
+        await utils.clickWithWait(el);
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        await browser.keys(["Enter"]);
-        await this.createRecommendationHeader.waitForDisplayed({ timeout: 10000 });
-        const currentDay = new Date().getDay(); 
+        await browser.pause(10000);
+        console.log("Navigated to detail view page of newly created Recommendation item");
+    }
+
+    private async fillCreateRecommendationForm() {
+        const currentDay = new Date().getDay();
         if ([1, 2, 3, 4].includes(currentDay)) {
             await utils.clickWithWait(this.objectTypeDropdown);
             await browser.keys(["ArrowDown", "Enter"]);
@@ -75,21 +137,6 @@ class RecommendationWorkbenchListView {
         await browser.keys(["ArrowDown", "Enter"]);
         await utils.clickWithWait(this.assessmentTypeDropdown);
         await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
-        await utils.clickWithWait(this.createReccWorkbenchBtn);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        if (await this.okBtn.isDisplayed().catch(() => false)) {
-            await this.okBtn.click();
-        }
-        console.log("Recommendation workbench created successfully.");
-        await this.searchNewlyCreated(this.ReccWorkShortDesc);
-        console.log("Created Recommendation Items");
-        console.log("Navigating to detail view page of newly created Recommendation item....");
-        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
-        await utils.clickWithWait(el);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(10000);
-        console.log("Navigated to detail view page of newly created Recommendation item");
     }
 
     public async searchNewlyCreated(shortDesc:string)
@@ -172,6 +219,84 @@ class RecommendationWorkbenchListView {
         await goBtn.waitForClickable({ timeout: 10000 });
         await goBtn.click();
         await browser.pause(5000);
+    }
+
+    public async searchAndSelectRecommendation(displayId: string){
+        console.log(`Searching and selecting recommendation: ${displayId}`);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.switchToIframe(this.reccWorkbenchIframe);
+        await browser.pause(2000);
+        await this.searchNewlyCreated(displayId);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        const rowCheckbox = await $(`(//tr[@role='row' and .//span[normalize-space()='${displayId}']]//td[@aria-colindex='1']//div[@role='checkbox'])[1]`);
+        await utils.clickWithWait(rowCheckbox);
+        await browser.pause(1000);
+        console.log(`Recommendation '${displayId}' selected`);
+    }
+
+    public async createMSPItemFromRecommendation(){
+        console.log("Opening Create dropdown and selecting 'To MSP Item'...");
+        await utils.switchToIframe(this.reccWorkbenchIframe);
+        await browser.pause(1000);
+        await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Create']]`));
+        await browser.pause(1500);
+        await utils.clickPopupMenuItem("To MSP Item");
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        console.log("'To MSP Item' option selected");
+    }
+
+    public async convertToMSPItem(){
+        console.log("Filling 'Convert To MSP Item' dialog...");
+        await utils.switchToIframe(this.reccWorkbenchIframe);
+        await this.convertMSPDialog.waitForDisplayed({ timeout: 15000 });
+        await browser.pause(1500);
+
+        this.MSPItemShortDesc = `Automation MSP Item ${Date.now()}`;
+        this.MSPItemLongDesc = `Automation MSP Item Long Desc ${Date.now()}`;
+
+        const shortInput = await this.convertMSPShortDescInput;
+        await shortInput.waitForDisplayed({ timeout: 10000 });
+        await shortInput.click();
+        await browser.keys(["Control", "a"]);
+        await browser.keys(["Delete"]);
+        await shortInput.setValue(this.MSPItemShortDesc);
+        await browser.pause(500);
+
+        const longInput = await this.convertMSPLongDescInput;
+        await longInput.waitForDisplayed({ timeout: 10000 });
+        await longInput.click();
+        await browser.keys(["Control", "a"]);
+        await browser.keys(["Delete"]);
+        await longInput.setValue(this.MSPItemLongDesc);
+        await browser.pause(500);
+
+        console.log(`MSP Item Short Desc: ${this.MSPItemShortDesc}`);
+        console.log(`MSP Item Long Desc: ${this.MSPItemLongDesc}`);
+
+        await utils.clickWithWait(this.convertBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        if (await this.errorDialog.isDisplayed().catch(() => false)) {
+            if (await this.errorOkBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.errorOkBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(1000);
+            }
+            throw new Error("Convert To MSP Item failed: error dialog was displayed");
+        }
+
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            console.log("MSP Item created successfully");
+            return;
+        }
+
+        throw new Error("Convert To MSP Item: neither Success nor Error dialog was displayed");
     }
 
     public async verifyDeletionOfRecommendationWorkbench(){

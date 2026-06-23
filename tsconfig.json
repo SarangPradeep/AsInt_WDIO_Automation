@@ -29,6 +29,7 @@
     },
     "include": [
         "equipment",
+        "functional_location",
         "planning",
         "page_object_model",
         "configuration",
