@@ -49,7 +49,9 @@ export const funcLocTestData = {
         noOfCharacteristics: 2
     },
     searchFunLoc: {
-        functionallocation1: 'Automation Regression Functional Location',
-        functionallocation2: 'ASIN-1001-PROD-RECT-RUPR-LP3'
+        functionallocation1: 'ASIN-DNST-P001-COMP-ACLE',
+        functionallocation2: 'ASIN-1001-PROD-RECT-RUPR-LP3',
+        displayId1: 'FLOC.640',
+        displayId2: 'FLOC.2211'
     }
 } as const;

@@ -64,7 +64,7 @@ describe('BTP - CMLs - Functional Test', () => {
     });
 
     it('should search the created CML in equipment detail and open it', async () => {
-        await CMLDetailView.searchCmlAndOpenDetail();
+        await CMLDetailView.searchCmlAndOpenDetailToVerifyAverage();
         console.log(`Average Reading captured from inspection: '${AssetInspectionDetailView.averageReading}'`);
     });
 

@@ -32,9 +32,33 @@ class Utils {
     async switchToIframe(frameElement: any): Promise<void> {
         console.log("---- Switching to iframe ----");
         await browser.switchFrame(null);
-        await frameElement.waitForExist({ timeout: 20000 });
-        await frameElement.waitForDisplayed({ timeout: 20000 });
+        await frameElement.waitForExist({ timeout: 30000 });
+        await frameElement.waitForDisplayed({ timeout: 30000 });
         await browser.switchFrame(frameElement);
+        try {
+            await browser.waitUntil(
+                async () => (await browser.execute(() => document.readyState)) === "complete",
+                { timeout: 30000, interval: 500, timeoutMsg: "iframe document.readyState != complete" }
+            );
+        } catch (e) {
+            console.warn("iframe readyState wait skipped: " + (e as Error).message);
+        }
+        try {
+            await browser.waitUntil(async () => {
+                return await browser.execute(() => {
+                    const w: any = window as any;
+                    const core = w.sap && w.sap.ui && w.sap.ui.getCore && w.sap.ui.getCore();
+                    if (!core) return true;
+                    if (typeof core.isInitialized === 'function' && !core.isInitialized()) return false;
+                    if (core.getUIDirty && core.getUIDirty()) return false;
+                    return true;
+                });
+            }, { timeout: 30000, interval: 500, timeoutMsg: "UI5 core not initialized" });
+        } catch (e) {
+            console.warn("UI5 core init wait skipped: " + (e as Error).message);
+        }
+        await this.waitForBusyIndicatorToDisappear();
+        await this.waitForLocalBusyToDisappear();
         console.log("---- Switched successfully ----");
     }
 
@@ -214,14 +238,41 @@ class Utils {
 
     async waitForSAPPopupAndClose(timeoutInSeconds = 30): Promise<void> {
         const popUpCloseBtn = $("//button[@title='Close Lightbox']");
+        const deadline = Date.now() + timeoutInSeconds * 1000;
         try {
-            if (await popUpCloseBtn.waitForDisplayed({ timeout: timeoutInSeconds * 1000 })) {
-                await popUpCloseBtn.click();
-            }
+            await popUpCloseBtn.waitForDisplayed({ timeout: timeoutInSeconds * 1000 });
         } catch {
             console.log("No SAP popup appeared within timeout");
-            console.log("Continuing without closing popup");
+            return;
         }
+        console.log("SAP popup detected, attempting to close (waiting for page to be ready)");
+        while (Date.now() < deadline) {
+            const stillThere = await popUpCloseBtn.isDisplayed().catch(() => false);
+            if (!stillThere) {
+                console.log("SAP popup closed");
+                return;
+            }
+            try {
+                await popUpCloseBtn.waitForClickable({ timeout: 5000 });
+                await popUpCloseBtn.click();
+                await browser.pause(1500);
+                const gone = !(await popUpCloseBtn.isDisplayed().catch(() => false));
+                if (gone) {
+                    console.log("SAP popup closed");
+                    return;
+                }
+            } catch {
+                try {
+                    await browser.execute((sel: string) => {
+                        const btn = document.evaluate(sel, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as HTMLElement | null;
+                        if (btn) btn.click();
+                    }, "//button[@title='Close Lightbox']");
+                    await browser.pause(1500);
+                } catch { }
+            }
+            await browser.pause(2000);
+        }
+        console.warn("SAP popup did not close within timeout");
     }
 
     async waitAndSelect(element: any) {
@@ -1235,7 +1286,7 @@ async addAllAdaptFilter(): Promise<void> {
     }
 
     public async getEntityNameAndId(): Promise<{ name: string; id: string }> {
-        const idPrefixes = ["ASDA", "MSPE", "MSP", "PMPL", "PMNO", "PMWO", "TASK", "RECO_ASINT_", "OPTA", "ASMT", "OBJT", "INSP", "CML", "DOCU", "FLOC", "EQUI", "RCM", "HAZOP"];
+        const idPrefixes = ["ASDA", "MSPE", "MSP", "PMPL", "PMNO", "PMWO", "PMFI", "TASK", "RECO_ASINT_", "OPTA", "ASMT", "OBJT", "INSP", "CML", "DOCU", "FLOC", "EQUI", "RCM", "RNC", "HAZOP"];
         let name = "";
         let id = "";
         const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
@@ -1303,19 +1354,23 @@ async addAllAdaptFilter(): Promise<void> {
             } catch { /* continue */ }
         }
         for (const prefix of idPrefixes) {
-            const matchToken = prefix.endsWith("_") ? prefix : `${prefix}.`;
+            const matchTokens: string[] = prefix.endsWith("_") || prefix.endsWith(".")
+                ? [prefix]
+                : [`${prefix}.`, `${prefix}_`];
             const tags = prefix === "CML" ? ["bdi", "span"] : ["span", "bdi"];
-            for (const tag of tags) {
-                const xpath = `//${tag}[starts-with(normalize-space(text()),'${matchToken}')]`;
-                const els = await $$(xpath);
-                for (const el of els) {
-                    try {
-                        if (!(await el.isDisplayed())) continue;
-                        let txt = (await el.getText()) ?? "";
-                        if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
-                        txt = txt.trim();
-                        if (txt && txt.startsWith(matchToken)) return txt;
-                    } catch { /* continue */ }
+            for (const matchToken of matchTokens) {
+                for (const tag of tags) {
+                    const xpath = `//${tag}[starts-with(normalize-space(text()),'${matchToken}')]`;
+                    const els = await $$(xpath);
+                    for (const el of els) {
+                        try {
+                            if (!(await el.isDisplayed())) continue;
+                            let txt = (await el.getText()) ?? "";
+                            if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
+                            txt = txt.trim();
+                            if (txt && txt.startsWith(matchToken)) return txt;
+                        } catch { /* continue */ }
+                    }
                 }
             }
         }
@@ -1446,6 +1501,28 @@ async addAllAdaptFilter(): Promise<void> {
             console.log("Waiting for busy indicator after Information OK...");
             await this.waitForBusyIndicatorToDisappear();
             await browser.pause(1500);
+    }
+
+    public async clickPopupMenuItem(label: string): Promise<void> {
+        const clicked = await browser.execute((text: string) => {
+            const candidates = Array.from(document.querySelectorAll<HTMLElement>(
+                "li[role='menuitem'], div[role='menuitem'], li[role='option'], div[role='option'], li, span, bdi"
+            ));
+            for (const el of candidates) {
+                const t = (el.innerText || el.textContent || "").trim();
+                if (t === text) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        el.click();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }, label);
+        if (!clicked) {
+            throw new Error(`Popup menu item '${label}' not found in open menu`);
+        }
     }
 
     async switchToVisibleAppFrame(): Promise<void> {
@@ -1675,8 +1752,14 @@ async addAllAdaptFilter(): Promise<void> {
                 await step.fn();
             } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
-                console.log(`Attachment step '${step.name}' failed: ${msg}`);
+                console.error(`\x1b[31mAttachment step '${step.name}' failed: ${msg}\x1b[0m`);
                 errors.push(`[${step.name}] ${msg}`);
+                if (step.name === "gotoAttachmentsTabAndAssignAttachment") {
+                    console.error(
+                        "\x1b[31mSkipping remaining attachment steps because the Attachments tab could not be opened.\x1b[0m"
+                    );
+                    break;
+                }
             }
         }
         if (errors.length > 0) {
@@ -1722,6 +1805,20 @@ async addAllAdaptFilter(): Promise<void> {
         await this.clickWithWait(this.homeBtn);
         await this.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
+    }
+
+    public async navigateBack(): Promise<void>
+    {
+        console.log("Navigating back to previous list view...");
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.switchFrame(null);
+        await browser.pause(2000);
+        await this.clickWithWait(this.backBtn);
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        await this.switchToFrame();
+        await browser.pause(2000);
+        console.log("Returned to previous list view");
     }
 }
 

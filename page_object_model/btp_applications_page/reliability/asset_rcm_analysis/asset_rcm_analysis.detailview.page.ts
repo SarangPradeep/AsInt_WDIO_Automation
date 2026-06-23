@@ -1967,8 +1967,36 @@ class assetRCMDetailView {
         await browser.keys("Enter");
         await this.deleteConfirmText.waitForDisplayed({ timeout: 60000 });
         await utils.clickWithWait(this.confirmOkBtn);
-        await this.okBtn.waitForDisplayed({ timeout: 60000 });
-        await utils.clickWithWait(this.okBtn);
+
+        // After confirming deletion, either:
+        //  - a Success popup appears with an OK button   -> deletion succeeded
+        //  - an Error popup ("Something went wrong, please try again.") appears -> FAIL
+        const successOkBtn = this.okBtn;
+        const errorDialog = $("//header[.//text()='Error']");
+        const errorOkBtn = $("//header[.//text()='Error']/following::button[.//bdi[text()='OK']]");
+
+        await browser.waitUntil(
+            async () =>
+                (await successOkBtn.isDisplayed().catch(() => false)) ||
+                (await errorDialog.isDisplayed().catch(() => false)),
+            {
+                timeout: 60000,
+                interval: 500,
+                timeoutMsg: "Neither Success nor Error popup appeared after delete confirmation",
+            }
+        );
+
+        if (await errorDialog.isDisplayed().catch(() => false)) {
+            // Dismiss the error popup so the next spec/run isn't blocked, then fail.
+            if (await errorOkBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(errorOkBtn).catch(() => { /* ignore */ });
+            }
+            const msg = "RCM deletion failed: server returned 'Something went wrong, please try again.'";
+            console.error(`\x1b[31m${msg}\x1b[0m`);
+            throw new Error(msg);
+        }
+
+        await utils.clickWithWait(successOkBtn);
         console.log("RCM deleted successfully");
     }
 }

@@ -8,7 +8,7 @@ class maintenance_detail_view{
     private get editHeaderTitle() { return $("//h1[.//text()='Edit Header Details']"); }
     private get shortDescriptionInput() { return $("//label[.//text()='Short Description']/following::textarea[1]"); }
     private get longDescriptionTextarea() { return $("//label[.//text()='Long Description']/following::textarea[1]"); }
-    private get saveHeader() { return $("//button[.//text()='Save']"); }
+    private get saveHeader() { return $("//footer//button[.//text()='Save']"); }
     private get generalInfoTab() { return $("//bdi[text()='General Information']"); }
     private get assignmentTab() { return $("//bdi[text()='Assignments']"); }
     private get detailTab() { return $("//bdi[text()='Details']"); }
@@ -102,8 +102,20 @@ class maintenance_detail_view{
         await utils.setValueWithWait(this.shortDescriptionInput, newMSPShortDEsc);
         MSPListView.MSPShortDesc = newMSPShortDEsc;
         await utils.setValueWithWait(this.longDescriptionTextarea, "Automation long description");
+        await this.saveHeader.waitForExist({ timeout: 30000 });
+        await this.saveHeader.scrollIntoView({ block: 'center' });
+        await this.saveHeader.waitForDisplayed({ timeout: 30000 });
+        await this.saveHeader.waitForClickable({ timeout: 30000 });
         await utils.clickWithWait(this.saveHeader);
+        await browser.pause(2000);
         await utils.waitForBusyIndicatorToDisappear();
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            console.log("Success popup appeared after save; clicking OK");
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+        await browser.pause(1500);
+        console.log("Header saved successfully");
     }
 
     public async editGeneralInfo()
