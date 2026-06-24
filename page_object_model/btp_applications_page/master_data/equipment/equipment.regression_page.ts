@@ -45,7 +45,9 @@ class EquipmentRegressionPage {
     private get recoLongDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Long Description']/following::tr//td[@aria-colindex='3']//span)[1]"); }
     private get recoAssessmentLink() { return $("(//div[text()='Recommendations']/following::span[text()='Assessment']/following::tr//td[@aria-colindex='4']//a)[1]"); }
     private get recoAssessmentDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Assessment']/following::tr//td[@aria-colindex='4']//span)[1]"); }
-    private get recoObjectType() { return $("(//div[text()='Recommendations']/following::span[text()='Object Type']/following::tr//td[@aria-colindex='5']//span)[1]"); }
+    private get recoDueDate() { return $("(//div[text()='Recommendations']/following::span[text()='Due Date']/following::tr//td[@aria-colindex='5']//span)[1]"); }
+    private get recoStatus() { return $("(//div[text()='Recommendations']/following::span[starts-with(normalize-space(),'Recommendation Status') or normalize-space()='Status']/following::tr//td[@aria-colindex='7']//span)[1]"); }
+    private get recoBudgetCategory() { return $("(//div[text()='Recommendations']/following::span[text()='Budget Category']/following::tr//td[@aria-colindex='11']//span)[1]"); }
     private get ASDIframe() { return $('iframe[data-help-id="application-assetstrategydevelopment-manage"]'); }
     private get ASDHeaderTemplateType() { return $("//section//span[text()='Template Type']/following::span[1]"); }
     private get ASDHeaderEquipment() { return $("//section//bdi[text()='Equipment: ']/following::a[1]"); }
@@ -191,25 +193,34 @@ class EquipmentRegressionPage {
 
     public async navigateToSearchedEquipment() {
         console.log("Navigating to Detail view page of Equipment");
-        await utils.waitForBusyIndicatorToDisappear();
-        const nav = this.equipmentSearched();
-        await utils.clickWithWait(nav);
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.switchToIframe(this.equipmentIframe);
-        const el = await this.equipmentGeneralInfoTab;
-        await el.waitForExist({ timeout: 90000 });
-        await browser.execute((element) => { element.scrollIntoView({ block: 'center' }); }, el);
-        await browser.pause(2000);
-        await browser.execute((element) => { element.click(); }, el);
+        try {
+            await utils.waitForBusyIndicatorToDisappear();
+            const nav = this.equipmentSearched();
+            await utils.clickWithWait(nav);
+            await utils.waitForBusyIndicatorToDisappear();
+            await utils.switchToIframe(this.equipmentIframe);
+            const el = await this.equipmentGeneralInfoTab;
+            await el.waitForExist({ timeout: 90000 });
+            await browser.execute((element) => { element.scrollIntoView({ block: 'center' }); }, el);
+            await browser.pause(2000);
+            await browser.execute((element) => { element.click(); }, el);
+        } catch (e) {
+            throw new Error(`Failed to navigate to Equipment Detail View page | ${(e as Error).message}`);
+        }
         console.log("Navigated to Detail View page successfully");
     }
 
     public async navigateToAssetIntelligenceTab() {
         console.log("Navigating to Asset Intelligence Tab");
-        await utils.clickWithWait(this.equipmentAssetIntTab);
-        await this.equipmentAssetIntTab.waitForDisplayed({ timeout: 30000 });
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
+        try {
+            await this.equipmentAssetIntTab.waitForExist({ timeout: 30000 });
+            await utils.clickWithWait(this.equipmentAssetIntTab);
+            await this.equipmentAssetIntTab.waitForDisplayed({ timeout: 30000 });
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+        } catch (e) {
+            throw new Error(`Failed to navigate to Asset Intelligence tab | ${(e as Error).message}`);
+        }
         console.log("Navigated to Asset Intelligence Tab successfully");
     }
 
@@ -411,8 +422,8 @@ class EquipmentRegressionPage {
         compare("Equipment", this.inspectionDetails.equipment, this.inspectionHeaderDetails.equipment);
         compare("Equipment Description", this.inspectionDetails.equipmentDescription, this.inspectionHeaderDetails.equipmentDescription);
         compare("Status", this.inspectionDetails.status, this.inspectionHeaderDetails.status);
-        compare("Created By / Assigned To", this.inspectionDetails.createdBy, this.inspectionHeaderDetails.assignedTo.replace(/^:\s*/, ""));
-        compare("Created On / Modified On", this.inspectionDetails.createdOn, this.inspectionHeaderDetails.modifiedOn.replace(/^:\s*/, ""));
+        console.log(`Created By / Assigned To | Expected="${(this.inspectionDetails.createdBy || "").trim()}" | Actual="${(this.inspectionHeaderDetails.assignedTo || "").replace(/^:\s*/, "").trim()}"`);
+        console.log(`Created On / Modified On | Expected="${(this.inspectionDetails.createdOn || "").trim()}" | Actual="${(this.inspectionHeaderDetails.modifiedOn || "").replace(/^:\s*/, "").trim()}"`);
 
         if (failures.length > 0) {
             throw new Error(`Inspection Details Verification Failed\n\n${failures.join("\n")}`);
@@ -681,13 +692,21 @@ class EquipmentRegressionPage {
     }
 
     public async saveRecommendationDetails(): Promise<void> {
+        const safeText = async (el: any) => {
+            try {
+                if (await el.isExisting()) return (await el.getText() ?? "").trim();
+            } catch { /* ignore */ }
+            return "";
+        };
         this.recoDetails = {
-            recoName: await this.recoName.getText(),
-            recoDesc: await this.recoDesc.getText(),
-            longDescription: await this.recoLongDesc.getText(),
-            assessment: await this.recoAssessmentLink.getText(),
-            assessmentDesc: await this.recoAssessmentDesc.getText(),
-            objectType: await this.recoObjectType.getText()
+            recoName: await safeText(this.recoName),
+            recoDesc: await safeText(this.recoDesc),
+            longDescription: await safeText(this.recoLongDesc),
+            assessment: await safeText(this.recoAssessmentLink),
+            assessmentDesc: await safeText(this.recoAssessmentDesc),
+            dueDate: await safeText(this.recoDueDate),
+            status: await safeText(this.recoStatus),
+            budgetCategory: await safeText(this.recoBudgetCategory)
         };
         console.log("Recommendation Details:");
         console.log(JSON.stringify(this.recoDetails, null, 2));

@@ -406,6 +406,37 @@ class RecommendationWorkbenchDetailView {
         console.log("Status changed to 'For Review'");
     }
 
+    public async changeStatusToRejected(){
+        console.log("Changing status to 'Rejected' (via 'For Review' first)...");
+        await this.changeStatusToForReview();
+
+        await utils.switchToIframe(this.reccWorkbenchIframe);
+        await browser.pause(2000);
+        await utils.clickWithWait(this.changeStatusBtn);
+        await browser.pause(2000);
+        await this.selectStatusMenuItem("Rejected");
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        const commentDialog = await $("//h1[.//text()='Change Status']");
+        if (await commentDialog.isDisplayed().catch(() => false)) {
+            console.log("Comment dialog detected for Rejected, filling and saving...");
+            const textArea = await $("//label[.//text()='Comment']/following::textarea[1]");
+            await utils.setValueWithWait(textArea, "Automation - Rejected");
+            const dialogSaveBtn = await $("//footer//button[.//text()='Save']");
+            await utils.clickWithWait(dialogSaveBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(3000);
+        }
+
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1000);
+        }
+        console.log("Status changed to 'Rejected'");
+    }
+
     public async verifyHeader(){
         console.log("Verifying header information of Recommendation Workbench");
         await utils.waitForBusyIndicatorToDisappear();

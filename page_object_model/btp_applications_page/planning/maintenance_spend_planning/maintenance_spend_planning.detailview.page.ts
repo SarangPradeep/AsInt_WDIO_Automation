@@ -472,5 +472,292 @@ class maintenance_detail_view{
         await expect(name).toEqual(MSPListView.MSPEShortDesc);
         console.log("MSP Event name matches header's name");
     }
+
+    public static bulkSnapshots: Array<{
+        shortDesc: string;
+        displayId: string;
+        planningYear: string;
+        deferralFollowup: string;
+        exchangeRateUSD: string;
+        processStage: string;
+        processSubStage: string;
+        regionOnChart: string;
+        statusApplied: string;
+    }> = [];
+
+    public static bulkUpdateValues: {
+        planningYear: string;
+        exchangeRateUSD: string;
+        regionOnChart: string;
+        processStage: string;
+        processSubStage: string;
+        deferralFollowup: string;
+    } | null = null;
+
+    public get bulkSnapshots() {
+        return maintenance_detail_view.bulkSnapshots;
+    }
+
+    public get bulkUpdateValues(): typeof maintenance_detail_view.bulkUpdateValues {
+        return maintenance_detail_view.bulkUpdateValues;
+    }
+    public set bulkUpdateValues(v: typeof maintenance_detail_view.bulkUpdateValues) {
+        maintenance_detail_view.bulkUpdateValues = v;
+    }
+
+    private fieldInput(label: string) {
+        return $(`(//label[.//text()='${label}']/following::input[1])[1]`);
+    }
+
+    private async readFieldValue(label: string): Promise<string> {
+        const inputEl = await this.fieldInput(label);
+        if (await inputEl.isExisting().catch(() => false)) {
+            const v = (await inputEl.getValue().catch(() => "")) ?? "";
+            if (v.trim().length > 0) return v.trim();
+        }
+        const spanEl = await $(`(//label[.//text()='${label}']/following::span[2])[1]`);
+        if (await spanEl.isExisting().catch(() => false)) {
+            const t = (await spanEl.getText().catch(() => "")) ?? "";
+            return t.trim();
+        }
+        return "";
+    }
+
+    private genValueFor(label: string): string {
+        switch (label) {
+            case "Planning Year": return `${2030 + Math.floor(Math.random() * 50)}`;
+            case "Exchange Rate to USD": return `${utils.rand(1, 99)}`;
+            case "Region On Chart": return `${utils.rand(1, 9)}`;
+            default: return "";
+        }
+    }
+
+    private async ensureFieldsForSection(
+        tab: any,
+        textFields: string[],
+        dropdownFields: string[]
+    ): Promise<void> {
+        await utils.clickWithWait(tab);
+        await browser.pause(1500);
+
+        const missingText: string[] = [];
+        for (const label of textFields) {
+            const v = await this.readFieldValue(label);
+            if (!v) missingText.push(label);
+        }
+        const missingDropdowns: string[] = [];
+        for (const label of dropdownFields) {
+            const v = await this.readFieldValue(label);
+            if (!v) missingDropdowns.push(label);
+        }
+
+        if (missingText.length === 0 && missingDropdowns.length === 0) {
+            console.log("All target fields already populated in this section");
+            return;
+        }
+
+        console.log(`Filling missing fields: text=[${missingText.join(", ")}] dropdowns=[${missingDropdowns.join(", ")}]`);
+        await utils.clickWithWait(this.editInfo);
+        await browser.pause(1500);
+
+        for (const label of missingText) {
+            const inputEl = await this.fieldInput(label);
+            if (await inputEl.isExisting().catch(() => false)) {
+                await utils.setValueWithWait(inputEl, this.genValueFor(label));
+            }
+        }
+        for (const label of missingDropdowns) {
+            const dd = await $(`(//label[.//text()='${label}']/following::span[1])[1]`);
+            if (await dd.isExisting().catch(() => false)) {
+                await utils.clickWithWait(dd);
+                await browser.keys(["ArrowDown", "Enter"]);
+                await browser.pause(500);
+            }
+        }
+
+        await utils.clickWithWait(this.saveDetailBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+        if (await this.closeErrBtn.isDisplayed().catch(() => false)) {
+            console.log(`Section save returned error; closing dialog`);
+            await this.closeErrBtn.click();
+        }
+        await browser.pause(1500);
+    }
+
+    public async captureBulkSnapshot(statusApplied: string): Promise<void> {
+        console.log(`Capturing bulk snapshot (target status: ${statusApplied})...`);
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(3000);
+        const { name, id } = await utils.getEntityNameAndId();
+
+        await this.ensureFieldsForSection(
+            this.generalInfoTab,
+            ["Planning Year"],
+            ["Deferral Follow-up"]
+        );
+        const planningYear = await this.readFieldValue("Planning Year");
+        const deferralFollowup = await this.readFieldValue("Deferral Follow-up");
+
+        await this.ensureFieldsForSection(
+            this.detailTab,
+            ["Exchange Rate to USD", "Region On Chart"],
+            []
+        );
+        const exchangeRateUSD = await this.readFieldValue("Exchange Rate to USD");
+        const regionOnChart = await this.readFieldValue("Region On Chart");
+
+        await this.ensureFieldsForSection(
+            this.summaryTab,
+            [],
+            ["Process Stage", "Process Sub-Stage"]
+        );
+        const processStage = await this.readFieldValue("Process Stage");
+        const processSubStage = await this.readFieldValue("Process Sub-Stage");
+
+        const snap = {
+            shortDesc: name,
+            displayId: id,
+            planningYear,
+            deferralFollowup,
+            exchangeRateUSD,
+            processStage,
+            processSubStage,
+            regionOnChart,
+            statusApplied
+        };
+        maintenance_detail_view.bulkSnapshots.push(snap);
+        console.log(`Snapshot for ${name} (${id}):`, JSON.stringify(snap));
+    }
+
+    private async readFundingStatus(): Promise<string> {
+        const fundingStatusElement = await $("//bdi[text()='Funding Status: ']/following::span[2]");
+        let fundingStatus = "";
+        if (
+            await fundingStatusElement.isDisplayed().catch(() => false) &&
+            await fundingStatusElement.isClickable().catch(() => false)
+        ) {
+            fundingStatus = (await fundingStatusElement.getText()).trim();
+        } else {
+            const expandBtn = await $("(//span[text()='Expand Header']/preceding-sibling::span//span)[2]");
+            if (await expandBtn.isDisplayed().catch(() => false)) {
+                await expandBtn.waitForClickable({ timeout: 10000 });
+                await expandBtn.click();
+                await browser.pause(2000);
+            }
+            fundingStatus = (await fundingStatusElement.getText().catch(() => "")).trim();
+        }
+        return fundingStatus.replace(/\s+/g, " ");
+    }
+
+    private async applyStatusStep(label: string): Promise<void> {
+        console.log(`  -> Applying status step '${label}'`);
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(1500);
+        await utils.clickWithWait(this.changeStatusBtn);
+        await browser.pause(2000);
+
+        await utils.clickPopupMenuItem(label);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2500);
+
+        const commentDialog = await $("//h1[.//text()='Change Status']");
+        if (await commentDialog.isDisplayed().catch(() => false)) {
+            console.log("  Comment dialog detected, filling and saving...");
+            const textArea = await $("//label[.//text()='Comment']/following::textarea[1]");
+            await utils.setValueWithWait(textArea, `Automation - ${label}`);
+            const dialogSaveBtn = await $("//footer//button[.//text()='Save']");
+            await utils.clickWithWait(dialogSaveBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(3000);
+        }
+
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+        }
+
+        const current = await this.readFundingStatus();
+        console.log(`  Funding Status after step: '${current}'`);
+        if (current.toLowerCase() !== label.toLowerCase()) {
+            throw new Error(`Status step failed. Expected: '${label}', Found: '${current}'`);
+        }
+    }
+
+    public async changeStatusToLabel(target: string): Promise<void> {
+        console.log(`Changing MSP status to target '${target}'...`);
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(2000);
+
+        const currentStatus = await this.readFundingStatus();
+        console.log(`Initial funding status: '${currentStatus}'`);
+
+        if (currentStatus.toLowerCase() === target.toLowerCase()) {
+            console.log(`MSP is already in '${target}' state; nothing to do.`);
+            return;
+        }
+
+        const steps: string[] = [];
+        switch (target) {
+            case "Reviewing":
+                return;
+            case "Ready for Funding":
+            case "Planning":
+            case "Deferred":
+                steps.push(target);
+                break;
+            case "Funded":
+                steps.push("Ready for Funding", "Funded");
+                break;
+            default:
+                throw new Error(`Status transition for '${target}' is not yet defined`);
+        }
+
+        for (const step of steps) {
+            await this.applyStatusStep(step);
+        }
+
+        const final = await this.readFundingStatus();
+        if (final.toLowerCase() !== target.toLowerCase()) {
+            throw new Error(`Final status mismatch. Expected: '${target}', Found: '${final}'`);
+        }
+        console.log(`Status successfully changed to '${target}'`);
+    }
+
+    public async readBulkUpdatedFields(): Promise<{
+        planningYear: string;
+        exchangeRateUSD: string;
+        regionOnChart: string;
+        processStage: string;
+        processSubStage: string;
+        deferralFollowup: string;
+    }> {
+        console.log("Reading bulk-updated fields from detail view...");
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(2000);
+
+        await utils.clickWithWait(this.generalInfoTab);
+        await browser.pause(1500);
+        const planningYear = await this.readFieldValue("Planning Year");
+        const deferralFollowup = await this.readFieldValue("Deferral Follow-up");
+
+        await utils.clickWithWait(this.detailTab);
+        await browser.pause(1500);
+        const exchangeRateUSD = await this.readFieldValue("Exchange Rate to USD");
+        const regionOnChart = await this.readFieldValue("Region On Chart");
+
+        await utils.clickWithWait(this.summaryTab);
+        await browser.pause(1500);
+        const processStage = await this.readFieldValue("Process Stage");
+        const processSubStage = await this.readFieldValue("Process Sub-Stage");
+
+        const read = { planningYear, exchangeRateUSD, regionOnChart, processStage, processSubStage, deferralFollowup };
+        console.log("Read fields:", JSON.stringify(read));
+        return read;
+    }
 }
 export default new maintenance_detail_view();

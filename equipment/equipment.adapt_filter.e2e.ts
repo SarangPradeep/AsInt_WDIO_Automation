@@ -8,7 +8,8 @@ describe('BTP - Equipment Application - Adapt Filter Functional test', () => {
         await HomePage.clickEquipmentTile();
     });
 
-    it('should add and verify all the adapt filters', async () => {
+    it('should add and verify all the adapt filters', async function () {
+        this.timeout(30 * 60 * 1000);
         await utils.verifyFieldsInListView();
         await utils.addAllAdaptFilter();
         const filterChecks: { name: string; run: () => Promise<void> }[] = [

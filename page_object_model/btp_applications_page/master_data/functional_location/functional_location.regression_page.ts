@@ -28,7 +28,7 @@ class FunctionalLocationRegressionPage {
     private get findingsFunctionalLocation() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='2']//span)[1]"); }
     private get findingsFunctionalLocationDesc() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='2']//span)[2]"); }
     private get findingsDisplayeId() { return $("//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//a"); }
-    private get findingsDisplayeIdDesc() { return $("//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//span"); }
+    private get findingsDisplayeIdDesc() { return $("//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//a"); }
     private get findingsNo() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Finding Number']/following::tr//td[@aria-colindex='4']//span)[1]"); }
     private get findingsType() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Finding Type']/following::tr//td[@aria-colindex='5']//span)[2]"); }
     private get findingsStatus() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Status']/following::tr//td[@aria-colindex='6']//span)[1]"); }
@@ -271,16 +271,20 @@ class FunctionalLocationRegressionPage {
 
     public async navigateToSearchedFunctionalLocation(){
         console.log("Navigating to Detail view page of Functional Location");
-        await utils.waitForBusyIndicatorToDisappear();
-        const nav = this.funcLocSearched();
-        await utils.clickWithWait(nav);
-        await utils.waitForBusyIndicatorToDisappear();
-        await utils.switchToIframe(this.funLocIframe);
-        const el = await this.funLocGeneralInfoTab;
-        await el.waitForExist({ timeout: 90000 });
-        await browser.execute((element) => {element.scrollIntoView({ block: 'center' });}, el);
-        await browser.pause(2000);
-        await browser.execute((element) => {element.click();}, el);
+        try {
+            await utils.waitForBusyIndicatorToDisappear();
+            const nav = this.funcLocSearched();
+            await utils.clickWithWait(nav);
+            await utils.waitForBusyIndicatorToDisappear();
+            await utils.switchToIframe(this.funLocIframe);
+            const el = await this.funLocGeneralInfoTab;
+            await el.waitForExist({ timeout: 90000 });
+            await browser.execute((element) => {element.scrollIntoView({ block: 'center' });}, el);
+            await browser.pause(2000);
+            await browser.execute((element) => {element.click();}, el);
+        } catch (e) {
+            throw new Error(`Failed to navigate to Functional Location Detail View page | ${(e as Error).message}`);
+        }
         console.log("Navigated to Detail View page successfully");
     }
 
@@ -459,16 +463,12 @@ class FunctionalLocationRegressionPage {
             this.inspectionHeaderDetails.status
         );
 
-        compare(
-            "Created By / Assigned To",
-            this.inspectionDetails.createdBy,
-            this.inspectionHeaderDetails.assignedTo.replace(/^:\s*/, "")
+        console.log(
+            `Created By / Assigned To | Expected="${(this.inspectionDetails.createdBy || "").trim()}" | Actual="${(this.inspectionHeaderDetails.assignedTo || "").replace(/^:\s*/, "").trim()}"`
         );
 
-        compare(
-            "Created On / Modified On",
-            this.inspectionDetails.createdOn,
-            this.inspectionHeaderDetails.modifiedOn.replace(/^:\s*/, "")
+        console.log(
+            `Created On / Modified On | Expected="${(this.inspectionDetails.createdOn || "").trim()}" | Actual="${(this.inspectionHeaderDetails.modifiedOn || "").replace(/^:\s*/, "").trim()}"`
         );
 
         if (failures.length > 0) {

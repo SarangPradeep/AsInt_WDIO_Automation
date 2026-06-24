@@ -167,40 +167,56 @@ class CML_Detail_Page{
         await utils.clickWithWait(this.calculateBtn, 1500);
         await utils.waitForBusyIndicatorToDisappear();
 
-        // ---- Handle "Bulk Calculation of CMLs has been initiated" Information popup ----
         console.log("Handling Bulk CML Calculation Information popup...");
         await utils.clickInformationOkButton();
 
-        // Wait for backend bulk calculation to complete before checking the notification bell.
-        const waitForCalcMs = 30000;
-        console.log(`Waiting ${waitForCalcMs} ms for CML calculation to complete...`);
-        await browser.pause(waitForCalcMs);
-
-        // Notification bell lives in the FLP shell, not inside the CML iframe.
         await browser.switchFrame(null);
         await utils.waitForBusyIndicatorToDisappear();
 
         const notificationBell = $('(//a[@role="button"]//span)[3]');
         await notificationBell.waitForExist({ timeout: 30000 });
         await notificationBell.waitForDisplayed({ timeout: 30000 });
-        await utils.clickWithWait(notificationBell);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
 
-        // Verify the "CML calculation is ready" notification entry is present.
-        const notificationEntry = $("//*[contains(normalize-space(.),'CML calculation is ready')]");
-        await notificationEntry.waitForExist({ timeout: 30000 });
-        const isPresent = await notificationEntry.isDisplayed();
-        if (!isPresent) {
-            throw new Error("'CML calculation is ready' notification was not found in the notification panel.");
+        const maxWaitMs = 5 * 60 * 1000;
+        const pollIntervalMs = 15000;
+        const deadline = Date.now() + maxWaitMs;
+        const readyXpath = "//*[contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'cml calculations are ready') or contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'cml calculation is ready')]";
+        const noDataXpath = "//div[normalize-space(.)='No data']";
+
+        let found = false;
+        let attempt = 0;
+        while (Date.now() < deadline) {
+            attempt++;
+            console.log(`Checking notification panel for CML calculation ready (attempt ${attempt})...`);
+            await utils.clickWithWait(notificationBell);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+
+            const entry = $(readyXpath);
+            if (await entry.isExisting() && await entry.isDisplayed().catch(() => false)) {
+                found = true;
+                console.log("'CML Calculations are ready' notification verified successfully.");
+                break;
+            }
+
+            const noData = $(noDataXpath);
+            if (await noData.isExisting().catch(() => false)) {
+                console.log("Notification panel currently shows 'No data' — closing and retrying...");
+            } else {
+                console.log("Notification panel open but expected entry not present — closing and retrying...");
+            }
+
+            await utils.clickWithWait(notificationBell);
+            await browser.pause(pollIntervalMs);
         }
-        console.log("'CML calculation is ready' notification verified successfully.");
 
-        // Switch back into the CML iframe to continue with the Background section.
+        if (!found) {
+            throw new Error(`'CML Calculations are ready' notification did not appear within ${maxWaitMs / 1000}s.`);
+        }
+
         await utils.switchToIframe(this.CMLIframe);
         await utils.waitForBusyIndicatorToDisappear();
 
-        // ---- Re-visit Background tab; if details were lost, refill and re-Calculate ----
         await this.openBackgroundTab();
         const currentDescription = (await this.descriptionInput.getAttribute("value")) ?? "";
         if (currentDescription.trim() === "") {
