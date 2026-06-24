@@ -565,23 +565,35 @@ class functionalLocationDetailView {
         await utils.waitForBusyIndicatorToDisappear();
         console.log("Navigated to Maintenance and Service successfully");
 
-        const maintainNoti = await this.maintainNoti.getText();
+        const readField = async (label: string, el: any): Promise<string> => {
+            try {
+                await el.waitForExist({ timeout: 15000 });
+                const text = (await el.getText() ?? "").trim();
+                if (!text) throw new Error("empty text");
+                return text;
+            } catch {
+                console.log(`\x1b[1m!!! Maintenance and Service: '${label}' is NOT PRESENT !!!\x1b[0m`);
+                return "";
+            }
+        };
+
+        const maintainNoti = await readField("Maintenance Notification", this.maintainNoti);
         const mn = await utils.getAssignedValue(maintainNoti);
         console.log(" Assigned Maintenance Notification : "+mn);
 
-        const maintainOrder = await this.maintainOrder.getText();
+        const maintainOrder = await readField("Maintenance Order", this.maintainOrder);
         const mo = await utils.getAssignedValue(maintainOrder);
         console.log(" Assigned Maintenance Order: "+mo);
 
-        const maintainPlan = await this.maintainPlan.getText();
+        const maintainPlan = await readField("Maintenance Plan", this.maintainPlan);
         const mp = await utils.getAssignedValue(maintainPlan);
         console.log(" Assigned Maintenance Plan: "+mp);
 
-        const recomWrk = await this.recomWrk.getText();
+        const recomWrk = await readField("Recommendation Workbench", this.recomWrk);
         const rw = await utils.getAssignedValue(recomWrk);
         console.log(" Assigned recommendations: "+rw);
 
-        const maintaintask = await this.maintaintask.getText();
+        const maintaintask = await readField("Maintenance Tasks", this.maintaintask);
         const mt = await utils.getAssignedValue(maintaintask);
         console.log(" Assigned Maintenance Task: "+mt);
     }

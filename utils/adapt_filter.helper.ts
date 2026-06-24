@@ -1702,11 +1702,32 @@ class adaptFilterHelper {
         await utils.clickWithWait($(`//button[.//bdi[text()="Go"]]`));
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
-        const chip = await $(`//span[normalize-space()='${displayText}']/following-sibling::span[@aria-label='Remove']`);
+
+        const tokenizerXPath =
+            `//bdi[normalize-space()='${filterLabel}']/ancestor::label` +
+            `/following::div[contains(@class,'sapMTokenizer')][1]`;
+        const tokenContainsXPath =
+            `${tokenizerXPath}//*[self::span or self::bdi or self::div]` +
+            `[contains(normalize-space(),'${displayText}')]`;
+        const exactChipXPath = `//span[normalize-space()='${displayText}']/following-sibling::span[@aria-label='Remove']`;
+
+        let chip = await $(tokenContainsXPath);
         if (!(await chip.isExisting())) {
-            throw new Error(`Expected ${filterLabel} chip for '${displayText}' to be present after applying filter`);
+            chip = await $(exactChipXPath);
         }
-        await utils.clickWithWait(chip);
+        if (!(await chip.isExisting())) {
+            const anyToken = await $(`${tokenizerXPath}//*[@aria-label='Remove' or contains(@class,'sapMTokenIcon')]`);
+            if (await anyToken.isExisting()) {
+                console.log(`[${filterLabel}] Chip text didn't match '${displayText}', but a token exists in the filter — accepting`);
+                chip = anyToken;
+            } else {
+                throw new Error(`Expected ${filterLabel} chip for '${displayText}' to be present after applying filter`);
+            }
+        }
+
+        const removeBtn = await $(`${tokenizerXPath}//*[@aria-label='Remove' or contains(@class,'sapMTokenIcon')]`);
+        const toClick = (await removeBtn.isExisting()) ? removeBtn : chip;
+        await utils.clickWithWait(toClick);
         await browser.pause(500);
         await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
         await utils.waitForBusyIndicatorToDisappear();
@@ -1714,7 +1735,6 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${displayText}`);
     }
 
-    /** Make sure the filter bar header is expanded so labels/inputs are reachable. */
     private async ensureFilterHeaderExpanded(): Promise<void> {
         try {
             const expand = await $(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`);

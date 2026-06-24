@@ -1,4 +1,9 @@
 import utils from "utils/utils";
+import MSPDetailView from "./maintenance_spend_planning.detailview.page";
+import recommendationWorkbenchListView from "../recommendation_workbench/recommendation_workbench.listview.page";
+import recommendationWorkbenchDetailView from "../recommendation_workbench/recommendation_workbench.detailview.page";
+import { mspTestData } from "../../../../test_data/btp_applications/planning/maintenance_spend_planning.data";
+
 class MSPListView {
 
     private get MSPApp() { return $("//a[contains(@aria-label, 'Maintenance Spend Planning')]"); }
@@ -64,8 +69,8 @@ class MSPListView {
         return `${prefix} ${Date.now()}`;
     }
 
-    public async createMSPItems(){
-        console.log("Creating MSP Items....");
+    public async createMSPItems(forceInlineRecc: boolean = false){
+        console.log(`Creating MSP Items.... (forceInlineRecc=${forceInlineRecc})`);
         await utils.switchToIframe(this.mspIframe);
         await browser.pause(4000);
         if(await this.sectionMoreBtn.isExisting()){
@@ -85,7 +90,7 @@ class MSPListView {
             const createMSPBox = await $("//header[.//text()='Create MSP']");
             await createMSPBox.waitForDisplayed();
 
-            await this.fillCreateMspForm();
+            await this.fillCreateMspForm(forceInlineRecc);
 
             await browser.pause(2000);
             await utils.clickWithWait(this.createMSPBtn);
@@ -133,9 +138,9 @@ class MSPListView {
         console.log("Navigated to detail view page of newly created MSP item");
     }
 
-    private async fillCreateMspForm() {
+    private async fillCreateMspForm(forceInlineRecc: boolean = false) {
         const dayOfMonth = new Date().getDate();
-        if (dayOfMonth % 2 === 0) {
+        if (!forceInlineRecc && dayOfMonth % 2 === 0) {
             console.log("Selecting recommendation...");
             await browser.pause(4000);
             await utils.clickWithWait(this.openSelectRecommendation);
@@ -337,6 +342,393 @@ class MSPListView {
         await utils.clickWithWait(el);
         await browser.pause(10000);
         console.log("Navigated to detail view page of newly created MSP Event");
+    }
+
+    public async createAndChangeStatusForBulkItem(statusLabel: string): Promise<void> {
+        console.log(`\n=== Bulk MSP iteration for status '${statusLabel}' ===`);
+        await this.createMSPItems(true);
+        await MSPDetailView.captureMSPId();
+        await MSPDetailView.captureBulkSnapshot(statusLabel);
+        await MSPDetailView.changeStatusToLabel(statusLabel);
+        await utils.navigateBack();
+        console.log(`=== Completed bulk MSP iteration for status '${statusLabel}' ===\n`);
+    }
+
+    public async bulkCreateAndUpdateMSPItems(statuses: readonly string[] = mspTestData.bulkStatuses): Promise<void> {
+        console.log(`Starting bulk create & status update for ${statuses.length} MSP items`);
+        for (let i = 0; i < statuses.length; i++) {
+            const label = statuses[i];
+            console.log(`-- Bulk iteration ${i + 1}/${statuses.length}: '${label}' --`);
+            await this.createAndChangeStatusForBulkItem(label);
+        }
+        console.log("Bulk create & update completed for all MSP items");
+        console.log("Collected snapshots:", JSON.stringify(MSPDetailView.bulkSnapshots, null, 2));
+    }
+
+    public async createMSPItemUsingSpecificRecommendation(reccShortDescOrId: string): Promise<void> {
+        console.log(`Creating MSP using specific recommendation: ${reccShortDescOrId}`);
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(4000);
+        if (await this.sectionMoreBtn.isExisting()) {
+            await this.sectionMoreBtn.waitForDisplayed({ timeout: 10000 });
+            await this.sectionMoreBtn.scrollIntoView();
+            await this.sectionMoreBtn.waitForClickable({ timeout: 10000 });
+            await utils.clickWithWait(this.sectionMoreBtn);
+            await browser.pause(1000);
+        }
+
+        await utils.clickWithWait(this.createBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.keys("Enter");
+        const createMSPBox = await $("//header[.//text()='Create MSP']");
+        await createMSPBox.waitForDisplayed();
+
+        await browser.pause(3000);
+        await utils.clickWithWait(this.openSelectRecommendation);
+        await this.selectRecommendationPopup.waitForDisplayed();
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        const popupSearch = await $("//header[.//text()='Select Recommendation(s)']/following::input[@type='search'][1]");
+        if (await popupSearch.isExisting().catch(() => false)) {
+            await utils.setValueWithWait(popupSearch, reccShortDescOrId);
+            await browser.keys("Enter");
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(3000);
+        } else {
+            console.log("Search box in Select Recommendation popup not found; proceeding with default order");
+        }
+
+        const matchingRow = await $(`//tr[@role='row' and .//span[contains(normalize-space(),'${reccShortDescOrId}')]]`);
+        if (await matchingRow.isExisting().catch(() => false)) {
+            const checkbox = await matchingRow.$(".//td[@aria-colindex='1']");
+            await utils.clickWithWait(checkbox);
+        } else {
+            console.log(`Matching row for '${reccShortDescOrId}' not found in popup; clicking first row as fallback`);
+            await utils.clickWithWait(this.firstRecommendationRow);
+        }
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        await utils.clickWithWait(this.nextBtn);
+        await this.mspItemHeader.waitForDisplayed({ timeout: 10000 });
+
+        this.MSPShortDesc = `${this.getRandomTxt("Automation MSP NotFunded ")} ${Math.floor(Math.random() * 100000)}`;
+        this.MSPLongDesc = `${this.getRandomTxt("Automation MSP NotFunded long desc")} ${Math.floor(Math.random() * 100000)}`;
+        await this.shortDescInput.setValue(this.MSPShortDesc);
+        await this.longDescInput.setValue(this.MSPLongDesc);
+
+        await browser.pause(2000);
+        await utils.clickWithWait(this.createMSPBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
+        await utils.clickSuccessOkButton();
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        await this.searchNewlyCreated(this.MSPShortDesc);
+        console.log("Navigating to detail view page of newly created Not-Funded MSP item....");
+        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
+        await utils.clickWithWait(el);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(10000);
+        console.log("Navigated to detail view page of Not-Funded MSP item");
+    }
+
+    public async createNotFundedMSPFlow(): Promise<void> {
+        console.log("\n=== Not Funded flow: build rejected recommendation, then MSP from it ===");
+        await utils.navigateToHomePage();
+
+        await recommendationWorkbenchListView.navigateRecommendationWorkbenchListView();
+        await recommendationWorkbenchListView.createReccWorkbench();
+        await recommendationWorkbenchDetailView.captureReccWorkbenchId();
+        await recommendationWorkbenchDetailView.changeStatusToRejected();
+        const rejectedReccId = recommendationWorkbenchListView.ReccWorkDisplayID;
+        const rejectedReccShortDesc = recommendationWorkbenchListView.ReccWorkShortDesc;
+        console.log(`Rejected recommendation created: ${rejectedReccShortDesc} (${rejectedReccId})`);
+
+        await utils.navigateToHomePage();
+        await this.navigateToMSPListView();
+
+        await this.createMSPItemUsingSpecificRecommendation(rejectedReccShortDesc);
+        await MSPDetailView.captureMSPId();
+        await MSPDetailView.captureBulkSnapshot("Not Funded");
+        await utils.navigateBack();
+        console.log("=== Not Funded flow completed ===\n");
+    }
+
+    public async selectMSPRowByDisplayId(displayId: string): Promise<void> {
+        console.log(`Selecting MSP row by displayId: ${displayId}`);
+        const rowXPath = `//tr[@role='row' and .//span[normalize-space()='${displayId}']]`;
+        const checkboxXPath = `${rowXPath}//div[@role='checkbox']`;
+
+        const row = await $(rowXPath);
+        await row.waitForExist({ timeout: 20000, timeoutMsg: `MSP row with id '${displayId}' not found` });
+        await row.scrollIntoView({ block: "center" });
+        await browser.pause(500);
+
+        let checkbox = await $(checkboxXPath);
+        if (!(await checkbox.isExisting().catch(() => false))) {
+            checkbox = await $(`${rowXPath}//td[@aria-colindex='1']`);
+        }
+        await checkbox.waitForClickable({ timeout: 10000 });
+        await utils.clickWithWait(checkbox);
+        await browser.pause(500);
+
+        const ariaSelected = await row.getAttribute("aria-selected").catch(() => "");
+        if (ariaSelected !== "true") {
+            console.log(`Row '${displayId}' aria-selected='${ariaSelected}', retrying click`);
+            await utils.clickWithWait(checkbox);
+            await browser.pause(500);
+        }
+        console.log(`Selected MSP row '${displayId}'`);
+    }
+
+    public async selectAllBulkSnapshotRows(): Promise<void> {
+        console.log("Selecting all MSP rows captured in bulkSnapshots...");
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(2000);
+
+        const snapshots = MSPDetailView.bulkSnapshots;
+        if (!snapshots.length) {
+            throw new Error("No bulkSnapshots captured; nothing to select");
+        }
+
+        for (const snap of snapshots) {
+            if (!snap.displayId) {
+                console.log(`Skipping snapshot with empty displayId (shortDesc='${snap.shortDesc}')`);
+                continue;
+            }
+            await this.searchNewlyCreated(snap.displayId);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            await this.selectMSPRowByDisplayId(snap.displayId);
+        }
+        console.log(`Selected ${snapshots.length} MSP row(s)`);
+    }
+
+    public async clickBulkUpdate(): Promise<void> {
+        console.log("Clicking 'Bulk Update' button...");
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(1500);
+        const bulkUpdateBtn = await $("//button[.//bdi[normalize-space()='Bulk Update'] or .//text()='Bulk Update']");
+        await bulkUpdateBtn.waitForDisplayed({ timeout: 15000 });
+        await bulkUpdateBtn.waitForClickable({ timeout: 15000 });
+        await utils.clickWithWait(bulkUpdateBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        console.log("'Bulk Update' clicked");
+    }
+
+    public async selectAllAndClickBulkUpdate(): Promise<void> {
+        await this.selectAllBulkSnapshotRows();
+        await this.clickBulkUpdate();
+    }
+
+    private async openBulkDropdownByLabel(label: string): Promise<void> {
+        const input = await $(`(//label[normalize-space()='${label}:' or normalize-space()='${label}']/following::input)[1]`);
+        await input.waitForDisplayed({ timeout: 15000 });
+        await utils.clickWithWait(input);
+        await browser.pause(400);
+        const opened = await browser.execute(() => {
+            const lists = Array.from(document.querySelectorAll<HTMLElement>(
+                "ul[role='listbox'], div[role='listbox'], .sapMSelectList, .sapMPopover"
+            ));
+            return lists.some(l => {
+                const r = l.getBoundingClientRect();
+                return r.width > 0 && r.height > 0;
+            });
+        });
+        if (!opened) {
+            await browser.keys(["F4"]);
+            await browser.pause(500);
+        }
+    }
+
+    private async pickFirstSafeSubStage(): Promise<string> {
+        const picked = await browser.execute(() => {
+            const items = Array.from(document.querySelectorAll<HTMLElement>(
+                "li[role='option'], div[role='option'], li.sapMSelectListItem, li[role='menuitem']"
+            ));
+            for (const el of items) {
+                const t = (el.innerText || el.textContent || "").trim();
+                const r = el.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0 && t && t.toLowerCase() !== "delete") {
+                    el.click();
+                    return t;
+                }
+            }
+            return "";
+        }) as string;
+        if (!picked) {
+            throw new Error("No safe Process Sub-Stage option found");
+        }
+        return picked;
+    }
+
+    public async fillBulkUpdateDialog(): Promise<void> {
+        console.log("Filling Bulk Update dialog...");
+        await utils.switchToIframe(this.mspIframe);
+        await browser.pause(2000);
+
+        const stages = mspTestData.bulkUpdate.processStages;
+        const regions = mspTestData.bulkUpdate.regionsOnChart;
+        const deferrals = mspTestData.bulkUpdate.deferralFollowups;
+
+        const stage = stages[Math.floor(Math.random() * stages.length)];
+        const region = regions[Math.floor(Math.random() * regions.length)];
+        const deferral = deferrals[Math.floor(Math.random() * deferrals.length)];
+        const planningYear = `${2030 + Math.floor(Math.random() * 6)}`;
+        const exchangeRateUSD = `${Math.floor(Math.random() * 99) + 1}`;
+
+        const pyInput = await $(`(//label[normalize-space()='Planning Year:' or normalize-space()='Planning Year']/following::input)[1]`);
+        await pyInput.waitForDisplayed({ timeout: 15000 });
+        await utils.setValueWithWait(pyInput, planningYear);
+        await browser.keys(["Tab"]);
+        await browser.pause(400);
+
+        const erInput = await $(`(//label[normalize-space()='Exchange Rate to USD:' or normalize-space()='Exchange Rate to USD']/following::input)[1]`);
+        await utils.setValueWithWait(erInput, exchangeRateUSD);
+        await browser.keys(["Tab"]);
+        await browser.pause(400);
+
+        await this.openBulkDropdownByLabel("Region On Chart");
+        await utils.clickPopupMenuItem(region);
+        await browser.pause(500);
+
+        await this.openBulkDropdownByLabel("Process Stage");
+        await utils.clickPopupMenuItem(stage);
+        await browser.pause(1000);
+
+        await this.openBulkDropdownByLabel("Process Sub-Stage");
+        const processSubStage = await this.pickFirstSafeSubStage();
+        await browser.pause(500);
+
+        await this.openBulkDropdownByLabel("Deferral Follow-up");
+        await utils.clickPopupMenuItem(deferral);
+        await browser.pause(500);
+
+        MSPDetailView.bulkUpdateValues = {
+            planningYear,
+            exchangeRateUSD,
+            regionOnChart: region,
+            processStage: stage,
+            processSubStage,
+            deferralFollowup: deferral
+        };
+        console.log("Bulk Update values:", JSON.stringify(MSPDetailView.bulkUpdateValues));
+    }
+
+    public async saveBulkUpdate(): Promise<void> {
+        console.log("Saving Bulk Update...");
+        await utils.switchToIframe(this.mspIframe);
+        const saveBtn = await $("//footer//button[.//bdi[normalize-space()='Save']]");
+        await saveBtn.waitForDisplayed({ timeout: 15000 });
+        await saveBtn.waitForClickable({ timeout: 15000 });
+        await utils.clickWithWait(saveBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        const okBtn = await $("//header[.//text()='Success']/following::button[.//bdi[normalize-space()='OK'] or .//text()='OK']");
+        if (await okBtn.isDisplayed().catch(() => false)) {
+            console.log("Success OK appeared → clicking");
+            await utils.clickWithWait(okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+        } else {
+            console.log("No Success OK appeared after Save (dialog may have closed directly)");
+        }
+        console.log("Bulk Update saved");
+    }
+
+    public async fillAndSaveBulkUpdate(): Promise<void> {
+        await this.fillBulkUpdateDialog();
+        await this.saveBulkUpdate();
+    }
+
+    public async verifyBulkUpdateApplied(): Promise<void> {
+        console.log("\n=== Verifying Bulk Update applied to each MSP item ===");
+        const expected = MSPDetailView.bulkUpdateValues;
+        if (!expected) {
+            throw new Error("No bulkUpdateValues stored; run fillAndSaveBulkUpdate first");
+        }
+        const snapshots = MSPDetailView.bulkSnapshots;
+        if (!snapshots.length) {
+            throw new Error("No bulkSnapshots captured; nothing to verify");
+        }
+
+        const norm = (s: string) => (s || "").trim().toLowerCase();
+        const fieldList: Array<keyof typeof expected> = [
+            "planningYear",
+            "exchangeRateUSD",
+            "regionOnChart",
+            "processStage",
+            "processSubStage",
+            "deferralFollowup"
+        ];
+
+        type Mismatch = { displayId: string; shortDesc: string; field: string; expected: string; actual: string };
+        const mismatches: Mismatch[] = [];
+
+        for (const snap of snapshots) {
+            if (!snap.displayId) {
+                console.log(`Skipping snapshot with empty displayId (shortDesc='${snap.shortDesc}')`);
+                continue;
+            }
+            console.log(`\n--- Verifying MSP ${snap.displayId} (${snap.shortDesc}) ---`);
+            await utils.switchToIframe(this.mspIframe);
+            await browser.pause(1500);
+            await this.searchNewlyCreated(snap.displayId);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+
+            await utils.switchToIframe(this.mspIframe);
+            const navLink = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
+            await navLink.waitForDisplayed({ timeout: 20000 });
+            await utils.clickWithWait(navLink);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(6000);
+
+            const actual = await MSPDetailView.readBulkUpdatedFields();
+
+            for (const f of fieldList) {
+                const exp = norm(expected[f]);
+                const act = norm(actual[f]);
+                const matches = exp === act || (exp.length > 0 && act.includes(exp)) || (act.length > 0 && exp.includes(act));
+                if (!matches) {
+                    mismatches.push({
+                        displayId: snap.displayId,
+                        shortDesc: snap.shortDesc,
+                        field: f,
+                        expected: expected[f],
+                        actual: actual[f]
+                    });
+                    console.log(`  [MISMATCH] ${f}: expected='${expected[f]}' actual='${actual[f]}'`);
+                } else {
+                    console.log(`  [OK]       ${f}: '${actual[f]}'`);
+                }
+            }
+
+            await utils.navigateBack();
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(3000);
+        }
+
+        console.log("\n========== BULK UPDATE VERIFICATION REPORT ==========");
+        if (mismatches.length === 0) {
+            console.log(`\x1b[32mUpdate for all ${snapshots.length} MSP item(s) verified successfully.\x1b[0m`);
+        } else {
+            console.log(`\x1b[31m${mismatches.length} mismatch(es) detected:\x1b[0m`);
+            for (const m of mismatches) {
+                console.log(
+                    `\x1b[31m  - Not updated for ${m.displayId} (${m.shortDesc}): ` +
+                    `field '${m.field}' expected='${m.expected}' actual='${m.actual}'\x1b[0m`
+                );
+            }
+            throw new Error(
+                `Bulk update verification failed: ${mismatches.length} mismatch(es). ` +
+                mismatches.map(m => `${m.displayId}/${m.field}`).join(", ")
+            );
+        }
+        console.log("=====================================================\n");
     }
 }
 export default new MSPListView();
