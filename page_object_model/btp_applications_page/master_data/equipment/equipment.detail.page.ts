@@ -84,6 +84,129 @@ class EquipmentDetailPage {
     private get equipmentHdOkBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
     public superEquipValue!: string;
     public equipHeadValue!: string;
+    public generalInfoValues: Record<string, string> = {};
+    public structureValues: Record<string, string> = {};
+    public componentValues: string[] = [];
+    public groupValues: string[] = [];
+    public templateValues: string[] = [];
+    public classValues: string[] = [];
+    public characteristicValues: string[] = [];
+
+    private async readValueByLabel(label: string, index: number = 1): Promise<string> {
+        try {
+            const input = await $(`(//bdi[normalize-space()='${label}']/ancestor::label/following::input)[${index}]`);
+            if (await input.isExisting()) {
+                const v = await input.getValue();
+                if (v != null && v !== "") return v.trim();
+            }
+        } catch (e) { void e; }
+        try {
+            const ta = await $(`//bdi[normalize-space()='${label}']/ancestor::label/following::textarea[1]`);
+            if (await ta.isExisting()) {
+                const v = await ta.getValue();
+                if (v != null && v !== "") return v.trim();
+            }
+        } catch (e) { void e; }
+        return "";
+    }
+
+    private async captureGeneralInfoValues(): Promise<void> {
+        console.log("Capturing General Information field values for later PDF verification");
+        const singleFieldLabels = [
+            "Inventory Number",
+            "Component Type",
+            "Activation State",
+            "Authorization Group",
+            "Start up date",
+            "Deactivation Date",
+            "Component Regulatory ID",
+            "Comments",
+            "Long Description",
+            "Asset Manufacturer Name",
+            "Part Number",
+            "Model Number",
+            "Serial Number"
+        ];
+        for (const label of singleFieldLabels) {
+            const value = await this.readValueByLabel(label, 1);
+            this.generalInfoValues[label] = value;
+            console.log(`GenInfo | ${label}: ${value}`);
+        }
+        const acqValue = await this.readValueByLabel("Acquisition Value / Currency", 1);
+        const acqCurrency = await this.readValueByLabel("Acquisition Value / Currency", 2);
+        this.generalInfoValues["Acquisition Value"] = acqValue;
+        this.generalInfoValues["Currency"] = acqCurrency;
+        console.log(`GenInfo | Acquisition Value: ${acqValue}`);
+        console.log(`GenInfo | Currency: ${acqCurrency}`);
+    }
+
+    private async readNthLabelValue(label: string, occurrence: number): Promise<string> {
+        try {
+            const input = await $(`(//bdi[normalize-space()='${label}'])[${occurrence}]/ancestor::label/following::input[1]`);
+            if (await input.isExisting()) {
+                const v = await input.getValue();
+                if (v != null && v !== "") return v.trim();
+            }
+        } catch (e) { void e; }
+        return "";
+    }
+
+    private async captureTableCells(headingPrefix: string, sink: string[], sinkLabel: string): Promise<void> {
+        try {
+            const rows = await $$(`//*[starts-with(normalize-space(text()), '${headingPrefix}')]/following::table[1]/tbody/tr[@role='row']`);
+            let rowIdx = 0;
+            for (const row of rows) {
+                const raw = ((await row.getText()) ?? "").trim();
+                if (raw) {
+                    const parts = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+                    for (const p of parts) {
+                        sink.push(p);
+                        console.log(`${sinkLabel} | Row[${rowIdx}]: ${p}`);
+                    }
+                }
+                rowIdx++;
+            }
+            console.log(`${sinkLabel} rows processed: ${rowIdx}`);
+        } catch (e) { void e; }
+    }
+
+    private async captureStructureValues(): Promise<void> {
+        console.log("Capturing Structuring/Component Information/Groups values for later PDF verification");
+        try { await utils.switchToIframe(this.equipmentIframe); } catch (e) { void e; }
+        const superEquipVal = await this.readValueByLabel("Superordinate Equipment", 1);
+        const superEquipTechIdVal = await this.readNthLabelValue("Tech ID", 1);
+        const superEquipDescVal = await this.readValueByLabel("Superordinate Equipment Description", 1);
+        const funcLocVal = await this.readValueByLabel("Functional Location", 1);
+        const funcLocTechIdVal = await this.readNthLabelValue("Tech ID", 2);
+        const funcLocDescVal = await this.readValueByLabel("Functional Location Description", 1);
+        this.structureValues["Superordinate Equipment"] = superEquipVal;
+        this.structureValues["Superordinate Equipment Tech ID"] = superEquipTechIdVal;
+        this.structureValues["Superordinate Equipment Description"] = superEquipDescVal;
+        this.structureValues["Functional Location"] = funcLocVal;
+        this.structureValues["Functional Location Tech ID"] = funcLocTechIdVal;
+        this.structureValues["Functional Location Description"] = funcLocDescVal;
+        console.log(`Structure | Superordinate Equipment: ${superEquipVal}`);
+        console.log(`Structure | Superordinate Equipment Tech ID: ${superEquipTechIdVal}`);
+        console.log(`Structure | Superordinate Equipment Description: ${superEquipDescVal}`);
+        console.log(`Structure | Functional Location: ${funcLocVal}`);
+        console.log(`Structure | Functional Location Tech ID: ${funcLocTechIdVal}`);
+        console.log(`Structure | Functional Location Description: ${funcLocDescVal}`);
+        this.componentValues = [];
+        this.groupValues = [];
+        await this.captureTableCells("Component Information", this.componentValues, "Component");
+        await this.captureTableCells("Groups", this.groupValues, "Group");
+    }
+
+    private async captureAssignmentValues(): Promise<void> {
+        console.log("Capturing Equipment Templates/Classes/Characteristics values for later PDF verification");
+        try { await utils.switchToIframe(this.equipmentIframe); } catch (e) { void e; }
+        this.templateValues = [];
+        this.classValues = [];
+        this.characteristicValues = [];
+        await this.captureTableCells("Equipment Templates", this.templateValues, "Template");
+        await this.captureTableCells("Classes", this.classValues, "Class");
+        await this.captureTableCells("Characteristics", this.characteristicValues, "Characteristic");
+    }
 
     async verifyOnEquipmentDetailPage(expectedName?: string): Promise<boolean> {
         try {
@@ -183,6 +306,7 @@ class EquipmentDetailPage {
             await browser.pause(2000);
         }
         await browser.pause(5000); 
+        await this.captureGeneralInfoValues();
         await this.saveBtn.click();
         await this.successOkBtn.waitForClickable({ timeout: 30000 });
         await this.successOkBtn.click();
@@ -334,9 +458,10 @@ class EquipmentDetailPage {
                 console.log("Could not assign a component in this round - exiting loop");
                 break;
             }
-    }
+        }
 
-    console.log("Equipment assigned");
+        console.log("Equipment assigned");
+        await this.captureStructureValues();
     }
 
     async assignEquipmentTemplate(noOfEquipment: number, autoAssign: boolean): Promise<void> {
@@ -360,6 +485,7 @@ class EquipmentDetailPage {
         await utils.clickWithWait($('//header[.//text()="Success"]/following::button[.//bdi[text()="OK"]]'));
 
         await this.equipmentAssignBtn.waitForClickable({ timeout: 30000 });
+        await this.captureAssignmentValues();
     }
 
     async assignEquipmentClass(noOfClasses: number, autoAssign: boolean): Promise<void> {
@@ -370,6 +496,7 @@ class EquipmentDetailPage {
 
         if (autoAssign) {
             console.log("Auto-assigning classes, skipping manual class assignment.");
+            await this.captureAssignmentValues();
             return;
         }
         await browser.pause(4000);
@@ -386,6 +513,7 @@ class EquipmentDetailPage {
         await utils.clickWithWait($('//header[.//text()="Assign Classes"]/following::button[.//bdi[text()="Ok"]]'));
         await browser.pause(2000);
         await utils.clickWithWait($('//header[.//text()="Success"]/following::button[.//bdi[text()="OK"]]'));
+        await this.captureAssignmentValues();
     }
 
     async assignCharacteristics(noOfChar: number): Promise<void> {
@@ -431,6 +559,7 @@ class EquipmentDetailPage {
         const updatedChar = await this.noOfCharMDA.getText();
         await utils.getAssignedValue(updatedChar);
         console.log("Assigned charactertics : "+updatedChar);
+        await this.captureAssignmentValues();
     }
 
     async verifyAssetIntelligence() {
@@ -491,10 +620,12 @@ class EquipmentDetailPage {
     async downloadAndVerifyPDF() {
         console.log("Downloading PDF and verifying its content");
         await utils.switchToIframe(this.equipmentIframe);
-        const { name: equipmentName } = await utils.getEntityNameAndId();
+        const { name: equipmentName, id: actualId } = await utils.getEntityNameAndId();
         this.equipmentHeadValue = equipmentName;
+        this.displayID = actualId;
+        console.log(`Final → Equipment="${equipmentName}" | DisplayID="${actualId}"`);
         await utils.clickWithWait(this.downloadReport);
-        let expectedFilters: string[] = [];
+        const expectedFilters: string[] = [];
         try {
             const info = await $("//*[contains(text(),'Failed to export')]");
             await info.waitForDisplayed({ timeout: 7000 });
@@ -518,13 +649,85 @@ class EquipmentDetailPage {
         console.log("File downloaded at:", filePath);
         const fileName = path.basename(filePath);
         console.log("Downloaded file name:", fileName);
-        expect(fileName).toContain(this.equipmentHeadValue);
-        console.log("File name contains Equipment header value");
         const pdfContent = await utils.extractTextFromPDF(filePath);
         console.log("Extracted PDF content:", pdfContent);
-        expect(pdfContent).toContain(this.equipmentHeadValue);
-        console.log("PDF content contains Equipment header value");
-        expect(pdfContent).toContain('Table of Content');
+        const stripHidden = (s: string) => (s ?? "")
+            .normalize('NFKC')
+            .replace(/[\u200B-\u200D\uFEFF]/g, '')
+            .replace(/\u00A0/g, ' ');
+        const normalizeForCompare = (s: string) => stripHidden(s).replace(/\s+/g, ' ').trim().toLowerCase();
+        const normalizedPdf = normalizeForCompare(pdfContent);
+        const normalizedPdfNoSpace = normalizedPdf.replace(/\s+/g, '');
+        const normalizedFileName = stripHidden(fileName).toLowerCase();
+        const missingFields: string[] = [];
+        const checkOne = (label: string, value: string) => {
+            if (!value) {
+                console.log(`PDF check | ${label}: skipped (empty)`);
+                return;
+            }
+            const needle = normalizeForCompare(value);
+            if (!needle) {
+                console.log(`PDF check | ${label}: skipped (empty after normalize)`);
+                return;
+            }
+            if (normalizedPdf.includes(needle)) {
+                console.log(`PDF check | ${label}: FOUND "${value}"`);
+                return;
+            }
+            const needleNoSpace = needle.replace(/\s+/g, '');
+            if (needleNoSpace && normalizedPdfNoSpace.includes(needleNoSpace)) {
+                console.log(`PDF check | ${label}: FOUND (space-insensitive) "${value}"`);
+                return;
+            }
+            const words = needle.split(' ').filter(w => w.length > 0);
+            if (words.length > 1 && words.every(w => normalizedPdf.includes(w))) {
+                console.log(`PDF check | ${label}: FOUND (fuzzy, all words present) "${value}"`);
+                return;
+            }
+            console.log(`PDF check | ${label}: MISSING "${value}"`);
+            missingFields.push(`${label}="${value}"`);
+        };
+        const checkFileNameContains = (label: string, value: string) => {
+            if (!value) {
+                console.log(`FileName check | ${label}: skipped (empty)`);
+                return;
+            }
+            const needle = stripHidden(value).toLowerCase();
+            if (normalizedFileName.includes(needle)) {
+                console.log(`FileName check | ${label}: FOUND "${value}"`);
+            } else {
+                console.log(`FileName check | ${label}: MISSING "${value}"`);
+                missingFields.push(`FileName.${label}="${value}"`);
+            }
+        };
+        checkFileNameContains("EquipmentName", this.equipmentHeadValue);
+        checkOne("PDF.TableOfContent", "Table of Content");
+        checkOne("PDF.EquipmentName", this.equipmentHeadValue);
+        checkOne("PDF.EquipmentID", this.displayID);
+        for (const [label, value] of Object.entries(this.generalInfoValues)) {
+            checkOne(`GeneralInfo.${label}`, value);
+        }
+        for (const [label, value] of Object.entries(this.structureValues)) {
+            checkOne(`Structure.${label}`, value);
+        }
+        for (let i = 0; i < this.componentValues.length; i++) {
+            checkOne(`Component[${i}]`, this.componentValues[i]);
+        }
+        for (let i = 0; i < this.groupValues.length; i++) {
+            checkOne(`Group[${i}]`, this.groupValues[i]);
+        }
+        for (let i = 0; i < this.templateValues.length; i++) {
+            checkOne(`Template[${i}]`, this.templateValues[i]);
+        }
+        for (let i = 0; i < this.classValues.length; i++) {
+            checkOne(`Class[${i}]`, this.classValues[i]);
+        }
+        for (let i = 0; i < this.characteristicValues.length; i++) {
+            checkOne(`Characteristic[${i}]`, this.characteristicValues[i]);
+        }
+        if (missingFields.length > 0) {
+            throw new Error(`PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}`);
+        }
         console.log("PDF content verification completed successfully");
     }
 
@@ -551,82 +754,109 @@ class EquipmentDetailPage {
         const newHandles = await browser.getWindowHandles();
         const newTab = newHandles.find(h => !oldHandles.includes(h));
         await browser.switchToWindow(newTab!);
-        await browser.waitUntil(
-            async () => (await browser.execute(() => document.readyState)) === 'complete',
-            { timeout: 30000 }
-        );
-        await utils.waitForBusyIndicatorToDisappear();
-        const frame = await $('//iframe[@data-help-id="application-cml-manage"]');
-        await frame.waitForExist({ timeout: 30000 });
-        await frame.waitForDisplayed({ timeout: 30000 });
-        await utils.switchToIframe(frame);
-        console.log("Switched to CML iframe");
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(3000);
-        const cmlElem = await $("(//h2//span)[2]");
-        await cmlElem.waitForDisplayed({ timeout: 30000 });
-        const equipInCML = await $("(//header//*[@role='heading']/span)[1]");
-        await equipInCML.waitForDisplayed({ timeout: 20000 });
-        await browser.waitUntil(async () => {
-            return (await equipInCML.getText()).trim().length > 0;
-        }, { timeout: 10000 });
-        const equipInCMLText = await equipInCML.getText();
-        console.log("Equipment in CML:", equipInCMLText);
-        let displayIdInCMLText = "";
-        await browser.waitUntil(async () => {
-            const candidates = await $$("//header//span");
-            for (const el of candidates) {
-                try {
-                    if (!(await el.isDisplayed())) continue;
-                    const txt = ((await el.getText()) ?? "").trim();
-                    if (txt.startsWith("EQUI")) {
-                        displayIdInCMLText = txt;
-                        return true;
-                    }
-                } catch { /* stale, continue */ }
-            }
-            return false;
-        }, { timeout: 20000, interval: 500, timeoutMsg: "EQUI display id not found in CML header" });
-        console.log("Display ID in CML:", displayIdInCMLText);
-        if (!equipInCMLText || !displayIdInCMLText) {
-            throw new Error("CML header values are empty");
-        }
-        await utils.assertTextEquals(equipInCML, this.equipmentHeadValue);
-        console.log("Equipment in CML matches header value");
-        if (displayIdInCMLText !== actualId) {
-            throw new Error(`Display ID mismatch in CML. Expected: ${actualId}, Found: ${displayIdInCMLText}`);
-        }
-        console.log("Display ID in CML matches header value");
-        let finalValue = 0;
-        let lastSeenText = "";
+        const errors: string[] = [];
         try {
             await browser.waitUntil(
-                async () => {
-                    let text = (await cmlElem.getText()) ?? "";
-                    if (!text) text = (await cmlElem.getAttribute("innerText")) ?? "";
-                    lastSeenText = text;
-                    const value = await utils.getAssignedValue(text);
-                    finalValue = value;
-                    return value > 0;
-                },
-                { timeout: 20000, interval: 1000 }
+                async () => (await browser.execute(() => document.readyState)) === 'complete',
+                { timeout: 30000 }
             );
-            console.log(`SUCCESS CML value became ${finalValue}`);
+            await utils.waitForBusyIndicatorToDisappear();
+            const frame = await $('//iframe[@data-help-id="application-cml-manage"]');
+            await frame.waitForExist({ timeout: 30000 });
+            await frame.waitForDisplayed({ timeout: 30000 });
+            await utils.switchToIframe(frame);
+            console.log("Switched to CML iframe");
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(3000);
+            const cmlElem = await $("(//h2//span)[2]");
+            await cmlElem.waitForDisplayed({ timeout: 30000 });
+            const equipInCML = await $("(//header//*[@role='heading']/span)[1]");
+            await equipInCML.waitForDisplayed({ timeout: 20000 });
+            try {
+                await browser.waitUntil(async () => {
+                    return (await equipInCML.getText()).trim().length > 0;
+                }, { timeout: 10000 });
+            } catch (e) {
+                errors.push(`Equipment header text in CML did not appear: ${(e as Error).message}`);
+            }
+            const equipInCMLText = await equipInCML.getText();
+            console.log("Equipment in CML:", equipInCMLText);
+            let displayIdInCMLText = "";
+            try {
+                await browser.waitUntil(async () => {
+                    const candidates = await $$("//header//span");
+                    for (const el of candidates) {
+                        try {
+                            if (!(await el.isDisplayed())) continue;
+                            const txt = ((await el.getText()) ?? "").trim();
+                            if (txt.startsWith("EQUI")) {
+                                displayIdInCMLText = txt;
+                                return true;
+                            }
+                        } catch { /* stale, continue */ }
+                    }
+                    return false;
+                }, { timeout: 20000, interval: 500, timeoutMsg: "EQUI display id not found in CML header" });
+            } catch (e) {
+                errors.push((e as Error).message);
+            }
+            console.log("Display ID in CML:", displayIdInCMLText);
+            if (!equipInCMLText || !displayIdInCMLText) {
+                errors.push("CML header values are empty");
+            }
+            try {
+                await utils.assertTextEquals(equipInCML, this.equipmentHeadValue);
+                console.log("Equipment in CML matches header value");
+            } catch (e) {
+                errors.push(`Equipment in CML mismatch: ${(e as Error).message}`);
+            }
+            if (displayIdInCMLText && displayIdInCMLText !== actualId) {
+                errors.push(`Display ID mismatch in CML. Expected: ${actualId}, Found: ${displayIdInCMLText}`);
+            } else if (displayIdInCMLText) {
+                console.log("Display ID in CML matches header value");
+            }
+            let finalValue = 0;
+            let lastSeenText = "";
+            try {
+                await browser.waitUntil(
+                    async () => {
+                        let text = (await cmlElem.getText()) ?? "";
+                        if (!text) text = (await cmlElem.getAttribute("innerText")) ?? "";
+                        lastSeenText = text;
+                        const value = await utils.getAssignedValue(text);
+                        finalValue = value;
+                        return value > 0;
+                    },
+                    { timeout: 20000, interval: 1000 }
+                );
+                console.log(`SUCCESS CML value became ${finalValue}`);
+            } catch (e) {
+                void e;
+                console.log(`WARNING → CML value is still 0 after waiting`);
+                console.log(`FINAL → CML TEXT: ${lastSeenText}`);
+            }
+            let cmlText = (await cmlElem.getText()) ?? "";
+            if (!cmlText) {
+                cmlText = (await cmlElem.getAttribute("innerText")) ?? "";
+            }
+            console.log("FINAL CML TEXT:", cmlText);
+            const CML = await utils.getAssignedValue(cmlText);
+            console.log("Assigned CMLs:", CML);
+            console.log("CML verification completed successfully");
         } catch (e) {
-            console.log(`WARNING → CML value is still 0 after waiting`);
-            console.log(`FINAL → CML TEXT: ${lastSeenText}`);
+            errors.push(`CML verification failed: ${(e as Error).message}`);
+        } finally {
+            try {
+                await browser.closeWindow();
+            } catch (e) { void e; }
+            try {
+                await browser.switchToWindow(parentTab);
+                console.log("Returned to parent tab");
+            } catch (e) { void e; }
         }
-        let cmlText = (await cmlElem.getText()) ?? "";
-        if (!cmlText) {
-            cmlText = (await cmlElem.getAttribute("innerText")) ?? "";
+        if (errors.length > 0) {
+            throw new Error(`CML Verification Failed:\n${errors.join("\n")}`);
         }
-        console.log("FINAL CML TEXT:", cmlText);
-        const CML = await utils.getAssignedValue(cmlText);
-        console.log("Assigned CMLs:", CML);
-        console.log("CML verification completed successfully");
-        await browser.closeWindow();
-        await browser.switchToWindow(parentTab);
-        console.log("Returned to parent tab");
     }
 
     async deleteEquipment(){

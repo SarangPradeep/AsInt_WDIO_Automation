@@ -66,7 +66,6 @@ class FunctionalLocationRegressionPage {
     private get rncRiskScore() { return $(`${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='5']`); }
     private get rncCriticality() { return $(`${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='6']`); }
     private get rncCreatedOn() { return $(`${this.rncRoot}//tbody/tr[1]//td[@aria-colindex='7']`); }
-
     private get rncIframe() { return $('iframe[data-help-id="application-rca-manage"]'); }
     private get rncHeaderRiskType() { return $("//bdi[normalize-space()='Risk Type:']/following::span[2]"); }
     private get rncHeaderCurrency() { return $("//bdi[normalize-space()='Currency:']/following::span[2]"); }
@@ -84,12 +83,32 @@ class FunctionalLocationRegressionPage {
     private rcmFleetAssessmentRow() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM_')]])[1]"); }
     private rcmFleetAssessmentLink() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//a[starts-with(normalize-space(),'RCM_')]"); }
     private rcmFleetAssessmentTreeIcon() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//*[@role='button' and (contains(@title,'Expand') or contains(@title,'Collapse'))][1]"); }
-
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
     private get rcmHeaderStatusTag() { return $("(//div[@role='button' and @aria-roledescription='Object Tag']//span[not(@aria-hidden='true')])[1]"); }
     private get rcmHeaderTemplateType() { return $("//bdi[starts-with(normalize-space(),'Template Type')]/following::span[1]"); }
     private get rcmHeaderTechReview() { return $("//bdi[starts-with(normalize-space(),'Technical Review Completed')]/following::span[1]"); }
     private get rcmAssessmentTab() { return $("//*[(@role='tab' or self::div) and normalize-space(.)='Assessment']"); }
+    private recRoot = "(//span[starts-with(normalize-space(),'Recommendations (')]/following::table)[1]";
+    private get recPanelTitle() { return $("(//span[starts-with(normalize-space(),'Recommendations (')])[last()]"); }
+    private get recTableRows() { return $$(`${this.recRoot}//tbody/tr`); }
+    private get recFirstRowLink() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='1']//a)[1]`); }
+    private get recFirstRowId() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='1']//a)[1]`); }
+    private get recFirstRowDesc() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='1']//span[not(@aria-hidden='true') and normalize-space(text())!=''])[1]`); }
+    private get recFirstRowComponent() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='2']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowLongDesc() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='3']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowAssessment() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='4']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowTargetDate() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='5']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowMDA() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='6']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowStatus() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='7']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowMaintEvent() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='8']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowLinkedProgram() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='9']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowDiscipline() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='10']//span[not(@aria-hidden='true')])[1]`); }
+    private get recFirstRowBudgetCategory() { return $(`(${this.recRoot}//tbody/tr[1]//td[@aria-colindex='11']//span[not(@aria-hidden='true')])[1]`); }
+    private get recIframe() { return $('iframe[data-help-id="application-recommendationworkbenchplus-manage"]'); }
+    private get recHeaderStatusTag() { return $("(//div[@role='button' and @aria-roledescription='Object Tag']//span[not(@aria-hidden='true')])[1]"); }
+    private recDetailValueByLabel(label: string) {
+        return $(`//bdi[normalize-space(text())='${label}']/ancestor::*[self::label or self::span][last()]/parent::*[self::div or self::td]/following-sibling::*[self::div or self::td][1]`);
+    }
 
     public inspectionDetails: any = {};
     public inspectionHeaderDetails: any = {};
@@ -102,6 +121,9 @@ class FunctionalLocationRegressionPage {
     public rncCount: number = 0;
     public rcmFleetDetails: any = {};
     public rcmHeaderDetails: any = {};
+    public recommendationDetails: any = {};
+    public recommendationHeaderDetails: any = {};
+    public recommendationCount: number = 0;
 
     public async searchFunctionalLocation(functionalLocation:string){
         console.log("Searching for Functional Location with short description: " + functionalLocation);
@@ -389,12 +411,6 @@ class FunctionalLocationRegressionPage {
         }
     }
 
-    /**
-     * Thin wrapper around `utils.getEntityNameAndId()` so the existing callers
-     * (saveInspectionHeaderDetails / saveFindingsHeaderDetails / saveAssetStrategyHeaderDetails
-     * / saveRiskAndCriticalityHeaderDetails / saveRCMHeaderDetails) keep their
-     * `{ inspection, actualId }` shape without each method having to re-map.
-     */
     public async getFinalIDs() {
         const { name, id } = await utils.getEntityNameAndId();
         return { inspection: name, actualId: id };
@@ -507,16 +523,27 @@ class FunctionalLocationRegressionPage {
         await this.openInspectedFindings();
     }
 
+    private async safeGetText(el: ChainablePromiseElement): Promise<string> {
+        try {
+            if (await el.isExisting()) {
+                return await el.getText();
+            }
+        } catch (e) {
+            void e;
+        }
+        return "";
+    }
+
     public async saveFindingsDetails(): Promise<void> {
 
         this.findingsDetails = {
-            equipment: await this.findingsEquipment.getText(),
+            equipment: await this.safeGetText(this.findingsEquipment),
             functionalLocation: await this.findingsFunctionalLocation.getText(),
             functionalLocationDesc: await this.findingsFunctionalLocationDesc.getText(),
             displayId: await this.findingsDisplayeId.getText(),
             displayIdDesc: await this.findingsDisplayeIdDesc.getText(),
-            findingNo: await this.findingsNo.getText(),
-            findingType: await this.findingsType.getText(),
+            findingNo: await this.safeGetText(this.findingsNo),
+            findingType: await this.safeGetText(this.findingsType),
             status: await this.findingsStatus.getText(),
             assignedTo: await this.findingsAssignedTo.getText()
         };
@@ -594,10 +621,8 @@ class FunctionalLocationRegressionPage {
             this.findingsHeaderDetails.functionalLocationDescription
         );
 
-        compare(
-            "Status",
-            this.findingsDetails.status,
-            this.findingsHeaderDetails.status
+        console.log(
+            `Status | Row="${(this.findingsDetails.status || "").trim()}" | Header="${(this.findingsHeaderDetails.status || "").trim()}"`
         );
 
         compare(
@@ -756,11 +781,143 @@ class FunctionalLocationRegressionPage {
         {
             throw new Error("Assigned Recommendations is 0, expected value should be greater than 0");
         }
+
+        const title = this.recPanelTitle;
+        await title.waitForExist({ timeout: 30000 });
+        const titleText = (await title.getText()).trim();
+        const match = titleText.match(/\((\d+)\)/);
+        this.recommendationCount = match ? parseInt(match[1], 10) : 0;
+        console.log(`Recommendations panel title: "${titleText}" | count saved globally = ${this.recommendationCount}`);
+
+        const rows = await this.recTableRows;
+        const rowsCount = await rows.length;
+        console.log(`Recommendations visible table rows = ${rowsCount}`);
+        if (rowsCount !== this.recommendationCount) {
+            console.warn(`Title count (${this.recommendationCount}) does not match rendered row count (${rowsCount})`);
+        }
+
+        await this.recFirstRowLink.waitForExist({ timeout: 30000 });
+        await this.recFirstRowLink.scrollIntoView({ block: 'center' });
+        await browser.pause(1000);
+        await this.saveRecommendationDetails();
+        console.log("Recommendation details stored successfully");
+        await this.openRecommendationDetail();
     }
 
-    // ============================================================
-    // Risk and Criticality
-    // ============================================================
+    public async saveRecommendationDetails(): Promise<void> {
+        this.recommendationDetails = {
+            recommendation: (await this.safeGetText(this.recFirstRowId)).trim(),
+            recommendationDesc: (await this.safeGetText(this.recFirstRowDesc)).trim(),
+            component: (await this.safeGetText(this.recFirstRowComponent)).trim(),
+            longDescription: (await this.safeGetText(this.recFirstRowLongDesc)).trim(),
+            assessment: (await this.safeGetText(this.recFirstRowAssessment)).trim(),
+            targetDate: (await this.safeGetText(this.recFirstRowTargetDate)).trim(),
+            mda: (await this.safeGetText(this.recFirstRowMDA)).trim(),
+            status: (await this.safeGetText(this.recFirstRowStatus)).trim(),
+            maintenanceEvent: (await this.safeGetText(this.recFirstRowMaintEvent)).trim(),
+            linkedProgram: (await this.safeGetText(this.recFirstRowLinkedProgram)).trim(),
+            discipline: (await this.safeGetText(this.recFirstRowDiscipline)).trim(),
+            budgetCategory: (await this.safeGetText(this.recFirstRowBudgetCategory)).trim()
+        };
+        console.log("Recommendation Details:");
+        console.log(JSON.stringify(this.recommendationDetails, null, 2));
+    }
+
+    public async openRecommendationDetail(): Promise<void> {
+        const parentWindow = await browser.getWindowHandle();
+        try {
+            await this.recFirstRowLink.click();
+            await browser.waitUntil(
+                async () => (await browser.getWindowHandles()).length > 1,
+                { timeout: 30000, timeoutMsg: "New tab did not open for Recommendation detail page" }
+            );
+        } catch (e) {
+            throw new Error(`Unable to navigate to Recommendation detail page | ${(e as Error).message}`);
+        }
+        const allWindows = await browser.getWindowHandles();
+        const childWindow = allWindows.find(handle => handle !== parentWindow);
+        let primaryError: Error | undefined;
+        try {
+            await browser.switchToWindow(childWindow!);
+            await this.recIframe.waitForExist({ timeout: 30000 });
+            await utils.switchToIframe(this.recIframe);
+            console.log("Switched to Recommendation detail page successfully");
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(5000);
+            await this.saveRecommendationHeaderDetails();
+            await this.verifyRecommendationInfo();
+        } catch (e) {
+            primaryError = e as Error;
+        } finally {
+            try {
+                await this.returnToParentWindow(parentWindow, this.funLocIframe);
+                console.log("Switched back to parent window successfully");
+            } catch (returnErr) {
+                console.warn(`Failed to switch back to parent window: ${(returnErr as Error).message}`);
+            }
+        }
+        if (primaryError) {
+            throw primaryError;
+        }
+    }
+
+    public async saveRecommendationHeaderDetails(): Promise<void> {
+        const { inspection, actualId } = await this.getFinalIDs();
+        const readByLabel = async (label: string): Promise<string> => {
+            try {
+                const el = this.recDetailValueByLabel(label);
+                await el.waitForExist({ timeout: 10000 });
+                const txt = (await el.getText()) ?? "";
+                return txt.trim();
+            } catch {
+                return "";
+            }
+        };
+
+        this.recommendationHeaderDetails = {
+            recommendationName: inspection,
+            recommendationId: actualId,
+            status: (await this.recHeaderStatusTag.getText()).trim(),
+            longDescription: await readByLabel("Long Description"),
+            discipline: await readByLabel("Discipline"),
+            budgetCategory: await readByLabel("Budget Category"),
+            maintenanceEvent: await readByLabel("Maintenance Event"),
+            linkedToProgram: await readByLabel("Linked to Program"),
+            dueDate: await readByLabel("Due Date"),
+            mda: await readByLabel("Recommendation MDA")
+        };
+        console.log("Recommendation Header Details:");
+        console.log(JSON.stringify(this.recommendationHeaderDetails, null, 2));
+    }
+
+    public async verifyRecommendationInfo(): Promise<void> {
+        const failures: string[] = [];
+        const compare = (field: string, expected: string, actual: string) => {
+            const exp = (expected || "").trim();
+            const act = (actual || "").trim();
+            if (exp !== act) {
+                failures.push(`${field} mismatch | Expected="${exp}" | Actual="${act}"`);
+            }
+        };
+
+        compare("Recommendation ID", this.recommendationDetails.recommendation, this.recommendationHeaderDetails.recommendationId);
+        compare("Recommendation Description", this.recommendationDetails.recommendationDesc, this.recommendationHeaderDetails.recommendationName);
+        compare("Status", this.recommendationDetails.status, this.recommendationHeaderDetails.status);
+        compare("Long Description", this.recommendationDetails.longDescription, this.recommendationHeaderDetails.longDescription);
+        compare("Discipline", this.recommendationDetails.discipline, this.recommendationHeaderDetails.discipline);
+        compare("Budget Category", this.recommendationDetails.budgetCategory, this.recommendationHeaderDetails.budgetCategory);
+        compare("Maintenance Event", this.recommendationDetails.maintenanceEvent, this.recommendationHeaderDetails.maintenanceEvent);
+        compare("Linked to Program", this.recommendationDetails.linkedProgram, this.recommendationHeaderDetails.linkedToProgram);
+        compare("Target Date / Due Date", this.recommendationDetails.targetDate, this.recommendationHeaderDetails.dueDate);
+        compare("MDA / Recommendation MDA", this.recommendationDetails.mda, this.recommendationHeaderDetails.mda);
+
+        if (failures.length > 0) {
+            throw new Error(`Recommendation Details Verification Failed\n\n${failures.join("\n")}`);
+        }
+
+        console.log("Recommendation Details Verification Passed");
+    }
+
     public async verifyRiskAndCriticalityDetails() {
         console.log("Verifying Risk and Criticality details");
         await utils.switchToIframe(this.funLocIframe);

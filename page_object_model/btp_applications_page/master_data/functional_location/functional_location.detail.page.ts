@@ -134,6 +134,14 @@ class functionalLocationDetailView {
     public superFuncLocValue!: string;
     public funcLocHeadValue!: string;
     public displayID!: string;
+    public funcLocDescValue: string = "";
+    public generalInfoValues: Record<string, string> = {};
+    public structureValues: Record<string, string> = {};
+    public componentValues: string[] = [];
+    public groupValues: string[] = [];
+    public templateValues: string[] = [];
+    public classValues: string[] = [];
+    public characteristicValues: string[] = [];
 
     public async verifyHeader(): Promise<void> {
         console.log("Verifying Functional Location name");
@@ -149,6 +157,8 @@ class functionalLocationDetailView {
         console.log("Editing header's Information");
         await utils.clickWithWait(this.funLocEditHeader);
         await utils.setValueWithWait(this.funLocDescEditHeader,funcLocTestData.headerInfoEdit.funLocDesc);
+        this.funcLocDescValue = funcLocTestData.headerInfoEdit.funLocDesc;
+        console.log(`Header | Functional Location Description: ${this.funcLocDescValue}`);
         await utils.clickWithWait(this.funLocCategoryEditHeader);
         await this.funLocCategory.waitForDisplayed({ timeout: 30000 });
         await this.funLocCtgChoose.scrollIntoView();
@@ -243,16 +253,16 @@ class functionalLocationDetailView {
         console.log("Cost Center : "+costCenter)
         const bussinessArea = await utils.getValueWithWait(this.bussArea);
         console.log("Bussiness Area : "+bussinessArea)
-        // await utils.clickWithWait(this.planPlant);
-        // await this.planPlantBox.waitForDisplayed({ timeout: 30000 });
-        // try {
-        //     await this.planPlantSelect.waitForDisplayed({ timeout: 30000 });
-        // } catch {
-        //     await utils.clickWithWait(await $("//footer//bdi[text()='Cancel']"));
-        //     throw new Error("Plan Plant Select not displayed");
-        // }
-        // await utils.clickWithWait(this.planPlantSelect,2000);
-        // await utils.clickWithWait(this.planPlantSave,1000);
+        await utils.clickWithWait(this.planPlant);
+        await this.planPlantBox.waitForDisplayed({ timeout: 30000 });
+        try {
+            await this.planPlantSelect.waitForDisplayed({ timeout: 30000 });
+        } catch {
+            await utils.clickWithWait(await $("//footer//bdi[text()='Cancel']"));
+            throw new Error("Plan Plant Select not displayed");
+        }
+        await utils.clickWithWait(this.planPlantSelect,2000);
+        await utils.clickWithWait(this.planPlantSave,1000);
         await utils.clickWithWait(this.planGrp);
         await this.planGrpBox.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.planGrpSelect,2000);
@@ -261,11 +271,91 @@ class functionalLocationDetailView {
         await this.ctgProfileBox.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.CtgProfileSelect,2000);
         await utils.clickWithWait(this.CtgProfileSave,1000);
+        await this.captureGeneralInfoValues();
         await this.infoSave.scrollIntoView();
         await utils.clickWithWait(this.infoSave,1000);
         await this.infoSuccUpdate.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.infoUpdateOK);
         console.log("General Information Edited and verified");
+    }
+
+    private async readValueByLabel(label: string, index: number = 1): Promise<string> {
+        try {
+            const input = await $(`(//bdi[normalize-space()='${label}']/ancestor::label/following::input)[${index}]`);
+            if (await input.isExisting()) {
+                const v = await input.getValue();
+                if (v != null && v !== "") return v.trim();
+            }
+        } catch (e) { void e; }
+        try {
+            const ta = await $(`//bdi[normalize-space()='${label}']/ancestor::label/following::textarea[1]`);
+            if (await ta.isExisting()) {
+                const v = await ta.getValue();
+                if (v != null && v !== "") return v.trim();
+            }
+        } catch (e) { void e; }
+        return "";
+    }
+
+    private async captureGeneralInfoValues(): Promise<void> {
+        console.log("Capturing General Information field values for later PDF verification");
+        const singleFieldLabels = [
+            "Object Type",
+            "Inventory Number",
+            "Authorization Group",
+            "Start up date",
+            "Long Description",
+            "Asset Manufacturer Name",
+            "Model Number",
+            "Part Number",
+            "Manufacturer Serial Number",
+            "Country",
+            "Maintenance Plant",
+            "Plant Section",
+            "Location",
+            "Work Center",
+            "Criticality",
+            "Sort Field",
+            "Functional Location",
+            "Company Code",
+            "Cost Center",
+            "Business Area",
+            "Planning Plant",
+            "Planner Group",
+            "Catalog Profile"
+        ];
+        for (const label of singleFieldLabels) {
+            const value = await this.readValueByLabel(label, 1);
+            this.generalInfoValues[label] = value;
+            console.log(`GenInfo | ${label}: ${value}`);
+        }
+        const acqValue = await this.readValueByLabel("Acquisition Value / Currency", 1);
+        const acqCurrency = await this.readValueByLabel("Acquisition Value / Currency", 2);
+        this.generalInfoValues["Acquisition Value"] = acqValue;
+        this.generalInfoValues["Currency"] = acqCurrency;
+        console.log(`GenInfo | Acquisition Value: ${acqValue}`);
+        console.log(`GenInfo | Currency: ${acqCurrency}`);
+        const cnstYear = await this.readValueByLabel("Construction Year / Month", 1);
+        const cnstMonRaw = await this.readValueByLabel("Construction Year / Month", 2);
+        const monthNameToNum: Record<string, string> = {
+            "january": "01",
+            "february": "02",
+            "march": "03",
+            "april": "04",
+            "may": "05",
+            "june": "06",
+            "july": "07",
+            "august": "08",
+            "september": "09",
+            "october": "10",
+            "november": "11",
+            "december": "12"
+        };
+        const cnstMon = monthNameToNum[cnstMonRaw.trim().toLowerCase()] ?? cnstMonRaw;
+        this.generalInfoValues["Construction Year"] = cnstYear;
+        this.generalInfoValues["Construction Month"] = cnstMon;
+        console.log(`GenInfo | Construction Year: ${cnstYear}`);
+        console.log(`GenInfo | Construction Month: ${cnstMon} (raw="${cnstMonRaw}")`);
     }
 
     public async verifyAndEditStructure() {
@@ -285,6 +375,7 @@ class functionalLocationDetailView {
 
         this.superFuncLocValue = await utils.getTextWithWait(this.superFunLocSelect);
         let i = 2;
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const row = $(`(//tr[@role='row'])[${i}]//td[2]//span`);
             await row.waitForDisplayed({ timeout: 20000 });
@@ -306,6 +397,41 @@ class functionalLocationDetailView {
         await utils.clickWithWait(this.infoUpdateOK);
         await utils.waitForBusyIndicatorToDisappear();
         console.log("Structuring saved successfully");
+        await this.captureStructureValues();
+    }
+
+    private async captureTableCells(headingPrefix: string, sink: string[], sinkLabel: string): Promise<void> {
+        try {
+            const rows = await $$(`//*[starts-with(normalize-space(text()), '${headingPrefix}')]/following::table[1]/tbody/tr[@role='row']`);
+            let rowIdx = 0;
+            for (const row of rows) {
+                const raw = ((await row.getText()) ?? "").trim();
+                if (raw) {
+                    const parts = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+                    for (const p of parts) {
+                        sink.push(p);
+                        console.log(`${sinkLabel} | Row[${rowIdx}]: ${p}`);
+                    }
+                }
+                rowIdx++;
+            }
+            console.log(`${sinkLabel} rows processed: ${rowIdx}`);
+        } catch (e) { void e; }
+    }
+
+    private async captureStructureValues(): Promise<void> {
+        console.log("Capturing Structuring/Components/Groups values for later PDF verification");
+        try { await utils.switchToIframe(this.funLocIframe); } catch (e) { void e; }
+        const superFunLocVal = await this.readValueByLabel("Superior Functional Location", 1);
+        const superFunLocDescVal = await this.readValueByLabel("Superior Functional Location Description", 1);
+        this.structureValues["Superior Functional Location"] = superFunLocVal;
+        this.structureValues["Superior Functional Location Description"] = superFunLocDescVal;
+        console.log(`Structure | Superior Functional Location: ${superFunLocVal}`);
+        console.log(`Structure | Superior Functional Location Description: ${superFunLocDescVal}`);
+        this.componentValues = [];
+        this.groupValues = [];
+        await this.captureTableCells("Component Information", this.componentValues, "Component");
+        await this.captureTableCells("Groups", this.groupValues, "Group");
     }
 
     public async assignEquipment(noOfEquipments: number) {
@@ -407,6 +533,9 @@ class functionalLocationDetailView {
         const funLocTemp = await this.funLocTemp.getText();
         const count = await utils.getAssignedValue(funLocTemp);
         console.log("No of Functional Location Template assigned are :"+count);
+        this.templateValues = [];
+        try { await utils.switchToIframe(this.funLocIframe); } catch (e) { void e; }
+        await this.captureTableCells("Functional Location Templates", this.templateValues, "Template");
     }
 
     async assignFunLocClass(noOfClasses: number, autoAssign: boolean): Promise<void> {
@@ -502,6 +631,11 @@ class functionalLocationDetailView {
         const updatedChar = await this.noOfCharMDA.getText();
         const uc = await utils.getAssignedValue(updatedChar);
         console.log("Assigned charactertics : "+uc);
+        this.classValues = [];
+        this.characteristicValues = [];
+        try { await utils.switchToIframe(this.funLocIframe); } catch (e) { void e; }
+        await this.captureTableCells("Classes", this.classValues, "Class");
+        await this.captureTableCells("Characteristics", this.characteristicValues, "Characteristic");
     }
 
     public async verifyAssetIntelligence() {
@@ -606,6 +740,8 @@ class functionalLocationDetailView {
             await utils.generateRandomFuncDescName()
         );
         const enteredDesc = await this.funLocDescEditHeader.getValue();
+        this.funcLocDescValue = enteredDesc;
+        console.log(`Header | Functional Location Description (updated): ${this.funcLocDescValue}`);
         await utils.clickWithWait(this.funLocCategoryEditHeader);
         await this.funLocCategory.waitForDisplayed({ timeout: 30000 });
         await this.funLocCtgChoose.scrollIntoView();
@@ -672,84 +808,111 @@ class functionalLocationDetailView {
         const newHandles = await browser.getWindowHandles();
         const newTab = newHandles.find(h => !oldHandles.includes(h));
         await browser.switchToWindow(newTab!);
-        await browser.waitUntil(
-            async () => (await browser.execute(() => document.readyState)) === 'complete'
-        );
-        await utils.waitForBusyIndicatorToDisappear();
-        const frame = await $('//iframe[@data-help-id="application-cml-manage"]');
-        await frame.waitForExist({ timeout: 20000 });
-        await utils.switchToIframe(frame);
-        console.log("Switched to CML iframe");
-        const cmlElem = await this.noOfCML;
-        await cmlElem.waitForDisplayed({ timeout: 20000 });
-        const funLocInCML = await $("(//header//*[@role='heading']/span)[1]");
-        await funLocInCML.waitForDisplayed({ timeout: 20000 });
-        await browser.waitUntil(async () => {
-            return (await funLocInCML.getText()).trim().length > 0;
-        }, { timeout: 10000 });
-        const funLocInCMLText = await funLocInCML.getText();
-        console.log("Functional Location in CML:", funLocInCMLText);
-        let displayIdInCMLText = "";
-        await browser.waitUntil(async () => {
-            const candidates = await $$("//header//span");
-            for (const el of candidates) {
-                try {
-                    if (!(await el.isDisplayed())) continue;
-                    const txt = ((await el.getText()) ?? "").trim();
-                    if (txt.startsWith("FLOC")) {
-                        displayIdInCMLText = txt;
-                        return true;
-                    }
-                } catch { /* stale, continue */ }
-            }
-            return false;
-        }, { timeout: 20000, interval: 500, timeoutMsg: "FLOC display id not found in CML header" });
-        console.log("Display ID in CML:", displayIdInCMLText);
-        if(!funLocInCMLText || !displayIdInCMLText) {
-            throw new Error("CML header values are empty");
-        }
-        await utils.assertTextEquals(funLocInCML, this.funcLocHeadValue);
-        console.log("Functional Location in CML matches header value");
-        if (displayIdInCMLText !== actualId) {
-            throw new Error(`Display ID mismatch in CML. Expected: ${actualId}, Found: ${displayIdInCMLText}`);
-        }
-        console.log("Display ID in CML matches header value");
-        let finalValue = 0;
-        let lastSeenText = "";
+        const errors: string[] = [];
         try {
             await browser.waitUntil(
-                async () => {
-                    let text = (await cmlElem.getText()) ?? "";
-                    if (!text) text = (await cmlElem.getAttribute("innerText")) ?? "";
-
-                    lastSeenText = text;
-
-                    const value = await utils.getAssignedValue(text);
-                    finalValue = value;
-
-                    return value > 0;
-                },
-                {
-                    timeout: 20000,
-                    interval: 1000
-                }
+                async () => (await browser.execute(() => document.readyState)) === 'complete'
             );
-            console.log(`SUCCESS CML value became ${finalValue}`);
+            await utils.waitForBusyIndicatorToDisappear();
+            const frame = await $('//iframe[@data-help-id="application-cml-manage"]');
+            await frame.waitForExist({ timeout: 20000 });
+            await utils.switchToIframe(frame);
+            console.log("Switched to CML iframe");
+            const cmlElem = await this.noOfCML;
+            await cmlElem.waitForDisplayed({ timeout: 20000 });
+            const funLocInCML = await $("(//header//*[@role='heading']/span)[1]");
+            await funLocInCML.waitForDisplayed({ timeout: 20000 });
+            try {
+                await browser.waitUntil(async () => {
+                    return (await funLocInCML.getText()).trim().length > 0;
+                }, { timeout: 10000 });
+            } catch (e) {
+                errors.push(`Functional Location header text in CML did not appear: ${(e as Error).message}`);
+            }
+            const funLocInCMLText = await funLocInCML.getText();
+            console.log("Functional Location in CML:", funLocInCMLText);
+            let displayIdInCMLText = "";
+            try {
+                await browser.waitUntil(async () => {
+                    const candidates = await $$("//header//span");
+                    for (const el of candidates) {
+                        try {
+                            if (!(await el.isDisplayed())) continue;
+                            const txt = ((await el.getText()) ?? "").trim();
+                            if (txt.startsWith("FLOC")) {
+                                displayIdInCMLText = txt;
+                                return true;
+                            }
+                        } catch { /* stale, continue */ }
+                    }
+                    return false;
+                }, { timeout: 20000, interval: 500, timeoutMsg: "FLOC display id not found in CML header" });
+            } catch (e) {
+                errors.push((e as Error).message);
+            }
+            console.log("Display ID in CML:", displayIdInCMLText);
+            if(!funLocInCMLText || !displayIdInCMLText) {
+                errors.push("CML header values are empty");
+            }
+            try {
+                await utils.assertTextEquals(funLocInCML, this.funcLocHeadValue);
+                console.log("Functional Location in CML matches header value");
+            } catch (e) {
+                errors.push(`Functional Location in CML mismatch: ${(e as Error).message}`);
+            }
+            if (displayIdInCMLText && displayIdInCMLText !== actualId) {
+                errors.push(`Display ID mismatch in CML. Expected: ${actualId}, Found: ${displayIdInCMLText}`);
+            } else if (displayIdInCMLText) {
+                console.log("Display ID in CML matches header value");
+            }
+            let finalValue = 0;
+            let lastSeenText = "";
+            try {
+                await browser.waitUntil(
+                    async () => {
+                        let text = (await cmlElem.getText()) ?? "";
+                        if (!text) text = (await cmlElem.getAttribute("innerText")) ?? "";
+
+                        lastSeenText = text;
+
+                        const value = await utils.getAssignedValue(text);
+                        finalValue = value;
+
+                        return value > 0;
+                    },
+                    {
+                        timeout: 20000,
+                        interval: 1000
+                    }
+                );
+                console.log(`SUCCESS CML value became ${finalValue}`);
+            } catch (e) {
+                void e;
+                console.log(`WARNING → CML value is still 0 after waiting`);
+                console.log(`FINAL → CML TEXT: ${lastSeenText}`);
+            }
+            let cmlText = (await cmlElem.getText()) ?? "";
+            if (!cmlText) {
+                cmlText = (await cmlElem.getAttribute("innerText")) ?? "";
+            }
+            console.log("FINAL CML TEXT:", cmlText);
+            const CML = await utils.getAssignedValue(cmlText);
+            console.log("Assigned CMLs:", CML);
+            console.log("CML verification completed successfully");
         } catch (e) {
-            console.log(`WARNING → CML value is still 0 after waiting`);
-            console.log(`FINAL → CML TEXT: ${lastSeenText}`);
+            errors.push(`CML verification failed: ${(e as Error).message}`);
+        } finally {
+            try {
+                await browser.closeWindow();
+            } catch (e) { void e; }
+            try {
+                await browser.switchToWindow(parentTab);
+                console.log("Returned to parent tab");
+            } catch (e) { void e; }
         }
-        let cmlText = (await cmlElem.getText()) ?? "";
-        if (!cmlText) {
-            cmlText = (await cmlElem.getAttribute("innerText")) ?? "";
+        if (errors.length > 0) {
+            throw new Error(`CML Verification Failed:\n${errors.join("\n")}`);
         }
-        console.log("FINAL CML TEXT:", cmlText);
-        const CML = await utils.getAssignedValue(cmlText);
-        console.log("Assigned CMLs:", CML);
-        console.log("CML verification completed successfully");
-        await browser.closeWindow();
-        await browser.switchToWindow(parentTab);
-        console.log("Returned to parent tab");
     }
 
     async deleteFunctionalLocation(){
@@ -780,10 +943,12 @@ class functionalLocationDetailView {
     async downloadAndVerifyPDF() {
         console.log("Downloading PDF and verifying its content");
         await utils.switchToIframe(this.funLocIframe);
-        const { name: funcLoc } = await utils.getEntityNameAndId();
+        const { name: funcLoc, id: actualId } = await utils.getEntityNameAndId();
         this.funcLocHeadValue = funcLoc;
+        this.displayID = actualId;
+        console.log(`Final → FuncLoc="${funcLoc}" | DisplayID="${actualId}" | Description="${this.funcLocDescValue}"`);
         await utils.clickWithWait(this.downloadReport);
-        let expectedFilters: string[] = [];
+        const expectedFilters: string[] = [];
         try {
             const info = await $("//*[contains(text(),'Failed to export')]");
             await info.waitForDisplayed({ timeout: 7000 });
@@ -807,13 +972,86 @@ class functionalLocationDetailView {
         console.log("File downloaded at:", filePath);
         const fileName = path.basename(filePath);
         console.log("Downloaded file name:", fileName);
-        expect(fileName).toContain(this.funcLocHeadValue); // replace dynamically
-        console.log("File name contains Functional Location header value");
         const pdfContent = await utils.extractTextFromPDF(filePath);
         console.log("Extracted PDF content:", pdfContent);
-        expect(pdfContent).toContain(this.funcLocHeadValue);
-        console.log("PDF content contains Functional Location header value");
-        expect(pdfContent).toContain('Table of Content');
+        const stripHidden = (s: string) => (s ?? "")
+            .normalize('NFKC')
+            .replace(/[\u200B-\u200D\uFEFF]/g, '')
+            .replace(/\u00A0/g, ' ');
+        const normalizeForCompare = (s: string) => stripHidden(s).replace(/\s+/g, ' ').trim().toLowerCase();
+        const normalizedPdf = normalizeForCompare(pdfContent);
+        const normalizedPdfNoSpace = normalizedPdf.replace(/\s+/g, '');
+        const normalizedFileName = stripHidden(fileName).toLowerCase();
+        const missingFields: string[] = [];
+        const checkOne = (label: string, value: string) => {
+            if (!value) {
+                console.log(`PDF check | ${label}: skipped (empty)`);
+                return;
+            }
+            const needle = normalizeForCompare(value);
+            if (!needle) {
+                console.log(`PDF check | ${label}: skipped (empty after normalize)`);
+                return;
+            }
+            if (normalizedPdf.includes(needle)) {
+                console.log(`PDF check | ${label}: FOUND "${value}"`);
+                return;
+            }
+            const needleNoSpace = needle.replace(/\s+/g, '');
+            if (needleNoSpace && normalizedPdfNoSpace.includes(needleNoSpace)) {
+                console.log(`PDF check | ${label}: FOUND (space-insensitive) "${value}"`);
+                return;
+            }
+            const words = needle.split(' ').filter(w => w.length > 0);
+            if (words.length > 1 && words.every(w => normalizedPdf.includes(w))) {
+                console.log(`PDF check | ${label}: FOUND (fuzzy, all words present) "${value}"`);
+                return;
+            }
+            console.log(`PDF check | ${label}: MISSING "${value}"`);
+            missingFields.push(`${label}="${value}"`);
+        };
+        const checkFileNameContains = (label: string, value: string) => {
+            if (!value) {
+                console.log(`FileName check | ${label}: skipped (empty)`);
+                return;
+            }
+            const needle = stripHidden(value).toLowerCase();
+            if (normalizedFileName.includes(needle)) {
+                console.log(`FileName check | ${label}: FOUND "${value}"`);
+            } else {
+                console.log(`FileName check | ${label}: MISSING "${value}"`);
+                missingFields.push(`FileName.${label}="${value}"`);
+            }
+        };
+        checkFileNameContains("FunctionalLocationName", this.funcLocHeadValue);
+        checkOne("PDF.TableOfContent", "Table of Content");
+        checkOne("PDF.FunctionalLocationName", this.funcLocHeadValue);
+        checkOne("PDF.FunctionalLocationID", this.displayID);
+        checkOne("PDF.FunctionalLocationDescription", this.funcLocDescValue);
+        for (const [label, value] of Object.entries(this.generalInfoValues)) {
+            checkOne(`GeneralInfo.${label}`, value);
+        }
+        for (const [label, value] of Object.entries(this.structureValues)) {
+            checkOne(`Structure.${label}`, value);
+        }
+        for (let i = 0; i < this.componentValues.length; i++) {
+            checkOne(`Component[${i}]`, this.componentValues[i]);
+        }
+        for (let i = 0; i < this.groupValues.length; i++) {
+            checkOne(`Group[${i}]`, this.groupValues[i]);
+        }
+        for (let i = 0; i < this.templateValues.length; i++) {
+            checkOne(`Template[${i}]`, this.templateValues[i]);
+        }
+        for (let i = 0; i < this.classValues.length; i++) {
+            checkOne(`Class[${i}]`, this.classValues[i]);
+        }
+        for (let i = 0; i < this.characteristicValues.length; i++) {
+            checkOne(`Characteristic[${i}]`, this.characteristicValues[i]);
+        }
+        if (missingFields.length > 0) {
+            throw new Error(`PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}`);
+        }
         console.log("PDF content verification completed successfully");
     }
 }

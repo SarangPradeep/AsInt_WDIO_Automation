@@ -34,7 +34,8 @@ export const equipmentTestData = {
         noOfCharacteristicsToAssign: 2,
     },
     searchEquipment: {
-        equipment: '10000029'
+        equipment: '10000029',
+        techId: 'EQUI.5087'
     }
 
 } as const;

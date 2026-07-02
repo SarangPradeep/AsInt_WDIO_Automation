@@ -51,10 +51,7 @@ describe('BTP - Asset Strategy Development (ASD)- Multiple Functional Locations 
     });
 
     it('should verify attachment section' , async () => {
-        await ASDDetailView.gotoAttachmentsTabAndAssignAttachment();
-//        await functionalLocationDetailView.addDocument();
-//        await functionalLocationDetailView.addLink();
-//        await functionalLocationDetailView.deleteAttachmentAndVerify();
+        await utils.verifyAttachmentSection();
     });
 
     it('should be able to download and verify ASD report', async () => {

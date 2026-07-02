@@ -1,5 +1,8 @@
 const assetRcmData = {
     description: "Automation Asset RCM Description",
+    report: {
+        technicalObject: "10000102"
+    },
     riskValues: [
         "A-HC1","A-HC2","A-I","A-II","A-III","A-IV",
         "B-HC1","B-HC2","B-I","B-II","B-III","B-IV",
