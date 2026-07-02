@@ -268,7 +268,7 @@ class Utils {
                         if (btn) btn.click();
                     }, "//button[@title='Close Lightbox']");
                     await browser.pause(1500);
-                } catch { }
+                } catch (e) { void e; }
             }
             await browser.pause(2000);
         }
@@ -354,7 +354,7 @@ class Utils {
                             const options = await listbox.$$('.//li[@role="option"]'); 
                             if (await options.length > 0) return true;
                         }
-                    } catch {}
+                    } catch (e) { void e; }
                 }
             }
             return false;
@@ -374,7 +374,7 @@ class Utils {
                             return listbox;
                         }
                     }
-                } catch {}
+                } catch (e) { void e; }
             }
         }
 
@@ -454,7 +454,7 @@ class Utils {
 
         try {
             await arrow.click();
-        } catch {}
+        } catch (e) { void e; }
 
         await browser.execute(el => el.click(), arrow);
 
@@ -548,6 +548,7 @@ async addAllAdaptFilter(): Promise<void> {
         await console.log("Adapt filter opened");
         let prevCount: number = -1;
  
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const checkboxes: any = await $$(`(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]//div[@role='checkbox' and @aria-checked='false']`);
             const uncheckedCount: number = checkboxes.length;
@@ -624,13 +625,13 @@ async addAllAdaptFilter(): Promise<void> {
     }
 
     async generateRandomEquipmentName(): Promise<string> {
-        console.log(`Automation_Equipment_${Math.floor(Math.random() * 10000)}`);
-        return `Automation_Equipment_${Math.floor(Math.random() * 10000)}`;
+        console.log(`Automation_Equipment_${Math.floor(Math.random() * 10000000)}`);
+        return `Automation_Equipment_${Math.floor(Math.random() * 10000000)}`;
     }
 
     async generateRandomHazopName(): Promise<string> {
-        console.log(`Automation_Hazop_${Math.floor(Math.random() * 10000)}`);
-        return `Automation_Hazop_${Math.floor(Math.random() * 10000)}`;
+        console.log(`Automation_Hazop_${Math.floor(Math.random() * 10000000)}`);
+        return `Automation_Hazop_${Math.floor(Math.random() * 10000000)}`;
     }
 
     public async verifyFieldsInListView(): Promise<void> {
@@ -653,9 +654,9 @@ async addAllAdaptFilter(): Promise<void> {
         await browser.pause(2000);
         const rows = await browser.$$("(//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')])[last()]//tr[@role='row']");
         const rowsArr = Array.from(rows);
-        let uncheckedCheckboxes: any[] = [];
-        let removedFields: string[] = [];
-        let selectedFields: string[] = [];
+        const uncheckedCheckboxes: any[] = [];
+        const removedFields: string[] = [];
+        const selectedFields: string[] = [];
 
         for (let i = 0; i < rowsArr.length; i++) {
 
@@ -847,7 +848,7 @@ async addAllAdaptFilter(): Promise<void> {
             console.log(`Found ${charts.length} chart(s) in Analytics Chart view`);
             console.log("Analytics Chart entries:");
             for (const chart of charts) {
-                let text: string = (await chart.getText()) || (await chart.getAttribute("innerText")) || "";
+                const text: string = (await chart.getText()) || (await chart.getAttribute("innerText")) || "";
                 console.log(text);
             }
         }
@@ -1175,7 +1176,7 @@ async addAllAdaptFilter(): Promise<void> {
         await browser.pause(2000);
         const dialogHeader = await $(`//h1//span[starts-with(normalize-space(),'Advanced Filters')]`);
         const firstFilterCheckbox = await $(`(//tr[@role='row'])[2]//div[@role='checkbox']`);
-        let isOpen = await dialogHeader.isDisplayed().catch(() => false)
+        const isOpen = await dialogHeader.isDisplayed().catch(() => false)
             || await firstFilterCheckbox.isDisplayed().catch(() => false);
         if (!isOpen) {
             console.log("Advanced Filters dialog not open → opening via Advanced Filter button");

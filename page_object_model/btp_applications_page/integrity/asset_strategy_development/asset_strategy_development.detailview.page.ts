@@ -1,3 +1,4 @@
+import { AssertionError } from "node:assert";
 import utils from "utils/utils";
 import ASDListView from "./asset_strategy_development.listview.page";
 class asset_strategy_development_detailview_page {
@@ -228,7 +229,7 @@ class asset_strategy_development_detailview_page {
     private get longDescriptionTextarea() { return $("//label[.//text()='Long Description']/following::textarea[1]"); }
     private get okHeaderBtn() { return $("//h1[.//text()='Edit Header']/following::button[.//text()='Ok']"); }
     private get headerMoreBtn() { return $("//header//button[@aria-label='Additional Options']//span[@role='presentation']"); }
-    private get deleteBtn() { return $("//body//button[.//text()='Delete']"); }
+    private get deleteBtn() { return $$("//button[.//bdi[normalize-space()='Delete']]"); }
     private get reportBtn() { return $("//button[.//text()='Report']"); }
     private get deleteConfirmText() { return $("//span[.//text()='Are you sure want to delete the Assessment?']"); }
     private get confirmOkBtn() { return $("//header[.//text()='Confirmation']/following::button[.//text()='OK']"); }
@@ -285,7 +286,7 @@ class asset_strategy_development_detailview_page {
     private get updateRecommendationsSaveBtn() { return $("//h1[.//text()='Update Recommendations']/following::button[.//text()='Save'][1]"); }
     private get editAndUpdateBtn() { return $("//span[contains(text(),'Strategies')]/following::button[.//text()='Edit & Update'][1]"); }
     private get freezeStrategyBtn() { return $("//span[contains(text(),'Strategies')]/following::button[.//text()='Freeze'][1]"); }
-    private get deleteStartegyBtn() { return $("//span[contains(text(),'Strategies')]/following::button[.//text()='Delete'][1]"); }
+    private get deleteStartegyBtn() { return $("//button[.//text()='Edit & Update']/ancestor::*[.//button[.//text()='Delete']][1]//button[.//text()='Delete']"); }
     private get equipmentSectionHeader() { return $("//span[starts-with(normalize-space(),'Equipment (')]"); }
     private equipmentCell(equipNo: string) { return $(`//div[@tabindex='0']//span[normalize-space()='${equipNo}']`); }
 
@@ -410,6 +411,7 @@ class asset_strategy_development_detailview_page {
     public async editHeader()
     {
         console.log("Editing header information of ASD");
+        await utils.switchToIframe(this.ASDIframe);
         await utils.clickWithWait(this.ASDEditHeader);
         await browser.pause(2000);
         await this.editHeaderTitle.waitForDisplayed();
@@ -872,7 +874,7 @@ class asset_strategy_development_detailview_page {
         {
             await utils.clickWithWait(this.failedOkBtn);
             this.calculateAnalysis = false;
-            throw new Error("Analysis information calculation failed");
+            throw new AssertionError({ message: "Analysis information calculation failed" });
         }
         await utils.waitForBusyIndicatorToDisappear();
         await this.headerData.waitForDisplayed({timeout: 10000});
@@ -880,7 +882,7 @@ class asset_strategy_development_detailview_page {
         const noOfRecc = await utils.getAssignedValue(text);
         if (noOfRecc === 0) {
             this.calculateAnalysis = false;
-            throw new Error("No recommendations found, calculation might have failed");
+            throw new AssertionError({ message: "No recommendations found, calculation might have failed" });
         }
         else
         {
@@ -1226,6 +1228,17 @@ class asset_strategy_development_detailview_page {
         await utils.clickWithWait(this.deleteStartegyBtn);
         await browser.pause(1500);
         await this.yesBtn.waitForDisplayed({ timeout: 15000 });
+        try {
+            const dialogText = await $("//div[@role='dialog' and .//header[.//text()='Confirmation']]").getText();
+            const dt = (dialogText || "").toLowerCase();
+            if (dt.includes("asset strategy") || dt.includes("delete this asd") || dt.includes("this asset strategy will be deleted")) {
+                throw new Error(`Wrong confirmation dialog opened during strategy delete (looks like ASD delete). Dialog text: '${dialogText}'`);
+            }
+            console.log(`Strategy delete confirmation dialog text: '${dialogText}'`);
+        } catch (e) {
+            if (e instanceof Error && e.message.startsWith("Wrong confirmation dialog")) throw e;
+            void e;
+        }
         await utils.clickWithWait(this.yesBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickSuccessOkButton(5000);
@@ -1258,6 +1271,7 @@ class asset_strategy_development_detailview_page {
     public async verifyMaintenanceAndServiceInfo()
     {
         console.log("Start: Verifying maintenance and service information of ASD");
+        await utils.switchToIframe(this.ASDIframe);
         await utils.clickWithWait(this.maintenanceAndServiceTab);
         await browser.pause(2000);
         const maintenanceNotification = await utils.getAssignedValue(await this.maintenanceNotificationValue.getText());
@@ -1410,8 +1424,6 @@ class asset_strategy_development_detailview_page {
             return;
         }
         console.log("Deleting the ASD...");
-        // captureHeaderDetails() exits to the parent frame at the end, so we
-        // must re-enter the ASD iframe before doing anything inside the app.
         await utils.switchToIframe(this.ASDIframe);
         await browser.pause(1000);
         await ASDListView.captureASDNameAndId();
@@ -1420,7 +1432,18 @@ class asset_strategy_development_detailview_page {
             await utils.clickWithWait(this.headerMoreBtn);
             await browser.pause(4000);
         }
-        await utils.clickWithWait(this.deleteBtn);
+        const deleteButtons = await this.deleteBtn;
+        let clicked = false;
+        for (const btn of deleteButtons) {
+            if (await btn.isDisplayed().catch(() => false) && await btn.isClickable().catch(() => false)) {
+                await utils.clickWithWait(btn);
+                clicked = true;
+                break;
+            }
+        }
+        if (!clicked) {
+            throw new Error("No visible/clickable Delete button found on ASD detail page");
+        }
         await browser.pause(2000);
         await utils.clickWithWait(this.yesBtn);
         await browser.pause(4000);
@@ -1450,6 +1473,7 @@ class asset_strategy_development_detailview_page {
         }
         else
         {
+            await utils.switchToIframe(this.ASDIframe);
             console.log("Publishing the ASD...");
             if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
                 await utils.clickWithWait(this.headerMoreBtn);

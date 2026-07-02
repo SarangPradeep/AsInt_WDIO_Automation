@@ -27,16 +27,16 @@ describe('BTP - Functional Location - Regression Test', () => {
         await FunctionalLocationRegressionPage.verifyAssetStrategyRCMFleetDetails();
     });
 
-    // ---------------- Transition: back to home, then re-enter Functional Location ----------------
-    it('should navigate back to home page after regression set 1', async () => {
-        await utils.navigateToHomePage();
+    it('should verify recommendation details', async () => {
+        await FunctionalLocationRegressionPage.verifyRecommendationDetails();
+    });
+
+    // ---------------- Transition: back to list view via back button ----------------
+    it('should navigate back to list view after regression set 1', async () => {
+        await utils.navigateBack();
     });
 
     // ---------------- Regression Set 2 ----------------
-    it('should navigate to functional location list view again', async () => {
-        await functionalLocationListView.navigateFunctionalLocationListView();
-    });
-
     it('should search and navigate to detail view of functional location (set 2)', async () => {
         await FunctionalLocationRegressionPage.searchFunctionalLocationByDisplayId(funcLocTestData.searchFunLoc.displayId2);
         await FunctionalLocationRegressionPage.navigateToSearchedFunctionalLocation();
@@ -56,10 +56,6 @@ describe('BTP - Functional Location - Regression Test', () => {
 
     it('should verify findings details (set 2)', async () => {
         await FunctionalLocationRegressionPage.verifyFindingDetails();
-    });
-
-    it('should verify recommendation details', async () => {
-        await FunctionalLocationRegressionPage.verifyRecommendationDetails();
     });
 
 });

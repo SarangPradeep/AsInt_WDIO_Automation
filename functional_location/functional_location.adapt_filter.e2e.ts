@@ -37,6 +37,9 @@ describe('BTP - Functional Location Application - Adapt Filter Functional test',
             { name: 'plannerGroupAdaptFilter', run: () => adaptFilterHelper.plannerGroupAdaptFilter('CVL') },
             { name: 'planningPlantAdaptFilter', run: () => adaptFilterHelper.planningPlantAdaptFilter('Werk 0001') },
             { name: 'plantSectionAdaptFilter', run: () => adaptFilterHelper.plantSectionAdaptFilter('PLE') },
+            { name: 'sourceSystemAdaptFilter', run: () => adaptFilterHelper.sourceSystemAdaptFilter('S4HPC') },
+            { name: 'sortFieldAdaptFilter', run: () => adaptFilterHelper.sortFieldAdaptFilter('ASIN-1001-PROD-RECT-RUPR') },
+            { name: 'workCenterAdaptFilter', run: () => adaptFilterHelper.workCenterAdaptFilter('MMD01') },
         ];
         const failures: { name: string; error: string }[] = [];
         for (const { name, run } of filterChecks) {

@@ -106,15 +106,32 @@ class maintenance_detail_view{
         await this.saveHeader.scrollIntoView({ block: 'center' });
         await this.saveHeader.waitForDisplayed({ timeout: 30000 });
         await this.saveHeader.waitForClickable({ timeout: 30000 });
-        await utils.clickWithWait(this.saveHeader);
-        await browser.pause(2000);
-        await utils.waitForBusyIndicatorToDisappear();
-        if (await this.okBtn.isDisplayed().catch(() => false)) {
-            console.log("Success popup appeared after save; clicking OK");
-            await utils.clickWithWait(this.okBtn);
+        const maxSaveAttempts = 3;
+        let savedAndClosed = false;
+        for (let attempt = 1; attempt <= maxSaveAttempts; attempt++) {
+            console.log(`Clicking Save (attempt ${attempt}/${maxSaveAttempts})`);
+            await utils.clickWithWait(this.saveHeader);
             await utils.waitForBusyIndicatorToDisappear();
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
+                console.log("Success popup appeared after save; clicking OK");
+                await utils.clickWithWait(this.okBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+            try {
+                await browser.waitUntil(
+                    async () => !(await this.editHeaderTitle.isDisplayed().catch(() => false)),
+                    { timeout: 8000, interval: 500 }
+                );
+                savedAndClosed = true;
+                break;
+            } catch (e) {
+                void e;
+                console.log(`Edit Header dialog still open after Save attempt ${attempt}; retrying`);
+            }
         }
-        await browser.pause(1500);
+        if (!savedAndClosed) {
+            throw new Error("Edit Header dialog did not close after multiple Save attempts");
+        }
         console.log("Header saved successfully");
     }
 

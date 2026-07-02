@@ -17,18 +17,18 @@ describe('BTP - RCM Analysis Application - Functional Test', () => {
         await assetRCMDetailView.addRoles();
     });
 
-    it('should verify assessment tab and add tecnhinal objects' , async () => {
+    it('should verify assessment tab and add technical objects' , async () => {
         await assetRCMDetailView.createAssessmentFlow();
         await assetRCMDetailView.verifyAssessment();
         await assetRCMDetailView.verifyAssessmentSections();
     });
 
-    it('should add maintanable itmes for techninal objects' , async () => {
+    it('should add maintainable items for technical objects' , async () => {
         await assetRCMDetailView.addMaintanableItems();
         await assetRCMDetailView.verifyMaintainableDetails();
     });
 
-    it('should add failure modes for added maintanable itmes of technical objects' , async () => {
+    it('should add failure modes for added maintainable items of technical objects' , async () => {
         await assetRCMDetailView.addFailureModes();
         await assetRCMDetailView.verifyFailureModesDetails();
     });
@@ -46,11 +46,11 @@ describe('BTP - RCM Analysis Application - Functional Test', () => {
         await assetRCMDetailView.assignFunctionalFailure();
     });
 
-    it('should add maintanable itmes for technical objects' , async () => {
+    it('should add maintainable items for functional location technical objects' , async () => {
         await assetRCMDetailView.addMaintainableItemsForFuncLoc();
     });
 
-    it('should add failure modes for added maintanable itmes of technical objects' , async () => {
+    it('should add failure modes for added maintainable items of functional location technical objects' , async () => {
         await assetRCMDetailView.addFailureModesForFuncLoc();
         await assetRCMDetailView.verifyFailureModesDetails();
     });
@@ -59,11 +59,11 @@ describe('BTP - RCM Analysis Application - Functional Test', () => {
         await utils.verifyAttachmentSection();
     });
 
-    it('should able to download and verify summary report', async () => {
+    it('should be able to download and verify summary report', async () => {
         await assetRCMDetailView.downloadSummaryReport();
     });
 
-    it('should able to delete newly created RCM', async () => {
+    it('should be able to delete newly created RCM', async () => {
         await assetRCMDetailView.deleteRCM();
         await assetRCMList.verifyRCMDeletion();
     });

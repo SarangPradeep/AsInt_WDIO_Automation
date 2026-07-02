@@ -4,6 +4,25 @@ import utils from './utils';
 
 class adaptFilterHelper {
 
+    private async logAndVerifyFilterValues(
+        filterLabel: string,
+        expectedValue: string,
+        fieldValues: WebdriverIO.ElementArray | Awaited<ReturnType<typeof $$>>
+    ): Promise<void> {
+        const expected = (expectedValue || '').trim().toLowerCase();
+        const values = await fieldValues;
+        console.log(`Total ${filterLabel} Found: ${values.length}`);
+        for (const element of values) {
+            const rawValue = (await element.getText() || await element.getAttribute('textContent') || '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            console.log(`Found ${filterLabel}: ${rawValue}`);
+            if (!rawValue.toLowerCase().includes(expected)) {
+                throw new Error(`Expected ${filterLabel}: ${expectedValue}, but found: ${rawValue}`);
+            }
+        }
+    }
+
     async activationStateAdaptFilter(totalCount: number,
         state: "Activated" | "Deactivated" | "All"
     ): Promise<void> {
@@ -47,6 +66,7 @@ class adaptFilterHelper {
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
     }
+
     async assetManufacturerNameAdaptFilter(manufacturerName: string): Promise<void> {
         const expectedValue = manufacturerName
         .trim()
@@ -75,22 +95,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='${colIndex}']//span`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText() || await element.getAttribute('textContent') || '')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, manufacturerName, fieldValues);
 
         await this.ensureFilterHeaderExpanded();
         await browser.pause(500);
@@ -101,6 +106,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${manufacturerName}`);
     }
+
     async catalogProfileAdaptFilter(profileName: string): Promise<void> {
         await utils.clickWithWait($(`//bdi[normalize-space()='Catalog Profile']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
         await utils.waitForBusyIndicatorToDisappear();
@@ -123,6 +129,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied Catalog Profile adapt filter with value: ${profileName}`);
     }
+
     async categoryAdaptFilter(categoryName: string): Promise<void> {
         
         const fieldLabel = "Category";
@@ -153,27 +160,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='3']//span`
         );
 
-        console.log(`Total Category Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-            
-            const expectedValue = categoryName
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${fieldLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(fieldLabel, categoryName, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${categoryId}']/following-sibling::span[@aria-label='Remove']`));
@@ -183,6 +170,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied Category adapt filter with value: ${categoryName}`);
     }
+
     async objectTypeAdaptFilter(objectTypeName: string): Promise<void> {
         
         const fieldLabel = "Object Type";
@@ -213,27 +201,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='4']//span`
         );
 
-        console.log(`Total Object Type Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-            
-            const expectedValue = objectTypeName
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${fieldLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(fieldLabel, objectTypeName, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${objectId}']/following-sibling::span[@aria-label='Remove']`));
@@ -243,6 +211,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied Object Type adapt filter with value: ${objectTypeName}`);
     }
+
     async criticalityAdaptFilter(criticality: string): Promise<void> {
         const fieldLabel = "Criticality";
         await utils.clickWithWait($(`//bdi[normalize-space()='Criticality']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
@@ -273,23 +242,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='${critColIndex}']/div[@aria-roledescription='Object Tag']/div/span[1]`
         );
 
-        console.log(`Total ${fieldLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            const expectedValue = criticalityId.trim().toLowerCase();
-            console.log(`Found ${fieldLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(fieldLabel, criticalityId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
 
@@ -301,6 +254,7 @@ class adaptFilterHelper {
         console.log(`Applied Criticality adapt filter with value: ${criticality}`);
 
     }
+
     async verifyDetailsInListView(fieldLabel: string, expectedValue: string): Promise<void> {
         await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
 
@@ -314,27 +268,11 @@ class adaptFilterHelper {
             `//span[normalize-space()='${fieldLabel}']/ancestor::div[1]/following-sibling::div/span[1]`
         );
 
-        console.log(`Total ${fieldLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            expectedValue = expectedValue.trim().toLowerCase();
-
-            console.log(`Found ${fieldLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(fieldLabel, expectedValue, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
     }
+
     async classAdaptFilter(className: string): Promise<void> {
         const filterLabel = "Class";
         const filterInput = await $(`//bdi[normalize-space()='Class']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`);
@@ -366,22 +304,7 @@ class adaptFilterHelper {
         await browser.pause(2000);
         const fieldValues = await $$(`//td[@aria-colindex='7']`);
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-                .replace(/\s+/g, ' ')
-                .trim()
-                .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }
+        await this.logAndVerifyFilterValues(filterLabel, className, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
 
@@ -392,6 +315,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${className} (code: ${classCode})`);
     }
+
     async componentFlagAdaptFilter(totalCount: number,
         state: "Temporary Repair Component" | "Out of Service" | "All"
     ): Promise<void> {
@@ -424,6 +348,7 @@ class adaptFilterHelper {
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
     }
+
     async planningPlantAdaptFilter(plantName: string): Promise<void> {
 
         const expectedValue = plantName.trim().toLowerCase();
@@ -455,25 +380,7 @@ class adaptFilterHelper {
             `//span[normalize-space()='Planning Plant']/ancestor::div[1]/following-sibling::div/span[1]`
         );
         
-        
-
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(plantId)) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${plantId}, but found: ${actualValue}`
-                );
-            }
-
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, plantId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${plantId}']/following-sibling::span[@aria-label='Remove']`));
@@ -484,6 +391,7 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${plantName}`);
     
     }
+
     async locationAdaptFilter(locationName: string): Promise<void> {
 
         const expectedValue = locationName.trim().toLowerCase();
@@ -514,22 +422,7 @@ class adaptFilterHelper {
         const fieldValues = await $$(
             `//span[normalize-space()='Location']/ancestor::div[1]/following-sibling::div/span[1]`
         );
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(locationId.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${locationId}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, locationId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${locationId}']/following-sibling::span[@aria-label='Remove']`));
@@ -540,6 +433,7 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${locationName}`);
 
     }
+
     async maintenancePlantAdaptFilter(plantName: string): Promise<void> {
 
         const expectedValue = plantName.trim().toLowerCase();
@@ -571,22 +465,7 @@ class adaptFilterHelper {
         const fieldValues = await $$(
             `//span[normalize-space()='Maintenance Plant']/ancestor::div[1]/following-sibling::div/span[1]`
         );
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(plantId.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${plantId}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, plantId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${plantId}']/following-sibling::span[@aria-label='Remove']`));
@@ -597,6 +476,7 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${plantName}`);
 
     }
+
     async workCenterAdaptFilter(workCenterName: string): Promise<void> {
 
         const expectedValue = workCenterName.trim().toLowerCase();
@@ -628,22 +508,7 @@ class adaptFilterHelper {
         const fieldValues = await $$(
             `//span[normalize-space()='Work Center']/ancestor::div[1]/following-sibling::div/span[1]`
         );
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(workCenterId.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${workCenterId}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, workCenterId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${workCenterId}']/following-sibling::span[@aria-label='Remove']`));
@@ -654,6 +519,7 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${workCenterName}`);
 
     }
+
     async userStatusAdaptFilter(status: string): Promise<void> {
         const expectedValue = status.trim().toLowerCase();
         const filterLabel = "User Status";
@@ -684,22 +550,7 @@ class adaptFilterHelper {
         const fieldValues = await $$(
             `//span[normalize-space()='User Status']/ancestor::div[1]/following-sibling::div/span[1]`
         );
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(statusId.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${statusId}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, statusId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${statusId}']/following-sibling::span[@aria-label='Remove']`));
@@ -710,6 +561,7 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${statusId}`);
         
     }
+
     async techIdAdaptFilter(techId: string): Promise<void> {
         const expectedValue = techId
         .trim()
@@ -783,23 +635,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='${colIndex}']`
         );
         
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText() || await element.getAttribute('textContent') || '')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, sourceSystem, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -810,6 +646,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${sourceSystem}`);
     }
+
     async systemStatusAdaptFilter(status: string): Promise<void> {
         const expectedValue = status.trim().toLowerCase();
         const filterLabel = "System Status";
@@ -840,22 +677,7 @@ class adaptFilterHelper {
         const fieldValues = await $$(
             `//span[normalize-space()='System Status']/ancestor::div[1]/following-sibling::div/span[1]`
         );
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(statusId.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${statusId}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, statusId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${statusId}']/following-sibling::span[@aria-label='Remove']`));
@@ -866,6 +688,7 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${statusId}`);
         
     }
+
     async superordinateEquipmentAdaptFilter(superordinateEquipmentId: string): Promise<void> {
 
         const expectedValue = superordinateEquipmentId.trim().toLowerCase();
@@ -897,25 +720,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='8']//div[1]/div[1]/span`
         );
         
-        
-
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${superordinateEquipmentId}, but found: ${actualValue}`
-                );
-            }
-
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, superordinateEquipmentId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${superordinateEquipmentId}']/following-sibling::span[@aria-label='Remove']`));
@@ -953,22 +758,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='8']//div[1]/div[2]/span`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, description, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -979,6 +769,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${description}`);
     }
+
     async plantSectionAdaptFilter(plantSectionName: string): Promise<void> {
 
         const expectedValue = plantSectionName.trim().toLowerCase();
@@ -1009,22 +800,7 @@ class adaptFilterHelper {
         const fieldValues = await $$(
             `//span[normalize-space()='Plant Section']/ancestor::div[1]/following-sibling::div/span[1]`
         );
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(plantSectionName.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${plantSectionName}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, plantSectionName, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${plantSectionName}']/following-sibling::span[@aria-label='Remove']`));
@@ -1035,6 +811,7 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${plantSectionName}`);
 
     }
+
     async createdByAdaptFilter(userName: string): Promise<void> {
         const expectedValue = userName
         .trim()
@@ -1063,22 +840,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='${colIndex}']/div/div[2]/span`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, userName, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -1089,6 +851,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${userName}`);
     }
+
     async createdOnAdaptFilter(date: string): Promise<void> {
         const expectedValue = date
         .trim()
@@ -1117,22 +880,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='${colIndex}']/div/div[1]/div/span`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, date, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -1143,6 +891,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${date}`);
     }
+
     async modifiedByAdaptFilter(userName: string): Promise<void> {
         const expectedValue = userName
         .trim()
@@ -1169,22 +918,7 @@ class adaptFilterHelper {
             `//span[normalize-space()='Modified On / By']/ancestor::div[1]/following-sibling::div/div/div[2]/span`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, userName, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -1195,6 +929,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${userName}`);
     }
+
     async modifiedOnAdaptFilter(date: string): Promise<void> {
         const expectedValue = date;
         const filterLabel = "Modified On";
@@ -1219,22 +954,7 @@ class adaptFilterHelper {
             `//span[normalize-space()='Modified On / By']/ancestor::div[1]/following-sibling::div/div/div[1]/div/span`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, date, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -1245,6 +965,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${date}`);
     }
+
     async deactivationDateAdaptFilter(date: string): Promise<void> {
         const expectedValue = date
         .trim()
@@ -1271,22 +992,7 @@ class adaptFilterHelper {
             `//span[normalize-space()='Deactivation Date']/ancestor::div[1]/following-sibling::div/span[1]`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, date, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -1298,8 +1004,7 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${date}`);
     }
 
-   async equipmentAdaptFilter(equipmentId: string): Promise<void> {
-        
+    async equipmentAdaptFilter(equipmentId: string): Promise<void> {
         const fieldLabel = "Equipment";
         await utils.clickWithWait($(`//bdi[normalize-space()='Equipment']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
         await utils.waitForBusyIndicatorToDisappear();
@@ -1328,28 +1033,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='1']/div/div[1]//span`
         );
 
-        console.log(`Total Equipment Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-            
-            const expectedValue = equipmentId
-            
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${fieldLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(fieldLabel, equipmentId, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${equipmentId}']/following-sibling::span[@aria-label='Remove']`));
@@ -1359,6 +1043,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied Equipment adapt filter with value: ${equipmentId}`);
     }
+
     async equipmentDescriptionFilter(equipmentDescription: string): Promise<void> {
         const expectedValue = equipmentDescription
         .trim()
@@ -1385,22 +1070,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='1']/div/div[2]//span`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, equipmentDescription, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -1411,6 +1081,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied ${filterLabel} adapt filter with value: ${equipmentDescription}`);
     }
+
     async equipmentMDAAdaptFilter(Description: string): Promise<void> {
         
         const fieldLabel = "Equipment MDA";
@@ -1441,30 +1112,7 @@ class adaptFilterHelper {
             `//span[normalize-space()='${fieldLabel}']/ancestor::div[1]/following-sibling::div/span[1]`
         );
 
-        console.log(`Total ${fieldLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-            
-            const expectedValue = Description
-            
-            .replace(/\s+/g, ' ')
-            
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${fieldLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(equipmentIdValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(fieldLabel, equipmentIdValue, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${equipmentIdValue}']/following-sibling::span[@aria-label='Remove']`));
@@ -1474,6 +1122,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied Equipment MDA adapt filter with value: ${Description}`);
     }
+
     async functionalLocationAdaptFilter(functionalLocationDesc: string): Promise<void> {
         
         const fieldLabel = "Functional Location";
@@ -1505,27 +1154,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='2']/div/div[1]//span`
         );
 
-        console.log(`Total Functional Locations Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-            
-            const expectedValue = functionalLocationValue
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${fieldLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(
-                    `Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(fieldLabel, functionalLocationValue, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${functionalLocationValue}']/following-sibling::span[@aria-label='Remove']`));
@@ -1535,7 +1164,6 @@ class adaptFilterHelper {
         await browser.pause(1000);
         console.log(`Applied Functional Location adapt filter with value: ${functionalLocationValue}`);
     }
-
 
     async functionalLocationDescriptionFilter(functionalLocationDesc: string): Promise<void> {
         const expectedValue = functionalLocationDesc
@@ -1563,22 +1191,7 @@ class adaptFilterHelper {
             `//td[@aria-colindex='2']/div/div[2]//span`
         );
 
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText())
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
-
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-
-            if (!actualValue.includes(expectedValue.toLowerCase().trim())) {
-                throw new Error(
-                    `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
-            }
-        }   
+        await this.logAndVerifyFilterValues(filterLabel, functionalLocationDesc, fieldValues);
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -1616,15 +1229,7 @@ class adaptFilterHelper {
         await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
 
         const fieldValues = await $$(`//td[@aria-colindex='1']/div/div[1]//span`);
-        console.log(`Total ${fieldLabel} Found: ${fieldValues.length}`);
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText()).replace(/\s+/g, ' ').trim().toLowerCase();
-            const expectedValue = functionalLocationValue.trim().toLowerCase();
-            console.log(`Found ${fieldLabel}: ${actualValue}`);
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(`Expected ${fieldLabel}: ${expectedValue}, but found: ${actualValue}`);
-            }
-        }
+        await this.logAndVerifyFilterValues(fieldLabel, functionalLocationValue, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${functionalLocationValue}']/following-sibling::span[@aria-label='Remove']`));
@@ -1650,14 +1255,7 @@ class adaptFilterHelper {
         await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
 
         const fieldValues = await $$(`//td[@aria-colindex='1']/div/div[2]//span`);
-        console.log(`Total ${filterLabel} Found: ${fieldValues.length}`);
-        for (const element of fieldValues) {
-            const actualValue = (await element.getText()).replace(/\s+/g, ' ').trim().toLowerCase();
-            console.log(`Found ${filterLabel}: ${actualValue}`);
-            if (!actualValue.includes(expectedValue)) {
-                throw new Error(`Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`);
-            }
-        }
+        await this.logAndVerifyFilterValues(filterLabel, functionalLocationDesc, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await filterInput.clearValue();
@@ -1817,11 +1415,6 @@ class adaptFilterHelper {
         await this.applyDropdownFilter('Evergreening Status', optionIndex);
     }
 
-    /**
-     * Active filter on Functional Location list view.
-     * UI is a MultiComboBox with two options: "Yes" and "No".
-     * `Yes` => optionIndex 1, `No` => optionIndex 2.
-     */
     async activeAdaptFilter(value: 'Yes' | 'No' = 'Yes'): Promise<void> {
         const optionIndex = value === 'Yes' ? 1 : 2;
         await this.applyDropdownFilter('Active', optionIndex);
@@ -1839,10 +1432,40 @@ class adaptFilterHelper {
         await this.applyValueHelpFilter('Planner Group', displayText, 'Save');
     }
 
+    async sortFieldAdaptFilter(value: string): Promise<void> {
+        const expectedValue = value.trim().toLowerCase();
+        const filterLabel = "Sort Field";
+        const filterInput = await $(`//label[.//bdi[normalize-space()='${filterLabel}']]/following::input[1]`);
+        await filterInput.waitForDisplayed();
+        await filterInput.click();
+        await filterInput.clearValue();
+        await filterInput.addValue(value);
+        await browser.pause(500);
+        await utils.clickWithWait($('//button//bdi[text()="Go"]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+
+        const rows = await $$(
+            "//table[@role='grid' and @aria-roledescription='Responsive Table']//following-sibling::tr[@role='none'][.//div[@role='gridcell']]"
+        );
+        await browser.pause(2000);
+        console.log(`Total Rows: ${rows.length}`);
+        await browser.pause(1000);
+
+        const fieldValues = await $$(
+            `//span[normalize-space()='${filterLabel}']/ancestor::div[1]/following-sibling::div/span[1]`
+        );
+        await this.logAndVerifyFilterValues(filterLabel, value, fieldValues);
+
+        await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+        await browser.pause(500);
+        await filterInput.clearValue();
+        await browser.pause(500);
+        await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Go']]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        console.log(`Applied ${filterLabel} adapt filter with value: ${value}`);
+    }
 }
-
-
-
-
-
 export default new adaptFilterHelper();

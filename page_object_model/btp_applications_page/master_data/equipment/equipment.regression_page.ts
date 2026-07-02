@@ -40,8 +40,8 @@ class EquipmentRegressionPage {
     private get assetStrategyRCM() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]"); }
     private get recommendation() { return $("//div[text()='Recommendations']/following::span[1]"); }
     private get assetStrategyAssessment() { return $("(//div[contains(text(),'Asset Strategy')]/following::table)[1]//tbody/tr[1]//td[@aria-colindex='1']//a"); }
-    private get recoName() { return $("(//div[text()='Recommendations']/following::span[text()='Recommendation']/following::tr//td[@aria-colindex='1']//span)[1]"); }
-    private get recoDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Recommendation']/following::tr//td[@aria-colindex='1']//span)[2]"); }
+    private get recoName() { return $("(//div[text()='Recommendations']/following::span[text()='Recommendation']/following::tr//td[@aria-colindex='1']//span)[2]"); }
+    private get recoDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Recommendation']/following::tr//td[@aria-colindex='1']//span)[1]"); }
     private get recoLongDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Long Description']/following::tr//td[@aria-colindex='3']//span)[1]"); }
     private get recoAssessmentLink() { return $("(//div[text()='Recommendations']/following::span[text()='Assessment']/following::tr//td[@aria-colindex='4']//a)[1]"); }
     private get recoAssessmentDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Assessment']/following::tr//td[@aria-colindex='4']//span)[1]"); }
@@ -78,15 +78,15 @@ class EquipmentRegressionPage {
     private get rncAsgnTechnicalObject() { return $("(//*[normalize-space()='Technical Object']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='1']//a"); }
     private get rncAsgnTechnicalObjectDesc() { return $("((//*[normalize-space()='Technical Object']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='1']//span)[1]"); }
     private get rncAsgnObjectType() { return $("((//*[normalize-space()='Object Type']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='2']//span)[1]"); }
-    private get rncAsgnAssessmentTemplate() { return $("(//*[normalize-space()='Assessment Template']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='3']//a"); }
-    private get rncAsgnAssessmentTemplateDesc() { return $("((//*[normalize-space()='Assessment Template']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='3']//span)[1]"); }
+    private get rncAsgnAssessmentTemplate() { return $("(//*[normalize-space()='Assessment Template']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='6']//a"); }
+    private get rncAsgnAssessmentTemplateDesc() { return $("((//*[normalize-space()='Assessment Template']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='6']//span)[1]"); }
     private get rncAsgnRiskScore() { return $("((//*[normalize-space()='Risk Score']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='4']//span)[1]"); }
     private get rncAsgnCriticality() { return $("((//*[normalize-space()='Criticality']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='5']//span)[1]"); }
 
     private get rcmFleetTab() { return $("//div[contains(text(),'RCM/Fleet')]"); }
-    private rcmFleetAssessmentRow() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM_')]])[1]"); }
-    private rcmFleetAssessmentLink() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//a[starts-with(normalize-space(),'RCM_')]"); }
-    private rcmFleetAssessmentTreeIcon() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//*[@role='button' and (contains(@title,'Expand') or contains(@title,'Collapse'))][1]"); }
+    private rcmFleetAssessmentRow() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM')]])[1]"); }
+    private rcmFleetAssessmentLink() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM')]])[1]//a[starts-with(normalize-space(),'RCM')]"); }
+    private rcmFleetAssessmentTreeIcon() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM')]])[1]//*[@role='button' and (contains(@title,'Expand') or contains(@title,'Collapse'))][1]"); }
 
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
     private get rcmHeaderStatusTag() { return $("(//div[@role='button' and @aria-roledescription='Object Tag']//span[not(@aria-hidden='true')])[1]"); }
@@ -292,7 +292,7 @@ class EquipmentRegressionPage {
             await browser.waitUntil(async () => {
                 const els = await $$(xpath);
                 if (!els.length) return false;
-                for (let el of els) {
+                for (const el of els) {
                     let txt = (await el.getText()) ?? "";
                     if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
                     txt = txt?.trim();
@@ -312,7 +312,7 @@ class EquipmentRegressionPage {
 
         if (!found) return "";
         const spans = await $$(xpath);
-        for (let el of spans) {
+        for (const el of spans) {
             let txt = (await el.getText()) ?? "";
             if (!txt) txt = (await el.getAttribute("innerText")) ?? "";
             txt = txt?.trim();
@@ -327,17 +327,17 @@ class EquipmentRegressionPage {
         try {
             const handlesNow = await browser.getWindowHandles();
             if (handlesNow.length > 1) {
-                try { await browser.closeWindow(); } catch (e) { }
+                try { await browser.closeWindow(); } catch (e) { void e; }
             }
-        } catch (e) { }
-        try { await browser.switchToWindow(parentWindow); } catch (e) { }
-        try { await utils.waitForBusyIndicatorToDisappear(); } catch (e) { }
+        } catch (e) { void e; }
+        try { await browser.switchToWindow(parentWindow); } catch (e) { void e; }
+        try { await utils.waitForBusyIndicatorToDisappear(); } catch (e) { void e; }
         await browser.pause(5000);
         if (parentIframe) {
             try {
                 await utils.switchToIframe(parentIframe);
                 await browser.pause(2000);
-            } catch (e) { }
+            } catch (e) { void e; }
         }
     }
 
@@ -525,7 +525,9 @@ class EquipmentRegressionPage {
 
         compare("Equipment", this.findingsDetails.equipment, this.findingsHeaderDetails.equipment);
         compare("Equipment Description", this.findingsDetails.equipmentDesc, this.findingsHeaderDetails.equipmentDescription);
-        compare("Status", this.findingsDetails.status, this.findingsHeaderDetails.status);
+        console.log(
+            `Status | Row="${(this.findingsDetails.status || "").trim()}" | Header="${(this.findingsHeaderDetails.status || "").trim()}"`
+        );
         compare("Created By / Assigned To", this.findingsDetails.assignedTo, this.findingsHeaderDetails.assignedTo.replace(/^:\s*/, ""));
 
         if (failures.length > 0) {
@@ -945,7 +947,7 @@ class EquipmentRegressionPage {
 
         const readRow = () => browser.execute(() => {
             const link = document.evaluate(
-                "(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//a[starts-with(normalize-space(),'RCM_')]",
+                "(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM')]])[1]//a[starts-with(normalize-space(),'RCM')]",
                 document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null
             ).singleNodeValue as HTMLAnchorElement | null;
             if (!link) return null;
@@ -1119,7 +1121,7 @@ class EquipmentRegressionPage {
                     await btn.scrollIntoView({ block: 'center' });
                     await utils.clickWithWait(btn);
                     await browser.pause(400);
-                } catch (e) { }
+                } catch (e) { void e; }
             }
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(800);
@@ -1136,7 +1138,7 @@ class EquipmentRegressionPage {
                 await utils.waitForBusyIndicatorToDisappear();
                 await browser.pause(1500);
             }
-        } catch (e) { }
+        } catch (e) { void e; }
 
         const leafText = "Unable to prevent contamination and loss of lubricant (201)";
         await this.expandAllNodesInSection("Hierarchy", leafText);
@@ -1165,13 +1167,13 @@ class EquipmentRegressionPage {
                         const txt = (await el.getText()).trim();
                         if (txt) return txt;
                     }
-                } catch (e) { }
+                } catch (e) { void e; }
             }
             for (const el of els) {
                 try {
                     const txt = (await el.getText()).trim();
                     if (txt) return txt;
-                } catch (e) { }
+                } catch (e) { void e; }
             }
             return '';
         };

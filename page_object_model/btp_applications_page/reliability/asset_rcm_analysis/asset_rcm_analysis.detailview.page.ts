@@ -4,6 +4,7 @@ import assetRcmData from "../../../../test_data/btp_applications/reliability/ass
 import * as path from 'path';
 import { url } from 'inspector';
 import console from 'console';
+import { strict as assert } from 'node:assert';
 class assetRCMDetailView {
 
     private get infoTab() { return $("//bdi[text()='Information']"); }
@@ -124,6 +125,13 @@ class assetRCMDetailView {
     private get safeLifeInput() { return $("//bdi[contains(text(),'Safe Life')]/ancestor::div[2]/following::input[@type='text'][1]"); }
     private get pfIntervalInput() { return $("//bdi[contains(text(),'P-F Interval')]/ancestor::div[2]/following::input[@type='text'][1]"); }
     private get consequenceSaveBtn() { return $("//bdi[contains(text(),'Safe Life')]/following::button[.//text()='Save']"); }
+    private get consequenceNotesBtn() { return $("//div[@role='toolbar'][.//*[normalize-space()='Consequence Evaluation']]//button[@aria-label='No Notes' or @aria-label='Notes']"); }
+    private get failureModeNotesBtn() { return $("//div[@aria-roledescription='Overflow Toolbar']//button[@aria-label='Notes Present' or @aria-label='No Notes']"); }
+    private get notesTextarea() { return $("//*[contains(text(),'characters remaining')]/preceding::textarea[1]"); }
+    private get notesSaveBtn() { return $("//*[contains(text(),'characters remaining')]/following::button[.//bdi[normalize-space()='Save']][1]"); }
+    private get notesCloseBtn() { return $("//*[contains(text(),'characters remaining')]/following::button[.//bdi[normalize-space()='Close']][1]"); }
+    private get errorDialogHeader() { return $("//header[.//text()='Error']"); }
+    private get errorDialogOkBtn() { return $("//header[.//text()='Error']/following::button[.//bdi[normalize-space()='OK']]"); }
     private get causesText() { return $("(//div[@role='heading']//following::span[contains(text(),'Causes')])[1]"); }
     private get causesAssignBtn() { return $("(//div[@role='heading']//following::span[contains(text(),'Causes')])[1]/following::button[1]"); }
     private get assignCausesHeader() { return $("//h1[normalize-space()='Assign Causes']"); }
@@ -240,6 +248,7 @@ class assetRCMDetailView {
     private maintenableItemFunLoc: boolean = false;
     public createdStrategies: any[] = [];
     public commonStrategyValues: any = {};
+    public analysisFailures: string[] = [];
 
     public async verifyAndEditGenInfo(){
         console.log("Navigating to Information Tab");
@@ -704,65 +713,155 @@ class assetRCMDetailView {
     }
 
     public async verifyFailureModesDetails()
-    { 
-        if(this.functionValue === "0")
-        {
+    {
+        if (this.functionValue === "0") {
             return;
         }
-        if(this.assignedMaintainable === 0)
+        if (this.assignedMaintainable === 0) {
             return;
-        await this.verifyAnalysisDetails();
-        await this.verifyRiskInfoDetails();
-        await this.verifyRiskMatrix();
+        }
+
+        const sectionFailures: Record<string, string[]> = {
+            "Analysis Details": [],
+            "Risk Information": [],
+            "Risk Matrix": []
+        };
+
+        console.log("========== Failure Mode Verification: START ==========");
+
+        try {
+            await this.verifyAnalysisDetails();
+        } catch (e) {
+            const msg = (e as Error).message || String(e);
+            console.log("Analysis Details threw an unexpected error: " + msg);
+            sectionFailures["Analysis Details"].push("Unexpected exception: " + msg);
+        }
+        if (this.analysisFailures && this.analysisFailures.length > 0) {
+            sectionFailures["Analysis Details"].push(...this.analysisFailures);
+        }
+        await this.dismissOpenDialogs("after Analysis Details");
+
+        try {
+            await this.verifyRiskInfoDetails();
+        } catch (e) {
+            const msg = (e as Error).message || String(e);
+            console.log("Risk Information threw an unexpected error: " + msg);
+            sectionFailures["Risk Information"].push("Unexpected exception: " + msg);
+        }
+        await this.dismissOpenDialogs("after Risk Information");
+
+        try {
+            await this.verifyRiskMatrix();
+        } catch (e) {
+            const msg = (e as Error).message || String(e);
+            console.log("Risk Matrix threw an unexpected error: " + msg);
+            sectionFailures["Risk Matrix"].push("Unexpected exception: " + msg);
+        }
+        await this.dismissOpenDialogs("after Risk Matrix");
+
+        const totalFailures = Object.values(sectionFailures).reduce((sum, arr) => sum + arr.length, 0);
+
+        console.log("========== Failure Mode Verification: SUMMARY ==========");
+        if (totalFailures === 0) {
+            console.log("ALL PASSED in Failure Mode Verification section.");
+            console.log("========================================================");
+            return;
+        }
+
+        const lines: string[] = [];
+        for (const section of Object.keys(sectionFailures)) {
+            const errs = sectionFailures[section];
+            if (errs.length === 0) {
+                console.log(`[${section}] PASSED`);
+            } else {
+                console.log(`[${section}] FAILED (${errs.length} issue(s)):`);
+                errs.forEach((er, idx) => console.log(`   ${idx + 1}. ${er}`));
+                lines.push(`[${section}] (${errs.length} issue(s)):`);
+                errs.forEach((er, idx) => lines.push(`   ${idx + 1}. ${er}`));
+            }
+        }
+        console.log("========================================================");
+        throw new Error(`Failure Mode Verification failed with ${totalFailures} issue(s):\n` + lines.join("\n"));
+    }
+
+    private async dismissOpenDialogs(stage: string)
+    {
+        try {
+            if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
+                console.log(`Dismissing Error dialog ${stage}...`);
+                if (await this.errorDialogOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.errorDialogOkBtn);
+                    await utils.waitForBusyIndicatorToDisappear();
+                }
+            }
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
+                console.log(`Dismissing stale OK popup ${stage}...`);
+                await utils.clickWithWait(this.okBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+            if (await this.cancelBtn.isDisplayed().catch(() => false)) {
+                console.log(`Dismissing stale Cancel popup ${stage}...`);
+                await utils.clickWithWait(this.cancelBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+            for (const btn of await this.closeBtn) {
+                if (await btn.isDisplayed().catch(() => false) && await btn.isClickable().catch(() => false)) {
+                    console.log(`Closing leftover dialog ${stage}...`);
+                    await utils.clickWithWait(btn);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    break;
+                }
+            }
+        } catch (cleanupErr) {
+            console.log(`Dialog cleanup ${stage} encountered: ` + (cleanupErr as Error).message);
+        }
+        await browser.pause(800);
     }
 
     public async verifyAnalysisDetails()
     {
         console.log("Failure Mode Flow starts...");
-        if(this.failureModeFunLoc === true)
-        {
-            const nameOnly = this.failureModeValueFunLoc.split(' (')[0];
-            const idOnly = this.failureModeValueFunLoc.match(/\((.*?)\)/)?.[1] || '';
-            await utils.clickWithWait(this.failureModeRow(this.failureModeValueFunLoc));
-            await browser.pause(5000);
-            let isDisplayed = false;
-            let actualText = "";
+        this.analysisFailures = [];
+        await this.openFailureModeDetailHeader();
+        await this.addFailureModeNote();
+        await this.openAnalysisDetailsSection();
+        await this.assignFailureEffects();
+        await this.editFailureScenario();
+        await this.assignFailureMechanism();
+        await this.performConsequenceEvaluation();
+        await this.addConsequenceNote();
+        await this.assignCauses();
+        await this.createEditStrategy();
+        console.log("Failure Mode Flow ends");
+    }
 
-            for (const el of await this.failureModeHeaders(nameOnly)) {
-                if (await el.isDisplayed()) {
-                    isDisplayed = true;
-                    actualText = await el.getText();
-                    console.log("Displayed Failure Mode Header: " + actualText);
-                    break;
-                }
+    public async openFailureModeDetailHeader()
+    {
+        const isFunLoc = this.failureModeFunLoc === true;
+        const failureModeText = isFunLoc ? this.failureModeValueFunLoc : this.failureMode;
+        const nameOnly = failureModeText.split(' (')[0];
+        const idOnly = failureModeText.match(/\((.*?)\)/)?.[1] || '';
+        console.log(`Opening failure mode detail page for '${failureModeText}'...`);
+        await utils.clickWithWait(this.failureModeRow(failureModeText));
+        await browser.pause(5000);
+
+        let isDisplayed = false;
+        for (const el of await this.failureModeHeaders(nameOnly)) {
+            if (await el.isDisplayed()) {
+                isDisplayed = true;
+                console.log("Displayed Failure Mode Header: " + await el.getText());
+                break;
             }
-
-            await expect(isDisplayed).toBe(true);
+        }
+        await expect(isDisplayed).toBe(true);
+        if (isFunLoc) {
             await browser.execute(() => window.scrollTo(0, 0));
-            await expect(this.failureModeId(idOnly)).toBeDisplayed();
         }
-        else
-        {
-            const nameOnly = this.failureMode.split(' (')[0];
-            const idOnly = this.failureMode.match(/\((.*?)\)/)?.[1] || '';
-            await utils.clickWithWait(this.failureModeRow(this.failureMode));
-            await browser.pause(5000);
-            let isDisplayed = false;
-            let actualText = "";
+        await expect(this.failureModeId(idOnly)).toBeDisplayed();
+    }
 
-            for (const el of await this.failureModeHeaders(nameOnly)) {
-                if (await el.isDisplayed()) {
-                    isDisplayed = true;
-                    actualText = await el.getText();
-                    console.log("Displayed Failure Mode Header: " + actualText);
-                    break;
-                }
-            }
-
-            await expect(isDisplayed).toBe(true);
-            await expect(this.failureModeId(idOnly)).toBeDisplayed();
-        }
-
+    public async openAnalysisDetailsSection()
+    {
         for (const el of await this.analysisDetailsSections) {
             if (await el.isDisplayed() && await el.isClickable()) {
                 await utils.clickWithWait(el);
@@ -771,7 +870,11 @@ class assetRCMDetailView {
                 break;
             }
         }
+    }
 
+    public async assignFailureEffects()
+    {
+        console.log("--- Failure Effects ---");
         let txt = await this.failureEffectsText.getText();
         console.log("Failure Effects before: " + await utils.getAssignedValue(txt));
         await utils.clickWithWait(this.failureEffectsAssignBtn);
@@ -779,14 +882,14 @@ class assetRCMDetailView {
         await browser.pause(3000);
         await expect(this.assignFailureEffectsHeader).toBeDisplayed();
 
-        let count = await utils.getAssignedValue(await this.failureEffectsCountText.getText());
+        const count = await utils.getAssignedValue(await this.failureEffectsCountText.getText());
         if (count === 0) {
             await utils.clickWithWait(this.cancelBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
         } else {
             const val = await this.failureEffectsValue.getText();
-            console.log("Failure effect selected :"+val);
+            console.log("Failure effect selected :" + val);
             await utils.clickWithWait(this.failureEffectsCheckbox);
             await utils.clickWithWait(this.assignBtn);
             await utils.waitForBusyIndicatorToDisappear();
@@ -796,6 +899,11 @@ class assetRCMDetailView {
         }
         txt = await this.failureEffectsText.getText();
         console.log("Failure Effects after: " + await utils.getAssignedValue(txt));
+    }
+
+    public async editFailureScenario()
+    {
+        console.log("--- Failure Scenario ---");
         await utils.clickWithWait(this.failureScenarioEditBtn);
         await this.failureScenarioTextarea.setValue("Test Scenario");
         await utils.clickWithWait(this.failureScenarioSaveBtn);
@@ -804,11 +912,16 @@ class assetRCMDetailView {
         await utils.clickWithWait(this.okBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
-        txt = await this.failureMechanismText.getText();
+    }
+
+    public async assignFailureMechanism()
+    {
+        console.log("--- Failure Mechanisms ---");
+        let txt = await this.failureMechanismText.getText();
         console.log("Failure Mechanisms before: " + await utils.getAssignedValue(txt));
         await utils.clickWithWait(this.failureMechanismAssignBtn);
         await expect(this.assignFailureMechanismHeader).toBeDisplayed();
-        count = await utils.getAssignedValue(await this.failureMechanismCountText.getText());
+        const count = await utils.getAssignedValue(await this.failureMechanismCountText.getText());
         if (count === 0) {
             await utils.clickWithWait(this.cancelBtn);
             await utils.waitForBusyIndicatorToDisappear();
@@ -816,7 +929,7 @@ class assetRCMDetailView {
         } else {
             await utils.clickWithWait(this.failureMechanismCheckbox);
             const failVal = await this.failureMechanismValue.getText();
-            console.log("Failure value selected :",failVal);
+            console.log("Failure value selected :", failVal);
             await utils.clickWithWait(this.assignBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
@@ -825,6 +938,11 @@ class assetRCMDetailView {
         }
         txt = await this.failureMechanismText.getText();
         console.log("Failure Mechanisms after: " + await utils.getAssignedValue(txt));
+    }
+
+    public async performConsequenceEvaluation()
+    {
+        console.log("--- Consequence Evaluation ---");
         await utils.clickWithWait(this.consequencePerformBtn);
         await browser.pause(2000);
         await expect(this.consequenceHeader).toBeDisplayed();
@@ -846,18 +964,161 @@ class assetRCMDetailView {
         await utils.clickWithWait(this.okBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
-        txt = await this.causesText.getText();
+    }
+
+    public async addFailureModeNote()
+    {
+        console.log("--- Failure Mode Notes (5001-char limit check) ---");
+        const notesBtn = this.failureModeNotesBtn;
+        const visible = await notesBtn.isDisplayed().catch(() => false);
+        if (!visible) {
+            const failure = "Failure Mode detail-page 'Notes' button is not visible - skipping.";
+            console.log(failure);
+            this.analysisFailures.push(failure);
+            return;
+        }
+
+        await utils.clickWithWait(notesBtn);
+        await browser.pause(1500);
+        await this.notesTextarea.waitForDisplayed({ timeout: 30000 });
+
+        const longText = "A".repeat(5001);
+        console.log(`Sending ${longText.length} characters into Failure Mode Notes textarea...`);
+        await this.notesTextarea.click();
+        await this.notesTextarea.clearValue();
+        await this.notesTextarea.setValue(longText);
+        await browser.pause(500);
+
+        const actualValue = (await this.notesTextarea.getValue()) || "";
+        console.log(`Failure Mode Notes textarea actually accepted ${actualValue.length} characters.`);
+
+        const limitCheck = `Failure Mode Notes textarea must enforce 5000-char limit (typed 5001, accepted ${actualValue.length})`;
+        if (actualValue.length === 5000) {
+            console.log(`PASS: ${limitCheck}`);
+        } else {
+            const failure = `FAIL: ${limitCheck}`;
+            console.log(failure);
+            this.analysisFailures.push(failure);
+        }
+
+        console.log("Clicking 'Save' on Failure Mode Notes popover...");
+        await utils.clickWithWait(this.notesSaveBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        await browser.waitUntil(
+            async () =>
+                (await this.okBtn.isDisplayed().catch(() => false)) ||
+                (await this.errorDialogHeader.isDisplayed().catch(() => false)) ||
+                !(await this.notesTextarea.isDisplayed().catch(() => false)),
+            { timeout: 30000, interval: 500, timeoutMsg: "No response after saving Failure Mode Notes" }
+        );
+
+        if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
+            const failure = "Saving Failure Mode Note returned an Error popup - dismissing and continuing.";
+            console.log(failure);
+            this.analysisFailures.push(failure);
+            if (await this.errorDialogOkBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.errorDialogOkBtn);
+            }
+            await utils.waitForBusyIndicatorToDisappear();
+            if (await this.notesCloseBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.notesCloseBtn);
+            }
+        } else if (await this.okBtn.isDisplayed().catch(() => false)) {
+            console.log("Failure Mode Note saved successfully - clicking OK.");
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        } else {
+            console.log("Failure Mode Notes popover closed without explicit Success/Error popup.");
+        }
+        await browser.pause(1500);
+    }
+
+    public async addConsequenceNote()
+    {
+        console.log("--- Consequence Notes (501-char limit check) ---");
+        const notesBtn = this.consequenceNotesBtn;
+        const visible = await notesBtn.isDisplayed().catch(() => false);
+        if (!visible) {
+            const failure = "Consequence Evaluation 'Notes' button is not visible - cannot add note.";
+            console.log(failure);
+            this.analysisFailures.push(failure);
+            return;
+        }
+
+        await utils.clickWithWait(notesBtn);
+        await browser.pause(1500);
+        await this.notesTextarea.waitForDisplayed({ timeout: 30000 });
+
+        const longText = "A".repeat(501);
+        console.log(`Sending ${longText.length} characters into the Notes textarea...`);
+        await this.notesTextarea.click();
+        await this.notesTextarea.clearValue();
+        await this.notesTextarea.setValue(longText);
+        await browser.pause(500);
+
+        const actualValue = (await this.notesTextarea.getValue()) || "";
+        console.log(`Notes textarea actually accepted ${actualValue.length} characters.`);
+
+        const limitCheck = `Notes textarea must enforce 500-char limit (typed 501, accepted ${actualValue.length})`;
+        if (actualValue.length === 500) {
+            console.log(`PASS: ${limitCheck}`);
+        } else {
+            const failure = `FAIL: ${limitCheck}`;
+            console.log(failure);
+            this.analysisFailures.push(failure);
+        }
+
+        console.log("Clicking 'Save' on Notes popover...");
+        await utils.clickWithWait(this.notesSaveBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        await browser.waitUntil(
+            async () =>
+                (await this.okBtn.isDisplayed().catch(() => false)) ||
+                (await this.errorDialogHeader.isDisplayed().catch(() => false)) ||
+                !(await this.notesTextarea.isDisplayed().catch(() => false)),
+            { timeout: 30000, interval: 500, timeoutMsg: "No response after saving Notes" }
+        );
+
+        if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
+            const failure = "Saving Consequence Note returned an Error popup - dismissing and continuing.";
+            console.log(failure);
+            this.analysisFailures.push(failure);
+            if (await this.errorDialogOkBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.errorDialogOkBtn);
+            }
+            await utils.waitForBusyIndicatorToDisappear();
+            if (await this.notesCloseBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.notesCloseBtn);
+            }
+        } else if (await this.okBtn.isDisplayed().catch(() => false)) {
+            console.log("Consequence Note saved successfully - clicking OK.");
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        } else {
+            console.log("Notes popover closed without explicit Success/Error popup.");
+        }
+        await browser.pause(1500);
+    }
+
+    public async assignCauses()
+    {
+        console.log("--- Causes ---");
+        let txt = await this.causesText.getText();
         console.log("Causes before: " + await utils.getAssignedValue(txt));
         await utils.clickWithWait(this.causesAssignBtn);
         await expect(this.assignCausesHeader).toBeDisplayed();
-        count = await utils.getAssignedValue(await this.causesCountText.getText());
+        const count = await utils.getAssignedValue(await this.causesCountText.getText());
         if (count === 0) {
             await utils.clickWithWait(this.cancelBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
         } else {
             const causesVal = await this.causesValue.getText();
-            console.log("Choosing : "+causesVal);
+            console.log("Choosing : " + causesVal);
             await utils.clickWithWait(this.causesCheckbox);
             await utils.clickWithWait(this.assignBtn);
             await utils.waitForBusyIndicatorToDisappear();
@@ -867,8 +1128,6 @@ class assetRCMDetailView {
         }
         txt = await this.causesText.getText();
         console.log("Causes after: " + await utils.getAssignedValue(txt));
-        await this.createEditStrategy();
-        console.log("Failure Mode Flow ends");
     }
 
     public async createEditStrategy()
@@ -1543,7 +1802,9 @@ class assetRCMDetailView {
                     clicked = true;
                     break;
                 }
-            } catch {}
+            } catch (e) {
+                console.log(`Skipping close button (not interactable): ${(e as Error).message}`);
+            }
         }
         if (!clicked) {
             console.log("No close button clicked");
@@ -1643,7 +1904,7 @@ class assetRCMDetailView {
 
     public async assignFunctionalFailure()
     {
-        if(this.functionValue = "0")
+        if(this.functionValue === "0")
         {
             return;
         }
@@ -1727,7 +1988,7 @@ class assetRCMDetailView {
     }
 
     public async addMaintainableItemsForFuncLoc() {
-        if(this.functionValue = "0")
+        if(this.functionValue === "0")
         {
             return;
         }
@@ -1810,7 +2071,7 @@ class assetRCMDetailView {
     }
 
     public async addFailureModesForFuncLoc() {
-        if(this.functionValue = "0")
+        if(this.functionValue === "0")
         {
             return;
         }
@@ -1946,7 +2207,7 @@ class assetRCMDetailView {
                 console.log(`${index + 1}. ${failure}`);
             });
             console.log("===================================\n");
-            throw new Error(
+            assert.fail(
                 `PDF Summary Report Validation Failed:\n\n${failures.join("\n")}`
             );
         }
