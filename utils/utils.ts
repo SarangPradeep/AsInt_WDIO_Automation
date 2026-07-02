@@ -1506,12 +1506,14 @@ async addAllAdaptFilter(): Promise<void> {
 
     public async clickPopupMenuItem(label: string): Promise<void> {
         const clicked = await browser.execute((text: string) => {
+            const norm = (s: string) => (s || "").replace(/\s+/g, " ").trim().toLowerCase();
+            const target = norm(text);
             const candidates = Array.from(document.querySelectorAll<HTMLElement>(
                 "li[role='menuitem'], div[role='menuitem'], li[role='option'], div[role='option'], li, span, bdi"
             ));
             for (const el of candidates) {
-                const t = (el.innerText || el.textContent || "").trim();
-                if (t === text) {
+                const t = norm(el.innerText || el.textContent || "");
+                if (t === target) {
                     const rect = el.getBoundingClientRect();
                     if (rect.width > 0 && rect.height > 0) {
                         el.click();

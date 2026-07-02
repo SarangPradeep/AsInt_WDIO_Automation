@@ -585,11 +585,19 @@ class maintenance_detail_view{
         }
         for (const label of missingDropdowns) {
             const dd = await $(`(//label[.//text()='${label}']/following::span[1])[1]`);
-            if (await dd.isExisting().catch(() => false)) {
-                await utils.clickWithWait(dd);
-                await browser.keys(["ArrowDown", "Enter"]);
-                await browser.pause(500);
+            if (!(await dd.isExisting().catch(() => false))) {
+                console.log(`Dropdown '${label}' not found in DOM — skipping`);
+                continue;
             }
+            const isDisp = await dd.isDisplayed().catch(() => false);
+            const isClickable = await dd.isClickable().catch(() => false);
+            if (!isDisp || !isClickable) {
+                console.log(`Dropdown '${label}' is not editable (displayed=${isDisp}, clickable=${isClickable}) — skipping (likely derived/disabled)`);
+                continue;
+            }
+            await utils.clickWithWait(dd);
+            await browser.keys(["ArrowDown", "Enter"]);
+            await browser.pause(500);
         }
 
         await utils.clickWithWait(this.saveDetailBtn);
@@ -630,7 +638,7 @@ class maintenance_detail_view{
         await this.ensureFieldsForSection(
             this.summaryTab,
             [],
-            ["Process Stage", "Process Sub-Stage"]
+            ["Process Stage"]
         );
         const processStage = await this.readFieldValue("Process Stage");
         const processSubStage = await this.readFieldValue("Process Sub-Stage");
@@ -681,15 +689,50 @@ class maintenance_detail_view{
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2500);
 
-        const commentDialog = await $("//h1[.//text()='Change Status']");
-        if (await commentDialog.isDisplayed().catch(() => false)) {
-            console.log("  Comment dialog detected, filling and saving...");
-            const textArea = await $("//label[.//text()='Comment']/following::textarea[1]");
+        const normalized = label.trim().toLowerCase();
+
+        if (normalized === "ready for funding") {
+            console.log("  'Ready for Funding' step -> no dialog expected, proceeding.");
+        } else if (normalized === "planning" || normalized === "deferred") {
+            console.log(`  '${label}' step -> Change Status comment dialog expected, filling and saving...`);
+            const commentDialog = await $("//h1[.//text()='Change Status']");
+            await commentDialog.waitForDisplayed({ timeout: 20000 });
+
+            const textArea = await $("//h1[.//text()='Change Status']/following::label[.//bdi[normalize-space(text())='Comment']]/following::textarea[1]");
+            await textArea.waitForDisplayed({ timeout: 15000 });
             await utils.setValueWithWait(textArea, `Automation - ${label}`);
-            const dialogSaveBtn = await $("//footer//button[.//text()='Save']");
+            await browser.pause(500);
+
+            const dialogSaveBtn = await $("//h1[.//text()='Change Status']/following::footer[1]//button[.//bdi[normalize-space(text())='Save']]");
+            await browser.waitUntil(async () => {
+                const disp = await dialogSaveBtn.isDisplayed().catch(() => false);
+                const clk = await dialogSaveBtn.isClickable().catch(() => false);
+                return disp && clk;
+            }, { timeout: 15000, interval: 500, timeoutMsg: "Save button in Change Status dialog did not become enabled" });
             await utils.clickWithWait(dialogSaveBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(3000);
+        } else if (normalized === "funded") {
+            console.log("  'Funded' step -> Linked MSP Funding Info dialog expected, clicking OK...");
+            const linkedTitle = await $("//h1[.//text()='Linked MSP Funding Info']");
+            await linkedTitle.waitForDisplayed({ timeout: 20000 });
+
+            const linkedOk = await $("//h1[.//text()='Linked MSP Funding Info']/following::footer[1]//button[.//bdi[normalize-space(text())='OK']]");
+            await linkedOk.waitForClickable({ timeout: 15000 });
+            await utils.clickWithWait(linkedOk);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2500);
+        } else {
+            console.log(`  Unknown step '${label}' -> best-effort dialog handling.`);
+            const commentDialog = await $("//h1[.//text()='Change Status']");
+            if (await commentDialog.isDisplayed().catch(() => false)) {
+                const textArea = await $("//h1[.//text()='Change Status']/following::label[.//bdi[normalize-space(text())='Comment']]/following::textarea[1]");
+                await utils.setValueWithWait(textArea, `Automation - ${label}`);
+                const dialogSaveBtn = await $("//h1[.//text()='Change Status']/following::footer[1]//button[.//bdi[normalize-space(text())='Save']]");
+                await utils.clickWithWait(dialogSaveBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2500);
+            }
         }
 
         if (await this.okBtn.isDisplayed().catch(() => false)) {

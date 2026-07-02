@@ -1,10 +1,10 @@
 export const mspTestData = {
     bulkStatuses: [
-        "Funded",
-        "Deferred",
-        "Ready for Funding",
         "Reviewing",
-        "Planning"
+        "Funded",
+        "Ready for Funding",
+        "Planning",
+        "Deferred"
     ],
     bulkUpdate: {
         processStages: [
