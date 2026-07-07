@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import HomePage from 'page_object_model/btp_applications_page/home.page';
 import utils from 'utils/utils';
 import adaptFilterHelper from 'utils/adapt_filter.helper';
@@ -96,7 +97,7 @@ describe('BTP - Equipment Application - Adapt Filter Functional test', () => {
         await utils.resetAllAdaptFilter();
         if (failures.length > 0) {
             const summary = failures.map((f, i) => `  ${i + 1}. ${f.name} -> ${f.error}`).join('\n');
-            throw new Error(`Found issue in ${failures.length} of the adapt filter(s):\n${summary}`);
+            throw new AssertionError({ message: `Found issue in ${failures.length} of the adapt filter(s):\n${summary}` });
         }
     });
 });

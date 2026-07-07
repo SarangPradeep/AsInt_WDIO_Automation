@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from '../../../../utils/utils';
 
 class RNCTDetailPage {
@@ -21,7 +22,7 @@ class RNCTDetailPage {
             }
 
             if (!(await frame.isExisting())) {
-                throw new Error('Application iframe not found');
+                throw new AssertionError({ message: 'Application iframe not found' });
             }
 
             await utils.switchToIframe(frame);
@@ -63,7 +64,7 @@ class RNCTDetailPage {
             console.log(`Created By: ${createdBy || 'N/A'} | Created On: ${createdOn || 'N/A'} | Changed By: ${changedBy || 'N/A'} | Changed On: ${changedOn || 'N/A'}`);
 
             if (!createdBy && !createdOn && !changedBy && !changedOn) {
-                throw new Error('No administrative information fields were found');
+                throw new AssertionError({ message: 'No administrative information fields were found' });
             }
 
             if (!changedOn) {

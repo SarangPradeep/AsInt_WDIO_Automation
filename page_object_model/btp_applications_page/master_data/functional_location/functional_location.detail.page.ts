@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import functionalLocationListView from './functional_location.listview.page';
 import {funcLocTestData} from '../../../../test_data/btp_applications/functional_location.data';
 import utils from '../../../../utils/utils';
@@ -259,7 +260,7 @@ class functionalLocationDetailView {
             await this.planPlantSelect.waitForDisplayed({ timeout: 30000 });
         } catch {
             await utils.clickWithWait(await $("//footer//bdi[text()='Cancel']"));
-            throw new Error("Plan Plant Select not displayed");
+            throw new AssertionError({ message: "Plan Plant Select not displayed" });
         }
         await utils.clickWithWait(this.planPlantSelect,2000);
         await utils.clickWithWait(this.planPlantSave,1000);
@@ -703,7 +704,7 @@ class functionalLocationDetailView {
             try {
                 await el.waitForExist({ timeout: 15000 });
                 const text = (await el.getText() ?? "").trim();
-                if (!text) throw new Error("empty text");
+                if (!text) throw new AssertionError({ message: "empty text" });
                 return text;
             } catch {
                 console.log(`\x1b[1m!!! Maintenance and Service: '${label}' is NOT PRESENT !!!\x1b[0m`);
@@ -778,14 +779,14 @@ class functionalLocationDetailView {
         const descLine = lines.find(l => l.toLowerCase().includes('description'));
 
         if (!categoryLine || !categoryLine.includes(selectedCategory)) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Category mismatch. Expected: ${selectedCategory}, Found: ${categoryLine}`
-            );
+             });
         }
         if (!descLine || !descLine.includes(enteredDesc)) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Description mismatch. Expected: ${enteredDesc}, Found: ${descLine}`
-            );
+             });
         }
         console.log("Change history validation passed successfully");
     }
@@ -911,7 +912,7 @@ class functionalLocationDetailView {
             } catch (e) { void e; }
         }
         if (errors.length > 0) {
-            throw new Error(`CML Verification Failed:\n${errors.join("\n")}`);
+            throw new AssertionError({ message: `CML Verification Failed:\n${errors.join("\n")}` });
         }
     }
 
@@ -1050,7 +1051,7 @@ class functionalLocationDetailView {
             checkOne(`Characteristic[${i}]`, this.characteristicValues[i]);
         }
         if (missingFields.length > 0) {
-            throw new Error(`PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}`);
+            throw new AssertionError({ message: `PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}` });
         }
         console.log("PDF content verification completed successfully");
     }

@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from "utils/utils";
 import CML_ListView_Page from "./cmls.listview.page";
 import AssetInspectionDetailView from "../asset_inspection/asset_inspection.detailview.page";
@@ -106,7 +107,7 @@ class CML_Detail_Page{
                 }
             }
             if (!detailBtnClicked) {
-                throw new Error("Details button is not visible/clickable for searched CML.");
+                throw new AssertionError({ message: "Details button is not visible/clickable for searched CML." });
             }
             await this.cmlHeader.waitForDisplayed();
             await this.cmlHeader.waitForClickable();
@@ -121,7 +122,7 @@ class CML_Detail_Page{
     public async searchCmlAndOpenDetailToVerifyAverage(cmlName?: string): Promise<void> {
         const target = (cmlName ?? CML_ListView_Page.cmlName ?? "").trim();
         if (!target) {
-            throw new Error("Searched Cml And Open Detail To Verify Average: CML name is empty.");
+            throw new AssertionError({ message: "Searched Cml And Open Detail To Verify Average: CML name is empty." });
         }
         console.log(`Searching CML '${target}' in equipment detail...`);
         await utils.waitForBusyIndicatorToDisappear();
@@ -136,12 +137,12 @@ class CML_Detail_Page{
         const noOfCMLs = await utils.getAssignedValue(cmlText);
         console.log(`Number of CMLs after search: ${noOfCMLs}`);
         if (noOfCMLs === 0) {
-            throw new Error(`No CML matched search for '${target}'.`);
+            throw new AssertionError({ message: `No CML matched search for '${target}'.` });
         }
 
         const expectedAvg = (AssetInspectionDetailView.averageReading || "").trim();
         if (!expectedAvg) {
-            throw new Error("Expected average reading is empty — was it captured from inspection flow?");
+            throw new AssertionError({ message: "Expected average reading is empty — was it captured from inspection flow?" });
         }
 
         const avgCellSpan = $(`//span[text()=${utils.xpathString(target)}]/following::td[@aria-colindex="7"]//span`);
@@ -151,7 +152,7 @@ class CML_Detail_Page{
         console.log(`Row average reading for '${target}': '${actualAvg}' (expected '${expectedAvg}').`);
 
         if (actualAvg !== expectedAvg) {
-            throw new Error(`Average reading mismatch for CML '${target}': expected '${expectedAvg}', got '${actualAvg}'.`);
+            throw new AssertionError({ message: `Average reading mismatch for CML '${target}': expected '${expectedAvg}', got '${actualAvg}'.` });
         }
         console.log(`Average reading verified for CML '${target}'.`);
     }

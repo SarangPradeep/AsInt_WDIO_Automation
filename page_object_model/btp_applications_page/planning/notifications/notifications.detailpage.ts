@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { browser } from '@wdio/globals';
 import utils from '../../../../utils/utils';
 
@@ -76,7 +77,7 @@ class NotificationsDetailPage {
 			}
 		}
 
-		throw new Error('Notifications detail view frame not found');
+		throw new AssertionError({ message: 'Notifications detail view frame not found' });
 	}
 
 	public async waitForNotificationDetailPage(): Promise<void> {
@@ -214,7 +215,7 @@ class NotificationsDetailPage {
 			const noData = await table.$('.//tbody//td[normalize-space()="No Data"]');
 			if (await noData.isExisting().catch(() => false)) {
 				console.log('Asset Strategy - No Data');
-                throw new Error('No data in Asset Strategy table');
+                throw new AssertionError({ message: 'No data in Asset Strategy table' });
 			}
 		}
 
@@ -242,7 +243,7 @@ class NotificationsDetailPage {
 		// const finalNoData = await table.$('.//tbody//td[normalize-space()="No Data"]');
 		// const noDataVisible = await finalNoData.isExisting().catch(() => false);
 		// if (finalCount !== 0 || !noDataVisible) {
-		// 	throw new Error('Asset Strategy table should be empty after unassign');
+		// 	throw new AssertionError({ message: 'Asset Strategy table should be empty after unassign' });
 		// }
 		console.log('Asset Strategy - table cleared after unassign');
 
@@ -344,7 +345,7 @@ class NotificationsDetailPage {
 		// const finalNoData = await table.$('.//tbody//td[normalize-space()="No Data"]');
 		// const noDataVisible = await finalNoData.isExisting().catch(() => false);
 		// if (finalCount !== 0 || !noDataVisible) {
-		// 	throw new Error('Asset Inspection table should be empty after unassign');
+		// 	throw new AssertionError({ message: 'Asset Inspection table should be empty after unassign' });
 		// }
 		console.log('Asset Inspection - table cleared after unassign');
 
@@ -444,7 +445,7 @@ class NotificationsDetailPage {
 		// const finalNoData = await table.$('.//tbody//td[normalize-space()="No Data"]');
 		// const noDataVisible = await finalNoData.isExisting().catch(() => false);
 		// if (finalCount !== 0 || !noDataVisible) {
-		// 	throw new Error('Recommendation table should be empty after unassign');
+		// 	throw new AssertionError({ message: 'Recommendation table should be empty after unassign' });
 		// }
 		console.log('Recommendation - table cleared after unassign');
 

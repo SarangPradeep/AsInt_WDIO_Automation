@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
     import { $ } from '@wdio/globals';
     import utils from '../../../../utils/utils';
     import { rcaData } from '../../../../test_data/btp_applications/reliability/root_cause_analysis_data';
@@ -618,7 +619,9 @@
             await browser.pause(2000);
             await utils.selectCheckboxes(2);
             await utils.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'),1000);
-    
+            await utils.waitForBusyIndicatorToDisappear();
+            await utils.assertNoErrorPopup("Assign attachment (RCA Fishbone)");
+
             await this.attachSuccMsg.waitForDisplayed({
                 timeout: 20000,
                 timeoutMsg: 'Document assign success message not displayed'
@@ -705,11 +708,11 @@
 
 
             if (!field.includes("Failure Name")) {
-                throw new Error("Field name mismatch");
+                throw new AssertionError({ message: "Field name mismatch" });
             }
 
             if (!newVal.includes(enteredDesc)) {
-                throw new Error(`New value mismatch. Expected: ${enteredDesc} Found: ${newVal}`);
+                throw new AssertionError({ message: `New value mismatch. Expected: ${enteredDesc} Found: ${newVal}` });
             }
         }
         

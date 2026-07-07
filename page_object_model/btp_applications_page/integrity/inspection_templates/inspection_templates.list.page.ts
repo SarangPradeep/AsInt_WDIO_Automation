@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import HomePage from '../../home.page';
 import { browser } from '@wdio/globals';
 import utils from 'utils/utils';
@@ -121,7 +122,7 @@ class InspectionTemplatesListPage {
             } catch {}
         }
 
-        throw new Error('No inspection template name found in list');
+        throw new AssertionError({ message: 'No inspection template name found in list' });
     }
 
     async clickOnInspectionTemplateInList(name: string): Promise<void> {

@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { browser } from '@wdio/globals';
 import HomePage from '../../home.page';
 import utils from '../../../../utils/utils';
@@ -60,7 +61,7 @@ class TaskManagementListView {
             const button = await $(selector);
             if (await button.isExisting()) return button;
         }
-        throw new Error('Add Task button not found in task management list view');
+        throw new AssertionError({ message: 'Add Task button not found in task management list view' });
     }
 
     private async switchToTaskManagementFrame(): Promise<void> {
@@ -368,7 +369,7 @@ class TaskManagementListView {
 
         const dialogOpen = await this.createTaskDialog.isDisplayed().catch(() => false);
         if (dialogOpen) {
-            throw new Error(`Task create dialog is still open. Task with description "${taskDescription}" was likely not created.`);
+            throw new AssertionError({ message: `Task create dialog is still open. Task with description "${taskDescription}" was likely not created.` });
         }
 
         await this.taskTable.waitForDisplayed({ timeout: 180000 });
@@ -617,7 +618,7 @@ class TaskManagementListView {
         const taskRow = this.taskDescriptionCell(taskDescription);
         const isTaskVisible = await taskRow.isDisplayed().catch(() => false);
         if (isTaskVisible) {
-            throw new Error(`Task "${taskDescription}" was not deleted - still visible in search results`);
+            throw new AssertionError({ message: `Task "${taskDescription}" was not deleted - still visible in search results` });
         }
         console.log(`[VERIFIED] Task "${taskDescription}" successfully deleted - not found in search`);
     }

@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { ChainablePromiseElement } from 'webdriverio';
 import utils from '../../../../utils/utils';
 import functionalLocationDetailView from './functional_location.detail.page';
@@ -150,7 +151,7 @@ class functionalLocationListView {
         }, { timeout: 30000 });
 
         if (!searchBox) {
-            throw new Error("Visible search box not found");
+            throw new AssertionError({ message: "Visible search box not found" });
         }
         console.log("Visible search box found, searching for deleted Functional Location");
         await browser.execute((el, value) => {
@@ -179,7 +180,7 @@ class functionalLocationListView {
             timeoutMsg: "Go button not found"
         });
         if (!goBtn) {
-            throw new Error("Go button not found");
+            throw new AssertionError({ message: "Go button not found" });
         }
 
         console.log("Clicking Go button to search for Functional Location");
@@ -206,7 +207,7 @@ class functionalLocationListView {
         const isFuncLocPresent = await $(noDataCell).isExisting();
 
         if (!isFuncLocPresent) {
-            throw new Error("Functional Location still exists after deletion");
+            throw new AssertionError({ message: "Functional Location still exists after deletion" });
         } else {
             console.log("Functional Location deletion verified successfully");
         }

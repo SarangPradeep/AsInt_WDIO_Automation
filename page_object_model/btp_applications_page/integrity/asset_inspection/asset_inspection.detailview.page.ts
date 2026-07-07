@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from "utils/utils";
 import CMLListView from "../cmls/cmls.listview.page";
 import CMLDetailView from "../cmls/cmls.detailview.page";
@@ -150,7 +151,7 @@ class AssetInspectionDetailView {
             await level2LabelEl.waitForExist({ timeout: 10000 });
             const level2Text = ((await level2LabelEl.getText().catch(() => "")) || "").trim();
             if (!level2Text.includes(equipmentName) && !equipmentName.includes(level2Text)) {
-                throw new Error(`Add CML dialog level-2 node text '${level2Text}' does not match selected equipment '${equipmentName}'.`);
+                throw new AssertionError({ message: `Add CML dialog level-2 node text '${level2Text}' does not match selected equipment '${equipmentName}'.` });
             }
             console.log(`Add CML dialog equipment node verified: '${level2Text}'.`);
         }
@@ -183,7 +184,7 @@ class AssetInspectionDetailView {
         await browser.pause(2000);
         const cmlName = (CMLListView.cmlName || "").trim();
         if (!cmlName) {
-            throw new Error("Cannot locate readings row: CMLListView.cmlName is empty.");
+            throw new AssertionError({ message: "Cannot locate readings row: CMLListView.cmlName is empty." });
         }
         const cmlNameXp = utils.xpathString(cmlName);
         const rowAnchor = `//span[text()=${cmlNameXp}]`;

@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from "utils/utils";
 
 class CML_Report_Page {
@@ -78,7 +79,7 @@ class CML_Report_Page {
         console.log(`Asset Overview tab text: '${tabText}'`);
         console.log(`Asset Overview count: ${count}`);
         if (count === 0) {
-            throw new Error(`Asset Overview count is 0 for equipment '${this.targetEquipment}'.`);
+            throw new AssertionError({ message: `Asset Overview count is 0 for equipment '${this.targetEquipment}'.` });
         }
         return count;
     }
@@ -149,7 +150,7 @@ class CML_Report_Page {
 
     public async extractExportedExcelValues(): Promise<void> {
         if (!this.exportedFilePath) {
-            throw new Error("No exported file path stored. Run clickExportAndDownload() first.");
+            throw new AssertionError({ message: "No exported file path stored. Run clickExportAndDownload() first." });
         }
         console.log(`Reading Excel file: ${this.exportedFilePath}`);
         const rows = await utils.extractRowsFromXlsx(this.exportedFilePath);
@@ -174,7 +175,7 @@ class CML_Report_Page {
 
     public verifyExportedExcelHasTargetEquipment(): void {
         if (this.exportedRows.length === 0) {
-            throw new Error("No exported rows available. Run extractExportedExcelValues() first.");
+            throw new AssertionError({ message: "No exported rows available. Run extractExportedExcelValues() first." });
         }
         const target = this.targetEquipment.trim();
         const matchedRow = this.exportedRows.find(row =>
@@ -182,9 +183,9 @@ class CML_Report_Page {
         );
         if (!matchedRow) {
             const firstRowDump = JSON.stringify(this.exportedRows[0]);
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Searched equipment '${target}' not found in exported Excel. First row: ${firstRowDump}`
-            );
+             });
         }
         console.log(`Verified: searched equipment '${target}' is present in the exported Excel.`);
         console.log(`Matched Excel row: ${JSON.stringify(matchedRow)}`);
@@ -206,7 +207,7 @@ class CML_Report_Page {
         console.log(`CMLs section text: '${cmlText}'`);
         console.log(`No of CMLs present is/are: ${count}`);
         if (count === 0) {
-            throw new Error(`CMLs count is 0 for equipment '${this.targetEquipment}'.`);
+            throw new AssertionError({ message: `CMLs count is 0 for equipment '${this.targetEquipment}'.` });
         }
         return count;
     }
@@ -241,9 +242,9 @@ class CML_Report_Page {
         }
 
         if (this.cmlsCount > 0 && this.cmlsExportedRowCount !== this.cmlsCount) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `CMLs Excel row count (${this.cmlsExportedRowCount}) does not match UI CMLs count (${this.cmlsCount}).`
-            );
+             });
         }
         console.log(`CMLs Excel row count matches UI CMLs count: ${this.cmlsCount}`);
     }

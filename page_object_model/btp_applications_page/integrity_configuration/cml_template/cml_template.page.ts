@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { $, browser } from '@wdio/globals';
 import utils from '../../../../utils/utils';
 
@@ -692,7 +693,7 @@ class CmlTemplatePage {
             }
             if (opened) break;
         }
-        if (!opened) { throw new Error(`Could not find API option "${apiName}" in open dropdown.`); }
+        if (!opened) { throw new AssertionError({ message: `Could not find API option "${apiName}" in open dropdown.` }); }
 
         // Click the matching option via JS, dispatching mousedown/mouseup/click/tap so the UI5 ComboBox tap handler fires.
         const clickResult = await browser.execute((targetName: string) => {
@@ -711,7 +712,7 @@ class CmlTemplatePage {
             match.dispatchEvent(new Event('tap', { bubbles: true }));
             return { ok: true, text: (match.textContent || '').trim().slice(0, 80) };
         }, apiName) as unknown as { ok: boolean; text?: string; reason?: string };
-        if (!clickResult.ok) { throw new Error(`Failed to click API option "${apiName}": ${clickResult.reason}`); }
+        if (!clickResult.ok) { throw new AssertionError({ message: `Failed to click API option "${apiName}": ${clickResult.reason}` }); }
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(500);
         console.log(`[ACTION] API Configuration — selected option: "${clickResult.text}"`);
@@ -784,7 +785,7 @@ class CmlTemplatePage {
             }, CmlTemplatePage.EDIT_API_CONFIG_DIALOG_XPATH, 'API') as unknown as WebdriverIO.Element;
 
         const arrow = await resolveArrow();
-        if (!arrow) { throw new Error('Could not resolve the API dropdown arrow inside the Edit API Configuration popup.'); }
+        if (!arrow) { throw new AssertionError({ message: 'Could not resolve the API dropdown arrow inside the Edit API Configuration popup.' }); }
         await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: 'center' }), arrow as unknown as HTMLElement);
 
         const findOptionByName = async (name: string): Promise<{ found: boolean; total?: number }> =>
@@ -801,18 +802,18 @@ class CmlTemplatePage {
         const openStrategies: Array<() => Promise<void>> = [
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: 'center' }), a as unknown as HTMLElement);
                 await (a as unknown as WebdriverIO.Element).click();
             },
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => el.click(), a as unknown as HTMLElement);
             },
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => {
                     el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
                     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
@@ -835,7 +836,7 @@ class CmlTemplatePage {
             }
             if (opened) break;
         }
-        if (!opened) { throw new Error(`Could not find API option "${apiName}" in Edit API Configuration dropdown.`); }
+        if (!opened) { throw new AssertionError({ message: `Could not find API option "${apiName}" in Edit API Configuration dropdown.` }); }
 
         const clickResult = await browser.execute((targetName: string) => {
             const items = Array.from(document.querySelectorAll('li[role="option"]')) as HTMLElement[];
@@ -853,7 +854,7 @@ class CmlTemplatePage {
             match.dispatchEvent(new Event('tap', { bubbles: true }));
             return { ok: true, text: (match.textContent || '').trim().slice(0, 80) };
         }, apiName) as unknown as { ok: boolean; text?: string; reason?: string };
-        if (!clickResult.ok) { throw new Error(`Failed to click API option "${apiName}": ${clickResult.reason}`); }
+        if (!clickResult.ok) { throw new AssertionError({ message: `Failed to click API option "${apiName}": ${clickResult.reason}` }); }
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(500);
         console.log(`[ACTION] Edit API Configuration — selected API: "${clickResult.text}"`);
@@ -1033,7 +1034,7 @@ class CmlTemplatePage {
             return { ok: true, text: item.getText() };
         }, controlId, optionText) as unknown as { ok: boolean; reason?: string; text?: string; available?: string[] };
         if (!result.ok) {
-            throw new Error(`setUi5SelectValueByText(#${controlId}, "${optionText}") failed: ${result.reason}${result.available ? ` — available: ${result.available.join(', ')}` : ''}`);
+            throw new AssertionError({ message: `setUi5SelectValueByText(#${controlId}, "${optionText}") failed: ${result.reason}${result.available ? ` — available: ${result.available.join(', ')}` : ''}` });
         }
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(200);
@@ -1067,7 +1068,7 @@ class CmlTemplatePage {
             return { ok: true, text: item.getText() };
         }, controlId, optionText) as unknown as { ok: boolean; reason?: string; text?: string; available?: string[] };
         if (!result.ok) {
-            throw new Error(`setUi5ComboBoxValueByText(#${controlId}, "${optionText}") failed: ${result.reason}${result.available ? ` — available: ${result.available.join(', ')}` : ''}`);
+            throw new AssertionError({ message: `setUi5ComboBoxValueByText(#${controlId}, "${optionText}") failed: ${result.reason}${result.available ? ` — available: ${result.available.join(', ')}` : ''}` });
         }
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(200);
@@ -1122,18 +1123,18 @@ class CmlTemplatePage {
         const openStrategies: Array<() => Promise<void>> = [
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: 'center' }), a as unknown as HTMLElement);
                 await (a as unknown as WebdriverIO.Element).click();
             },
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => el.click(), a as unknown as HTMLElement);
             },
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => {
                     el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
                     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
@@ -1152,7 +1153,7 @@ class CmlTemplatePage {
             }
             if (opened) break;
         }
-        if (!opened) { throw new Error(`Could not find ${fieldLabel} option "${optionLabel}" in open dropdown.`); }
+        if (!opened) { throw new AssertionError({ message: `Could not find ${fieldLabel} option "${optionLabel}" in open dropdown.` }); }
 
         const clickResult = await browser.execute((targetName: string) => {
             const items = Array.from(document.querySelectorAll('li[role="option"]')) as HTMLElement[];
@@ -1170,7 +1171,7 @@ class CmlTemplatePage {
             match.dispatchEvent(new Event('tap', { bubbles: true }));
             return { ok: true, text: (match.textContent || '').trim().slice(0, 80) };
         }, optionLabel) as unknown as { ok: boolean; text?: string; reason?: string };
-        if (!clickResult.ok) { throw new Error(`Failed to click ${fieldLabel} option "${optionLabel}": ${clickResult.reason}`); }
+        if (!clickResult.ok) { throw new AssertionError({ message: `Failed to click ${fieldLabel} option "${optionLabel}": ${clickResult.reason}` }); }
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(400);
         console.log(`[ACTION] ${fieldLabel} selected: "${optionLabel}"`);
@@ -1256,18 +1257,18 @@ class CmlTemplatePage {
         const openStrategies: Array<() => Promise<void>> = [
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: 'center' }), a as unknown as HTMLElement);
                 await (a as unknown as WebdriverIO.Element).click();
             },
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => el.click(), a as unknown as HTMLElement);
             },
             async () => {
                 const a = await resolveArrow();
-                if (!a) { throw new Error('arrow not resolved'); }
+                if (!a) { throw new AssertionError({ message: 'arrow not resolved' }); }
                 await browser.execute((el: HTMLElement) => {
                     el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
                     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
@@ -1286,7 +1287,7 @@ class CmlTemplatePage {
             }
             if (opened) break;
         }
-        if (!opened) { throw new Error(`Could not find ${fieldLabel} option "${optionLabel}" in open dropdown.`); }
+        if (!opened) { throw new AssertionError({ message: `Could not find ${fieldLabel} option "${optionLabel}" in open dropdown.` }); }
 
         const clickResult = await browser.execute((targetName: string) => {
             const items = Array.from(document.querySelectorAll('li[role="option"]')) as HTMLElement[];
@@ -1304,7 +1305,7 @@ class CmlTemplatePage {
             match.dispatchEvent(new Event('tap', { bubbles: true }));
             return { ok: true, text: (match.textContent || '').trim().slice(0, 80) };
         }, optionLabel) as unknown as { ok: boolean; text?: string; reason?: string };
-        if (!clickResult.ok) { throw new Error(`Failed to click ${fieldLabel} option "${optionLabel}": ${clickResult.reason}`); }
+        if (!clickResult.ok) { throw new AssertionError({ message: `Failed to click ${fieldLabel} option "${optionLabel}": ${clickResult.reason}` }); }
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(400);
         console.log(`[ACTION] ${fieldLabel} selected: "${optionLabel}"`);

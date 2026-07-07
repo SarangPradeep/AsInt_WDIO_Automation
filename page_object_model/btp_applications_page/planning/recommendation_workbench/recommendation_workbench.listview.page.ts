@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 
 
 import utils from "utils/utils";
@@ -80,9 +81,9 @@ class RecommendationWorkbenchListView {
                     await browser.pause(1500);
                 }
                 if (attempt === 2) {
-                    throw new Error(
+                    throw new AssertionError({ message: 
                         `Recommendation creation failed twice. Last error: ${lastError}. Aborting recommendation_workbench spec.`
-                    );
+                     });
                 }
                 console.log("Retrying recommendation creation...");
                 continue;
@@ -182,7 +183,7 @@ class RecommendationWorkbenchListView {
         }, { timeout: 30000 });
 
         if (!searchBox) {
-            throw new Error("Visible search box not found");
+            throw new AssertionError({ message: "Visible search box not found" });
         }
         console.log("Visible search box found, searching for deleted Functional Location");
         await browser.execute((el, value) => {
@@ -211,7 +212,7 @@ class RecommendationWorkbenchListView {
             timeoutMsg: "Go button not found"
         });
         if (!goBtn) {
-            throw new Error("Go button not found");
+            throw new AssertionError({ message: "Go button not found" });
         }
 
         console.log("Clicking Go button to search for MSP");
@@ -285,7 +286,7 @@ class RecommendationWorkbenchListView {
                 await utils.waitForBusyIndicatorToDisappear();
                 await browser.pause(1000);
             }
-            throw new Error("Convert To MSP Item failed: error dialog was displayed");
+            throw new AssertionError({ message: "Convert To MSP Item failed: error dialog was displayed" });
         }
 
         if (await this.okBtn.isDisplayed().catch(() => false)) {
@@ -296,7 +297,7 @@ class RecommendationWorkbenchListView {
             return;
         }
 
-        throw new Error("Convert To MSP Item: neither Success nor Error dialog was displayed");
+        throw new AssertionError({ message: "Convert To MSP Item: neither Success nor Error dialog was displayed" });
     }
 
     public async verifyDeletionOfRecommendationWorkbench(){
@@ -320,7 +321,7 @@ class RecommendationWorkbenchListView {
         const isFuncLocPresent = await $(noDataCell).isExisting();
 
         if (!isFuncLocPresent) {
-            throw new Error("Recommendation still exists after deletion");
+            throw new AssertionError({ message: "Recommendation still exists after deletion" });
         } else {
             console.log("Recommendation deletion verified successfully");
         }

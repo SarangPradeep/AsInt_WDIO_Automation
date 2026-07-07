@@ -10,7 +10,7 @@ describe('BTP - CMLs - Functional Test', () => {
     });
 
     it('should create new CMLs', async () => {
-        await CMLListView.createNewCMLs();
+        await CMLListView.createNewCMLsUsingEquipment();
     });
 
     it('verify created CMLs in CML Summary', async () => {
@@ -41,7 +41,7 @@ describe('BTP - CMLs - Functional Test', () => {
         await AssetInspectionListView.navigateToAssetInspectionListView();
     });
 
-    it('should create asset inspection using same equipment/fun loc from CML and navigate to detail page', async () => {
+    it('should create asset inspection using same equipment from CML and navigate to detail page', async () => {
         await AssetInspectionListView.createInspectionUsingSameObjectAsCML();
     });
 
