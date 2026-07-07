@@ -18,11 +18,15 @@ describe('BTP - CMLs (Functional Location) - Functional Test', () => {
     });
 
     it('should edit and verify details in backgroud section in CML detailed section', async () => {
-        await CMLDetailView.editVerifyBackgroundSection();
+        await CMLDetailView.editVerifyBackgroundSectionFunLoc();
     });
 
     it('should edit and verify details in pressure Tmin section in CML detailed section', async () => {
-        await CMLDetailView.editVerifyPressureTminSection();
+        await CMLDetailView.editVerifyPressureTminSectionFunLoc();
+    });
+
+    it('should verify details in Structural Tmin section in CML detailed section', async () => {
+        await CMLDetailView.verifyStructuralTminSectionFunLoc();
     });
 
     it('should verify details in MAWP section in CML detailed section', async () => {

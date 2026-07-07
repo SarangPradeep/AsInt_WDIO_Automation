@@ -181,6 +181,43 @@ class CML_ListView_Page {
         throw new AssertionError({ message: `No visible/clickable option found for xpath: ${optionXpath}` });
     }
 
+    private async selectCMLTemplateByText(dropdownEl: any, templateName: string, context: string): Promise<void> {
+        console.log(`Selecting CML template '${templateName}' in ${context}...`);
+        await utils.clickWithWait(dropdownEl);
+        await browser.pause(1500);
+        const optionXpaths = [
+            `//li[@role='option'][.//text()='${templateName}']`,
+            `//div[@role='option'][.//text()='${templateName}']`,
+            `//li[.//bdi[normalize-space()='${templateName}']]`,
+            `//li[.//span[normalize-space()='${templateName}']]`,
+            `//div[@role='option'][.//span[normalize-space()='${templateName}']]`,
+        ];
+        let clicked = false;
+        for (const xp of optionXpaths) {
+            const opts = await $$(xp);
+            for (const opt of opts) {
+                if ((await opt.isDisplayed().catch(() => false)) && (await opt.isClickable().catch(() => false))) {
+                    await utils.clickWithWait(opt);
+                    clicked = true;
+                    break;
+                }
+            }
+            if (clicked) break;
+        }
+        if (!clicked) {
+            throw new AssertionError({ message: `CML template option '${templateName}' not found in dropdown (${context}).` });
+        }
+        await browser.pause(2000);
+        await utils.waitForBusyIndicatorToDisappear();
+        if (await this.errorHeader.isDisplayed().catch(() => false)) {
+            const bodyEl = $("//header[.//text()='Error']/following::section//span[normalize-space()][1]");
+            const bodyText = (await bodyEl.getText().catch(() => "")).trim();
+            await utils.clickWithWait(this.errorOkBtn);
+            throw new AssertionError({ message: `Error after selecting CML template '${templateName}' in ${context}: ${bodyText}` });
+        }
+        console.log(`CML template '${templateName}' selected in ${context}.`);
+    }
+
     public async createNewCMLsUsingEquipment() {
         console.log("Creating new CMLs (Equipment)...");
         await this.plusIconAndCMLSelect();
@@ -210,34 +247,10 @@ class CML_ListView_Page {
         await utils.waitForLocalBusyToDisappear();
         await utils.waitForBusyIndicatorToDisappear();
         let templateText = '';
-        let validTemplateFound = false;
         console.log("Selected Equipment:", equipmentText);
-        for (let t = 3; t <= 10; t++) {
-            await browser.pause(1500);
-            await utils.selectFromDropdown(this.cmlTemplateDropdown, t - 1);
-            await browser.pause(3000);
-            await utils.waitForBusyIndicatorToDisappear();
-            const selectedTextEl = $("//bdi[text()='CML Template']/following::span[2]//span[2]");
-            const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
-            console.log(`After selection ${t} → text: ${selectedText}`);
-            if (!selectedText) {
-                console.log("No value selected → trying next option");
-                continue;
-            }
-            if (await this.errorHeader.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.errorOkBtn);
-                console.log("Error after selection → trying next");
-                continue;
-            }
-            console.log("Valid Template selected:", selectedText);
-            templateText = selectedText;
-            validTemplateFound = true;
-            break;
-        }
+        await this.selectCMLTemplateByText(this.cmlTemplateDropdown, cmlsTestData.cmlDetails.equipmentTemplate, "Create CML header");
+        templateText = cmlsTestData.cmlDetails.equipmentTemplate;
 
-        if (!validTemplateFound) {
-            throw new AssertionError({ message: "No valid CML template found for the selected equipment" });
-        }
         this.selectedEquipment = equipmentText;
         this.selectedEquTemplate = templateText;
 
@@ -258,32 +271,7 @@ class CML_ListView_Page {
         await this.nameInput.setValue(this.generateCMLName());
         await utils.clickWithWait(this.descriptionInput);
         await this.descriptionInput.setValue("Automation CML Description");
-        let cmlTemplateSelected = false;
-        for (let ct = 3; ct <= 10; ct++) {
-            await browser.pause(1500);
-            await utils.selectFromDropdown(this.cmlTemplateCell, ct - 1);
-            await browser.pause(3000);
-            await utils.waitForBusyIndicatorToDisappear();
-
-            const selectedTextEl = $("(//th[.//text()='CML Template']/following::td[@aria-colindex='3']//span//span[2])[1]");
-            const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
-            console.log(`After selection ${ct} → text: ${selectedText}`);
-            if (!selectedText) {
-                console.log("No value selected → trying next option");
-                continue;
-            }
-            if (await this.errorHeader.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.errorOkBtn);
-                console.log("Error after selection → trying next");
-                continue;
-            }
-            console.log("Valid CML template selected:", selectedText);
-            cmlTemplateSelected = true;
-            break;
-        }
-        if (!cmlTemplateSelected) {
-            throw new AssertionError({ message: "No valid CML template selected for the equipment" });
-        }
+        await this.selectCMLTemplateByText(this.cmlTemplateCell, cmlsTestData.cmlDetails.equipmentTemplate, "Equipment CML row");
         flowCompleted = true;
         if (flowCompleted) {
             console.log("Clicking on create button...");
@@ -333,34 +321,10 @@ class CML_ListView_Page {
         await utils.waitForLocalBusyToDisappear();
         await utils.waitForBusyIndicatorToDisappear();
         let templateText = '';
-        let validTemplateFound = false;
         console.log("Selected Functional Location:", funLocText);
-        for (let t = 3; t <= 10; t++) {
-            await browser.pause(1500);
-            await utils.selectFromDropdown(this.cmlTemplateDropdown, t - 1);
-            await browser.pause(3000);
-            await utils.waitForBusyIndicatorToDisappear();
-            const selectedTextEl = $("//bdi[text()='CML Template']/following::span[2]//span[2]");
-            const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
-            console.log(`After selection ${t} → text: ${selectedText}`);
-            if (!selectedText) {
-                console.log("No value selected → trying next option");
-                continue;
-            }
-            if (await this.errorHeader.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.errorOkBtn);
-                console.log("Error after selection → trying next");
-                continue;
-            }
-            console.log("Valid Template selected:", selectedText);
-            templateText = selectedText;
-            validTemplateFound = true;
-            break;
-        }
+        await this.selectCMLTemplateByText(this.cmlTemplateDropdown, cmlsTestData.cmlDetails.functionalLocationTemplate, "Create CML header");
+        templateText = cmlsTestData.cmlDetails.functionalLocationTemplate;
 
-        if (!validTemplateFound) {
-            throw new AssertionError({ message: "No valid CML template found for the selected functional location" });
-        }
         this.selectedFunLoc = funLocText;
         this.selectedFunLocTemplate = templateText;
 
@@ -381,32 +345,7 @@ class CML_ListView_Page {
         await this.nameInput.setValue(this.generateCMLName());
         await utils.clickWithWait(this.descriptionInput);
         await this.descriptionInput.setValue("Automation CML Description");
-        let cmlTemplateSelected = false;
-        for (let ct = 3; ct <= 10; ct++) {
-            await browser.pause(1500);
-            await utils.selectFromDropdown(this.cmlTemplateCell, ct - 1);
-            await browser.pause(3000);
-            await utils.waitForBusyIndicatorToDisappear();
-
-            const selectedTextEl = $("(//th[.//text()='CML Template']/following::td[@aria-colindex='3']//span//span[2])[1]");
-            const selectedText = (await selectedTextEl.getText().catch(() => "")).trim();
-            console.log(`After selection ${ct} → text: ${selectedText}`);
-            if (!selectedText) {
-                console.log("No value selected → trying next option");
-                continue;
-            }
-            if (await this.errorHeader.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.errorOkBtn);
-                console.log("Error after selection → trying next");
-                continue;
-            }
-            console.log("Valid CML template selected:", selectedText);
-            cmlTemplateSelected = true;
-            break;
-        }
-        if (!cmlTemplateSelected) {
-            throw new AssertionError({ message: "No valid CML template selected for the functional location" });
-        }
+        await this.selectCMLTemplateByText(this.cmlTemplateCell, cmlsTestData.cmlDetails.cmlRowTemplate, "Functional Location CML row");
         flowCompleted = true;
         if (flowCompleted) {
             console.log("Clicking on create button...");
