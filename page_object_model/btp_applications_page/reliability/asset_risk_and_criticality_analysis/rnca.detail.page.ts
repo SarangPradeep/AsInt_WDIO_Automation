@@ -140,8 +140,8 @@ class RNCADetailPage {
         let lastCount = rows.length;
         let attempts = 0;
 
-        while (rows.length <= targetIndex) {
-            console.log(`Loading more rows... current rows: ${rows.length}, need: ${targetIndex}`);
+        while (rowsLength <= targetIndex) {
+            console.log(`Loading more rows... current rows: ${rowsLength}, need: ${targetIndex}`);
 
             const container = await this.getDialogScrollContainer();
             await container.scrollIntoView();
@@ -160,13 +160,13 @@ class RNCADetailPage {
 
             rows = (await this.getEquipmentRows()) as unknown as any[];
 
-            if (rows.length <= lastCount) {
+            if (rowsLength <= lastCount) {
                 attempts += 1;
                 if (attempts >= 3) {
                     throw new AssertionError({ message: "No more rows can be loaded." });
                 }
             } else {
-                lastCount = rows.length;
+                lastCount = rowsLength;
                 attempts = 0;
             }
         }
@@ -256,8 +256,9 @@ class RNCADetailPage {
         //     break;
         // }
         let batchStart = 0;
-        let batchSize = 20;
+        const batchSize = 20;
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
 
             console.log(`Starting batch from index: ${batchStart}`);
@@ -487,10 +488,10 @@ class RNCADetailPage {
         await browser.pause(3000);
         const expcolBtns = (await $$("//button[@title='Expand/Collapse']")) as unknown as any[];
 
-        console.log("Total panels:", expcolBtns.length);
+        console.log("Total panels:", expcolBtnsLength);
 
         // Step 2: loop each panel
-        for (let i = 0; i < expcolBtns.length; i++) {
+        for (let i = 0; i < expcolBtnsLength; i++) {
             await console.log(`Processing panel ${i + 1}`);
             const btn = expcolBtns[i];
 
@@ -514,7 +515,7 @@ class RNCADetailPage {
             // Step 4: check content
             const content = (await panel.$$("//*[normalize-space()!='']")) as unknown as any[];
 
-            if (content.length === 0) {
+            if (contentLength === 0) {
                 console.log(`Panel ${i + 1}: empty`);
                 continue;
             }
@@ -524,10 +525,10 @@ class RNCADetailPage {
             // Step 5: get tables inside THIS panel only
             const tables = (await panel.$$("//table[@role='grid']")) as unknown as any[];
 
-            console.log(`Panel ${i + 1}: tables =`, tables.length);
+            console.log(`Panel ${i + 1}: tables =`, tablesLength);
 
             // Step 6: loop tables
-            for (let j = 0; j < tables.length; j++) {
+            for (let j = 0; j < tablesLength; j++) {
                 await console.log(`Processing table ${j + 1} in panel ${i + 1}`);
                 const table = tables[j];
 
@@ -582,12 +583,12 @@ class RNCADetailPage {
             const rows = (await table.$$("//tbody/tr")) as unknown as any[];
 
 
-            if (rows.length === 0) {
+            if (rowsLength === 0) {
                 console.log("❌ Risk Details present but empty");
             } else {
-                console.log(`✅ Risk Details found (${rows.length} rows)`);
+                console.log(`✅ Risk Details found (${rowsLength} rows)`);
 
-                for (let row of rows) {
+                for (const row of rows) {
                     // ✅ skip hidden rows (important for SAP)
                     if (!(await row.isDisplayed())) continue;
 
