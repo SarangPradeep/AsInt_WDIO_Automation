@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 // import { browser, $ } from '@wdio/globals';
 
 // class BtpLoginPage {
@@ -61,8 +62,8 @@
 //     async login(username: string, password: string): Promise<void> {
 //         // --- ADDED VALIDATION FOR RELIABILITY ---
 //         if (!username || !password) {
-//             throw new Error(`[ERROR] Login failed: Username or Password is undefined. 
-//             Check if BTP_USERNAME and BTP_PASSWORD are correctly set in your .env file.`);
+//             throw new AssertionError({ message: `[ERROR] Login failed: Username or Password is undefined. 
+//             Check if BTP_USERNAME and BTP_PASSWORD are correctly set in your .env file.` });
 //         }
 
 //         // Step 0: AsInt Log-On

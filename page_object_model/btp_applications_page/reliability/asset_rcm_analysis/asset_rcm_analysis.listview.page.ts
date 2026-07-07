@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from '../../../../utils/utils';
 import assetRcmData from "../../../../test_data/btp_applications/reliability/asset_rcm.data";
 import { browser } from '@wdio/globals';
@@ -116,7 +117,7 @@ class assetRCMListView {
         }, { timeout: 30000 });
 
         if (!searchBox) {
-            throw new Error("Visible search box not found");
+            throw new AssertionError({ message: "Visible search box not found" });
         }
         console.log("Visible search box found, searching for deleted RCM");
         await browser.execute((el, value) => {const input = el as unknown as HTMLInputElement;
@@ -144,7 +145,7 @@ class assetRCMListView {
             timeoutMsg: "Go button not found"
         });
         if (!goBtn) {
-            throw new Error("Go button not found");
+            throw new AssertionError({ message: "Go button not found" });
         }
 
         console.log("Clicking Go button to search for RCM");
@@ -171,7 +172,7 @@ class assetRCMListView {
         const isFuncLocPresent = await $(noDataCell).isExisting();
 
         if (!isFuncLocPresent) {
-            throw new Error("RCM still exists after deletion");
+            throw new AssertionError({ message: "RCM still exists after deletion" });
         } else {
             console.log("RCM deletion verified successfully");
         }

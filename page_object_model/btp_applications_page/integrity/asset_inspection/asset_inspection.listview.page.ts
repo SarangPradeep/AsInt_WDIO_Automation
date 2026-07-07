@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from "utils/utils";
 import CMLListView from "../cmls/cmls.listview.page";
 
@@ -118,7 +119,7 @@ class AssetInspectionListView {
         const objectName = isEquipmentFlow ? "Automation CML Equipment" : CMLListView.selectedFunLoc;
 
         if (!objectName) {
-            throw new Error("No equipment/functional location value found from CML creation flow.");
+            throw new AssertionError({ message: "No equipment/functional location value found from CML creation flow." });
         }
 
         await utils.waitForBusyIndicatorToDisappear();

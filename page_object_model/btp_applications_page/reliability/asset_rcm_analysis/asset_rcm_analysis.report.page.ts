@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { $, $$, browser } from '@wdio/globals';
 import utils from '../../../../utils/utils';
 import assetRCMList from './asset_rcm_analysis.listview.page';
@@ -75,8 +76,13 @@ class AssetRCMReportPage {
             console.log("  -> Ticking the 'Technical Object' checkbox.");
             try {
                 await utils.clickWithWait(checkbox);
-            } catch {
-                await browser.execute((el) => (el as HTMLElement).click(), checkbox);
+            } catch (e) {
+                void e;
+                try {
+                    await checkbox.scrollIntoView({ block: "center" });
+                } catch (scrollErr) { void scrollErr; }
+                await browser.pause(300);
+                await checkbox.click();
             }
         } else {
             console.log("  -> 'Technical Object' was already selected.");
@@ -184,12 +190,12 @@ class AssetRCMReportPage {
         console.log(`Summary: captured ${this.capturedRowCount} assessment(s) covering ${this.totalTechnicalObjects} technical object(s) in total.`);
 
         if (this.capturedRowCount === 0) {
-            throw new Error(`No assessment rows found for Technical Object '${this.targetTechnicalObject}'.`);
+            throw new AssertionError({ message: `No assessment rows found for Technical Object '${this.targetTechnicalObject}'.` });
         }
         if (this.headerAssessmentCount > 0 && this.headerAssessmentCount !== this.capturedRowCount) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Captured row count (${this.capturedRowCount}) does not match header Assessments count (${this.headerAssessmentCount}).`
-            );
+             });
         }
     }
 
@@ -261,7 +267,7 @@ class AssetRCMReportPage {
     public async extractAndVerifyExcelReport(): Promise<void> {
         console.log("Step 6: Verifying the downloaded Excel report against the captured UI data...");
         if (!this.exportedFilePath) {
-            throw new Error("No exported file path stored. Run clickExportToExcelAndDownload() first.");
+            throw new AssertionError({ message: "No exported file path stored. Run clickExportToExcelAndDownload() first." });
         }
 
         console.log(`  -> Reading Excel file: ${this.exportedFilePath}`);
@@ -392,7 +398,7 @@ class AssetRCMReportPage {
         console.log("=========================================================================\n");
 
         if (failed.length > 0) {
-            throw new Error(`Excel verification failed for ${failed.length} check(s). See log above for details.`);
+            throw new AssertionError({ message: `Excel verification failed for ${failed.length} check(s). See log above for details.` });
         }
         console.log("All checks passed - the Excel report matches the UI data.");
     }
@@ -465,7 +471,7 @@ class AssetRCMReportPage {
     public async verifySecondExcelHasAddedFields(): Promise<void> {
         console.log("Step 10: Verifying the re-exported Excel contains the newly added columns and their values...");
         if (!this.secondExportedFilePath) {
-            throw new Error("No second exported file path stored. Run reExportToExcel() first.");
+            throw new AssertionError({ message: "No second exported file path stored. Run reExportToExcel() first." });
         }
 
         console.log(`  -> Reading updated Excel file: ${this.secondExportedFilePath}`);
@@ -574,7 +580,7 @@ class AssetRCMReportPage {
         console.log("=============================================================================\n");
 
         if (failed.length > 0) {
-            throw new Error(`Updated Excel verification failed for ${failed.length} check(s). See log above for details.`);
+            throw new AssertionError({ message: `Updated Excel verification failed for ${failed.length} check(s). See log above for details.` });
         }
         console.log("All checks passed - the updated Excel contains every newly added column and value.");
     }

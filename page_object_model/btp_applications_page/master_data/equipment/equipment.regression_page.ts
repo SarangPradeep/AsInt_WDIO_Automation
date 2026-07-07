@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import {equipmentTestData} from '../../../../test_data/btp_applications/equipment.data';
 import utils from '../../../../utils/utils';
 
@@ -150,7 +151,7 @@ class EquipmentRegressionPage {
         }, { timeout: 30000 });
 
         if (!searchBox) {
-            throw new Error("Visible search box not found");
+            throw new AssertionError({ message: "Visible search box not found" });
         }
         console.log("Visible search box found, searching for Equipment");
         await browser.execute((el, value) => {
@@ -180,7 +181,7 @@ class EquipmentRegressionPage {
             timeoutMsg: "Go button not found"
         });
         if (!goBtn) {
-            throw new Error("Go button not found");
+            throw new AssertionError({ message: "Go button not found" });
         }
 
         console.log("Clicking Go button to search for Equipment");
@@ -205,7 +206,7 @@ class EquipmentRegressionPage {
             await browser.pause(2000);
             await browser.execute((element) => { element.click(); }, el);
         } catch (e) {
-            throw new Error(`Failed to navigate to Equipment Detail View page | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Failed to navigate to Equipment Detail View page | ${(e as Error).message}` });
         }
         console.log("Navigated to Detail View page successfully");
     }
@@ -219,7 +220,7 @@ class EquipmentRegressionPage {
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
         } catch (e) {
-            throw new Error(`Failed to navigate to Asset Intelligence tab | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Failed to navigate to Asset Intelligence tab | ${(e as Error).message}` });
         }
         console.log("Navigated to Asset Intelligence Tab successfully");
     }
@@ -230,7 +231,7 @@ class EquipmentRegressionPage {
         const ai1 = await utils.getAssignedValue(astInsp);
         console.log("Assigned asset Inspection : " + ai1);
         if (ai1 === 0) {
-            throw new Error("Assigned Asset Inspection is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Assigned Asset Inspection is 0, expected value should be greater than 0" });
         }
         console.log("Fetching Asset Inspection details...");
         await this.saveInspectionDetails();
@@ -426,7 +427,7 @@ class EquipmentRegressionPage {
         console.log(`Created On / Modified On | Expected="${(this.inspectionDetails.createdOn || "").trim()}" | Actual="${(this.inspectionHeaderDetails.modifiedOn || "").replace(/^:\s*/, "").trim()}"`);
 
         if (failures.length > 0) {
-            throw new Error(`Inspection Details Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `Inspection Details Verification Failed\n\n${failures.join("\n")}` });
         }
 
         console.log("Inspection Details Verification Passed");
@@ -440,7 +441,7 @@ class EquipmentRegressionPage {
         const f = await utils.getAssignedValue(finding);
         console.log("Assigned findings : " + f);
         if (f === 0) {
-            throw new Error("Assigned Findings is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Assigned Findings is 0, expected value should be greater than 0" });
         }
         console.log("Fetching Findings details...");
         await this.saveFindingsDetails();
@@ -531,7 +532,7 @@ class EquipmentRegressionPage {
         compare("Created By / Assigned To", this.findingsDetails.assignedTo, this.findingsHeaderDetails.assignedTo.replace(/^:\s*/, ""));
 
         if (failures.length > 0) {
-            throw new Error(`Findings Details Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `Findings Details Verification Failed\n\n${failures.join("\n")}` });
         }
 
         console.log("Findings Details Verification Passed");
@@ -545,7 +546,7 @@ class EquipmentRegressionPage {
         const as2 = await utils.getAssignedValue(assetStraRCM);
         console.log("Assigned asset strategy RCM: " + as2);
         if (as2 === 0) {
-            throw new Error("Assigned Asset Strategy RCM is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Assigned Asset Strategy RCM is 0, expected value should be greater than 0" });
         }
         await this.saveAssetStrategyDetails();
         await this.openAssetStrategyAssessment();
@@ -669,7 +670,7 @@ class EquipmentRegressionPage {
         compare("Created On / Modified On", this.assetStrategyDetails.createdOn, this.asdHeaderDetails.modifiedOn);
 
         if (failures.length > 0) {
-            throw new Error(`ASD Details Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `ASD Details Verification Failed\n\n${failures.join("\n")}` });
         }
 
         console.log("ASD Details Verification Passed");
@@ -683,7 +684,7 @@ class EquipmentRegressionPage {
         const recom = await utils.getAssignedValue(recommendation);
         console.log("Assigned recommendations: " + recom);
         if (recom === 0) {
-            throw new Error("Assigned Recommendations is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Assigned Recommendations is 0, expected value should be greater than 0" });
         }
         await this.recoName.waitForExist({ timeout: 30000 });
         await this.recoName.scrollIntoView({ block: 'center' });
@@ -755,7 +756,7 @@ class EquipmentRegressionPage {
     public async verifyRecoInAsd(): Promise<void> {
         const expectedReco = (this.recoDetails.recoName || "").trim();
         if (!expectedReco) {
-            throw new Error("Recommendation name was not captured from Equipment Recommendations panel");
+            throw new AssertionError({ message: "Recommendation name was not captured from Equipment Recommendations panel" });
         }
         console.log(`Verifying Recommendation "${expectedReco}" inside ASD Risk Information`);
 
@@ -784,7 +785,7 @@ class EquipmentRegressionPage {
         console.log(`ASD Recommendations title after search: "${countText}" | count=${count}`);
 
         if (count !== 1) {
-            throw new Error(`Recommendation "${expectedReco}" not found in ASD | Expected count=1 | Actual count=${count}`);
+            throw new AssertionError({ message: `Recommendation "${expectedReco}" not found in ASD | Expected count=1 | Actual count=${count}` });
         }
 
         const firstRowName = this.asdRecoFirstRowName;
@@ -795,7 +796,7 @@ class EquipmentRegressionPage {
         this.recoAsdHeaderDetails.recoName = actualReco;
 
         if (actualReco !== expectedReco) {
-            throw new Error(`Recommendation mismatch in ASD | Expected="${expectedReco}" | Actual="${actualReco}"`);
+            throw new AssertionError({ message: `Recommendation mismatch in ASD | Expected="${expectedReco}" | Actual="${actualReco}"` });
         }
         console.log("Recommendation Verification in ASD Passed");
     }
@@ -923,7 +924,7 @@ class EquipmentRegressionPage {
         compare("Allowed Objects", "Equipment", this.rncHeaderDetails.allowedObjects);
 
         if (failures.length > 0) {
-            throw new Error(`Risk and Criticality Details Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `Risk and Criticality Details Verification Failed\n\n${failures.join("\n")}` });
         }
 
         console.log("Risk and Criticality Details Verification Passed");
@@ -1038,7 +1039,7 @@ class EquipmentRegressionPage {
         console.log(JSON.stringify(this.rcmFleetDetails, null, 2));
 
         if (!status) {
-            throw new Error("RCM/Fleet assessment status was empty");
+            throw new AssertionError({ message: "RCM/Fleet assessment status was empty" });
         }
 
         await this.openRCMAssessment();
@@ -1097,7 +1098,7 @@ class EquipmentRegressionPage {
         compare("Status", this.rcmFleetDetails.status, this.rcmHeaderDetails.status);
 
         if (failures.length > 0) {
-            throw new Error(`RCM Header Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `RCM Header Verification Failed\n\n${failures.join("\n")}` });
         }
         console.log("RCM Header Verification Passed");
     }
@@ -1205,7 +1206,7 @@ class EquipmentRegressionPage {
             failures.push(`Failure Mode mismatch | Expected to contain="${expectedFailure}" | Actual="${failureMode}"`);
         }
         if (failures.length > 0) {
-            throw new Error(`RCM Technical Objects Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `RCM Technical Objects Verification Failed\n\n${failures.join("\n")}` });
         }
         console.log("RCM Technical Objects Verification Passed");
     }

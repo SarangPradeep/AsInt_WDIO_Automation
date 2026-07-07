@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from "utils/utils";
 import recommendationWorkbenchListView from '../recommendation_workbench/recommendation_workbench.listview.page.ts';
 import recommWorkbenchData from "test_data/btp_applications/planning/recommendation_workbench.data.ts";
@@ -305,9 +306,9 @@ class RecommendationWorkbenchDetailView {
             .replace(/\s+/g, "_")
             .toUpperCase();
         if (!categoryLine?.includes(expectedValue)) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Category mismatch. Expected: ${expectedValue}, Found: ${categoryLine}`
-            );
+             });
         }
         console.log("Change history validation passed successfully");
     }
@@ -331,9 +332,7 @@ class RecommendationWorkbenchDetailView {
         await this.createWorkflowSaveBtn.click();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
-        if(await this.errorOkBtn.isDisplayed()){
-            await utils.clickWithWait(this.errorOkBtn);
-        }
+        await utils.assertNoErrorPopup("Create Workflow");
         await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
@@ -365,7 +364,7 @@ class RecommendationWorkbenchDetailView {
             return false;
         }, label);
         if (!clicked) {
-            throw new Error(`Status menu item '${label}' not found in open menu`);
+            throw new AssertionError({ message: `Status menu item '${label}' not found in open menu` });
         }
     }
 

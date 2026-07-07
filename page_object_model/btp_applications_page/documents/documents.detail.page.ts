@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { browser } from '@wdio/globals';
 import utils from 'utils/utils';
 import documentsListviewPage from './documents.listview.page';
@@ -36,7 +37,7 @@ class DocumentsDetailPage {
             await utils.clickWithWait(btn);
             await utils.waitForBusyIndicatorToDisappear();
         } catch (err) {
-            throw new Error('Download button not found or failed to click');
+            throw new AssertionError({ message: 'Download button not found or failed to click' });
         }
     }
     public async verifyHeader(): Promise<void> {
@@ -121,7 +122,7 @@ class DocumentsDetailPage {
                 await console.log(await Comments.getText());
                 await utils.setValueWithWait(Comments, "updated comments for link document");
                 if (await Comments.getText() !== "updated comments for link document") {
-                    throw new Error("Failed to update comments for link document");
+                    throw new AssertionError({ message: "Failed to update comments for link document" });
                 }
                 const saveBtn = await $("//button[.//bdi[normalize-space()='Save']]");
                 await saveBtn.waitForClickable({ timeout: 50000 });

@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { promises } from "node:dns";
 import utils from "utils/utils";
 import { waitForDisplayed } from "webdriverio/build/commands/element";
@@ -68,7 +69,7 @@ class EquipmentListviewPage {
         // const template = await $(`//span[text()="${equipmentTemplate}"]/ancestor::tr//div[@role="checkbox"]`);
         // const templateExists = await template.isExisting();
         // if (!templateExists) {
-        //     throw new Error(`No row found for equipment template: ${equipmentTemplate}`);
+        //     throw new AssertionError({ message: `No row found for equipment template: ${equipmentTemplate}` });
         // }
         // await template.waitForDisplayed({ timeout: 30000 });
         // await template.waitForClickable({ timeout: 30000 });
@@ -169,7 +170,7 @@ class EquipmentListviewPage {
         }, { timeout: 30000 });
  
         if (!searchBox) {
-            throw new Error("❌ Visible search box not found");
+            throw new AssertionError({ message: "❌ Visible search box not found" });
         }
         console.log("Visible search box found, searching for deleted Equipment");
         // 🔥 set value via JS (TS safe)
@@ -198,7 +199,7 @@ class EquipmentListviewPage {
         }, { timeout: 20000 });
  
         if (!goBtn) {
-            throw new Error("❌ Go button not found");
+            throw new AssertionError({ message: "❌ Go button not found" });
         }
         console.log("Clicking Go button to search for Equipment");
         await browser.execute(el => el.click(), goBtn);
@@ -208,7 +209,7 @@ class EquipmentListviewPage {
         const isEquipmentPresent = await $('//td[text()="No data"]').isExisting();
  
         if (!isEquipmentPresent) {
-            throw new Error("Equipment still exists after deletion");
+            throw new AssertionError({ message: "Equipment still exists after deletion" });
         } else {
             console.log("Equipment deletion verified successfully");
         }

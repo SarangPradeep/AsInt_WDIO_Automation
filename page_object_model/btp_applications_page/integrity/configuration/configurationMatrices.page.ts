@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { $, browser } from '@wdio/globals';
 import SapUtils from '../../../../utils/utils';
 
@@ -553,9 +554,9 @@ class MatricesPage {
         console.log(`[VERIFY] X-Axis sub-labels found: ${JSON.stringify(normalizedXSub)}`);
         for (const expectedLabel of expected.xAxisSubLabels) {
             if (!normalizedXSub.includes(expectedLabel)) {
-                throw new Error(
+                throw new AssertionError({ message: 
                     `X-Axis sub-label "${expectedLabel}" not displayed. Found: ${JSON.stringify(normalizedXSub)}`
-                );
+                 });
             }
         }
 
@@ -565,9 +566,9 @@ class MatricesPage {
         console.log(`[VERIFY] X-Axis range labels found: ${JSON.stringify(normalizedXRange)}`);
         for (const expectedRange of expected.xAxisRangeLabels) {
             if (!normalizedXRange.includes(expectedRange)) {
-                throw new Error(
+                throw new AssertionError({ message: 
                     `X-Axis range label "${expectedRange}" not displayed. Found: ${JSON.stringify(normalizedXRange)}`
-                );
+                 });
             }
         }
 
@@ -577,9 +578,9 @@ class MatricesPage {
         console.log(`[VERIFY] Y-Axis sub-labels found: ${JSON.stringify(normalizedYSub)}`);
         for (const expectedLabel of expected.yAxisSubLabels) {
             if (!normalizedYSub.includes(expectedLabel)) {
-                throw new Error(
+                throw new AssertionError({ message: 
                     `Y-Axis sub-label "${expectedLabel}" not displayed. Found: ${JSON.stringify(normalizedYSub)}`
-                );
+                 });
             }
         }
 
@@ -589,14 +590,14 @@ class MatricesPage {
         console.log(`[VERIFY] Axis title labels found: ${JSON.stringify(normalizedTitles)}`);
 
         if (!normalizedTitles.includes(expected.xAxisDescription)) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `X-Axis description "${expected.xAxisDescription}" not displayed. Found: ${JSON.stringify(normalizedTitles)}`
-            );
+             });
         }
         if (!normalizedTitles.includes(expected.yAxisLabel)) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Y-Axis label "${expected.yAxisLabel}" not displayed. Found: ${JSON.stringify(normalizedTitles)}`
-            );
+             });
         }
 
         // Risk lines render as <line> elements inside the matrix SVG.
@@ -605,7 +606,7 @@ class MatricesPage {
         for (const _el of lineEls) lineCount++;
         console.log(`[VERIFY] Risk Line <line> elements found: ${lineCount}`);
         if (lineCount < 1) {
-            throw new Error('Risk Line is not displayed on the matrix (no <line> elements found).');
+            throw new AssertionError({ message: 'Risk Line is not displayed on the matrix (no <line> elements found).' });
         }
 
         console.log('[SUCCESS] Matrix details verified before Publish');
@@ -642,9 +643,9 @@ class MatricesPage {
 
         const assertEquals = (label: string, actual: string, expectedValue: string) => {
             if (actual !== expectedValue) {
-                throw new Error(
+                throw new AssertionError({ message: 
                     `Listview row "${expected.title}" — ${label} mismatch. Expected "${expectedValue}", got "${actual}".`
-                );
+                 });
             }
             console.log(`[VERIFY] ${label} = "${actual}" OK`);
         };
@@ -665,10 +666,10 @@ class MatricesPage {
         assertEquals('Version',     actualVersion,     expected.version);
 
         if (actualCategories.length === 0) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Listview row "${expected.title}" — Categories cell is EMPTY after ${expected.status}. ` +
                 `Expected "${expected.categories}". This is the known regression where categories drop after New Revision.`
-            );
+             });
         }
         assertEquals('Categories', actualCategories, expected.categories);
 

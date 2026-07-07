@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import HomePage from '../home.page';
 import { browser, $, $$ } from '@wdio/globals';
 import utils from 'utils/utils';
@@ -67,10 +68,10 @@ class DocumentsListviewPage {
                     const txt = (await el.getText()) || '';
                     if (txt.trim()) return txt.trim();
                 }
-            } catch {}
+            } catch (e) { void e; }
         }
 
-        throw new Error('No document name found in list');
+        throw new AssertionError({ message: 'No document name found in list' });
     }
 
     // async clickOnDocumentInList(name: string): Promise<void> {
@@ -106,11 +107,11 @@ class DocumentsListviewPage {
             return searchBox !== null;
         }, { timeout: 30000 });
 
-        if (!searchBox) throw new Error('Search box not found');
+        if (!searchBox) throw new AssertionError({ message: 'Search box not found' });
 
         await browser.execute((el, value) => {
             const input = el as HTMLInputElement;
-            input.value = value as string;
+            input.value = value as unknown as string;
             input.dispatchEvent(new Event('input', { bubbles: true }));
         }, searchBox, name);
 
@@ -164,7 +165,7 @@ class DocumentsListviewPage {
         await name.waitForDisplayed({ timeout: 30000 });
         const listFileName = await name.getText();
         if (listFileName.trim() !== fileName) {
-            throw new Error(`Expected document "${fileName}" not found in list, found "${listFileName}" instead`);
+            throw new AssertionError({ message: `Expected document "${fileName}" not found in list, found "${listFileName}" instead` });
         }
         else {
             console.log(`Document "${fileName}" successfully verified in list`);

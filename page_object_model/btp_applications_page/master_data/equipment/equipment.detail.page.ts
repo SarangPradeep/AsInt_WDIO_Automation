@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from "../../../../utils/utils.ts";
 import EquipmentListviewPage from "./equipment.listview.page.ts";
 import * as path from 'path';
@@ -726,7 +727,7 @@ class EquipmentDetailPage {
             checkOne(`Characteristic[${i}]`, this.characteristicValues[i]);
         }
         if (missingFields.length > 0) {
-            throw new Error(`PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}`);
+            throw new AssertionError({ message: `PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}` });
         }
         console.log("PDF content verification completed successfully");
     }
@@ -741,7 +742,7 @@ class EquipmentDetailPage {
         this.equipmentHeadValue = equipmentName;
         console.log(`Final → Equipment="${equipmentName}" | DisplayID="${actualId}"`);
         if (!actualId) {
-            throw new Error("Equipment Display ID could not be captured from header");
+            throw new AssertionError({ message: "Equipment Display ID could not be captured from header" });
         }
         console.log("Verifying CML section");
         const parentTab = await browser.getWindowHandle();
@@ -855,7 +856,7 @@ class EquipmentDetailPage {
             } catch (e) { void e; }
         }
         if (errors.length > 0) {
-            throw new Error(`CML Verification Failed:\n${errors.join("\n")}`);
+            throw new AssertionError({ message: `CML Verification Failed:\n${errors.join("\n")}` });
         }
     }
 
@@ -971,7 +972,7 @@ class EquipmentDetailPage {
             try {
                 await el.waitForExist({ timeout: 15000 });
                 const text = (await el.getText() ?? "").trim();
-                if (!text) throw new Error("empty text");
+                if (!text) throw new AssertionError({ message: "empty text" });
                 return text;
             } catch {
                 console.log(`\x1b[1m!!! Maintenance and Service: '${label}' is NOT PRESENT !!!\x1b[0m`);
@@ -1045,14 +1046,14 @@ class EquipmentDetailPage {
             const descLine = lines.find(l => l.toLowerCase().includes('description'));
     
             if (!categoryLine || !categoryLine.includes(selectedCategory)) {
-                throw new Error(
+                throw new AssertionError({ message: 
                     `Category mismatch. Expected: ${selectedCategory}, Found: ${categoryLine}`
-                );
+                 });
             }
             if (!descLine || !descLine.includes(enteredDesc)) {
-                throw new Error(
+                throw new AssertionError({ message: 
                     `Description mismatch. Expected: ${enteredDesc}, Found: ${descLine}`
-                );
+                 });
             }
             console.log("Change history validation passed successfully");
         }

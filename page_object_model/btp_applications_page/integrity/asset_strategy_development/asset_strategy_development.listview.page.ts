@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import utils from "utils/utils";  
 class asset_strategy_development_listview_page {
 
@@ -194,7 +195,7 @@ class asset_strategy_development_listview_page {
         }, { timeout: 30000 });
 
         if (!searchBox) {
-            throw new Error("Visible search box not found");
+            throw new AssertionError({ message: "Visible search box not found" });
         }
         console.log("Visible search box found, searching for deleted ASD");
         await browser.execute((el, value) => {const input = el as unknown as HTMLInputElement;
@@ -222,7 +223,7 @@ class asset_strategy_development_listview_page {
             timeoutMsg: "Go button not found"
         });
         if (!goBtn) {
-            throw new Error("Go button not found");
+            throw new AssertionError({ message: "Go button not found" });
         }
 
         console.log("Clicking Go button to search for ASD");
@@ -249,7 +250,7 @@ class asset_strategy_development_listview_page {
         const isFuncLocPresent = await $(noDataCell).isExisting();
 
         if (!isFuncLocPresent) {
-            throw new Error("ASD still exists after deletion");
+            throw new AssertionError({ message: "ASD still exists after deletion" });
         } else {
             console.log("ASD deletion verified successfully");
         }
@@ -293,11 +294,11 @@ class asset_strategy_development_listview_page {
         console.log(`Number of functional locations to be assigned: ${count}`); 
         if(count === 0) 
         { 
-            throw new Error("No functional locations found to assign for ASD"); 
+            throw new AssertionError({ message: "No functional locations found to assign for ASD" }); 
         }
         const allAddBtns = await $$("//td[@aria-colindex='3']//button[@title='Add']");
         if (await allAddBtns.length === 0) {
-            throw new Error("No functional locations available");
+            throw new AssertionError({ message: "No functional locations available" });
         }
         let success = false;
         for (let i = 0; i < await allAddBtns.length; i++) {
@@ -308,7 +309,7 @@ class asset_strategy_development_listview_page {
             const selectedCount = await utils.getAssignedValue(selectedText);
             console.log(`Number of functional locations selected: ${selectedCount}`);
             if (selectedCount === 0) {
-                throw new Error("No functional locations selected for ASD");
+                throw new AssertionError({ message: "No functional locations selected for ASD" });
             }
             await utils.clickWithWait(noOfFuncLocsSelected);
             await browser.pause(4000);
@@ -343,7 +344,7 @@ class asset_strategy_development_listview_page {
             break;
         }
         if (!success) {
-        throw new Error("Mass run not possible with any functional location");
+        throw new AssertionError({ message: "Mass run not possible with any functional location" });
         }
         await browser.pause(4000);
         const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');

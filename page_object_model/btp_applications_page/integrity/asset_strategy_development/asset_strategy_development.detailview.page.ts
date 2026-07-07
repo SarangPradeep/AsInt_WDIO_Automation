@@ -1084,13 +1084,13 @@ class asset_strategy_development_detailview_page {
         const actualCount = await utils.getAssignedValue(headerText);
         console.log(`Equipment header text: '${headerText}' → actual count: ${actualCount}, expected: ${expectedCount}`);
         if (actualCount !== expectedCount) {
-            throw new Error(`Equipment count mismatch: expected ${expectedCount}, found ${actualCount}`);
+            throw new AssertionError({ message: `Equipment count mismatch: expected ${expectedCount}, found ${actualCount}` });
         }
         for (const equipNo of expectedEquipmentNumbers) {
             const cell = await this.equipmentCell(equipNo);
             await cell.waitForDisplayed({ timeout: 15000 });
             if (!(await cell.isDisplayed())) {
-                throw new Error(`Equipment '${equipNo}' not found in Risk Information section`);
+                throw new AssertionError({ message: `Equipment '${equipNo}' not found in Risk Information section` });
             }
             console.log(`Equipment '${equipNo}' confirmed present in Risk Information section`);
         }
@@ -1197,7 +1197,7 @@ class asset_strategy_development_detailview_page {
             }
         }
         if (matchedRowIndex === null) {
-            throw new Error(`Could not find strategy row matching shortDescription='${shortDescription}' and section='${section}'.`);
+            throw new AssertionError({ message: `Could not find strategy row matching shortDescription='${shortDescription}' and section='${section}'.` });
         }
         const rowSelector = await $(`//div[@id='idNewTable-rowsel${matchedRowIndex}']`);
         await rowSelector.waitForDisplayed({ timeout: 10000 });
@@ -1232,7 +1232,7 @@ class asset_strategy_development_detailview_page {
             const dialogText = await $("//div[@role='dialog' and .//header[.//text()='Confirmation']]").getText();
             const dt = (dialogText || "").toLowerCase();
             if (dt.includes("asset strategy") || dt.includes("delete this asd") || dt.includes("this asset strategy will be deleted")) {
-                throw new Error(`Wrong confirmation dialog opened during strategy delete (looks like ASD delete). Dialog text: '${dialogText}'`);
+                throw new AssertionError({ message: `Wrong confirmation dialog opened during strategy delete (looks like ASD delete). Dialog text: '${dialogText}'` });
             }
             console.log(`Strategy delete confirmation dialog text: '${dialogText}'`);
         } catch (e) {
@@ -1249,7 +1249,7 @@ class asset_strategy_development_detailview_page {
         );
         const remainingCount = await remainingRows.length;
         if (remainingCount > 0) {
-            throw new Error(`Strategy '${searchText}' still present after delete (found ${remainingCount} row(s)).`);
+            throw new AssertionError({ message: `Strategy '${searchText}' still present after delete (found ${remainingCount} row(s)).` });
         }
         console.log(`Strategy '${searchText}' confirmed deleted (not present after re-search).`);
     }
@@ -1301,7 +1301,7 @@ class asset_strategy_development_detailview_page {
         const pdfContent = await utils.extractTextFromPDF(filePath);
 
         if (!pdfContent || pdfContent.trim() === "") {
-            throw new Error("PDF content is empty");
+            throw new AssertionError({ message: "PDF content is empty" });
         }
 
         console.log("------ PDF CONTENT ------");
@@ -1402,13 +1402,13 @@ class asset_strategy_development_detailview_page {
                 await utils.waitForBusyIndicatorToDisappear();
                 const headers = await utils.captureHeaderDetails();
                 if (headers["Status"] !== "Published") {
-                    throw new Error(`Status is not Published → ${headers["Status"]}`);
+                    throw new AssertionError({ message: `Status is not Published → ${headers["Status"]}` });
                 }
                 this.publish = true;
                 console.log("Status is Published");
             }
         } else {
-            throw new Error("Create Workflow button not available. Hence, workflow cannot be created");
+            throw new AssertionError({ message: "Create Workflow button not available. Hence, workflow cannot be created" });
         }
         console.log("Workflow verified successfully");
     }
@@ -1418,9 +1418,30 @@ class asset_strategy_development_detailview_page {
         console.log("Inside deletion ASD method...");
         await utils.switchToIframe(this.ASDIframe);
         await browser.pause(4000);
+        try { await utils.clickSuccessOkButton(3000); } catch (e) { void e; }
         const headers = await utils.captureHeaderDetails();
-        if (this.publish || headers["Status"]?.trim() === "Published") {
-            console.log("Status is Published, Cannot delete the ASD");
+        const statusText = (headers["Status"] ?? "").trim().toLowerCase();
+        const isPublished = this.publish || statusText.includes("published") && !statusText.includes("unpublished");
+        if (isPublished) {
+            console.log("Status is Published → delete must NOT happen. Verifying Delete button is unavailable...");
+            if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.headerMoreBtn);
+                await browser.pause(2000);
+            }
+            const deleteButtons = await this.deleteBtn;
+            let deleteVisible = false;
+            for (const btn of deleteButtons) {
+                if (await btn.isDisplayed().catch(() => false) && await btn.isClickable().catch(() => false)) {
+                    deleteVisible = true;
+                    break;
+                }
+            }
+            if (deleteVisible) {
+                throw new AssertionError({
+                    message: "Delete button is still available on a Published ASD — it must not be shown/clickable.",
+                });
+            }
+            console.log("Verified: Delete is not available for Published ASD. Skipping deletion.");
             return;
         }
         console.log("Deleting the ASD...");
@@ -1442,7 +1463,7 @@ class asset_strategy_development_detailview_page {
             }
         }
         if (!clicked) {
-            throw new Error("No visible/clickable Delete button found on ASD detail page");
+            throw new AssertionError({ message: "No visible/clickable Delete button found on ASD detail page" });
         }
         await browser.pause(2000);
         await utils.clickWithWait(this.yesBtn);
@@ -1487,7 +1508,7 @@ class asset_strategy_development_detailview_page {
             const noOfRecc = await utils.getAssignedValue(text);
             if (noOfRecc === 0) {
                 this.publish === false
-                throw new Error("No recommendations found after publishing, something went wrong");
+                throw new AssertionError({ message: "No recommendations found after publishing, something went wrong" });
             }
             else
             {
@@ -1540,7 +1561,7 @@ class asset_strategy_development_detailview_page {
                 await browser.pause(5000);
                 const headers = await utils.captureHeaderDetails();
                 if (headers["Status"] !== "Published") {
-                    throw new Error(`Status is not Published → ${headers["Status"]}`);
+                    throw new AssertionError({ message: `Status is not Published → ${headers["Status"]}` });
                 }
                 this.publish === true;
                 console.log("Status is Published");
@@ -1576,7 +1597,7 @@ class asset_strategy_development_detailview_page {
                 await browser.pause(5000);
                 const headers = await utils.captureHeaderDetails();
                 if (headers["Status"] !== "Published") {
-                    throw new Error(`Status is not Published → ${headers["Status"]}`);
+                    throw new AssertionError({ message: `Status is not Published → ${headers["Status"]}` });
                 }
                 this.publish === true;
                 console.log("Status is Published");
@@ -1605,7 +1626,7 @@ class asset_strategy_development_detailview_page {
         console.log("All recommendations are skipped successfully");
         const headers = await utils.captureHeaderDetails();
         if (headers["Status"] !== "Published") {
-            throw new Error(`Status is not Published → ${headers["Status"]}`);
+            throw new AssertionError({ message: `Status is not Published → ${headers["Status"]}` });
         }
         this.publish === true;
         console.log("Status is Published");

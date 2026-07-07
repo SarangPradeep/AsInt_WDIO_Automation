@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { $, browser } from '@wdio/globals';
 import utils from '../../../../utils/utils';
 
@@ -413,7 +414,7 @@ class AssetStrategyAnalysisForClassesPage {
     private parseDate(value: string): Date {
         const d = new Date(value);
         if (isNaN(d.getTime())) {
-            throw new Error(`Unrecognized date format: "${value}". Expected e.g. "Dec 31, 2026".`);
+            throw new AssertionError({ message: `Unrecognized date format: "${value}". Expected e.g. "Dec 31, 2026".` });
         }
         return new Date(d.getFullYear(), d.getMonth(), d.getDate());
     }
@@ -462,7 +463,7 @@ class AssetStrategyAnalysisForClassesPage {
             await utils.clickWithWait(goForward ? this.calendarNextButton : this.calendarPrevButton);
             await browser.pause(120);
         }
-        throw new Error(`Could not navigate calendar to ${target.toDateString()}`);
+        throw new AssertionError({ message: `Could not navigate calendar to ${target.toDateString()}` });
     }
 
     /**
@@ -666,7 +667,7 @@ class AssetStrategyAnalysisForClassesPage {
         if (exists) {
             const displayed = await row.isDisplayed();
             if (displayed) {
-                throw new Error(`Assessment "${description}" is still present after deletion`);
+                throw new AssertionError({ message: `Assessment "${description}" is still present after deletion` });
             }
         }
         console.log(`[VERIFY] Assessment "${description}" is deleted`);
@@ -1084,7 +1085,7 @@ class AssetStrategyAnalysisForClassesPage {
             } else if (c.value) {
                 await this.selectCharacteristicValue(c.id, c.value);
             } else {
-                throw new Error(`Characteristic "${c.id}" has neither value nor valueIndex`);
+                throw new AssertionError({ message: `Characteristic "${c.id}" has neither value nor valueIndex` });
             }
         }
 
@@ -1342,7 +1343,7 @@ class AssetStrategyAnalysisForClassesPage {
         } else if (rowText && rowText.trim().length > 0) {
             btn = await this.assessmentHierarchyAddButtonByRowText(rowText);
         } else {
-            throw new Error('clickAssessmentHierarchyRowAddButton: provide rowText or rowIndex');
+            throw new AssertionError({ message: 'clickAssessmentHierarchyRowAddButton: provide rowText or rowIndex' });
         }
 
         await btn.waitForExist({ timeout: 30000 });

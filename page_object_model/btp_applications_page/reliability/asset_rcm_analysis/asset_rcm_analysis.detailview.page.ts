@@ -4,7 +4,7 @@ import assetRcmData from "../../../../test_data/btp_applications/reliability/ass
 import * as path from 'path';
 import { url } from 'inspector';
 import console from 'console';
-import { strict as assert } from 'node:assert';
+import { strict as assert, AssertionError } from 'node:assert';
 class assetRCMDetailView {
 
     private get infoTab() { return $("//bdi[text()='Information']"); }
@@ -333,13 +333,21 @@ class assetRCMDetailView {
         await utils.switchToIframe(this.rcmIframe);
         await browser.pause(4000);
         await this.technicalObjectsHeader.waitForDisplayed();
+        let assessmentCreated = false;
+        let lastFailureReason = "";
         for(let i=2;i<=81;i++){
             console.log(`Trying checkbox index: ${i}`);
             await utils.clickWithWait(this.equipmentValueBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(5000);
             const checkBox = $(`(//tr[@role='row']//div[@role='checkbox'])[${i}]`);
-            await checkBox.waitForClickable({timeout : 50000});
+            await checkBox.waitForExist({ timeout: 50000 });
+            await checkBox.scrollIntoView({ block: "center", inline: "center" });
+            await browser.pause(1000);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+            await checkBox.waitForDisplayed({ timeout: 50000 });
+            await checkBox.waitForClickable({ timeout: 50000 });
             await utils.clickWithWait(checkBox);
             await this.selectEquipmentAndStore(i);
             await utils.clickWithWait(this.confirmBtn);
@@ -347,12 +355,35 @@ class assetRCMDetailView {
             await utils.clickWithWait(this.createBtnFooter);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(5000);
-            await browser.waitUntil(async () => (await this.okBtn.isDisplayed()) || (await this.warningMsg.isDisplayed()), { timeout: 60000 });
-            if (await this.okBtn.isDisplayed()) {
+            await browser.waitUntil(async () =>
+                (await this.okBtn.isDisplayed().catch(() => false))
+                || (await this.warningMsg.isDisplayed().catch(() => false))
+                || (await this.errorDialogHeader.isDisplayed().catch(() => false)),
+                { timeout: 60000, timeoutMsg: `No Success / Warning / Error popup detected for checkbox index ${i}` }
+            );
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
                 console.log("Assessment created successfully");
                 await utils.clickWithWait(this.okBtn);
+                assessmentCreated = true;
                 break;
-            } else if (await this.warningMsg.isDisplayed()) {
+            } else if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
+                let errMsg = "";
+                try {
+                    const bodyEl = $("//header[.//text()='Error']/following::section//span[normalize-space()][1]");
+                    if (await bodyEl.isDisplayed().catch(() => false)) {
+                        errMsg = (await bodyEl.getText().catch(() => "")).trim();
+                    }
+                } catch (e) { void e; }
+                lastFailureReason = `Error: ${errMsg || "unknown"}`;
+                console.log(`Error dialog displayed ('${errMsg}') → dismissing, going Previous, retrying with next checkbox`);
+                await utils.clickWithWait(this.errorDialogOkBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                await utils.clickWithWait(this.previousBtn);
+                await browser.pause(4000);
+                await utils.waitForBusyIndicatorToDisappear();
+                await utils.clickWithWait(this.removeSelectedToken);
+            } else if (await this.warningMsg.isDisplayed().catch(() => false)) {
+                lastFailureReason = "Warning displayed on Create";
                 console.log("Warning displayed, retrying with next checkbox");
                 await utils.clickWithWait(this.warningOkBtn);
                 await utils.clickWithWait(this.previousBtn);
@@ -360,6 +391,9 @@ class assetRCMDetailView {
                 await utils.waitForBusyIndicatorToDisappear();
                 await utils.clickWithWait(this.removeSelectedToken);
             }
+        }
+        if (!assessmentCreated) {
+            assert.fail(`RCM assessment could not be created after trying checkbox indexes 2..81. Last failure: ${lastFailureReason || "none captured"}`);
         }
         console.log("Assessment details :", this.selectedEquipmentData);
         console.log("Assessment flow end");
@@ -677,7 +711,7 @@ class assetRCMDetailView {
             }
         }
         if (!clicked) {
-            throw new Error("Assign Failure Mode popup did not open");
+            throw new AssertionError({ message: "Assign Failure Mode popup did not open" });
         }
         console.log("Assign failure mode button clicked");
         await expect(this.failureModeCountText).toBeDisplayed();
@@ -781,7 +815,7 @@ class assetRCMDetailView {
             }
         }
         console.log("========================================================");
-        throw new Error(`Failure Mode Verification failed with ${totalFailures} issue(s):\n` + lines.join("\n"));
+        throw new AssertionError({ message: `Failure Mode Verification failed with ${totalFailures} issue(s):\n` + lines.join("\n") });
     }
 
     private async dismissOpenDialogs(stage: string)
@@ -1401,9 +1435,9 @@ class assetRCMDetailView {
             this.createdStrategies.map(x => x.finMR)
         );
         if (failures.length > 0) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Edit All Strategies Validation Failed\n\n${failures.join("\n")}`
-            );
+             });
         }
         if(failures.length === 0){
             console.log("Only common values are getting reflected. Hence, All the checks passed")
@@ -1847,7 +1881,7 @@ class assetRCMDetailView {
             const fnValue = await this.firstFunctionValue.getText();
 
             if (!fnValue) {
-                throw new Error("Function Value is empty");
+                throw new AssertionError({ message: "Function Value is empty" });
             }
 
             this.functionValue = fnValue;
@@ -1871,7 +1905,7 @@ class assetRCMDetailView {
 
         let found = false;
         if (!this.functionValue) {
-            throw new Error("functionValue not set");
+            throw new AssertionError({ message: "functionValue not set" });
         }
 
         for (const el of await this.functionRow(this.functionValue)) {
@@ -2254,7 +2288,7 @@ class assetRCMDetailView {
             }
             const msg = "RCM deletion failed: server returned 'Something went wrong, please try again.'";
             console.error(`\x1b[31m${msg}\x1b[0m`);
-            throw new Error(msg);
+            throw new AssertionError({ message: msg });
         }
 
         await utils.clickWithWait(successOkBtn);

@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { browser } from '@wdio/globals';
 import HomePage from '../../home.page';
 import utils from '../../../../utils/utils';
@@ -41,7 +42,7 @@ class NotificationsListPage {
 			}
 		}
 
-		throw new Error('Notifications list view frame not found');
+		throw new AssertionError({ message: 'Notifications list view frame not found' });
 	}
 
 	private async getNotificationRows(): Promise<any[]> {

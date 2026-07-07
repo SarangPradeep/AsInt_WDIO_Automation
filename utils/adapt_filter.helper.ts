@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { $, $$, browser } from '@wdio/globals';
 import * as console from 'console';
 import utils from './utils';
@@ -18,7 +19,7 @@ class adaptFilterHelper {
                 .trim();
             console.log(`Found ${filterLabel}: ${rawValue}`);
             if (!rawValue.toLowerCase().includes(expected)) {
-                throw new Error(`Expected ${filterLabel}: ${expectedValue}, but found: ${rawValue}`);
+                throw new AssertionError({ message: `Expected ${filterLabel}: ${expectedValue}, but found: ${rawValue}` });
             }
         }
     }
@@ -582,16 +583,16 @@ class adaptFilterHelper {
         const techIdCount = await techIdValues.length;
         console.log(`Total ${filterLabel} Found: ${techIdCount}`);
         if (techIdCount === 0) {
-            throw new Error(`No ${filterLabel} values found after applying filter: ${techId}`);
+            throw new AssertionError({ message: `No ${filterLabel} values found after applying filter: ${techId}` });
         }
         for (const valueEl of techIdValues) {
             const raw = (await valueEl.getText() || await valueEl.getAttribute('textContent') || '');
             const actualValue = raw.replace(/\s+/g, ' ').trim().toLowerCase();
             console.log(`Found ${filterLabel}: ${actualValue}`);
             if (!actualValue.includes(expectedValue)) {
-                throw new Error(
+                throw new AssertionError({ message: 
                     `Expected ${filterLabel}: ${expectedValue}, but found: ${actualValue}`
-                );
+                 });
             }
         }
 
@@ -1279,7 +1280,7 @@ class adaptFilterHelper {
         await browser.pause(1000);
         const applied = (await filterInput.getValue() || '').trim();
         if (!applied.toLowerCase().includes(value.trim().toLowerCase())) {
-            throw new Error(`Expected ${filterLabel} input to retain '${value}', but found: '${applied}'`);
+            throw new AssertionError({ message: `Expected ${filterLabel} input to retain '${value}', but found: '${applied}'` });
         }
         await filterInput.clearValue();
         await browser.pause(500);
@@ -1319,7 +1320,7 @@ class adaptFilterHelper {
                 console.log(`[${filterLabel}] Chip text didn't match '${displayText}', but a token exists in the filter — accepting`);
                 chip = anyToken;
             } else {
-                throw new Error(`Expected ${filterLabel} chip for '${displayText}' to be present after applying filter`);
+                throw new AssertionError({ message: `Expected ${filterLabel} chip for '${displayText}' to be present after applying filter` });
             }
         }
 

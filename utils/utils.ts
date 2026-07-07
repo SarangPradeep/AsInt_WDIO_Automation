@@ -236,6 +236,37 @@ class Utils {
     await browser.pause(1500);
     }
 
+    async getAssignedAssessmentRncId(timeout = 15000): Promise<string | null> {
+        const warningMessage = await $(
+            "//span[contains(normalize-space(), 'All of the selected Technical Objects are already assigned to other ongoing assessments. Please select different Technical Objects.')]"
+        );
+
+        if (!(await warningMessage.isExisting().catch(() => false)) || !(await warningMessage.isDisplayed().catch(() => false))) {
+            console.log("Assignment conflict warning is not displayed");
+            return null;
+        }
+
+        const viewDetailsLink = await $("//div[@role='alertdialog']//a[normalize-space()='View Details']");
+        if (await viewDetailsLink.isExisting().catch(() => false)) {
+            await this.clickWithWait(viewDetailsLink, 500, timeout);
+        }
+
+        const assignedDialogText = await $(
+            "//div[contains(@role,'dialog')]//div[contains(normalize-space(),'Already assigned :')]"
+        );
+
+        await assignedDialogText.waitForDisplayed({ timeout });
+        const dialogText = ((await assignedDialogText.getText()) || "").trim();
+        const rncMatch = dialogText.match(/\b(RNC\.\d+)\b/);
+
+        if (!rncMatch) {
+            throw new Error(`Unable to extract RNC ID from assignment dialog text: "${dialogText}"`);
+        }
+
+        console.log(`Extracted assigned RNC ID: ${rncMatch[1]}`);
+        return rncMatch[1];
+    }
+
     async waitForSAPPopupAndClose(timeoutInSeconds = 30): Promise<void> {
         const popUpCloseBtn = $("//button[@title='Close Lightbox']");
         const deadline = Date.now() + timeoutInSeconds * 1000;
@@ -1823,6 +1854,9 @@ async addAllAdaptFilter(): Promise<void> {
         await browser.pause(2000);
         console.log("Returned to previous list view");
     }
+
+
+
 }
 
 export default new Utils();

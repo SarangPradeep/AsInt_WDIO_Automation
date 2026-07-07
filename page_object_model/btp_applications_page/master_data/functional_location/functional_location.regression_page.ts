@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import {funcLocTestData} from '../../../../test_data/btp_applications/functional_location.data.ts';
 import utils from '../../../../utils/utils';
 class FunctionalLocationRegressionPage {
@@ -168,7 +169,7 @@ class FunctionalLocationRegressionPage {
         }, { timeout: 30000 });
 
         if (!searchBox) {
-            throw new Error("Visible search box not found");
+            throw new AssertionError({ message: "Visible search box not found" });
         }
         console.log("Visible search box found, searching for deleted Functional Location");
         await browser.execute((el, value) => {
@@ -197,7 +198,7 @@ class FunctionalLocationRegressionPage {
             timeoutMsg: "Go button not found"
         });
         if (!goBtn) {
-            throw new Error("Go button not found");
+            throw new AssertionError({ message: "Go button not found" });
         }
 
         console.log("Clicking Go button to search for Functional Location");
@@ -305,7 +306,7 @@ class FunctionalLocationRegressionPage {
             await browser.pause(2000);
             await browser.execute((element) => {element.click();}, el);
         } catch (e) {
-            throw new Error(`Failed to navigate to Functional Location Detail View page | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Failed to navigate to Functional Location Detail View page | ${(e as Error).message}` });
         }
         console.log("Navigated to Detail View page successfully");
     }
@@ -319,7 +320,7 @@ class FunctionalLocationRegressionPage {
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
         } catch (e) {
-            throw new Error(`Failed to navigate to Asset Intelligence tab | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Failed to navigate to Asset Intelligence tab | ${(e as Error).message}` });
         }
         console.log("Navigated to Asset Intelligence Tab successfully");
     }
@@ -333,7 +334,7 @@ class FunctionalLocationRegressionPage {
         console.log("Assigned asset Inspection : "+ai1);
         if(ai1 === 0)
         {
-            throw new Error("Assigned Asset Inspection is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Assigned Asset Inspection is 0, expected value should be greater than 0" });
         }
         console.log("Fetching Asset Inspection details...");
         await this.saveInspectionDetails();
@@ -488,9 +489,9 @@ class FunctionalLocationRegressionPage {
         );
 
         if (failures.length > 0) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Inspection Details Verification Failed\n\n${failures.join("\n")}`
-            );
+             });
         }
 
         console.log("Inspection Details Verification Passed");
@@ -505,7 +506,7 @@ class FunctionalLocationRegressionPage {
         console.log("Assigned findings : "+f);
         if(f === 0)
         {
-            throw new Error("Assigned Findings is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Assigned Findings is 0, expected value should be greater than 0" });
         }
         console.log("Fetching Asset Inspection details...");
         await this.saveFindingsDetails();
@@ -632,9 +633,9 @@ class FunctionalLocationRegressionPage {
         );
 
         if (failures.length > 0) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `Inspection Details Verification Failed\n\n${failures.join("\n")}`
-            );
+             });
         }
 
         console.log("Inspection Details Verification Passed");
@@ -647,7 +648,7 @@ class FunctionalLocationRegressionPage {
         console.log("Assigned asset strategy RCM: "+as2);
         if(as2 === 0)
         {
-            throw new Error("Assigned Asset Strategy RCM is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Assigned Asset Strategy RCM is 0, expected value should be greater than 0" });
         }
         await this.saveAssetStrategyDetails();
         await this.openAssetStrategyAssessment();
@@ -762,9 +763,9 @@ class FunctionalLocationRegressionPage {
         );
 
         if (failures.length > 0) {
-            throw new Error(
+            throw new AssertionError({ message: 
                 `ASD Details Verification Failed\n\n${failures.join("\n")}`
-            );
+             });
         }
 
         console.log("ASD Details Verification Passed");
@@ -779,7 +780,7 @@ class FunctionalLocationRegressionPage {
         console.log(" Assigned recommendations: "+recom);
         if(recom === 0)
         {
-            throw new Error("Assigned Recommendations is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Assigned Recommendations is 0, expected value should be greater than 0" });
         }
 
         const title = this.recPanelTitle;
@@ -832,7 +833,7 @@ class FunctionalLocationRegressionPage {
                 { timeout: 30000, timeoutMsg: "New tab did not open for Recommendation detail page" }
             );
         } catch (e) {
-            throw new Error(`Unable to navigate to Recommendation detail page | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Unable to navigate to Recommendation detail page | ${(e as Error).message}` });
         }
         const allWindows = await browser.getWindowHandles();
         const childWindow = allWindows.find(handle => handle !== parentWindow);
@@ -912,7 +913,7 @@ class FunctionalLocationRegressionPage {
         compare("MDA / Recommendation MDA", this.recommendationDetails.mda, this.recommendationHeaderDetails.mda);
 
         if (failures.length > 0) {
-            throw new Error(`Recommendation Details Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `Recommendation Details Verification Failed\n\n${failures.join("\n")}` });
         }
 
         console.log("Recommendation Details Verification Passed");
@@ -931,7 +932,7 @@ class FunctionalLocationRegressionPage {
         console.log(`Risk and Criticality panel title: "${titleText}" | count saved globally = ${this.rncCount}`);
 
         if (this.rncCount === 0) {
-            throw new Error("Risk and Criticality count is 0, expected value should be greater than 0");
+            throw new AssertionError({ message: "Risk and Criticality count is 0, expected value should be greater than 0" });
         }
 
         const rows = await this.rncTableRows;
@@ -975,7 +976,7 @@ class FunctionalLocationRegressionPage {
                 { timeout: 30000, timeoutMsg: "New tab did not open for Risk and Criticality assessment" }
             );
         } catch (e) {
-            throw new Error(`Unable to navigate to Risk and Criticality assessment tab | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Unable to navigate to Risk and Criticality assessment tab | ${(e as Error).message}` });
         }
         const allWindows = await browser.getWindowHandles();
         const childWindow = allWindows.find(handle => handle !== parentWindow);
@@ -1032,7 +1033,7 @@ class FunctionalLocationRegressionPage {
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
         } catch (e) {
-            throw new Error(`Unable to navigate to RNC Assignments tab | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Unable to navigate to RNC Assignments tab | ${(e as Error).message}` });
         }
         console.log("Navigated to RNC Assignments tab");
     }
@@ -1065,7 +1066,7 @@ class FunctionalLocationRegressionPage {
         compare("Allowed Objects", "Functional Location", this.rncHeaderDetails.allowedObjects);
 
         if (failures.length > 0) {
-            throw new Error(`Risk and Criticality Details Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `Risk and Criticality Details Verification Failed\n\n${failures.join("\n")}` });
         }
 
         console.log("Risk and Criticality Details Verification Passed");
@@ -1087,7 +1088,7 @@ class FunctionalLocationRegressionPage {
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
         } catch (e) {
-            throw new Error(`Unable to navigate to RCM/Fleet tab | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Unable to navigate to RCM/Fleet tab | ${(e as Error).message}` });
         }
 
         const row = this.rcmFleetAssessmentRow();
@@ -1188,7 +1189,7 @@ class FunctionalLocationRegressionPage {
         console.log(JSON.stringify(this.rcmFleetDetails, null, 2));
 
         if (!status) {
-            throw new Error("RCM/Fleet assessment status was empty");
+            throw new AssertionError({ message: "RCM/Fleet assessment status was empty" });
         }
 
         await this.openRCMAssessment();
@@ -1203,7 +1204,7 @@ class FunctionalLocationRegressionPage {
                 { timeout: 30000, timeoutMsg: "New tab did not open for RCM assessment" }
             );
         } catch (e) {
-            throw new Error(`Unable to navigate to RCM assessment tab | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Unable to navigate to RCM assessment tab | ${(e as Error).message}` });
         }
         const allWindows = await browser.getWindowHandles();
         const childWindow = allWindows.find(handle => handle !== parentWindow);
@@ -1251,7 +1252,7 @@ class FunctionalLocationRegressionPage {
         compare("Status", this.rcmFleetDetails.status, this.rcmHeaderDetails.status);
 
         if (failures.length > 0) {
-            throw new Error(`RCM Header Verification Failed\n\n${failures.join("\n")}`);
+            throw new AssertionError({ message: `RCM Header Verification Failed\n\n${failures.join("\n")}` });
         }
         console.log("RCM Header Verification Passed");
     }
@@ -1318,7 +1319,7 @@ class FunctionalLocationRegressionPage {
         this.rcmHeaderDetails.functionalLocation = functionalLocation;
 
         if (!functionalLocation.includes(expectedFL)) {
-            throw new Error(`RCM Technical Objects Verification Failed | Expected Functional Location to contain="${expectedFL}" | Actual="${functionalLocation}"`);
+            throw new AssertionError({ message: `RCM Technical Objects Verification Failed | Expected Functional Location to contain="${expectedFL}" | Actual="${functionalLocation}"` });
         }
         console.log("RCM Technical Objects Verification Passed");
     }

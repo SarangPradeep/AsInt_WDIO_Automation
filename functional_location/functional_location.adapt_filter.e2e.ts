@@ -1,3 +1,4 @@
+import { AssertionError } from 'node:assert';
 import { $, $$, browser } from '@wdio/globals';
 import functionalLocationListView from '../page_object_model/btp_applications_page/master_data/functional_location/functional_location.listview.page';
 import utils from '../utils/utils';
@@ -94,7 +95,7 @@ describe('BTP - Functional Location Application - Adapt Filter Functional test',
         await utils.resetAllAdaptFilter();
         if (failures.length > 0) {
             const summary = failures.map((f, i) => `  ${i + 1}. ${f.name} -> ${f.error}`).join('\n');
-            throw new Error(`Found issue in ${failures.length} of the adapt filter(s):\n${summary}`);
+            throw new AssertionError({ message: `Found issue in ${failures.length} of the adapt filter(s):\n${summary}` });
         }
     });
 });
