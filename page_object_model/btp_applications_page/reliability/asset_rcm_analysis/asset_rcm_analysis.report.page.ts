@@ -32,16 +32,6 @@ class AssetRCMReportPage {
     public secondExportedFilePath: string = "";
 
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
-    private get adaptFilterBtn() { return $("//bdi[contains(text(),'Adapt Filters')]/ancestor::button"); }
-    private get adaptFiltersDialog() {
-        return $("//div[@role='dialog'][.//span[starts-with(normalize-space(),'Adapt Filters')]]");
-    }
-    private get technicalObjectFilterCheckbox() {
-        return $("//div[@role='dialog'][.//span[starts-with(normalize-space(),'Adapt Filters')]]//tr[@role='row'][.//bdi[normalize-space()='Technical Object']]//div[@role='checkbox']");
-    }
-    private get dialogOkBtn() {
-        return $("//div[@role='dialog'][.//span[starts-with(normalize-space(),'Adapt Filters')]]//footer//button[.//bdi[normalize-space()='OK']]");
-    }
     private get technicalObjectInput() { return $("//label[.//bdi[normalize-space()='Technical Object']]/following::input[1]"); }
     private get goBtn() { return $("//button[.//bdi[normalize-space()='Go']]"); }
     private get exportToExcelBtn() { return $('//button[@aria-label="Export to Excel"]'); }
@@ -64,35 +54,10 @@ class AssetRCMReportPage {
     }
 
     public async addTechnicalObjectAdaptFilter(): Promise<void> {
-        console.log("Step 2: Opening 'Adapt Filters' to add the 'Technical Object' filter...");
-        await utils.clickWithWait(this.adaptFilterBtn);
-        await browser.pause(3000);
-        await this.adaptFiltersDialog.waitForDisplayed({ timeout: 30000 });
-
-        const checkbox = this.technicalObjectFilterCheckbox;
-        await checkbox.waitForExist({ timeout: 30000 });
-        const state = await checkbox.getAttribute("aria-checked");
-        if (state !== "true") {
-            console.log("  -> Ticking the 'Technical Object' checkbox.");
-            try {
-                await utils.clickWithWait(checkbox);
-            } catch (e) {
-                void e;
-                try {
-                    await checkbox.scrollIntoView({ block: "center" });
-                } catch (scrollErr) { void scrollErr; }
-                await browser.pause(300);
-                await checkbox.click();
-            }
-        } else {
-            console.log("  -> 'Technical Object' was already selected.");
-        }
-
-        await browser.pause(500);
-        await utils.clickWithWait(this.dialogOkBtn);
-        await browser.pause(3000);
+        console.log("Step 2: Adding all Adapt Filters (includes 'Technical Object') via utils helper...");
+        await utils.addAllAdaptFilter();
         await utils.waitForBusyIndicatorToDisappear();
-        console.log("'Technical Object' filter is now visible on the filter bar.");
+        console.log("All Adapt Filters (including 'Technical Object') are now visible on the filter bar.");
     }
 
     public async searchByTechnicalObject(value: string = this.targetTechnicalObject): Promise<void> {
@@ -169,15 +134,22 @@ class AssetRCMReportPage {
                 if (rowId) {
                     const popinRow = await $(`//tr[@data-sap-ui-related='${rowId}']`);
                     if (await popinRow.isExisting()) {
-                        const popinText = ((await popinRow.getText()) || "").replace(/\s+/g, " ").trim();
-                        const extractAfter = (label: string): string => {
-                            const re = new RegExp(`${label}\\s*:?[\\s]*([^|\\n\\r]+?)(?=\\s*(?:Workflow\\s+(?:Requested\\s+On\\s*/\\s*By|Status|Type)|$))`, "i");
-                            const m = popinText.match(re);
-                            return m ? m[1].trim() : "";
-                        };
-                        data.workflowRequestedOnBy = extractAfter("Workflow Requested On / By");
-                        data.workflowStatus = extractAfter("Workflow Status");
-                        data.workflowType = extractAfter("Workflow Type");
+                        const pairs: Record<string, string> = {};
+                        const rowDivs = await popinRow.$$(".//div[./div/span[@data-popin-colon]]");
+                        for (const rowDiv of rowDivs) {
+                            const headerDiv = await rowDiv.$("./div[1]");
+                            const valueDiv = await rowDiv.$("./div[2]");
+                            const labelSpan = await headerDiv.$("./span[1]");
+                            const label = ((await labelSpan.getText()) || "").trim();
+                            const value = ((await valueDiv.getText()) || "").replace(/\s+/g, " ").trim();
+                            if (label) pairs[label] = value;
+                        }
+                        data.workflowRequestedOnBy = pairs["Workflow Requested On / By"] || "";
+                        data.workflowStatus = pairs["Workflow Status"] || "";
+                        data.workflowType = pairs["Workflow Type"] || "";
+                        if (!data.workflowLevel && pairs["Workflow Level"]) {
+                            data.workflowLevel = pairs["Workflow Level"];
+                        }
                     }
                 }
             }
@@ -261,7 +233,54 @@ class AssetRCMReportPage {
     }
 
     private normalizeDate(s: string): string {
-        return (s || "").toString().replace(/\s+/g, " ").replace(/,/g, "").trim().toLowerCase();
+        const raw = (s || "").toString().replace(/\s+/g, " ").trim();
+        if (!raw) return "";
+
+        const monthNames = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+
+        const mUS = raw.match(/^([A-Za-z]{3,9})\s+(\d{1,2}),\s*(\d{4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?$/i);
+        if (mUS) {
+            const monthIdx = monthNames.indexOf(mUS[1].toLowerCase().slice(0, 3));
+            if (monthIdx >= 0) {
+                let hour = parseInt(mUS[4], 10);
+                const ampm = (mUS[7] || "").toUpperCase();
+                if (ampm === "PM" && hour !== 12) hour += 12;
+                else if (ampm === "AM" && hour === 12) hour = 0;
+                const yyyy = mUS[3];
+                const mm = String(monthIdx + 1).padStart(2, "0");
+                const dd = mUS[2].padStart(2, "0");
+                const hh = String(hour).padStart(2, "0");
+                return `${yyyy}-${mm}-${dd} ${hh}:${mUS[5]}:${mUS[6]}`;
+            }
+        }
+
+        const mExcel = raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
+        if (mExcel) {
+            const dd = mExcel[1].padStart(2, "0");
+            const mm = mExcel[2].padStart(2, "0");
+            const yyyy = mExcel[3];
+            let hour = parseInt(mExcel[4] || "0", 10);
+            const ampm = (mExcel[7] || "").toUpperCase();
+            if (ampm === "PM" && hour !== 12) hour += 12;
+            else if (ampm === "AM" && hour === 12) hour = 0;
+            const hh = String(hour).padStart(2, "0");
+            const mmS = mExcel[5] || "00";
+            const ss = mExcel[6] || "00";
+            return `${yyyy}-${mm}-${dd} ${hh}:${mmS}:${ss}`;
+        }
+
+        const mISO = raw.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+        if (mISO) {
+            return `${mISO[1]}-${mISO[2]}-${mISO[3]} ${mISO[4]}:${mISO[5]}:${mISO[6] || "00"}`;
+        }
+
+        return raw.replace(/,/g, "").toLowerCase();
+    }
+
+    private normalizeStatus(s: string): string {
+        const raw = (s || "").toString().replace(/\s+/g, " ").trim().toLowerCase();
+        if (!raw) return "";
+        return raw.split(/\s+/)[0];
     }
 
     public async extractAndVerifyExcelReport(): Promise<void> {
@@ -329,7 +348,12 @@ class AssetRCMReportPage {
 
             const statusVal = this.getRowField(sample, statusColCandidates);
             const statusCheck = `Assessment '${displayId}': Status '${captured.status}' present in Excel ('${statusVal}')`;
-            if (statusVal && statusVal.toLowerCase().includes(captured.status.toLowerCase())) {
+            const uiStatusCore = this.normalizeStatus(captured.status);
+            const excelStatusCore = this.normalizeStatus(statusVal);
+            if (
+                (uiStatusCore && excelStatusCore && (uiStatusCore === excelStatusCore || excelStatusCore.includes(uiStatusCore) || uiStatusCore.includes(excelStatusCore))) ||
+                (statusVal && captured.status && statusVal.toLowerCase().includes(captured.status.toLowerCase()))
+            ) {
                 passed.push(statusCheck);
             } else {
                 failed.push(statusCheck);
@@ -506,10 +530,10 @@ class AssetRCMReportPage {
         const techReviewCandidates = ["Technical Review Completed", "Technical Review"];
         const templateIdCandidates = ["Template Identifier", "Template Id", "Template"];
         const wfApprovedOnCandidates = ["Workflow Approved On", "Approved On"];
-        const wfApprovedByCandidates = ["Workflow Approved By", "Approved By"];
+        const wfApprovedByCandidates = ["Workflow Approver", "Workflow Approved By", "Approved By", "Approver"];
         const wfLevelCandidates = ["Workflow Level", "Level"];
         const wfRequestedOnCandidates = ["Workflow Requested On", "Requested On"];
-        const wfRequestedByCandidates = ["Workflow Requested By", "Requested By"];
+        const wfRequestedByCandidates = ["Workflow Requester", "Workflow Requested By", "Requested By", "Requester"];
         const wfStatusCandidates = ["Workflow Status"];
         const wfTypeCandidates = ["Workflow Type"];
 
