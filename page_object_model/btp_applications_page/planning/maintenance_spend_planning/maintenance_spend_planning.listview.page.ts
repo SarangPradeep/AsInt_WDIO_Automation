@@ -18,7 +18,7 @@ class MSPListView {
     private get mspItemHeader() { return $("//h1[.='Create MSP']"); }
     private get shortDescInput() { return $("//bdi[.='Short Description']/following::input[1]"); }
     private get longDescInput() { return $("//bdi[.='Long Description']/following::textarea[1]"); }
-    private get createMSPBtn() { return $("//footer//button[.//text()='Create']"); }
+    private get createMSPBtn() { return $("//header[.//text()='Create MSP']/following::footer[1]//button[.//text()='Create']"); }
     private get createRecommendation() { return $("//section//li[.='Create Recommendation']//div//div"); }
     private get objectTypeDropdown() { return $("//bdi[.='Object Type']/following::span[2]"); }
     private get equipmentValueHelpBtn() { return $("//bdi[.='Equipment']/following::span[5]"); }
@@ -94,9 +94,36 @@ class MSPListView {
             await this.fillCreateMspForm(forceInlineRecc);
 
             await browser.pause(2000);
-            await utils.clickWithWait(this.createMSPBtn);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(4000);
+            const createMspHeader = await $("//header[.//text()='Create MSP']");
+            let dialogClosed = false;
+            for (let clickAttempt = 1; clickAttempt <= 3; clickAttempt++) {
+                console.log(`Clicking footer Create button (attempt #${clickAttempt})`);
+                try {
+                    await this.createMSPBtn.waitForDisplayed({ timeout: 10000 });
+                    await this.createMSPBtn.scrollIntoView();
+                    await this.createMSPBtn.waitForClickable({ timeout: 10000 });
+                    await this.createMSPBtn.click();
+                } catch (e) {
+                    void e;
+                    console.log(`Footer Create click threw on attempt #${clickAttempt}, will re-check dialog state`);
+                }
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(3000);
+
+                if (await this.errorDialog.isDisplayed().catch(() => false)) {
+                    break;
+                }
+
+                if (!(await createMspHeader.isDisplayed().catch(() => false))) {
+                    dialogClosed = true;
+                    break;
+                }
+                console.log("Create MSP dialog still displayed after click — retrying");
+            }
+            if (!dialogClosed && !(await this.errorDialog.isDisplayed().catch(() => false))) {
+                throw new AssertionError({ message: "Create MSP dialog did not close after clicking footer Create button" });
+            }
+            await browser.pause(1000);
 
             // Detect the "Failed to Create Recommendation, Please try again later" error popup
             if (await this.errorDialog.isDisplayed().catch(() => false)) {
