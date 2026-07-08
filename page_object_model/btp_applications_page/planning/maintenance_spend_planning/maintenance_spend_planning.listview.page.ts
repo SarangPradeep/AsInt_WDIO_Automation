@@ -95,17 +95,39 @@ class MSPListView {
 
             await browser.pause(2000);
             const createMspHeader = await $("//header[.//text()='Create MSP']");
+            const createBtnXpaths = [
+                "//header[.//text()='Create MSP']/following::footer[1]//button[.//text()='Create']",
+                "//header[.//text()='Create MSP']/following::footer[1]//button[.//bdi[normalize-space()='Create']]",
+                "//header[.//text()='Create MSP']/following::button[.//bdi[normalize-space()='Create']][1]",
+                "//*[@role='dialog'][.//text()='Create MSP']//button[.//text()='Create']",
+                "//*[@role='dialog'][.//text()='Create MSP']//button[.//bdi[normalize-space()='Create']]",
+            ];
             let dialogClosed = false;
             for (let clickAttempt = 1; clickAttempt <= 3; clickAttempt++) {
                 console.log(`Clicking footer Create button (attempt #${clickAttempt})`);
-                try {
-                    await this.createMSPBtn.waitForDisplayed({ timeout: 10000 });
-                    await this.createMSPBtn.scrollIntoView();
-                    await this.createMSPBtn.waitForClickable({ timeout: 10000 });
-                    await this.createMSPBtn.click();
-                } catch (e) {
-                    void e;
-                    console.log(`Footer Create click threw on attempt #${clickAttempt}, will re-check dialog state`);
+                let clicked = false;
+                for (const xp of createBtnXpaths) {
+                    const candidates = await $$(xp);
+                    for (const el of candidates) {
+                        const displayed = await el.isDisplayed().catch(() => false);
+                        if (!displayed) continue;
+                        const clickable = await el.isClickable().catch(() => false);
+                        if (!clickable) continue;
+                        try {
+                            await el.scrollIntoView().catch(() => { /* ignore */ });
+                            await el.click();
+                            clicked = true;
+                            console.log(`Footer Create clicked via: ${xp}`);
+                            break;
+                        } catch (e) {
+                            void e;
+                            console.log(`Click threw for ${xp}, trying next candidate`);
+                        }
+                    }
+                    if (clicked) break;
+                }
+                if (!clicked) {
+                    console.log(`No displayed/clickable Create button found on attempt #${clickAttempt}`);
                 }
                 await utils.waitForBusyIndicatorToDisappear();
                 await browser.pause(3000);
