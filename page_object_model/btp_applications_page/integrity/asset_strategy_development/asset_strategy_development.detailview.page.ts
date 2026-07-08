@@ -249,6 +249,9 @@ class asset_strategy_development_detailview_page {
     private get publishConfirmBtn() { return $("//h1[.//text()='Confirmation']/following::button[.//text()='Yes']"); }
     private get selectAllRecc() { return $("//table[@aria-rowcount='3']//div[@title='Select All']"); }
     private get publishBtn() { return $("//footer//button[.//text()='Publish']"); }
+    private get convertToNotificationMenuItem() { return $("//*[@role='menuitem'][.//text()[normalize-space()='Convert to Notification'] or normalize-space(.)='Convert to Notification']"); }
+    private get convertToAPMReccMenuItem() { return $("//*[@role='menuitem'][.//text()[normalize-space()='Convert to APM Recommendations'] or normalize-space(.)='Convert to APM Recommendations']"); }
+    private get skipAllReccMenuItem() { return $("//*[@role='menuitem'][.//text()[normalize-space()='Skip All Recommendations'] or normalize-space(.)='Skip All Recommendations']"); }
     private get notificationHeader() { return $("//header//span[contains(text(),'Notification')]"); }
     private get notificationTypeDrp() { return $("//bdi[text()='Type']/following::span[@role='button'][1]"); }
     private get notificationTypePopup() { return $("//header[.//text()='Select Notification Type']"); }
@@ -415,7 +418,7 @@ class asset_strategy_development_detailview_page {
         await utils.clickWithWait(this.ASDEditHeader);
         await browser.pause(2000);
         await this.editHeaderTitle.waitForDisplayed();
-        if(ASDListView.singleCreate = true)
+        if(ASDListView.singleCreate === true)
         {
             ASDListView.assetASDDesc = `Automation_ASD_Single_Equipment_${Date.now()}`;
             console.log(`Generated ASD Description: ${ASDListView.assetASDDesc}`);
@@ -423,10 +426,9 @@ class asset_strategy_development_detailview_page {
         }
         else
         {
-            const newASDDesc = `Automation_ASD_Multiple_Equipment_${Date.now()}`;
-            console.log("Setting new short description: " + newASDDesc);
-            await utils.setValueWithWait(this.shortDescriptionInput, newASDDesc);
-            ASDListView.assetASDFunLoc = newASDDesc;
+            ASDListView.assetASDFunLoc = `Automation_ASD_Multiple_FuncLoc_${Date.now()}`;
+            console.log(`Generated ASD Description: ${ASDListView.assetASDFunLoc}`);
+            await utils.setValueWithWait(this.shortDescriptionInput, ASDListView.assetASDFunLoc);
         }
         await utils.setValueWithWait(this.assessDateInput, utils.formatDate(0));
         await utils.setValueWithWait(this.longDescriptionTextarea, "Automation long description");
@@ -1058,10 +1060,14 @@ class asset_strategy_development_detailview_page {
         await browser.pause(2000);
         const isErrorPresent = await this.errorOkBtn.isDisplayed().catch(() => false);
         if (isErrorPresent) {
+            let errorMessage = "";
+            try {
+                errorMessage = (await $("//header[.//text()='Error']/following::section//span[normalize-space()]").getText()).trim();
+            } catch { void 0; }
             await this.errorOkBtn.waitForClickable({ timeout: 5000 });
             await this.errorOkBtn.click();
-            console.log("Error popup handled → OK clicked");
-            return;
+            console.log(`Error popup dismissed → OK clicked. Message: '${errorMessage}'`);
+            throw new AssertionError({ message: `Risk Information error popup shown: '${errorMessage || 'Unknown error'}'` });
         }
         const riskInfo = await utils.getAssignedValue(await this.riskInformationValue.getText());
         const strategies = await utils.getAssignedValue(await this.strategiesValue.getText());
@@ -1532,8 +1538,8 @@ class asset_strategy_development_detailview_page {
         await utils.clickWithWait(this.selectAllRecc);
         await utils.clickWithWait(this.publishBtn);
         console.log("Converting to notification");
-        await browser.keys("ArrowDown");
-        await browser.keys("Enter");
+        await this.convertToNotificationMenuItem.waitForDisplayed({ timeout: 15000 });
+        await utils.clickWithWait(this.convertToNotificationMenuItem);
         await browser.pause(2000);
         await utils.waitForBusyIndicatorToDisappear();
         while (true) {
@@ -1582,9 +1588,10 @@ class asset_strategy_development_detailview_page {
         await utils.clickWithWait(this.selectAllRecc);
         await utils.clickWithWait(this.publishBtn);
         console.log("Converting to APM recommendation");
-        await browser.keys("ArrowDown");
-        await browser.keys("ArrowDown");
-        await browser.keys("Enter");
+        await this.convertToAPMReccMenuItem.waitForDisplayed({ timeout: 15000 });
+        await utils.clickWithWait(this.convertToAPMReccMenuItem);
+        await browser.pause(2000);
+        await utils.waitForBusyIndicatorToDisappear();
         while (true) {
             await this.recWorkbenchHeader.waitForDisplayed({ timeout: 20000 });
             
@@ -1617,10 +1624,10 @@ class asset_strategy_development_detailview_page {
         await utils.clickWithWait(this.selectAllRecc);
         await utils.clickWithWait(this.publishBtn);
         console.log("Skipping all the recommendation");
-        await browser.keys("ArrowDown");
-        await browser.keys("ArrowDown");
-        await browser.keys("ArrowDown");
-        await browser.keys("Enter");
+        await this.skipAllReccMenuItem.waitForDisplayed({ timeout: 15000 });
+        await utils.clickWithWait(this.skipAllReccMenuItem);
+        await browser.pause(2000);
+        await utils.waitForBusyIndicatorToDisappear();
         await this.skipAllReccSuccMsg.waitForDisplayed({ timeout: 20000 });
         await utils.clickWithWait(this.okBtn);
         console.log("All recommendations are skipped successfully");
