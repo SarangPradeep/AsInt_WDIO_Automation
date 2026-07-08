@@ -255,15 +255,56 @@ class functionalLocationDetailView {
         const bussinessArea = await utils.getValueWithWait(this.bussArea);
         console.log("Bussiness Area : "+bussinessArea)
         await utils.clickWithWait(this.planPlant);
-        await this.planPlantBox.waitForDisplayed({ timeout: 30000 });
+        let planPlantDialogOpened = true;
         try {
-            await this.planPlantSelect.waitForDisplayed({ timeout: 30000 });
+            await this.planPlantBox.waitForDisplayed({ timeout: 20000 });
         } catch {
-            await utils.clickWithWait(await $("//footer//bdi[text()='Cancel']"));
-            throw new AssertionError({ message: "Plan Plant Select not displayed" });
+            planPlantDialogOpened = false;
         }
-        await utils.clickWithWait(this.planPlantSelect,2000);
-        await utils.clickWithWait(this.planPlantSave,1000);
+        let selectAvailable = false;
+        if (planPlantDialogOpened) {
+            try {
+                await this.planPlantSelect.waitForDisplayed({ timeout: 20000 });
+                selectAvailable = true;
+            } catch { /* handled below */ }
+        }
+        if (!selectAvailable) {
+            const cancelCandidates = [
+                "//footer//bdi[text()='Cancel']",
+                "//footer//button[.//text()='Cancel']",
+                "//*[@role='dialog']//bdi[text()='Cancel']",
+                "//*[@role='dialog']//button[.//text()='Cancel']",
+                "//bdi[text()='Cancel']/ancestor::button[1]",
+                "//a[normalize-space()='Cancel']",
+                "//span[normalize-space()='Cancel']/ancestor::*[self::button or self::a][1]",
+            ];
+            let cancelled = false;
+            for (const xp of cancelCandidates) {
+                const els = await $$(xp);
+                for (const el of els) {
+                    if ((await el.isDisplayed().catch(() => false)) && (await el.isClickable().catch(() => false))) {
+                        try {
+                            await el.click();
+                            cancelled = true;
+                            console.log(`Planning Plant dialog cancelled via: ${xp}`);
+                            break;
+                        } catch (e) { void e; }
+                    }
+                }
+                if (cancelled) break;
+            }
+            if (!cancelled) {
+                console.log("Cancel button not found for Planning Plant dialog; pressing Escape as fallback.");
+                try { await browser.keys('Escape'); } catch (e) { void e; }
+            }
+            await browser.pause(1000);
+            const reason = planPlantDialogOpened
+                ? "Planning Plant option not displayed"
+                : "Planning Plant dialog did not open";
+            throw new AssertionError({ message: reason });
+        }
+        await utils.clickWithWait(this.planPlantSelect, 2000);
+        await utils.clickWithWait(this.planPlantSave, 1000);
         await utils.clickWithWait(this.planGrp);
         await this.planGrpBox.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.planGrpSelect,2000);
