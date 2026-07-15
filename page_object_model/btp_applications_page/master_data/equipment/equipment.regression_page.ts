@@ -41,14 +41,22 @@ class EquipmentRegressionPage {
     private get assetStrategyRCM() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]"); }
     private get recommendation() { return $("//div[text()='Recommendations']/following::span[1]"); }
     private get assetStrategyAssessment() { return $("(//div[contains(text(),'Asset Strategy')]/following::table)[1]//tbody/tr[1]//td[@aria-colindex='1']//a"); }
-    private get recoName() { return $("(//div[text()='Recommendations']/following::span[text()='Recommendation']/following::tr//td[@aria-colindex='1']//span)[2]"); }
-    private get recoDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Recommendation']/following::tr//td[@aria-colindex='1']//span)[1]"); }
-    private get recoLongDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Long Description']/following::tr//td[@aria-colindex='3']//span)[1]"); }
-    private get recoAssessmentLink() { return $("(//div[text()='Recommendations']/following::span[text()='Assessment']/following::tr//td[@aria-colindex='4']//a)[1]"); }
-    private get recoAssessmentDesc() { return $("(//div[text()='Recommendations']/following::span[text()='Assessment']/following::tr//td[@aria-colindex='4']//span)[1]"); }
-    private get recoDueDate() { return $("(//div[text()='Recommendations']/following::span[text()='Due Date']/following::tr//td[@aria-colindex='5']//span)[1]"); }
-    private get recoStatus() { return $("(//div[text()='Recommendations']/following::span[starts-with(normalize-space(),'Recommendation Status') or normalize-space()='Status']/following::tr//td[@aria-colindex='7']//span)[1]"); }
-    private get recoBudgetCategory() { return $("(//div[text()='Recommendations']/following::span[text()='Budget Category']/following::tr//td[@aria-colindex='11']//span)[1]"); }
+    private recoTableXPath(): string {
+        return "(//table[.//thead//th//span[normalize-space()='Recommendation']])[last()]";
+    }
+    private recoFirstCellXPath(headerText: string): string {
+        const header = JSON.stringify(headerText);
+        const table = this.recoTableXPath();
+        return `${table}/tbody/tr[1]/td[@data-sap-ui-column=${table}//thead//th[.//span[normalize-space()=${header}]]/@data-sap-ui-column]`;
+    }
+    private get recoName() { return $(`${this.recoFirstCellXPath('Recommendation')}//div[contains(@class,'sapMObjectIdentifierTitle')]//a`); }
+    private get recoDesc() { return $(`(${this.recoFirstCellXPath('Recommendation')}//div[contains(@class,'sapMObjectIdentifierText')]//span)[1]`); }
+    private get recoLongDesc() { return $(`(${this.recoFirstCellXPath('Long Description')}//span[contains(@class,'sapMExTextString')])[1]`); }
+    private get recoAssessmentLink() { return $(`${this.recoFirstCellXPath('Assessment')}//a[1]`); }
+    private get recoAssessmentDesc() { return $(`(${this.recoFirstCellXPath('Assessment')}//div[contains(@class,'sapMObjectIdentifierText')]//span)[1]`); }
+    private get recoDueDate() { return $(`(${this.recoFirstCellXPath('Due Date')}//span[normalize-space()])[1]`); }
+    private get recoStatus() { return $(`(${this.recoFirstCellXPath('Recommendation Status')}//span[normalize-space()])[1]`); }
+    private get recoBudgetCategory() { return $(`(${this.recoFirstCellXPath('Budget Category')}//span[normalize-space()])[1]`); }
     private get ASDIframe() { return $('iframe[data-help-id="application-assetstrategydevelopment-manage"]'); }
     private get ASDHeaderTemplateType() { return $("//section//span[text()='Template Type']/following::span[1]"); }
     private get ASDHeaderEquipment() { return $("//section//bdi[text()='Equipment: ']/following::a[1]"); }
@@ -68,7 +76,7 @@ class EquipmentRegressionPage {
     private get rncStatus() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Status']/following::tr//td[@aria-colindex='4']//span)[1]"); }
     private get rncRiskScore() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Risk Score']/following::tr//td[@aria-colindex='5']//span)[1]"); }
     private get rncCriticality() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Criticality']/following::tr//td[@aria-colindex='6']//span)[1]"); }
-    private get rncCreatedOn() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='7']//span)[1]"); }
+    private get rncCreatedOn() { return $("(//div[contains(text(),'Risk and Criticality')]/following::span[text()='Created On']/following::tr//td[@aria-colindex='7']//span)[1]"); }
 
     private get rncIframe() { return $('iframe[data-help-id="application-rca-manage"]'); }
     private get rncHeaderRiskType() { return $("//bdi[normalize-space()='Risk Type:']/following::span[2]"); }
@@ -79,10 +87,10 @@ class EquipmentRegressionPage {
     private get rncAsgnTechnicalObject() { return $("(//*[normalize-space()='Technical Object']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='1']//a"); }
     private get rncAsgnTechnicalObjectDesc() { return $("((//*[normalize-space()='Technical Object']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='1']//span)[1]"); }
     private get rncAsgnObjectType() { return $("((//*[normalize-space()='Object Type']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='2']//span)[1]"); }
-    private get rncAsgnAssessmentTemplate() { return $("(//*[normalize-space()='Assessment Template']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='6']//a"); }
-    private get rncAsgnAssessmentTemplateDesc() { return $("((//*[normalize-space()='Assessment Template']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='6']//span)[1]"); }
-    private get rncAsgnRiskScore() { return $("((//*[normalize-space()='Risk Score']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='4']//span)[1]"); }
-    private get rncAsgnCriticality() { return $("((//*[normalize-space()='Criticality']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='5']//span)[1]"); }
+    private get rncAsgnAssessmentTemplate() { return $("(//table[.//th[.//*[normalize-space()='Assessment Template']]])[last()]//tbody/tr[1]/td[@data-sap-ui-column=(//table[.//th[.//*[normalize-space()='Assessment Template']]])[last()]//th[.//*[normalize-space()='Assessment Template']]/@data-sap-ui-column]//a"); }
+    private get rncAsgnAssessmentTemplateDesc() { return $("((//table[.//th[.//*[normalize-space()='Assessment Template']]])[last()]//tbody/tr[1]/td[@data-sap-ui-column=(//table[.//th[.//*[normalize-space()='Assessment Template']]])[last()]//th[.//*[normalize-space()='Assessment Template']]/@data-sap-ui-column]//span)[1]"); }
+    private get rncAsgnRiskScore() { return $("((//table[.//th[.//*[normalize-space()='Risk Score']]])[last()]//tbody/tr[1]/td[@data-sap-ui-column=(//table[.//th[.//*[normalize-space()='Risk Score']]])[last()]//th[.//*[normalize-space()='Risk Score']]/@data-sap-ui-column]//span)[1]"); }
+    private get rncAsgnCriticality() { return $("((//table[.//th[.//*[normalize-space()='Criticality']]])[last()]//tbody/tr[1]/td[@data-sap-ui-column=(//table[.//th[.//*[normalize-space()='Criticality']]])[last()]//th[.//*[normalize-space()='Criticality']]/@data-sap-ui-column]//span)[1]"); }
 
     private get rcmFleetTab() { return $("//div[contains(text(),'RCM/Fleet')]"); }
     private rcmFleetAssessmentRow() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM')]])[1]"); }

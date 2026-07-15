@@ -1,4 +1,5 @@
 import { AssertionError } from 'node:assert';
+import * as assert from 'node:assert';
 import utils from "../../../../utils/utils.ts";
 import EquipmentListviewPage from "./equipment.listview.page.ts";
 import * as path from 'path';
@@ -727,7 +728,7 @@ class EquipmentDetailPage {
             checkOne(`Characteristic[${i}]`, this.characteristicValues[i]);
         }
         if (missingFields.length > 0) {
-            throw new AssertionError({ message: `PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}` });
+            assert.fail(`PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}`);
         }
         console.log("PDF content verification completed successfully");
     }
@@ -769,7 +770,7 @@ class EquipmentDetailPage {
             console.log("Switched to CML iframe");
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(3000);
-            const cmlElem = await $("(//h2//span)[2]");
+            const cmlElem = await $("//h2//span[contains(text(),'CML')]");
             await cmlElem.waitForDisplayed({ timeout: 30000 });
             const equipInCML = await $("(//header//*[@role='heading']/span)[1]");
             await equipInCML.waitForDisplayed({ timeout: 20000 });

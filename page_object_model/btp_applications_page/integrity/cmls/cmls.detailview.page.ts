@@ -527,15 +527,37 @@ class CML_Detail_Page{
         await utils.waitForBusyIndicatorToDisappear();
 
         const anyOkBtn = $("//bdi[normalize-space(text())='OK']/ancestor::button[1]");
+        const bulkCalcInfoHeader = $("//header[.//text()='Information'][.//following::*[contains(normalize-space(.), 'Bulk Calculation of CMLs')]]");
+        const bulkCalcInfoBody = $("//*[contains(normalize-space(.), 'Bulk Calculation of CMLs has been initiated')]");
         if (await this.calculateBtn.isDisplayed().catch(() => false)
             && await this.calculateBtn.isClickable().catch(() => false)) {
             console.log("Calculate button available on Background (FunLoc) -> clicking Calculate.");
-            await utils.clickWithWait(this.calculateBtn, 1500);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(2000);
-            try { await utils.clickSuccessOkButton(); } catch (e) { void e; }
-            if (await anyOkBtn.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(anyOkBtn);
+            const maxAttempts = 4;
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                console.log(`Calculate attempt #${attempt}`);
+                await utils.clickWithWait(this.calculateBtn, 1500);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+                try { await utils.clickSuccessOkButton(); } catch (e) { void e; }
+                const bulkPopupShown = (await bulkCalcInfoHeader.isDisplayed().catch(() => false))
+                    || (await bulkCalcInfoBody.isDisplayed().catch(() => false));
+                if (bulkPopupShown) {
+                    console.log(`'Bulk Calculation of CMLs has been initiated' popup detected on attempt #${attempt}; clicking OK and waiting 30s before retrying Calculate.`);
+                    if (await anyOkBtn.isDisplayed().catch(() => false)) {
+                        await utils.clickWithWait(anyOkBtn);
+                    }
+                    await utils.waitForBusyIndicatorToDisappear();
+                    await browser.pause(30000);
+                    if (attempt === maxAttempts) {
+                        console.log("Bulk Calculation popup kept appearing after max attempts; proceeding to Save.");
+                    }
+                    continue;
+                }
+                if (await anyOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(anyOkBtn);
+                }
+                console.log(`Calculate succeeded without bulk-calc popup on attempt #${attempt}.`);
+                break;
             }
         } else {
             console.log("Calculate button not available on Background (FunLoc) -> skipping calculation.");

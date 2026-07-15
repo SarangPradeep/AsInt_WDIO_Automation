@@ -341,6 +341,7 @@ class assetRCMDetailView {
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(5000);
             const checkBox = $(`(//tr[@role='row']//div[@role='checkbox'])[${i}]`);
+            await this.ensureCheckboxLoaded(i);
             await checkBox.waitForExist({ timeout: 50000 });
             await checkBox.scrollIntoView({ block: "center", inline: "center" });
             await browser.pause(1000);
@@ -397,6 +398,40 @@ class assetRCMDetailView {
         }
         console.log("Assessment details :", this.selectedEquipmentData);
         console.log("Assessment flow end");
+    }
+
+    private async ensureCheckboxLoaded(targetIndex: number): Promise<void> {
+        const checkboxXpath = "//tr[@role='row']//div[@role='checkbox']";
+        const maxScrollAttempts = 20;
+        let previousCount = 0;
+        let stagnantScrolls = 0;
+        for (let attempt = 1; attempt <= maxScrollAttempts; attempt++) {
+            const count = await $$(checkboxXpath).length;
+            if (count >= targetIndex) {
+                console.log(`Checkbox index ${targetIndex} available (loaded ${count} rows).`);
+                return;
+            }
+            if (count === previousCount) {
+                stagnantScrolls++;
+                if (stagnantScrolls >= 3) {
+                    console.log(`No new rows loaded after ${stagnantScrolls} stagnant scrolls (total ${count}); stopping scroll loop.`);
+                    return;
+                }
+            } else {
+                stagnantScrolls = 0;
+            }
+            previousCount = count;
+            if (count > 0) {
+                const lastCheckbox = await $(`(${checkboxXpath})[${count}]`);
+                try {
+                    await lastCheckbox.scrollIntoView({ block: "end", inline: "center" });
+                } catch (e) { void e; }
+            }
+            await browser.pause(1500);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(500);
+        }
+        console.log(`ensureCheckboxLoaded: exhausted ${maxScrollAttempts} scroll attempts trying to reach index ${targetIndex}.`);
     }
 
     public async selectEquipmentAndStore(i:number){

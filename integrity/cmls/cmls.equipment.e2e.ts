@@ -3,7 +3,7 @@ import CMLDetailView from "../../page_object_model/btp_applications_page/integri
 import AssetInspectionListView from "../../page_object_model/btp_applications_page/integrity/asset_inspection/asset_inspection.listview.page";
 import AssetInspectionDetailView from "../../page_object_model/btp_applications_page/integrity/asset_inspection/asset_inspection.detailview.page";
 import utils from "utils/utils";
-describe('BTP - CMLs - Functional Test', () => {
+describe('BTP - CMLs (Equipment) - Functional Test', () => {
 
     it('should navigate to CMLs list view', async () => {
         await CMLListView.navigateToCMLListView();

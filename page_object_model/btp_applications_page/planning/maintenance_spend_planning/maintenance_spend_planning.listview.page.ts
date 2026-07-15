@@ -33,7 +33,7 @@ class MSPListView {
     private get okBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
     private get mspEventsTab() { return $("(//section//li[@role='option' and @aria-posinset='2'])[1]");}
     private get createMSPEventHeader(){return $("//header[.//text()='Create MSP Event']");}
-    private get mspeShortDescInput(){return $("//label[.//text()='Short Description']/following::input[1]");}
+    private get mspeShortDescInput(){return $("//label[.//text()='Short Description']/following::textarea[1]");}
     private get mspeStartDateInput(){return $("//label[.//text()='Start Date']/following::input[1]");}
     private get mspeEndDateInput(){return $("//label[.//text()='End Date']/following::input[1]");}
     private get mspeLongDescInput(){return $("//label[.//text()='Long Description']/following::textarea[1]");}

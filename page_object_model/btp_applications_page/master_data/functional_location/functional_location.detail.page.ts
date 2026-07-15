@@ -1,4 +1,5 @@
 import { AssertionError } from 'node:assert';
+import * as assert from 'node:assert';
 import functionalLocationListView from './functional_location.listview.page';
 import {funcLocTestData} from '../../../../test_data/btp_applications/functional_location.data';
 import utils from '../../../../utils/utils';
@@ -126,7 +127,7 @@ class functionalLocationDetailView {
     private get component() { return $("//bdi[text()='Risk Summary']//following::h2[2]"); }
     private get recommendation() { return $("//bdi[text()='Risk Summary']//following::div[@aria-level='2']//span"); }
     private get funLocTemp() { return $("//div[text()='Functional Location Templates']/following::span[1]"); }
-    private get noOfCML() { return $("(//h2//span)[2]"); }
+    private get noOfCML() { return $("//h2//span[contains(text(),'CML')]"); }
     private get deleteBtn() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Delete']]"); }
     private get downloadReport() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Download Report']]"); }
     private get attachSuccMsg() { return $("//span[text()='Success']"); }
@@ -1092,7 +1093,7 @@ class functionalLocationDetailView {
             checkOne(`Characteristic[${i}]`, this.characteristicValues[i]);
         }
         if (missingFields.length > 0) {
-            throw new AssertionError({ message: `PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}` });
+            assert.fail(`PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}`);
         }
         console.log("PDF content verification completed successfully");
     }
