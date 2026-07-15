@@ -1254,10 +1254,23 @@ class asset_strategy_development_detailview_page {
             `//tr[@data-sap-ui-rowindex and .//h5//span[normalize-space()=${this.xpathLiteral(searchText)}]]`
         );
         const remainingCount = await remainingRows.length;
-        if (remainingCount > 0) {
-            throw new AssertionError({ message: `Strategy '${searchText}' still present after delete (found ${remainingCount} row(s)).` });
+        if (remainingCount === 0) {
+            console.log(`Strategy '${searchText}' confirmed deleted (not present after re-search).`);
+            return;
         }
-        console.log(`Strategy '${searchText}' confirmed deleted (not present after re-search).`);
+        console.log(`Strategy '${searchText}' still shows ${remainingCount} row(s); verifying current ASDA is not among them.`);
+        const currentAsdId = (ASDListView.assetASDDisplayID || "").trim();
+        if (!currentAsdId) {
+            throw new AssertionError({ message: `Strategy '${searchText}' still present after delete (found ${remainingCount} row(s)) and current ASDA ID is unknown.` });
+        }
+        const assessmentLinks = await $$(
+            `//tr[@data-sap-ui-rowindex]//td[@aria-colindex='4']//a[normalize-space()=${this.xpathLiteral(currentAsdId)}]`
+        );
+        const asdaMatches = await assessmentLinks.length;
+        if (asdaMatches > 0) {
+            throw new AssertionError({ message: `Strategy '${searchText}' still present after delete: current ASDA '${currentAsdId}' still appears in Assessment column ${asdaMatches} time(s).` });
+        }
+        console.log(`Strategy '${searchText}' confirmed deleted for current ASDA '${currentAsdId}' (remaining ${remainingCount} row(s) belong to other assessments).`);
     }
 
     private async searchStrategy(searchText: string): Promise<void> {

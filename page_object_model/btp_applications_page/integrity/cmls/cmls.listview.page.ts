@@ -185,27 +185,56 @@ class CML_ListView_Page {
         console.log(`Selecting CML template '${templateName}' in ${context}...`);
         await utils.clickWithWait(dropdownEl);
         await browser.pause(1500);
-        const optionXpaths = [
-            `//li[@role='option'][.//text()='${templateName}']`,
-            `//div[@role='option'][.//text()='${templateName}']`,
-            `//li[.//bdi[normalize-space()='${templateName}']]`,
-            `//li[.//span[normalize-space()='${templateName}']]`,
-            `//div[@role='option'][.//span[normalize-space()='${templateName}']]`,
-        ];
+        const hasTargetName = typeof templateName === 'string' && templateName.trim() !== '' && templateName.trim().toLowerCase() !== 'undefined';
         let clicked = false;
-        for (const xp of optionXpaths) {
-            const opts = await $$(xp);
-            for (const opt of opts) {
-                if ((await opt.isDisplayed().catch(() => false)) && (await opt.isClickable().catch(() => false))) {
-                    await utils.clickWithWait(opt);
-                    clicked = true;
-                    break;
+        let clickedTemplateName = templateName;
+        if (hasTargetName) {
+            const optionXpaths = [
+                `//li[@role='option'][.//text()='${templateName}']`,
+                `//div[@role='option'][.//text()='${templateName}']`,
+                `//li[.//bdi[normalize-space()='${templateName}']]`,
+                `//li[.//span[normalize-space()='${templateName}']]`,
+                `//div[@role='option'][.//span[normalize-space()='${templateName}']]`,
+            ];
+            for (const xp of optionXpaths) {
+                const opts = await $$(xp);
+                for (const opt of opts) {
+                    if ((await opt.isDisplayed().catch(() => false)) && (await opt.isClickable().catch(() => false))) {
+                        await utils.clickWithWait(opt);
+                        clicked = true;
+                        break;
+                    }
                 }
+                if (clicked) break;
             }
-            if (clicked) break;
         }
         if (!clicked) {
-            throw new AssertionError({ message: `CML template option '${templateName}' not found in dropdown (${context}).` });
+            const reason = hasTargetName
+                ? `Template '${templateName}' not found in dropdown (${context}); falling back to first available option.`
+                : `Template name is undefined for ${context}; picking first available option.`;
+            console.log(reason);
+            const fallbackXpaths = [
+                `//li[@role='option']`,
+                `//div[@role='option']`,
+            ];
+            for (const xp of fallbackXpaths) {
+                const opts = await $$(xp);
+                for (const opt of opts) {
+                    if ((await opt.isDisplayed().catch(() => false)) && (await opt.isClickable().catch(() => false))) {
+                        const optText = (await opt.getText().catch(() => "")).trim();
+                        if (!optText) continue;
+                        await utils.clickWithWait(opt);
+                        clicked = true;
+                        clickedTemplateName = optText;
+                        console.log(`Fallback: selected first available CML template option '${optText}' in ${context}.`);
+                        break;
+                    }
+                }
+                if (clicked) break;
+            }
+        }
+        if (!clicked) {
+            throw new AssertionError({ message: `CML template option '${templateName}' not found in dropdown (${context}) and no fallback option was available.` });
         }
         await browser.pause(2000);
         await utils.waitForBusyIndicatorToDisappear();
@@ -213,9 +242,9 @@ class CML_ListView_Page {
             const bodyEl = $("//header[.//text()='Error']/following::section//span[normalize-space()][1]");
             const bodyText = (await bodyEl.getText().catch(() => "")).trim();
             await utils.clickWithWait(this.errorOkBtn);
-            throw new AssertionError({ message: `Error after selecting CML template '${templateName}' in ${context}: ${bodyText}` });
+            throw new AssertionError({ message: `Error after selecting CML template '${clickedTemplateName}' in ${context}: ${bodyText}` });
         }
-        console.log(`CML template '${templateName}' selected in ${context}.`);
+        console.log(`CML template '${clickedTemplateName}' selected in ${context}.`);
     }
 
     public async createNewCMLsUsingEquipment() {

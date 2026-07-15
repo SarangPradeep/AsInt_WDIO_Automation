@@ -1,4 +1,5 @@
 import { AssertionError } from 'node:assert';
+import * as assert from 'node:assert';
 
 
 import utils from "utils/utils";
@@ -29,6 +30,7 @@ class RecommendationWorkbenchListView {
     private get convertMSPShortDescInput() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//label[.//text()='Short Description']/following::input[1]"); }
     private get convertMSPLongDescInput() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//label[.//text()='Long Description']/following::textarea[1]"); }
     private get convertBtn() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//button[.//bdi[normalize-space()='Convert']]"); }
+    private get convertMSPCancelBtn() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//button[.//bdi[normalize-space()='Cancel']]"); }
 
     public ReccWorkDisplayID!: string;
     public ReccWorkShortDesc!: string;
@@ -286,7 +288,7 @@ class RecommendationWorkbenchListView {
                 await utils.waitForBusyIndicatorToDisappear();
                 await browser.pause(1000);
             }
-            throw new AssertionError({ message: "Convert To MSP Item failed: error dialog was displayed" });
+            assert.fail("Unable to convert to MSP");
         }
 
         if (await this.okBtn.isDisplayed().catch(() => false)) {
@@ -297,7 +299,20 @@ class RecommendationWorkbenchListView {
             return;
         }
 
-        throw new AssertionError({ message: "Convert To MSP Item: neither Success nor Error dialog was displayed" });
+        console.log("Convert To MSP Item: neither Success nor Error dialog was displayed \u2014 attempting to cancel Convert dialog before failing.");
+        try {
+            if (await this.convertMSPCancelBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.convertMSPCancelBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(1500);
+                console.log("Convert To MSP Item dialog cancelled.");
+            } else {
+                console.log("Convert To MSP Item Cancel button not displayed; skipping cancel.");
+            }
+        } catch (e) {
+            console.log(`Cancel of Convert To MSP Item dialog failed: ${(e as Error).message}`);
+        }
+        assert.fail("Convert To MSP Item: neither Success nor Error message popup was displayed");
     }
 
     public async verifyDeletionOfRecommendationWorkbench(){
