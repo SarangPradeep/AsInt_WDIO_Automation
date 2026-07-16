@@ -288,7 +288,7 @@ class RecommendationWorkbenchListView {
                 await utils.waitForBusyIndicatorToDisappear();
                 await browser.pause(1000);
             }
-            assert.fail("Unable to convert to MSP");
+            throw new AssertionError({ message: "Unable to convert to MSP" });
         }
 
         if (await this.okBtn.isDisplayed().catch(() => false)) {
@@ -312,7 +312,7 @@ class RecommendationWorkbenchListView {
         } catch (e) {
             console.log(`Cancel of Convert To MSP Item dialog failed: ${(e as Error).message}`);
         }
-        assert.fail("Convert To MSP Item: neither Success nor Error message popup was displayed");
+        throw new AssertionError({ message: "Convert To MSP Item: neither Success nor Error message popup was displayed" });
     }
 
     public async verifyDeletionOfRecommendationWorkbench(){

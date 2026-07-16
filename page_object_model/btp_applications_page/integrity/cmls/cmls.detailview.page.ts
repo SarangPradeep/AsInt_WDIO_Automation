@@ -94,7 +94,7 @@ class CML_Detail_Page{
         console.log("No of CMLs present is/are :"+noOfCMLs);
         if(noOfCMLs === 0)
         {
-            throw  new Error("No CML has been present.");
+            throw new AssertionError({ message: "No CML has been present." });
         }
         else
         {
@@ -114,7 +114,7 @@ class CML_Detail_Page{
         console.log("No of CMLs present is/are :"+noOfCMLs);
         if(noOfCMLs === 0)
         {
-            throw  new Error("No CML is present.");
+            throw new AssertionError({ message: "No CML is present." });
         }
         else
         {
