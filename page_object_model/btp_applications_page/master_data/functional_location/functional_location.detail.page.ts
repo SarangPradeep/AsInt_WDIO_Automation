@@ -1093,7 +1093,7 @@ class functionalLocationDetailView {
             checkOne(`Characteristic[${i}]`, this.characteristicValues[i]);
         }
         if (missingFields.length > 0) {
-            throw new AssertionError({ message: `PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}` });
+            assert.fail(`PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}`);
         }
         console.log("PDF content verification completed successfully");
     }
