@@ -247,11 +247,13 @@ class asset_strategy_development_detailview_page {
     private get failedOkBtn() { return $("//button[.//text()='OK']"); }
     private get publishASDBtn() { return $("//header//button[.//text()='Publish']"); }
     private get publishConfirmBtn() { return $("//h1[.//text()='Confirmation']/following::button[.//text()='Yes']"); }
-    private get selectAllRecc() { return $("//table[@aria-rowcount='3']//div[@title='Select All']"); }
-    private get publishBtn() { return $("//footer//button[.//text()='Publish']"); }
-    private get convertToNotificationMenuItem() { return $("//*[@role='menuitem'][.//text()[normalize-space()='Convert to Notification'] or normalize-space(.)='Convert to Notification']"); }
-    private get convertToAPMReccMenuItem() { return $("//*[@role='menuitem'][.//text()[normalize-space()='Convert to APM Recommendations'] or normalize-space(.)='Convert to APM Recommendations']"); }
-    private get skipAllReccMenuItem() { return $("//*[@role='menuitem'][.//text()[normalize-space()='Skip All Recommendations'] or normalize-space(.)='Skip All Recommendations']"); }
+    private get selectAllRecc() { return $("//div[@role='dialog']//table//th//div[@title='Select All']"); }
+    private get publishBtn() { return $("//div[@role='dialog']//button[.//bdi[normalize-space()='Publish']]"); }
+    private get publishBtnArrow() { return $("//div[@role='dialog']//button[.//bdi[normalize-space()='Publish']]/following-sibling::button[1]"); }
+    private get publishMenuPopup() { return $("//ul[@role='menu' and .//*[@role='menuitem']]"); }
+    private get convertToNotificationMenuItem() { return $("//ul[@role='menu']//*[@role='menuitem'][.//text()[normalize-space()='Convert to Notification'] or normalize-space(.)='Convert to Notification']"); }
+    private get convertToAPMReccMenuItem() { return $("//ul[@role='menu']//*[@role='menuitem'][.//text()[normalize-space()='Convert to APM Recommendations'] or normalize-space(.)='Convert to APM Recommendations']"); }
+    private get skipAllReccMenuItem() { return $("//ul[@role='menu']//*[@role='menuitem'][.//text()[normalize-space()='Skip All Recommendations'] or normalize-space(.)='Skip All Recommendations']"); }
     private get notificationHeader() { return $("//header//span[contains(text(),'Notification')]"); }
     private get notificationTypeDrp() { return $("//bdi[text()='Type']/following::span[@role='button'][1]"); }
     private get notificationTypePopup() { return $("//header[.//text()='Select Notification Type']"); }
@@ -1548,8 +1550,8 @@ class asset_strategy_development_detailview_page {
 
     public async convertToNotification() 
     {
-        await utils.clickWithWait(this.selectAllRecc);
-        await utils.clickWithWait(this.publishBtn);
+        await this.ensureAllRecommendationsSelected();
+        await this.openPublishRecommendationsMenu();
         console.log("Converting to notification");
         await this.convertToNotificationMenuItem.waitForDisplayed({ timeout: 15000 });
         await utils.clickWithWait(this.convertToNotificationMenuItem);
@@ -1598,8 +1600,8 @@ class asset_strategy_development_detailview_page {
 
     public async convertToAPMRecc()
     {
-        await utils.clickWithWait(this.selectAllRecc);
-        await utils.clickWithWait(this.publishBtn);
+        await this.ensureAllRecommendationsSelected();
+        await this.openPublishRecommendationsMenu();
         console.log("Converting to APM recommendation");
         await this.convertToAPMReccMenuItem.waitForDisplayed({ timeout: 15000 });
         await utils.clickWithWait(this.convertToAPMReccMenuItem);
@@ -1634,14 +1636,14 @@ class asset_strategy_development_detailview_page {
 
     public async skipAllRecc()
     {
-        await utils.clickWithWait(this.selectAllRecc);
-        await utils.clickWithWait(this.publishBtn);
         console.log("Skipping all the recommendation");
+        await this.ensureAllRecommendationsSelected();
+        await this.openPublishRecommendationsMenu();
         await this.skipAllReccMenuItem.waitForDisplayed({ timeout: 15000 });
         await utils.clickWithWait(this.skipAllReccMenuItem);
         await browser.pause(2000);
         await utils.waitForBusyIndicatorToDisappear();
-        await this.skipAllReccSuccMsg.waitForDisplayed({ timeout: 20000 });
+        await this.skipAllReccSuccMsg.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.okBtn);
         console.log("All recommendations are skipped successfully");
         const headers = await utils.captureHeaderDetails();
@@ -1650,6 +1652,39 @@ class asset_strategy_development_detailview_page {
         }
         this.publish === true;
         console.log("Status is Published");
+    }
+
+    private async ensureAllRecommendationsSelected(): Promise<void> {
+        const cb = this.selectAllRecc;
+        await cb.waitForDisplayed({ timeout: 15000 });
+        const checked = await cb.getAttribute("aria-checked");
+        if (checked !== "true") {
+            await utils.clickWithWait(cb);
+            await browser.pause(500);
+        }
+    }
+
+    private async openPublishRecommendationsMenu(): Promise<void> {
+        const btn = this.publishBtn;
+        await btn.waitForDisplayed({ timeout: 15000 });
+        await btn.waitForClickable({ timeout: 15000 });
+        await utils.clickWithWait(btn);
+        const menu = this.publishMenuPopup;
+        let opened = false;
+        try {
+            await menu.waitForDisplayed({ timeout: 5000 });
+            opened = true;
+        } catch (e) { void e; }
+        if (!opened) {
+            console.log("Publish menu did not open on first click, retrying via chevron arrow...");
+            const arrow = this.publishBtnArrow;
+            if (await arrow.isExisting().catch(() => false)) {
+                await utils.clickWithWait(arrow);
+            } else {
+                await utils.clickWithWait(btn);
+            }
+            await menu.waitForDisplayed({ timeout: 10000 });
+        }
     }
 
 }export default new asset_strategy_development_detailview_page();

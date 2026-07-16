@@ -977,7 +977,7 @@ class FunctionalLocationRegressionPage {
                 { timeout: 30000, timeoutMsg: "New tab did not open for Risk and Criticality assessment" }
             );
         } catch (e) {
-            assert.fail(`Unable to navigate to Risk and Criticality assessment tab | ${(e as Error).message}`);
+            throw new AssertionError({ message: `Unable to navigate to Risk and Criticality assessment tab | ${(e as Error).message}` });
         }
         const allWindows = await browser.getWindowHandles();
         const childWindow = allWindows.find(handle => handle !== parentWindow);

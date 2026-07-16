@@ -698,13 +698,35 @@ class adaptFilterHelper {
         await filterInput.waitForDisplayed();
         await filterInput.click();
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
-        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${superordinateEquipmentId}']]//div[@role='checkbox']`));
+
+        const selectEquipDialog = await $(`//div[@role='dialog'][.//header[.//text()[normalize-space()='Select Equipment']]]`);
+        await selectEquipDialog.waitForDisplayed({ timeout: 60000, timeoutMsg: "Select Equipment dialog did not open" });
+        const dialogSearchInput = await $(`//div[@role='dialog'][.//header[.//text()[normalize-space()='Select Equipment']]]//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 60000, timeoutMsg: "Select Equipment dialog search input not visible" });
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const firstDataRow = await $(`//div[@role='dialog'][.//header[.//text()[normalize-space()='Select Equipment']]]//tbody//tr[.//td[@role='gridcell']]`);
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: "Select Equipment dialog rows did not load" });
+
+        await dialogSearchInput.click();
+        try { await dialogSearchInput.clearValue(); } catch { void 0; }
+        await dialogSearchInput.addValue(superordinateEquipmentId);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        const targetRow = await $(`//div[@role='dialog'][.//header[.//text()[normalize-space()='Select Equipment']]]//tr[.//span[normalize-space()='${superordinateEquipmentId}']]`);
+        await targetRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Row for '${superordinateEquipmentId}' not visible in Select Equipment dialog` });
+        const rowCheckbox = await targetRow.$(`.//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
         const plantId = await $(
             `//tr[.//span[normalize-space()='${superordinateEquipmentId}']]//td[@role='gridcell'][2]//span`  
         ).getText();
         console.log(plantId);
         await utils.clickWithWait($(`//button[.//bdi[text()="Confirm"]]`));
+        await selectEquipDialog.waitForDisplayed({ timeout: 30000, reverse: true, timeoutMsg: "Select Equipment dialog did not close after Confirm" });
+        await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
         await utils.clickWithWait($(`//button[.//bdi[text()="Go"]]`));
         await utils.waitForBusyIndicatorToDisappear();
@@ -739,7 +761,8 @@ class adaptFilterHelper {
         .toLowerCase();
         const filterLabel = "Description";
         const filterInput = await $(`//label[.//bdi[text()='Superordinate Equipment Description']]/following::input[1]`);
-        await filterInput.waitForDisplayed();
+        await filterInput.waitForDisplayed({ timeout: 60000, timeoutMsg: "Superordinate Equipment Description input not visible" });
+        await filterInput.waitForEnabled({ timeout: 30000 }).catch(() => { void 0; });
         await filterInput.click();
         await filterInput.clearValue();
         await filterInput.addValue(description);
@@ -747,8 +770,10 @@ class adaptFilterHelper {
         await utils.clickWithWait($('//button//bdi[text()="Go"]'));
 
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(1000);
+        await browser.pause(2000);
         await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+        const firstDataRow = await $("//table[@role='grid' and @aria-roledescription='Responsive Table']//following-sibling::tr[@role='none'][.//div[@role='gridcell']]");
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: "Equipment list did not reload after applying Superordinate Equipment Description filter" });
         const rows = await $$(
             "//table[@role='grid' and @aria-roledescription='Responsive Table']//following-sibling::tr[@role='none'][.//div[@role='gridcell']]"
         );
@@ -1204,18 +1229,31 @@ class adaptFilterHelper {
         console.log(`Applied ${filterLabel} adapt filter with value: ${functionalLocationDesc}`);
     }
 
-    // =====================================================================
-    // Functional Location list view specific adapt filters.
-    // Use these (rather than the equipment-table ones above) when running
-    // against the Functional Location list view, where FL is in column 1.
-    // =====================================================================
-
     async functionalLocationAdaptFilterFL(functionalLocationDesc: string): Promise<void> {
         const fieldLabel = "Functional Location";
         await utils.clickWithWait($(`//bdi[normalize-space()='Functional Location']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${functionalLocationDesc}']]//div[@role='checkbox']`));
+
+        const dialog = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
+        await dialog.waitForDisplayed({ timeout: 60000, timeoutMsg: `Value help dialog for '${fieldLabel}' did not open` });
+        const dialogSearchInput = await dialog.$(`.//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 60000, timeoutMsg: `Search input in ${fieldLabel} value help dialog not visible` });
+        await utils.waitForBusyIndicatorToDisappear();
+        const firstDataRow = await dialog.$(`.//tbody//tr[.//td[@role='gridcell']]`);
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `${fieldLabel} value help dialog rows did not load` });
+
+        await dialogSearchInput.click();
+        try { await dialogSearchInput.clearValue(); } catch { void 0; }
+        await dialogSearchInput.addValue(functionalLocationDesc);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        const targetRow = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[.//span[normalize-space()='${functionalLocationDesc}']]`);
+        await targetRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Row for '${functionalLocationDesc}' not visible in ${fieldLabel} value help dialog` });
+        const rowCheckbox = await targetRow.$(`.//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
 
         const functionalLocationValue = await $(
             `//tr[.//span[normalize-space()='${functionalLocationDesc}']]//td[@role='gridcell'][2]/span[1]`
@@ -1223,6 +1261,8 @@ class adaptFilterHelper {
         console.log(functionalLocationValue);
 
         await utils.clickWithWait($(`//button[.//bdi[text()="Confirm"]]`));
+        await dialog.waitForDisplayed({ timeout: 30000, reverse: true, timeoutMsg: `${fieldLabel} value help dialog did not close after Confirm` });
+        await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
         await utils.clickWithWait($(`//button[.//bdi[text()="Go"]]`));
         await utils.waitForBusyIndicatorToDisappear();
@@ -1245,15 +1285,18 @@ class adaptFilterHelper {
         const expectedValue = functionalLocationDesc.trim().toLowerCase();
         const filterLabel = "Functional Location Description";
         const filterInput = await $(`//label[.//bdi[text()='Functional Location Description']]/following::input[1]`);
-        await filterInput.waitForDisplayed();
+        await filterInput.waitForDisplayed({ timeout: 60000, timeoutMsg: `${filterLabel} input not visible` });
+        await filterInput.waitForEnabled({ timeout: 30000 }).catch(() => { void 0; });
         await filterInput.click();
         await filterInput.clearValue();
         await filterInput.addValue(functionalLocationDesc);
         await browser.pause(500);
         await utils.clickWithWait($('//button//bdi[text()="Go"]'));
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(1000);
+        await browser.pause(2000);
         await utils.clickWithWait($(`//button[@aria-label='Collapse Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
+        const firstDataRow = await $("//table[@role='grid' and @aria-roledescription='Responsive Table']//following-sibling::tr[@role='none'][.//div[@role='gridcell']]");
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `List did not reload after applying ${filterLabel} filter` });
 
         const fieldValues = await $$(`//td[@aria-colindex='1']/div/div[2]//span`);
         await this.logAndVerifyFilterValues(filterLabel, functionalLocationDesc, fieldValues);
@@ -1294,9 +1337,31 @@ class adaptFilterHelper {
     private async applyValueHelpFilter(filterLabel: string, displayText: string, confirmLabel: 'Confirm' | 'Save' | 'OK' = 'OK'): Promise<void> {
         await utils.clickWithWait($(`//bdi[normalize-space()='${filterLabel}']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${displayText}']]//div[@role='checkbox']`));
+
+        const dialog = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
+        await dialog.waitForDisplayed({ timeout: 60000, timeoutMsg: `Value help dialog for '${filterLabel}' did not open` });
+        const dialogSearchInput = await dialog.$(`.//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 60000, timeoutMsg: `Search input in ${filterLabel} value help dialog not visible` });
+        await utils.waitForBusyIndicatorToDisappear();
+        const firstDataRow = await dialog.$(`.//tbody//tr[.//td[@role='gridcell']]`);
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `${filterLabel} value help dialog rows did not load` });
+
+        await dialogSearchInput.click();
+        try { await dialogSearchInput.clearValue(); } catch { void 0; }
+        await dialogSearchInput.addValue(displayText);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        const targetRow = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[.//span[normalize-space()='${displayText}']]`);
+        await targetRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Row for '${displayText}' not visible in ${filterLabel} value help dialog` });
+        const rowCheckbox = await targetRow.$(`.//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
+
         await utils.clickWithWait($(`//button[.//bdi[text()="${confirmLabel}"]]`));
+        await dialog.waitForDisplayed({ timeout: 30000, reverse: true, timeoutMsg: `${filterLabel} value help dialog did not close after ${confirmLabel}` });
+        await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(1000);
         await utils.clickWithWait($(`//button[.//bdi[text()="Go"]]`));
         await utils.waitForBusyIndicatorToDisappear();

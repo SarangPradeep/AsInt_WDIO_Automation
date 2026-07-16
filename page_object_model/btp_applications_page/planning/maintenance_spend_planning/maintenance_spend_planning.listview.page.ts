@@ -163,7 +163,7 @@ class MSPListView {
                 }
                 if (attempt === 2) {
                     throw new AssertionError({ message: 
-                        `MSP creation failed twice. Last error: ${lastError}. Aborting maintenance_spend_planning_item spec.`
+                        `AssertionError: MSP creation failed twice. Last error: ${lastError}. Aborting maintenance_spend_planning_item spec.`
                      });
                 }
                 console.log("Retrying MSP creation...");

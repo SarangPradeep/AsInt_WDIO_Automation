@@ -728,7 +728,7 @@ class EquipmentDetailPage {
             checkOne(`Characteristic[${i}]`, this.characteristicValues[i]);
         }
         if (missingFields.length > 0) {
-            assert.fail(`PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}`);
+            throw new AssertionError({ message: `PDF verification failed with ${missingFields.length} missing item(s):\n${missingFields.join("\n")}` });
         }
         console.log("PDF content verification completed successfully");
     }
