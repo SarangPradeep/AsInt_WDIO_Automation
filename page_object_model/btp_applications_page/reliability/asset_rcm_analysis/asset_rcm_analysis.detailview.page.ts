@@ -394,7 +394,7 @@ class assetRCMDetailView {
             }
         }
         if (!assessmentCreated) {
-            assert.fail(`RCM assessment could not be created after trying checkbox indexes 2..81. Last failure: ${lastFailureReason || "none captured"}`);
+            throw new AssertionError({ message: `RCM assessment could not be created after trying checkbox indexes 2..81. Last failure: ${lastFailureReason || "none captured"}` });
         }
         console.log("Assessment details :", this.selectedEquipmentData);
         console.log("Assessment flow end");
@@ -2276,9 +2276,7 @@ class assetRCMDetailView {
                 console.log(`${index + 1}. ${failure}`);
             });
             console.log("===================================\n");
-            assert.fail(
-                `PDF Summary Report Validation Failed:\n\n${failures.join("\n")}`
-            );
+            throw new AssertionError({ message: `PDF Summary Report Validation Failed:\n\n${failures.join("\n")}` });
         }
         console.log("PDF Summary report verification completed");
     }
