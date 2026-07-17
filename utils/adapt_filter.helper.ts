@@ -7,10 +7,12 @@ class adaptFilterHelper {
 
     private async logAndVerifyFilterValues(
         filterLabel: string,
-        expectedValue: string,
+        expectedValue: string | string[],
         fieldValues: WebdriverIO.ElementArray | Awaited<ReturnType<typeof $$>>
     ): Promise<void> {
-        const expected = (expectedValue || '').trim().toLowerCase();
+        const expectedList = (Array.isArray(expectedValue) ? expectedValue : [expectedValue])
+            .map(v => (v || '').trim().toLowerCase())
+            .filter(v => v.length > 0);
         const values = await fieldValues;
         console.log(`Total ${filterLabel} Found: ${values.length}`);
         for (const element of values) {
@@ -18,8 +20,9 @@ class adaptFilterHelper {
                 .replace(/\s+/g, ' ')
                 .trim();
             console.log(`Found ${filterLabel}: ${rawValue}`);
-            if (!rawValue.toLowerCase().includes(expected)) {
-                throw new AssertionError({ message: `Expected ${filterLabel}: ${expectedValue}, but found: ${rawValue}` });
+            const lc = rawValue.toLowerCase();
+            if (!expectedList.some(exp => lc.includes(exp))) {
+                throw new AssertionError({ message: `AssertionError: Expected ${filterLabel}: ${expectedList.join(' | ')}, but found: ${rawValue}` });
             }
         }
     }
@@ -73,7 +76,7 @@ class adaptFilterHelper {
         .trim()
         .toLowerCase();
         const filterLabel = "Asset Manufacturer Name";
-        const filterInput = await $(`//label[.//bdi[text()='Asset Manufacturer Name ']]/following::input[1]`);
+        const filterInput = await $(`//label[.//bdi[text()='Asset Manufacturer Name']]/following::input[1]`);
         await filterInput.waitForDisplayed();
         await filterInput.click();
         await filterInput.clearValue();
@@ -90,10 +93,8 @@ class adaptFilterHelper {
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
-        const colHeader = await $(`//th[.//span[normalize-space()='${filterLabel}']]`);
-        const colIndex = (await colHeader.isExisting()) ? (await colHeader.getAttribute('aria-colindex') || '5') : '5';
         const fieldValues = await $$(
-            `//td[@aria-colindex='${colIndex}']//span`
+            `//table[@role='grid' and @aria-roledescription='Responsive Table']//span[normalize-space()='${filterLabel}']/parent::div/following-sibling::div[1]`
         );
 
         await this.logAndVerifyFilterValues(filterLabel, manufacturerName, fieldValues);
@@ -177,8 +178,27 @@ class adaptFilterHelper {
         const fieldLabel = "Object Type";
         await utils.clickWithWait($(`//bdi[normalize-space()='Object Type']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${objectTypeName}']]//div[@role='checkbox']`));
+        await browser.pause(5000);
+
+        const dialog = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
+        await dialog.waitForDisplayed({ timeout: 60000, timeoutMsg: `Object Type value help dialog did not open` });
+        const firstDataRow = await dialog.$(`.//tbody//tr[.//td[@role='gridcell']]`);
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Object Type value help dialog rows did not load` });
+
+        const dialogSearchInput = await dialog.$(`.//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 30000, timeoutMsg: `Search input in Object Type value help dialog not visible` });
+        await dialogSearchInput.click();
+        try { await dialogSearchInput.clearValue(); } catch { void 0; }
+        await dialogSearchInput.addValue(objectTypeName);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        const targetRow = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[.//span[normalize-space()='${objectTypeName}']]`);
+        await targetRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Row for Object Type '${objectTypeName}' not visible after search in value help dialog` });
+        const rowCheckbox = await targetRow.$(`.//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
 
         const objectId = await $(
             `//tr[.//span[normalize-space()='${objectTypeName}']]//td[@role='gridcell'][2]//span`
@@ -198,11 +218,17 @@ class adaptFilterHelper {
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
+        const objectTypeHeader = await $(`//table[@role='grid' and @aria-roledescription='Responsive Table']//th[.//span[normalize-space()='${fieldLabel}']]`);
+        if (!(await objectTypeHeader.isExisting())) {
+            throw new AssertionError({ message: `AssertionError: '${fieldLabel}' column header not found in list view` });
+        }
+        const objectTypeColIndex = await objectTypeHeader.getAttribute('aria-colindex');
+        console.log(`${fieldLabel} column index resolved to: ${objectTypeColIndex}`);
         const fieldValues = await $$(
-            `//td[@aria-colindex='4']//span`
+            `//table[@role='grid' and @aria-roledescription='Responsive Table']//tr[@role='row' and @aria-rowindex]//td[@aria-colindex='${objectTypeColIndex}']//span[normalize-space()]`
         );
 
-        await this.logAndVerifyFilterValues(fieldLabel, objectTypeName, fieldValues);
+        await this.logAndVerifyFilterValues(fieldLabel, [objectTypeName, objectId], fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
         await utils.clickWithWait($(`//span[normalize-space()='${objectId}']/following-sibling::span[@aria-label='Remove']`));
@@ -280,16 +306,35 @@ class adaptFilterHelper {
         await filterInput.waitForDisplayed();
         await filterInput.click();
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
+        await browser.pause(5000);
 
-        const rawCode = await $(
-            `//tr[.//span[normalize-space()='${className}']]//td[@role='gridcell'][2]//span[starts-with(normalize-space(),'(')]`
+        const dialog = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
+        await dialog.waitForDisplayed({ timeout: 60000, timeoutMsg: `Class value help dialog did not open` });
+        const firstDataRow = await dialog.$(`.//tbody//tr[.//td[@role='gridcell']]`);
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Class value help dialog rows did not load` });
+
+        const dialogSearchInput = await dialog.$(`.//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 30000, timeoutMsg: `Search input in Class value help dialog not visible` });
+        await dialogSearchInput.click();
+        try { await dialogSearchInput.clearValue(); } catch { void 0; }
+        await dialogSearchInput.addValue(className);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        const targetRow = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[.//span[normalize-space()='${className}']]`);
+        await targetRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Row for Class '${className}' not visible after search in value help dialog` });
+
+        const rawCode = await targetRow.$(
+            `.//td[@role='gridcell'][2]//span[starts-with(normalize-space(),'(')]`
         ).getText();
         const classCode = rawCode.replace(/^\(|\)$/g, '').trim();
         console.log(`Class code: ${classCode}`);
         const expectedValue = className.trim().toLowerCase();
 
-        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${className}']]//div[@role='checkbox']`));
+        const rowCheckbox = await targetRow.$(`.//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
         await utils.clickWithWait($(`//button[.//bdi[text()="Confirm"]]`));
         await browser.pause(1000);
         await utils.clickWithWait($(`//button[.//bdi[text()="Go"]]`));
@@ -303,7 +348,9 @@ class adaptFilterHelper {
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
-        const fieldValues = await $$(`//td[@aria-colindex='7']`);
+        const fieldValues = await $$(
+            `//table[@role='grid' and @aria-roledescription='Responsive Table']//span[normalize-space()='${filterLabel}']/parent::div/following-sibling::div[1]`
+        );
 
         await this.logAndVerifyFilterValues(filterLabel, className, fieldValues);
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
@@ -957,13 +1004,18 @@ class adaptFilterHelper {
     }
 
     async modifiedOnAdaptFilter(date: string): Promise<void> {
-        const expectedValue = date;
         const filterLabel = "Modified On";
+        const columnHeaderLabel = "Modified On / By";
+        const rangeParts = date.split(/\s*-\s*/).map(s => s.trim()).filter(Boolean);
+        const fromDate = rangeParts[0];
+        const toDate = rangeParts[1] ?? fromDate;
+        const inputValue = `${fromDate} - ${toDate}`;
+        console.log(`${filterLabel} filter input value: '${inputValue}'`);
         const filterInput = await $(`//label[.//bdi[text()='Modified On']]/following::input[1]`);
         await filterInput.waitForDisplayed();
         await filterInput.click();
         await filterInput.clearValue();
-        await filterInput.addValue(date + " - " + date);
+        await filterInput.addValue(inputValue);
         await browser.pause(500);
         await utils.clickWithWait($('//button//bdi[text()="Go"]'));
 
@@ -976,11 +1028,28 @@ class adaptFilterHelper {
         await browser.pause(2000);
         console.log(`Total Rows: ${rows.length}`);
         await browser.pause(2000);
-        const fieldValues = await $$(
-            `//span[normalize-space()='Modified On / By']/ancestor::div[1]/following-sibling::div/div/div[1]/div/span`
+        const modifiedOnHeader = await $(`//table[@role='grid' and @aria-roledescription='Responsive Table']//th[.//span[normalize-space()='${columnHeaderLabel}']]`);
+        if (!(await modifiedOnHeader.isExisting())) {
+            throw new AssertionError({ message: `AssertionError: '${columnHeaderLabel}' column header not found in list view` });
+        }
+        const modifiedOnColIndex = await modifiedOnHeader.getAttribute('aria-colindex');
+        console.log(`${filterLabel} column index resolved to: ${modifiedOnColIndex}`);
+        const cells = await $$(
+            `//table[@role='grid' and @aria-roledescription='Responsive Table']//tr[@role='row' and @aria-rowindex]//td[@aria-colindex='${modifiedOnColIndex}']`
         );
-
-        await this.logAndVerifyFilterValues(filterLabel, date, fieldValues);
+        console.log(`Total ${filterLabel} Found: ${cells.length}`);
+        const expectedList = Array.from(new Set([fromDate, toDate])).map(v => v.trim().toLowerCase());
+        for (const td of cells) {
+            const firstSpan = await td.$(`.//span`);
+            const rawValue = (await firstSpan.isExisting())
+                ? ((await firstSpan.getText()) || '').trim()
+                : '';
+            console.log(`Found ${filterLabel}: ${rawValue}`);
+            const lc = rawValue.toLowerCase();
+            if (!expectedList.some(exp => lc.includes(exp))) {
+                throw new AssertionError({ message: `AssertionError: Expected ${filterLabel}: ${expectedList.join(' | ')}, but found: ${rawValue}` });
+            }
+        }
 
         await utils.clickWithWait($(`//button[@aria-label='Expand Header' and not(ancestor-or-self::*[@aria-hidden='true'])]`));
         await browser.pause(500);
@@ -1034,8 +1103,27 @@ class adaptFilterHelper {
         const fieldLabel = "Equipment";
         await utils.clickWithWait($(`//bdi[normalize-space()='Equipment']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${equipmentId}']]//div[@role='checkbox']`));
+        await browser.pause(5000);
+
+        const dialog = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
+        await dialog.waitForDisplayed({ timeout: 60000, timeoutMsg: `Equipment value help dialog did not open` });
+        const firstDataRow = await dialog.$(`.//tbody//tr[.//td[@role='gridcell']]`);
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Equipment value help dialog rows did not load` });
+
+        const dialogSearchInput = await dialog.$(`.//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 30000, timeoutMsg: `Search input in Equipment value help dialog not visible` });
+        await dialogSearchInput.click();
+        try { await dialogSearchInput.clearValue(); } catch { void 0; }
+        await dialogSearchInput.addValue(equipmentId);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        const targetRow = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[.//span[normalize-space()='${equipmentId}']]`);
+        await targetRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Row for Equipment '${equipmentId}' not visible after search in value help dialog` });
+        const rowCheckbox = await targetRow.$(`.//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
 
         const equipmentIdValue = await $(
             `//tr[.//span[normalize-space()='${equipmentId}']]//td[@role='gridcell'][2]//span`
@@ -1154,8 +1242,27 @@ class adaptFilterHelper {
         const fieldLabel = "Functional Location";
         await utils.clickWithWait($(`//bdi[normalize-space()='Functional Location']/ancestor::label/following::span[@role='button' and @aria-label='Show Value Help'][1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        await utils.clickWithWait($(`//tr[.//span[normalize-space()='${functionalLocationDesc}']]//div[@role='checkbox']`));
+        await browser.pause(5000);
+
+        const dialog = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
+        await dialog.waitForDisplayed({ timeout: 60000, timeoutMsg: `Functional Location value help dialog did not open` });
+        const firstDataRow = await dialog.$(`.//tbody//tr[.//td[@role='gridcell']]`);
+        await firstDataRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Functional Location value help dialog rows did not load` });
+
+        const dialogSearchInput = await dialog.$(`.//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 30000, timeoutMsg: `Search input in Functional Location value help dialog not visible` });
+        await dialogSearchInput.click();
+        try { await dialogSearchInput.clearValue(); } catch { void 0; }
+        await dialogSearchInput.addValue(functionalLocationDesc);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        const targetRow = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[.//span[normalize-space()='${functionalLocationDesc}']]`);
+        await targetRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `Row for Functional Location '${functionalLocationDesc}' not visible after search in value help dialog` });
+        const rowCheckbox = await targetRow.$(`.//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
 
         const functionalLocationValue = await $(
                 `//tr[.//span[normalize-space()='${functionalLocationDesc}']]//td[@role='gridcell'][2]/span[1]`

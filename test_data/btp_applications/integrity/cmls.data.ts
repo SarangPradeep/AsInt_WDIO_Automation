@@ -6,6 +6,7 @@ export const cmlsTestData = {
 	cmlDetails: {
 		descriptionPrefix: 'Automation CML Description',
 		equipmentTemplate: 'Cathodic Protection Measurements',
+		equipmentCmlRowTemplate: 'Cathodic Protection',
 		functionalLocationTemplate: 'IDMS_PIPE',
 		cmlRowTemplate: 'UT Pipe',
 	},
