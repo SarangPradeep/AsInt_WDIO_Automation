@@ -300,7 +300,7 @@ class CML_ListView_Page {
         await this.nameInput.setValue(this.generateCMLName());
         await utils.clickWithWait(this.descriptionInput);
         await this.descriptionInput.setValue("Automation CML Description");
-        await this.selectCMLTemplateByText(this.cmlTemplateCell, cmlsTestData.cmlDetails.cmlRowTemplate, "Equipment CML row");
+        await this.selectCMLTemplateByText(this.cmlTemplateCell, cmlsTestData.cmlDetails.equipmentCmlRowTemplate, "Equipment CML row");
         flowCompleted = true;
         if (flowCompleted) {
             console.log("Clicking on create button...");

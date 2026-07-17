@@ -43,6 +43,8 @@ class EquipmentDetailPage {
     get inventoryNumberInput() { return $('//bdi[text()="Inventory Number"]/following::input[1]'); }
     private get equipmentIframe() { return $('iframe[data-help-id="application-equipment-manage"]'); }
     get componentTypeDropdown() { return $('//bdi[text()="Component Type"]/following::input[1]'); }
+    get componentTypeArrow() { return $('//bdi[text()="Component Type"]/ancestor::label/following::span[@role="button"][1]'); }
+    get componentTypeListItems() { return $$('(//ul[@role="listbox"])[last()]//li'); }
     get activationStateDropdown() { return $('//bdi[text()="Activation State"]/following::input[1]'); }
     get authorizationGroupInput() { return $('//bdi[text()="Authorization Group"]/following::input[1]'); }
     get startUpDateInput() { return $('//bdi[text()="Start up date"]/following::input[1]'); }
@@ -249,9 +251,24 @@ class EquipmentDetailPage {
         }
 
         if (componentType !== undefined) {
-            await this.componentTypeDropdown.click();
-            await browser.keys(componentType);
-            await browser.keys("Enter");
+            const arrow = this.componentTypeArrow;
+            await arrow.waitForClickable({ timeout: 15000 });
+            await arrow.click();
+            await browser.pause(1500);
+            const items = await this.componentTypeListItems;
+            const count = await items.length;
+            console.log(`Component Type dropdown options available: ${count}`);
+            if (count > 0) {
+                const firstItem = items[0];
+                await firstItem.waitForClickable({ timeout: 10000 });
+                const selectedText = ((await firstItem.getText()) || '').trim();
+                await firstItem.click();
+                console.log(`Component Type selected: '${selectedText}'`);
+            } else {
+                console.log('Component Type dropdown has no options; skipping selection');
+                try { await browser.keys('Escape'); } catch (e) { void e; }
+            }
+            await browser.pause(1000);
         }
 
         if (activationState !== undefined) {
@@ -310,8 +327,28 @@ class EquipmentDetailPage {
         await browser.pause(5000); 
         await this.captureGeneralInfoValues();
         await this.saveBtn.click();
-        await this.successOkBtn.waitForClickable({ timeout: 30000 });
-        await this.successOkBtn.click();
+        const successOk = this.successOkBtn;
+        const errorDialog = await $("//div[@role='dialog' and .//header[.//text()='Error']]");
+        const errorOk = await $("//header[.//text()='Error']/following::button[.//text()='OK']");
+        await browser.waitUntil(
+            async () => (await successOk.isDisplayed().catch(() => false))
+                || (await errorDialog.isDisplayed().catch(() => false)),
+            { timeout: 30000, interval: 500, timeoutMsg: "Neither Success nor Error dialog appeared after Save on General Info" }
+        );
+        if (await errorDialog.isDisplayed().catch(() => false)) {
+            let errorMessage = "";
+            try {
+                errorMessage = ((await $("//div[@role='dialog' and .//header[.//text()='Error']]//section//*[normalize-space()]").getText()) || "").trim();
+            } catch (e) { void e; }
+            if (await errorOk.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(errorOk);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(1000);
+            }
+            throw new AssertionError({ message: `AssertionError: Save General Info failed with Error dialog: '${errorMessage || 'Unknown error'}'` });
+        }
+        await successOk.waitForClickable({ timeout: 30000 });
+        await successOk.click();
         await browser.pause(10000); 
     }
 

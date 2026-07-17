@@ -138,7 +138,7 @@ describe('BTP - Functional Location Application - Adapt Filter Functional test',
         const failedResults = results.filter(r => r.status === 'failed');
         if (failedResults.length > 0) {
             const summary = failedResults.map((f, i) => `  ${i + 1}. ${f.name} -> ${f.error}`).join('\n');
-            throw new AssertionError({ message: `Found issue in ${failedResults.length} of the adapt filter(s):\n${summary}` });
+            throw new AssertionError({ message: `AssertionError: Found issue in ${failedResults.length} of the adapt filter(s):\n${summary}` });
         }
     });
 });

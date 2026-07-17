@@ -1,7 +1,7 @@
 import utils from "../../utils/utils.ts";
 import recommendationWorkbenchDetailView from '../../page_object_model/btp_applications_page/planning/recommendation_workbench/recommendation_workbench.detailview.page.ts';
 import recommendationWorkbenchListView from '../../page_object_model/btp_applications_page/planning/recommendation_workbench/recommendation_workbench.listview.page.ts';
-describe('BTP - Recommendation Workbench (Equipment) - Functional Test', () => {
+describe('BTP - Recommendation Workbench (Functional Location) - Functional Test', () => {
 
     let abortSuite = false;
 
@@ -16,9 +16,9 @@ describe('BTP - Recommendation Workbench (Equipment) - Functional Test', () => {
         await recommendationWorkbenchListView.navigateRecommendationWorkbenchListView();
     });
 
-    it('should create new recommendation workbench from list page', async function () {
+    it('should create new recommendation workbench (Functional Location) from list page', async function () {
         try {
-            await recommendationWorkbenchListView.createReccWorkbench();
+            await recommendationWorkbenchListView.createReccWorkbenchFL();
         } catch (err) {
             abortSuite = true;
             throw err;
@@ -28,7 +28,7 @@ describe('BTP - Recommendation Workbench (Equipment) - Functional Test', () => {
     it('should capture header details of newly created Recommendation Workbench items', async() => {
         await utils.captureHeaderDetails();
     });
-    
+
     it('should verify and edit header details of the recommendation workbench', async() => {
         await recommendationWorkbenchDetailView.verifyHeader();
         await recommendationWorkbenchDetailView.editHeader();

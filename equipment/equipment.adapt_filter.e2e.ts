@@ -42,7 +42,7 @@ describe('BTP - Equipment Application - Adapt Filter Functional test', () => {
             { name: 'functionalLocationAdaptFilter', run: () => adaptFilterHelper.functionalLocationAdaptFilter('AUTOMATION-FUNC-LOC-DESC-903546') },
             { name: 'functionalLocationDescriptionFilter', run: () => adaptFilterHelper.functionalLocationDescriptionFilter('AUTOMATION-FUNC-LOC-DESC-903546') },
             { name: 'modifiedByAdaptFilter', run: () => adaptFilterHelper.modifiedByAdaptFilter('virendra') },
-            { name: 'modifiedOnAdaptFilter', run: () => adaptFilterHelper.modifiedOnAdaptFilter('Jun 11, 2026') },
+            { name: 'modifiedOnAdaptFilter', run: () => adaptFilterHelper.modifiedOnAdaptFilter('Jun 11, 2026 - Jun 11, 2026') },
         ];
         const results: { name: string; status: 'passed' | 'failed' | 'skipped'; error?: string }[] = [];
         const runStartTs = Date.now();
@@ -139,7 +139,7 @@ describe('BTP - Equipment Application - Adapt Filter Functional test', () => {
         const failedResults = results.filter(r => r.status === 'failed');
         if (failedResults.length > 0) {
             const summary = failedResults.map((f, i) => `  ${i + 1}. ${f.name} -> ${f.error}`).join('\n');
-            throw new AssertionError({ message: `Found issue in ${failedResults.length} of the adapt filter(s):\n${summary}` });
+            throw new AssertionError({ message: `AssertionError: Found issue in ${failedResults.length} of the adapt filter(s):\n${summary}` });
         }
     });
 });

@@ -1,8 +1,7 @@
 import { AssertionError } from 'node:assert';
 import * as assert from 'node:assert';
-
-
 import utils from "utils/utils";
+import recommWorkbenchData from "../../../../test_data/btp_applications/planning/recommendation_workbench.data";
 class RecommendationWorkbenchListView {
 
     private get reccWorkbenchIframe() { return $('iframe[data-help-id="application-recommendationworkbenchplus-manage"]'); }
@@ -110,28 +109,112 @@ class RecommendationWorkbenchListView {
     }
 
     private async fillCreateRecommendationForm() {
-        const currentDay = new Date().getDay();
-        if ([1, 2, 3, 4].includes(currentDay)) {
-            await utils.clickWithWait(this.objectTypeDropdown);
-            await browser.keys(["ArrowDown", "Enter"]);
-            await utils.clickWithWait(this.equipmentValueHelpBtn);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(2000);
-            await this.equipmentPopupHeader.waitForDisplayed();
-            await utils.clickWithWait(this.equipmentSecondCheckbox);
-            await utils.clickWithWait(this.confirmBtn);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(2000);
-        } else {
-            await utils.clickWithWait(this.objectTypeDropdown);
-            await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
-            await utils.clickWithWait(this.functionalLocationValueHelpBtn);
-            await this.functionalLocationPopupHeader.waitForDisplayed();
-            await browser.pause(10000);
-            await utils.clickWithWait(this.functionalLocationSecondCheckbox);
-            await utils.clickWithWait(this.confirmBtn);
-        }
+        await utils.clickWithWait(this.objectTypeDropdown);
+        await browser.keys(["ArrowDown", "Enter"]);
+        await utils.clickWithWait(this.equipmentValueHelpBtn);
         await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        await this.equipmentPopupHeader.waitForDisplayed();
+        await utils.clickWithWait(this.equipmentSecondCheckbox);
+        await utils.clickWithWait(this.confirmBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        await utils.waitForBusyIndicatorToDisappear();
+        this.ReccWorkShortDesc = `Automation Recommendation ${Date.now()}`;
+        this.ReccWorkLongDesc = `Automation Recommendation Long Desc ${Date.now()}`;
+        await this.reccWorkShortDescInput.setValue(this.ReccWorkShortDesc);
+        await this.reccWorkLongDescInput.setValue(this.ReccWorkLongDesc);
+        await utils.clickWithWait(this.typeDropdown);
+        await browser.keys(["ArrowDown", "Enter"]);
+        await utils.clickWithWait(this.assessmentTypeDropdown);
+        await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
+    }
+
+    public async createReccWorkbenchFL()
+    {
+        console.log("Creating new Recommendation workbench (Functional Location)...");
+        await utils.switchToIframe(this.reccWorkbenchIframe);
+        await browser.pause(4000);
+
+        let lastError: string | undefined;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            console.log(`Create Recommendation (FL) attempt #${attempt}`);
+            await utils.clickWithWait(this.createBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            await browser.keys(["Enter"]);
+            await this.createRecommendationHeader.waitForDisplayed({ timeout: 10000 });
+            await this.fillCreateRecommendationFormFL();
+            await utils.clickWithWait(this.createReccWorkbenchBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+
+            if (await this.errorDialog.isDisplayed().catch(() => false)) {
+                lastError = "Create Recommendation returned 'Failed to create APM recommendation.' error popup";
+                console.log(`${lastError} — attempt #${attempt}`);
+                if (await this.errorOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.errorOkBtn);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    await browser.pause(1000);
+                }
+                if (await this.cancelCreateBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.cancelCreateBtn);
+                    await utils.waitForBusyIndicatorToDisappear();
+                    await browser.pause(1500);
+                }
+                if (attempt === 2) {
+                    throw new AssertionError({ message:
+                        `AssertionError: Recommendation (FL) creation failed twice. Last error: ${lastError}. Aborting recommendation_workbench_fl spec.`
+                     });
+                }
+                console.log("Retrying recommendation creation...");
+                continue;
+            }
+
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
+                await this.okBtn.click();
+            }
+            console.log("Recommendation workbench (Functional Location) created successfully.");
+            break;
+        }
+
+        await this.searchNewlyCreated(this.ReccWorkShortDesc);
+        console.log("Created Recommendation Items");
+        console.log("Navigating to detail view page of newly created Recommendation item....");
+        const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
+        await utils.clickWithWait(el);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(10000);
+        console.log("Navigated to detail view page of newly created Recommendation item");
+    }
+
+    private async fillCreateRecommendationFormFL() {
+        const funcLocName = recommWorkbenchData.functionalLocationName;
+        await utils.clickWithWait(this.objectTypeDropdown);
+        await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
+        await utils.clickWithWait(this.functionalLocationValueHelpBtn);
+        await this.functionalLocationPopupHeader.waitForDisplayed({ timeout: 30000 });
+
+        const flDialog = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
+        await flDialog.waitForDisplayed({ timeout: 30000, timeoutMsg: "Functional Location value help dialog did not open" });
+        const dialogSearchInput = await flDialog.$(`.//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 30000, timeoutMsg: "Search input in Functional Location dialog not visible" });
+        await dialogSearchInput.click();
+        try { await dialogSearchInput.clearValue(); } catch { void 0; }
+        await dialogSearchInput.addValue(funcLocName);
+        await browser.keys('Enter');
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        const targetRow = await $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[.//span[normalize-space()='${funcLocName}']]`);
+        await targetRow.waitForDisplayed({ timeout: 30000, timeoutMsg: `Row for Functional Location '${funcLocName}' not visible in value help dialog` });
+        const rowCheckbox = await targetRow.$(`.//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 15000 });
+        await utils.clickWithWait(rowCheckbox);
+        await utils.clickWithWait(this.confirmBtn);
+        await flDialog.waitForDisplayed({ timeout: 30000, reverse: true, timeoutMsg: "Functional Location value help dialog did not close after Confirm" });
+        await utils.waitForBusyIndicatorToDisappear();
+
         this.ReccWorkShortDesc = `Automation Recommendation ${Date.now()}`;
         this.ReccWorkLongDesc = `Automation Recommendation Long Desc ${Date.now()}`;
         await this.reccWorkShortDescInput.setValue(this.ReccWorkShortDesc);
