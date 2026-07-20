@@ -107,31 +107,37 @@ class maintenance_detail_view{
         await this.saveHeader.scrollIntoView({ block: 'center' });
         await this.saveHeader.waitForDisplayed({ timeout: 30000 });
         await this.saveHeader.waitForClickable({ timeout: 30000 });
-        const maxSaveAttempts = 3;
-        let savedAndClosed = false;
-        for (let attempt = 1; attempt <= maxSaveAttempts; attempt++) {
-            console.log(`Clicking Save (attempt ${attempt}/${maxSaveAttempts})`);
-            await utils.clickWithWait(this.saveHeader);
+        console.log("Clicking Save");
+        await utils.clickWithWait(this.saveHeader);
+        await utils.waitForBusyIndicatorToDisappear();
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            console.log("Success popup appeared after save; clicking OK");
+            await utils.clickWithWait(this.okBtn);
             await utils.waitForBusyIndicatorToDisappear();
-            if (await this.okBtn.isDisplayed().catch(() => false)) {
-                console.log("Success popup appeared after save; clicking OK");
-                await utils.clickWithWait(this.okBtn);
-                await utils.waitForBusyIndicatorToDisappear();
-            }
-            try {
-                await browser.waitUntil(
-                    async () => !(await this.editHeaderTitle.isDisplayed().catch(() => false)),
-                    { timeout: 8000, interval: 500 }
-                );
-                savedAndClosed = true;
-                break;
-            } catch (e) {
-                void e;
-                console.log(`Edit Header dialog still open after Save attempt ${attempt}; retrying`);
-            }
         }
-        if (!savedAndClosed) {
-            throw new AssertionError({ message: "Edit Header dialog did not close after multiple Save attempts" });
+        let saved = false;
+        try {
+            await browser.waitUntil(
+                async () => !(await this.editHeaderTitle.isDisplayed().catch(() => false)),
+                { timeout: 10000, interval: 500 }
+            );
+            saved = true;
+        } catch (e) { void e; }
+
+        if (!saved) {
+            console.log("Save did not close the Edit Header dialog; clicking Close as cleanup");
+            const closeButtons = await $$("//header[.//text()='Edit Header Details']/following::button[.//text()='Close']");
+            for (const btn of closeButtons) {
+                try {
+                    if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                        await btn.click();
+                        await utils.waitForBusyIndicatorToDisappear();
+                        await browser.pause(500);
+                        break;
+                    }
+                } catch (e) { void e; }
+            }
+            throw new AssertionError({ message: "AssertionError: Edit Header dialog did not close after Save; dialog closed via Close button as cleanup" });
         }
         console.log("Header saved successfully");
     }
@@ -575,8 +581,7 @@ class maintenance_detail_view{
         }
 
         console.log(`Filling missing fields: text=[${missingText.join(", ")}] dropdowns=[${missingDropdowns.join(", ")}]`);
-        await utils.clickWithWait(this.editInfo);
-        await browser.pause(1500);
+        await utils.clickWithWait(this.editInfo,1500);
 
         for (const label of missingText) {
             const inputEl = await this.fieldInput(label);
