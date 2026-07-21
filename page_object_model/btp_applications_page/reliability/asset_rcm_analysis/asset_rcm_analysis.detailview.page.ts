@@ -230,11 +230,15 @@ class assetRCMDetailView {
     private get manageBtn() { return $("//button[.//text()='Manage']"); }
     private get deleteConfirmText() { return $("//span[.//text()='Are you sure you want to delete the assessment?']"); }
     private get confirmOkBtn() { return $("//header[.//text()='Confirmation']/following::button[.//text()='OK']"); }
+    private get createSystemTab() { return $("//li[@role='option'][.//div[normalize-space()='Create System']]"); }
+    private get systemNameInput() { return $("//bdi[normalize-space()='System Name']/following::textarea[1]"); }
+    private get systemDescInput() { return $("//bdi[normalize-space()='System Description']/following::textarea[1]"); }
+    private get genericCloseBtn() { return $("//button[.//text()='Close']"); }
 
     public selectedEquipmentData:any = {};
     public selectedFunctionalLocation:any ={};
     private techObj!: string;
-    private maintanableItems!: string;
+    private maintainableItems!: string;
     private failureMode!: string;
     private funcLocObj!: string;
     private functionValue!: string;
@@ -245,10 +249,12 @@ class assetRCMDetailView {
     private maintainableItemEquip: boolean = false;
     private failureModeEquip: boolean = false;
     private failureModeFunLoc: boolean = false;
-    private maintenableItemFunLoc: boolean = false;
+    private maintainableItemFunLoc: boolean = false;
     public createdStrategies: any[] = [];
     public commonStrategyValues: any = {};
     public analysisFailures: string[] = [];
+    public systemName!: string;
+    public subSystemName!: string;
 
     public async verifyAndEditGenInfo(){
         console.log("Navigating to Information Tab");
@@ -630,9 +636,9 @@ class assetRCMDetailView {
         console.log("Closed Assessment detail page")
     }
 
-    public async addMaintanableItems()
+    public async addMaintanableItemsOrFunctions()
     {
-        console.log("Adding maintanable items...");
+        console.log("Adding maintanable items or functions...");
         await utils.clickWithWait(this.addMaintainableBtn(this.techObj));
         await browser.pause(3000);
         for (const btn of await this.assignMaintainableItemsBtns) {
@@ -648,22 +654,27 @@ class assetRCMDetailView {
         console.log("Total assigned maintainable are :"+this.assignedMaintainable);
         if(this.assignedMaintainable === 0)
         {
-            console.log("No maintainable values are present");
+            console.log("No maintainable values are present. Checking for Assign Functions option...");
             await utils.clickWithWait(this.cancelBtn);
-            this.maintainableItemEquip = true;
-            return;
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            const proceededWithFunctions = await this.tryAssignFunctionsFallback();
+            if (!proceededWithFunctions) {
+                this.maintainableItemEquip = true;
+                return;
+            }
         }
         else
         {
             const miValue = await this.maintainableItemValue.getText();
-            this.maintanableItems = miValue;
+            this.maintainableItems = miValue;
             console.log("Maintainable item is/are : "+miValue);
             await utils.clickWithWait(this.maintainableItemRow);
             await utils.clickWithWait(this.assignBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(5000);
         }
-        console.log("Expanding the tenchinal object for maintainable items...");
+        console.log("Expanding the technical object for maintainable items...");
         await browser.waitUntil(async () => {
             const btns = await this.expandBtn(this.techObj);
             if (await btns.length === 0) return false;
@@ -682,9 +693,9 @@ class assetRCMDetailView {
                 break;
             }
         }
-        console.log("Expanded the tenchinal object for maintainable items");
+        console.log("Expanded the technical object for maintainable items");
         let found = false;
-        for (const item of await this.assignedItem(this.maintanableItems)) {
+        for (const item of await this.assignedItem(this.maintainableItems)) {
             if (await item.isDisplayed()) {
                 found = true;
                 await utils.clickWithWait(await item.$("./ancestor::div[4]"));
@@ -693,17 +704,112 @@ class assetRCMDetailView {
         }
         await expect(found).toBe(true);
 
-        console.log("MaintanableItems Added successfully");
+        console.log("Maintainable Items Added successfully");
     }
 
-    public async verifyMaintainableDetails()
+    public async tryAssignFunctionsFallback(): Promise<boolean> {
+        console.log(`Clicking Add (+) icon again on technical object '${this.techObj}' to look for Assign Functions...`);
+        await utils.clickWithWait(this.addMaintainableBtn(this.techObj));
+        await browser.pause(3000);
+
+        let assignFunctionsClicked = false;
+        for (const btn of await this.assignFunctionsBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+                console.log("Assign Functions option found and clicked");
+                assignFunctionsClicked = true;
+                break;
+            }
+        }
+        if (!assignFunctionsClicked) {
+            console.log("Assign Functions option not present either");
+            return false;
+        }
+
+        await this.assignFunctionsHeader.waitForDisplayed({ timeout: 60000, timeoutMsg: "Assign Functions dialog did not open" });
+        await this.functionsCountText.waitForDisplayed({ timeout: 60000, timeoutMsg: "Assign Functions count text did not appear" });
+        const fnText = await this.functionsCountText.getText();
+        const fnCount = await utils.getAssignedValue(fnText);
+        console.log(`Available Functions in Assign Functions dialog: ${fnCount}`);
+
+        if (fnCount === 0) {
+            console.log("No functions available to assign; clicking Cancel and returning");
+            await utils.clickWithWait(this.cancelBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            return false;
+        }
+
+        await this.firstFunctionValue.waitForDisplayed({ timeout: 30000 });
+        const fnValue = (await this.firstFunctionValue.getText() || "").trim();
+        this.functionValue = fnValue;
+        console.log(`Selecting first function: '${fnValue}'`);
+        await utils.clickWithWait(this.firstFunctionCheckbox);
+        await utils.clickWithWait(this.assignBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2500);
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+        console.log(`Function assigned: '${fnValue}'`);
+
+        this.selectedFunctionalLocation = {
+            locationName: this.selectedEquipmentData.equipmentName,
+            locationId: this.selectedEquipmentData.equipmentId
+        };
+        this.funcLocObj = this.techObj;
+
+        await browser.pause(4000);
+        console.log(`Expanding technical object '${this.techObj}' to open assigned function detail...`);
+        for (const btn of await this.expandBtn(this.techObj)) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.getAttribute("aria-expanded")) === "false") {
+                await utils.clickWithWait(btn);
+                await browser.pause(2500);
+                break;
+            }
+        }
+
+        let opened = false;
+        for (const el of await this.functionRow(this.functionValue)) {
+            if (await el.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.functionRowClick(this.functionValue));
+                await browser.pause(2500);
+                opened = true;
+                console.log(`Function detail opened for '${this.functionValue}'`);
+                break;
+            }
+        }
+        if (opened) {
+            for (const btn of await this.closeBtn) {
+                if (await btn.isDisplayed().catch(() => false) && await btn.isClickable().catch(() => false)) {
+                    await utils.clickWithWait(btn);
+                    await browser.pause(2000);
+                    break;
+                }
+            }
+        } else {
+            console.log(`Function row for '${this.functionValue}' not found after expand; skipping detail open`);
+        }
+
+        console.log("Continuing with Functional Failure -> Maintainable Items -> Failure Modes chain (equipment fallback)...");
+        await this.assignFunctionalFailure();
+        await this.addMaintainableItemsForFunction();
+        await this.addFailureModesForFunction();
+
+        return true;
+    }
+
+    public async verifyMaintainableOrFunctionsDetails()
     {
         if(this.assignedMaintainable === 0)
         return;
         console.log("Verifying Maintainable Item Details...");
-        const nameOnly = this.maintanableItems.split(' (')[0];
+        const nameOnly = this.maintainableItems.split(' (')[0];
         await expect(this.maintainableItemHeader(nameOnly)).toBeDisplayed();
-        const idMatch = this.maintanableItems?.match(/\((.*?)\)/);
+        const idMatch = this.maintainableItems?.match(/\((.*?)\)/);
         const idOnly = idMatch ? idMatch[1] : '';
         await expect(this.maintainableItemIdValue(idOnly)).toBeDisplayed();
         const riskText = await this.riskInfoText.getText();
@@ -726,7 +832,7 @@ class assetRCMDetailView {
         if(this.assignedMaintainable === 0)
             return;
         console.log("Adding Failure Modes...");
-        await utils.clickWithWait(this.failureModeAddBtn(this.maintanableItems));
+        await utils.clickWithWait(this.failureModeAddBtn(this.maintainableItems));
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
         console.log("Clicking assign failure mode button...");
@@ -770,7 +876,7 @@ class assetRCMDetailView {
         await utils.clickWithWait(this.okBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
-        const expandBtn = this.failureModeExpandBtn(this.maintanableItems);
+        const expandBtn = this.failureModeExpandBtn(this.maintainableItems);
         await expandBtn.waitForDisplayed({ timeout: 60000 });
         await expandBtn.waitForClickable({ timeout: 60000 });
         if ((await expandBtn.getAttribute("aria-expanded")) === "false") {
@@ -1650,7 +1756,7 @@ class assetRCMDetailView {
 
             await browser.pause(3000);
             await expect(this.functionalLocationHeader).toBeDisplayed();
-            await browser.pause(5000);
+            await browser.pause(8000);
             const checkBox = this.checkBoxByIndex(i);
             await checkBox.waitForClickable({ timeout: 60000 });
             await utils.clickWithWait(checkBox);
@@ -2056,7 +2162,7 @@ class assetRCMDetailView {
         }
     }
 
-    public async addMaintainableItemsForFuncLoc() {
+    public async addMaintainableItemsForFunction() {
         if(this.functionValue === "0")
         {
             return;
@@ -2084,7 +2190,7 @@ class assetRCMDetailView {
         console.log("Available Maintainable Items: " + count);
         if (count === 0) {
             await utils.clickWithWait(this.cancelBtn);
-            this.maintenableItemFunLoc = true;
+            this.maintainableItemFunLoc = true;
             await browser.pause(2500);
             return;
         }
@@ -2139,12 +2245,12 @@ class assetRCMDetailView {
         console.log("Add Maintainable Items For FuncLoc ends");
     }
 
-    public async addFailureModesForFuncLoc() {
+    public async addFailureModesForFunction() {
         if(this.functionValue === "0")
         {
             return;
         }
-        if(this.maintenableItemFunLoc === true)
+        if(this.maintainableItemFunLoc === true)
         {
             return;
         }
@@ -2263,7 +2369,7 @@ class assetRCMDetailView {
         };
 
         verifyValue("techObj", this.techObj);
-        verifyValue("maintanableItems", this.maintanableItems);
+        verifyValue("maintainableItems", this.maintainableItems);
         verifyValue("failureMode", this.failureMode);
         verifyValue("funcLocObj", this.funcLocObj);
         verifyValue("functionValue", this.functionValue);
@@ -2326,6 +2432,1131 @@ class assetRCMDetailView {
 
         await utils.clickWithWait(successOkBtn);
         console.log("RCM deleted successfully");
+    }
+
+    public async createAssessmentFlowWithCreateSystem() {
+        console.log("Navigating to Assessment Tab");
+        utils.switchToIframe(this.rcmIframe);
+        await utils.clickWithWait(this.assessmentTab);
+        console.log("Navigated to Assessment tab");
+        console.log("Assessment (Create System) flow start");
+        await utils.switchToIframe(this.rcmIframe);
+        await browser.pause(4000);
+        await utils.clickWithWait(this.startAssessmentBtn);
+        await browser.pause(2000);
+        await utils.switchToIframe(this.rcmIframe);
+        await browser.pause(4000);
+        await this.technicalObjectsHeader.waitForDisplayed();
+        let assessmentCreated = false;
+        let lastFailureReason = "";
+        for (let i = 2; i <= 81; i++) {
+            console.log(`Trying checkbox index: ${i}`);
+            await utils.clickWithWait(this.equipmentValueBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(5000);
+            const checkBox = $(`(//tr[@role='row']//div[@role='checkbox'])[${i}]`);
+            await this.ensureCheckboxLoaded(i);
+            await checkBox.waitForExist({ timeout: 50000 });
+            await checkBox.scrollIntoView({ block: "center", inline: "center" });
+            await browser.pause(1000);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+            await checkBox.waitForDisplayed({ timeout: 50000 });
+            await checkBox.waitForClickable({ timeout: 50000 });
+            await utils.clickWithWait(checkBox);
+            await this.selectEquipmentAndStore(i);
+            await utils.clickWithWait(this.confirmBtn);
+            await utils.clickWithWait(this.nextBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            console.log("Switching to 'Create System' tab...");
+            await this.createSystemTab.waitForDisplayed({ timeout: 30000, timeoutMsg: "'Create System' segmented option not visible" });
+            await utils.clickWithWait(this.createSystemTab);
+            await browser.pause(2000);
+            const stamp = Date.now();
+            const systemName = `Auto_System_${stamp}`;
+            const systemDesc = `Automation System Description ${stamp}`;
+            console.log(`Filling System Name='${systemName}', Description='${systemDesc}'`);
+            await this.systemNameInput.waitForDisplayed({ timeout: 30000 });
+            await utils.setValueWithWait(this.systemNameInput, systemName);
+            await utils.setValueWithWait(this.systemDescInput, systemDesc);
+            await utils.clickWithWait(this.createBtnFooter);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(5000);
+            await browser.waitUntil(async () =>
+                (await this.okBtn.isDisplayed().catch(() => false))
+                || (await this.warningMsg.isDisplayed().catch(() => false))
+                || (await this.errorDialogHeader.isDisplayed().catch(() => false)),
+                { timeout: 60000, timeoutMsg: `No Success / Warning / Error popup detected for checkbox index ${i} (Create System)` }
+            );
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
+                console.log(`Assessment created successfully with new system '${systemName}'`);
+                await utils.clickWithWait(this.okBtn);
+                this.systemName = systemName;
+                assessmentCreated = true;
+                break;
+            } else if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
+                let errMsg = "";
+                try {
+                    const bodyEl = $("//header[.//text()='Error']/following::section//span[normalize-space()][1]");
+                    if (await bodyEl.isDisplayed().catch(() => false)) {
+                        errMsg = (await bodyEl.getText().catch(() => "")).trim();
+                    }
+                } catch (e) { void e; }
+                lastFailureReason = `Error: ${errMsg || "unknown"}`;
+                console.log(`Error dialog displayed ('${errMsg}') → dismissing and retrying with next checkbox`);
+                if (await this.errorDialogOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.errorDialogOkBtn);
+                } else if (await this.genericCloseBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.genericCloseBtn);
+                }
+                await utils.waitForBusyIndicatorToDisappear();
+                await utils.clickWithWait(this.previousBtn);
+                await browser.pause(4000);
+                await utils.waitForBusyIndicatorToDisappear();
+                await utils.clickWithWait(this.removeSelectedToken);
+            } else if (await this.warningMsg.isDisplayed().catch(() => false)) {
+                lastFailureReason = "Warning displayed on Create (Create System)";
+                console.log("Warning displayed, retrying with next checkbox");
+                await utils.clickWithWait(this.warningOkBtn);
+                await utils.clickWithWait(this.previousBtn);
+                await browser.pause(4000);
+                await utils.waitForBusyIndicatorToDisappear();
+                await utils.clickWithWait(this.removeSelectedToken);
+            }
+        }
+        if (!assessmentCreated) {
+            throw new AssertionError({ message: `RCM assessment (Create System) could not be created after trying checkbox indexes 2..81. Last failure: ${lastFailureReason || "none captured"}` });
+        }
+        console.log("Assessment details :", this.selectedEquipmentData);
+        console.log("Assessment (Create System) flow end");
+    }
+
+    public async verifySystemInHierarchy() {
+        console.log(`Verifying System '${this.systemName}' is reflected in hierarchy...`);
+        const el = $(`//span[@dir='auto'][normalize-space()="${this.systemName}"]`);
+        await el.waitForDisplayed({ timeout: 60000, timeoutMsg: `AssertionError: System '${this.systemName}' not visible in hierarchy` });
+        console.log(`System '${this.systemName}' is displayed in hierarchy`);
+
+        console.log(`Opening System '${this.systemName}' detail page by clicking the row...`);
+        const rowClick = $(`//span[@dir='auto'][normalize-space()="${this.systemName}"]/ancestor::div[4]`);
+        await utils.clickWithWait(rowClick);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        console.log(`Verifying System detail page header shows '${this.systemName}'...`);
+        const headerTitleEls = await $$(`//header[@aria-roledescription='Object page header']//div[@role='heading']//span[@dir='auto'][normalize-space()="${this.systemName}"]`);
+        let systemHeaderShown = false;
+        await browser.waitUntil(async () => {
+            for (const el of headerTitleEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    systemHeaderShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 60000, interval: 1000, timeoutMsg: `AssertionError: System detail page header did not show '${this.systemName}'` });
+        if (!systemHeaderShown) {
+            throw new AssertionError({ message: `AssertionError: System detail page header did not show '${this.systemName}'` });
+        }
+        console.log(`System detail page header shows '${this.systemName}'`);
+
+        const techObjSectionEls = await $$("//h2[contains(normalize-space(),'Technical Objects')]");
+        let techObjSectionVisible = false;
+        await browser.waitUntil(async () => {
+            for (const el of techObjSectionEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    techObjSectionVisible = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 30000, interval: 1000, timeoutMsg: "AssertionError: 'Technical Objects' section not found on System detail page" });
+        if (!techObjSectionVisible) {
+            throw new AssertionError({ message: "AssertionError: 'Technical Objects' section not found on System detail page" });
+        }
+
+        const equipmentId = this.selectedEquipmentData.equipmentId;
+        const equipmentName = this.selectedEquipmentData.equipmentName;
+        console.log(`Verifying Technical Object '${equipmentName} (${equipmentId})' is present on System detail page...`);
+        let sysIdShown = false;
+        await browser.waitUntil(async () => {
+            const idEls = await $$(`//tr[@role='row']//span[@dir='auto' and normalize-space()="${equipmentId}"]`);
+            for (const el of idEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    sysIdShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 30000, interval: 1000, timeoutMsg: `AssertionError: Equipment ID '${equipmentId}' not shown in System detail page Technical Objects` });
+        if (!sysIdShown) {
+            throw new AssertionError({ message: `AssertionError: Equipment ID '${equipmentId}' not shown in System detail page Technical Objects` });
+        }
+        let sysNameShown = false;
+        await browser.waitUntil(async () => {
+            const nameEls = await $$(`//tr[@role='row']//span[@dir='auto' and normalize-space()="${equipmentName}"]`);
+            for (const el of nameEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    sysNameShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 30000, interval: 1000, timeoutMsg: `AssertionError: Equipment Name '${equipmentName}' not shown in System detail page Technical Objects` });
+        if (!sysNameShown) {
+            throw new AssertionError({ message: `AssertionError: Equipment Name '${equipmentName}' not shown in System detail page Technical Objects` });
+        }
+        console.log(`System detail page shows same Technical Object: '${equipmentName} (${equipmentId})'`);
+
+        console.log("Closing System detail page...");
+        let closed = false;
+        for (const btn of await this.closeBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn);
+                await browser.pause(2000);
+                closed = true;
+                break;
+            }
+        }
+        if (!closed) {
+            console.log("No visible Decline button found to close System detail page");
+        } else {
+            console.log("System detail page closed");
+        }
+    }
+
+    public async addSubSystem() {
+        const equipmentId = this.selectedEquipmentData.equipmentId;
+        const equipmentName = this.selectedEquipmentData.equipmentName;
+        if (!this.systemName) {
+            throw new AssertionError({ message: "AssertionError: systemName not set - createAssessmentFlowWithCreateSystem must run first" });
+        }
+        console.log(`Clicking Add (+) on System '${this.systemName}'...`);
+        const addBtn = $(`//span[@dir='auto'][normalize-space()="${this.systemName}"]/following::button[@title='Add' and @aria-label='Add'][1]`);
+        await addBtn.waitForClickable({ timeout: 60000, timeoutMsg: `AssertionError: Add (+) button on System '${this.systemName}' not clickable` });
+        await utils.clickWithWait(addBtn);
+        await browser.pause(1500);
+        console.log("Clicking 'Create Sub-System' menu item...");
+        const createSubSysMenuItem = $("//span[normalize-space()='Create Sub-System']");
+        await createSubSysMenuItem.waitForDisplayed({ timeout: 30000, timeoutMsg: "AssertionError: 'Create Sub-System' menu item not shown" });
+        await utils.clickWithWait(createSubSysMenuItem);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        const dialogHeader = $("//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//h1[normalize-space()='Create Sub-System']");
+        await dialogHeader.waitForDisplayed({ timeout: 30000, timeoutMsg: "AssertionError: 'Create Sub-System' dialog did not open" });
+        const stamp = Date.now();
+        const subSystemName = `Auto_SubSystem_${stamp}`;
+        const subSystemDesc = `Automation Sub-System Description ${stamp}`;
+        this.subSystemName = subSystemName;
+        const nameArea = $("//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//bdi[normalize-space()='Sub-System Name']/ancestor::label[1]/following::textarea[1]");
+        const descArea = $("//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//bdi[normalize-space()='Description']/ancestor::label[1]/following::textarea[1]");
+        await nameArea.waitForDisplayed({ timeout: 30000 });
+        await utils.setValueWithWait(nameArea, subSystemName);
+        await utils.setValueWithWait(descArea, subSystemDesc);
+        console.log(`Sub-System Name='${subSystemName}', Desc='${subSystemDesc}'`);
+        console.log(`Verifying same Technical Object ('${equipmentName} (${equipmentId})') is reflected in sub-system dialog...`);
+        const techObjIdSpan = $(`//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//tr[@role='row' and @aria-rowindex>1]//span[normalize-space()="${equipmentId}"]`);
+        const techObjNameSpan = $(`//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//tr[@role='row' and @aria-rowindex>1]//span[normalize-space()="${equipmentName}"]`);
+        await techObjIdSpan.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: Equipment ID '${equipmentId}' not shown in sub-system dialog` });
+        await techObjNameSpan.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: Equipment Name '${equipmentName}' not shown in sub-system dialog` });
+        console.log("Technical Object matches the equipment used earlier");
+        console.log("Selecting the Technical Object row checkbox...");
+        const rowCheckbox = $(`//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//tr[@role='row' and @aria-rowindex>1][.//span[normalize-space()="${equipmentId}"]]//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
+        await browser.pause(1500);
+        console.log("Clicking Save on Sub-System dialog...");
+        const saveBtn = $("//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//footer//button[.//bdi[normalize-space()='Save']]");
+        await saveBtn.waitForClickable({ timeout: 30000, timeoutMsg: "AssertionError: Sub-System Save button did not become clickable" });
+        await utils.clickWithWait(saveBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        await browser.waitUntil(async () =>
+            (await this.okBtn.isDisplayed().catch(() => false))
+            || (await this.errorDialogHeader.isDisplayed().catch(() => false))
+            || !(await dialogHeader.isDisplayed().catch(() => false)),
+            { timeout: 60000, timeoutMsg: "AssertionError: No response after saving Sub-System" }
+        );
+        if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
+            let errMsg = "";
+            try {
+                const bodyEl = $("//header[.//text()='Error']/following::section//span[normalize-space()][1]");
+                if (await bodyEl.isDisplayed().catch(() => false)) {
+                    errMsg = (await bodyEl.getText().catch(() => "")).trim();
+                }
+            } catch (e) { void e; }
+            if (await this.errorDialogOkBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.errorDialogOkBtn);
+            }
+            throw new AssertionError({ message: `AssertionError: Sub-System creation failed with error: '${errMsg || "unknown"}'` });
+        }
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+        console.log(`Sub-System created. Verifying '${subSystemName}' is reflected in hierarchy...`);
+        const subSysRow = $(`//span[@dir='auto'][normalize-space()="${subSystemName}"]`);
+        if (!(await subSysRow.isDisplayed().catch(() => false))) {
+            console.log(`Expanding System '${this.systemName}' to reveal newly-created Sub-System '${subSystemName}'...`);
+            const sysTreeIcon = await $(`(//tr[.//span[@dir='auto'][normalize-space()="${this.systemName}"]]//span[@aria-label='Node'])[1]`);
+            if (await sysTreeIcon.isExisting().catch(() => false)) {
+                await browser.execute((el: HTMLElement) => el.click(), await sysTreeIcon);
+                await browser.pause(2500);
+            } else {
+                for (const btn of await this.expandBtn(this.systemName)) {
+                    if ((await btn.isDisplayed().catch(() => false)) && (await btn.getAttribute("aria-expanded")) === "false") {
+                        await utils.clickWithWait(btn);
+                        await browser.pause(2500);
+                        break;
+                    }
+                }
+            }
+        }
+        await subSysRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `AssertionError: Sub-System '${subSystemName}' not reflected in hierarchy after save` });
+        console.log(`Sub-System '${subSystemName}' reflected in hierarchy`);
+
+        console.log(`Opening Sub-System '${subSystemName}' detail page by clicking the row...`);
+        const subSysRowClick = $(`//span[@dir='auto'][normalize-space()="${subSystemName}"]/ancestor::div[4]`);
+        await utils.clickWithWait(subSysRowClick);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        console.log(`Verifying Sub-System detail page header shows '${subSystemName}'...`);
+        const subSysHeaderTitleEls = await $$(`//header[@aria-roledescription='Object page header']//div[@role='heading']//span[@dir='auto'][normalize-space()="${subSystemName}"]`);
+        let subSysHeaderShown = false;
+        await browser.waitUntil(async () => {
+            for (const el of subSysHeaderTitleEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    subSysHeaderShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 60000, interval: 1000, timeoutMsg: `AssertionError: Sub-System detail page header did not show '${subSystemName}'` });
+        if (!subSysHeaderShown) {
+            throw new AssertionError({ message: `AssertionError: Sub-System detail page header did not show '${subSystemName}'` });
+        }
+        console.log(`Sub-System detail page header shows '${subSystemName}'`);
+
+        const subSysTechObjSectionEls = await $$("//h2[contains(normalize-space(),'Technical Objects')]");
+        let subSysTechObjSectionVisible = false;
+        await browser.waitUntil(async () => {
+            for (const el of subSysTechObjSectionEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    subSysTechObjSectionVisible = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 30000, interval: 1000, timeoutMsg: "AssertionError: 'Technical Objects' section not found on Sub-System detail page" });
+        if (!subSysTechObjSectionVisible) {
+            throw new AssertionError({ message: "AssertionError: 'Technical Objects' section not found on Sub-System detail page" });
+        }
+
+        console.log(`Verifying Technical Object '${equipmentName} (${equipmentId})' is present on Sub-System detail page...`);
+        let subSysIdShown = false;
+        await browser.waitUntil(async () => {
+            const idEls = await $$(`//tr[@role='row']//span[@dir='auto' and normalize-space()="${equipmentId}"]`);
+            for (const el of idEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    subSysIdShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 30000, interval: 1000, timeoutMsg: `AssertionError: Equipment ID '${equipmentId}' not shown in Sub-System detail page Technical Objects` });
+        if (!subSysIdShown) {
+            throw new AssertionError({ message: `AssertionError: Equipment ID '${equipmentId}' not shown in Sub-System detail page Technical Objects` });
+        }
+        let subSysNameShown = false;
+        await browser.waitUntil(async () => {
+            const nameEls = await $$(`//tr[@role='row']//span[@dir='auto' and normalize-space()="${equipmentName}"]`);
+            for (const el of nameEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    subSysNameShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 30000, interval: 1000, timeoutMsg: `AssertionError: Equipment Name '${equipmentName}' not shown in Sub-System detail page Technical Objects` });
+        if (!subSysNameShown) {
+            throw new AssertionError({ message: `AssertionError: Equipment Name '${equipmentName}' not shown in Sub-System detail page Technical Objects` });
+        }
+        console.log(`Sub-System detail page shows same Technical Object: '${equipmentName} (${equipmentId})'`);
+
+        console.log("Closing Sub-System detail page...");
+        let subSysClosed = false;
+        for (const btn of await this.closeBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn);
+                await browser.pause(2000);
+                subSysClosed = true;
+                break;
+            }
+        }
+        if (!subSysClosed) {
+            console.log("No visible Decline button found to close Sub-System detail page");
+        } else {
+            console.log("Sub-System detail page closed");
+        }
+    }
+
+    public async assignFunctionsToSubSystem() {
+        if (!this.systemName) {
+            throw new AssertionError({ message: "AssertionError: systemName not set - createAssessmentFlowWithCreateSystem must run first" });
+        }
+        if (!this.subSystemName) {
+            throw new AssertionError({ message: "AssertionError: subSystemName not set - addSubSystem must run first" });
+        }
+
+        const subSysSpan = $(`//span[@dir='auto'][normalize-space()="${this.subSystemName}"]`);
+        if (!(await subSysSpan.isDisplayed().catch(() => false))) {
+            console.log(`Expanding System '${this.systemName}' to reveal Sub-System '${this.subSystemName}'...`);
+            const treeIcon = await $(`(//tr[.//span[@dir='auto'][normalize-space()="${this.systemName}"]]//span[@aria-label='Node'])[1]`);
+            await treeIcon.waitForExist({ timeout: 30000, timeoutMsg: `AssertionError: Tree icon for System '${this.systemName}' not found` });
+            await browser.execute((el: HTMLElement) => el.click(), await treeIcon);
+            await browser.pause(2500);
+        }
+        await subSysSpan.waitForDisplayed({ timeout: 60000, timeoutMsg: `AssertionError: Sub-System '${this.subSystemName}' not visible after expanding System '${this.systemName}'` });
+        console.log(`Sub-System '${this.subSystemName}' visible under '${this.systemName}'`);
+
+        console.log(`Clicking Add (+) on Sub-System '${this.subSystemName}'...`);
+        await utils.clickWithWait(this.addMaintainableBtn(this.subSystemName));
+        await browser.pause(2000);
+
+        let assignFunctionsClicked = false;
+        for (const btn of await this.assignFunctionsBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+                console.log("'Assign Functions' menu item clicked");
+                assignFunctionsClicked = true;
+                break;
+            }
+        }
+        if (!assignFunctionsClicked) {
+            throw new AssertionError({ message: `AssertionError: 'Assign Functions' not available on Sub-System '${this.subSystemName}'` });
+        }
+
+        await this.assignFunctionsHeader.waitForDisplayed({ timeout: 60000, timeoutMsg: "AssertionError: Assign Functions dialog did not open" });
+        await this.functionsCountText.waitForDisplayed({ timeout: 60000 });
+        const fnText = await this.functionsCountText.getText();
+        const fnCount = await utils.getAssignedValue(fnText);
+        console.log(`Available Functions for Sub-System '${this.subSystemName}': ${fnCount}`);
+        if (fnCount === 0) {
+            await utils.clickWithWait(this.cancelBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            throw new AssertionError({ message: `AssertionError: No Functions available to assign for Sub-System '${this.subSystemName}'` });
+        }
+
+        await this.firstFunctionValue.waitForDisplayed({ timeout: 30000 });
+        const fnValue = (await this.firstFunctionValue.getText() || "").trim();
+        this.functionValue = fnValue;
+        console.log(`Selecting first function: '${fnValue}'`);
+        await utils.clickWithWait(this.firstFunctionCheckbox);
+        await utils.clickWithWait(this.assignBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2500);
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+        console.log(`Function assigned: '${fnValue}'`);
+
+        this.selectedFunctionalLocation = { locationName: this.subSystemName, locationId: this.subSystemName };
+        this.funcLocObj = this.subSystemName;
+    }
+
+    public async verifyFunctionUnderSubSystem() {
+        if (!this.functionValue) {
+            throw new AssertionError({ message: "AssertionError: functionValue not set - assignFunctionsToSubSystem must run first" });
+        }
+        console.log(`Expanding Sub-System '${this.subSystemName}' to verify assigned Function '${this.functionValue}'...`);
+        const fnSpan = $(`//span[@dir='auto'][normalize-space()="${this.functionValue}"]`);
+        if (!(await fnSpan.isDisplayed().catch(() => false))) {
+            for (const btn of await this.expandBtn(this.subSystemName)) {
+                if ((await btn.isDisplayed().catch(() => false)) && (await btn.getAttribute("aria-expanded")) === "false") {
+                    await utils.clickWithWait(btn);
+                    await browser.pause(2500);
+                    break;
+                }
+            }
+            if (!(await fnSpan.isDisplayed().catch(() => false))) {
+                const treeIcon = await $(`(//tr[.//span[@dir='auto'][normalize-space()="${this.subSystemName}"]]//span[@aria-label='Node'])[1]`);
+                if (await treeIcon.isExisting().catch(() => false)) {
+                    await browser.execute((el: HTMLElement) => el.click(), await treeIcon);
+                    await browser.pause(2500);
+                }
+            }
+        }
+        await fnSpan.waitForDisplayed({ timeout: 60000, timeoutMsg: `AssertionError: Function '${this.functionValue}' not visible under Sub-System '${this.subSystemName}' after expand` });
+        console.log(`Function '${this.functionValue}' verified under Sub-System '${this.subSystemName}'`);
+    }
+
+    public async verifyFunctionDetail() {
+        if (!this.functionValue) {
+            throw new AssertionError({ message: "AssertionError: functionValue not set - assignFunctionsToSubSystem must run first" });
+        }
+        await this.verifyFunctionUnderSubSystem();
+        const baseName = this.functionValue.split(' (')[0].trim();
+        const codeId = this.functionValue.match(/\((.*?)\)/)?.[1] || '';
+        console.log(`Opening Function detail page for '${this.functionValue}' (baseName='${baseName}', codeId='${codeId}')...`);
+        await utils.clickWithWait(this.functionRowClick(this.functionValue));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        console.log(`Verifying Function detail page header shows '${baseName}'...`);
+        const fnHeaderTitleEls = await $$(`//header[@aria-roledescription='Object page header']//div[@role='heading']//span[@dir='auto'][normalize-space()="${baseName}"]`);
+        let fnHeaderShown = false;
+        await browser.waitUntil(async () => {
+            for (const el of fnHeaderTitleEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    fnHeaderShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 60000, interval: 1000, timeoutMsg: `AssertionError: Function detail page header did not show '${baseName}'` });
+        if (!fnHeaderShown) {
+            throw new AssertionError({ message: `AssertionError: Function detail page header did not show '${baseName}'` });
+        }
+        console.log(`Function detail page header shows '${baseName}'`);
+
+        if (codeId) {
+            console.log(`Verifying Code ID '${codeId}' is present on Function detail page...`);
+            const codeIdValue = $(`//bdi[normalize-space()='Code ID']/ancestor::dt[1]/following-sibling::dd[1]//span[normalize-space()="${codeId}"]`);
+            await codeIdValue.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: Code ID '${codeId}' not shown on Function detail page` });
+            console.log(`Code ID matches: '${codeId}'`);
+        }
+
+        try {
+            const codeGroupIdEl = $("//bdi[normalize-space()='Code Group ID']/ancestor::dt[1]/following-sibling::dd[1]//span[normalize-space()][1]");
+            if (await codeGroupIdEl.isDisplayed().catch(() => false)) {
+                console.log(`Code Group ID: '${(await codeGroupIdEl.getText()).trim()}'`);
+            }
+        } catch (e) { void e; }
+        try {
+            const codeGroupDescEl = $("//bdi[normalize-space()='Code Group Description']/ancestor::dt[1]/following-sibling::dd[1]//span[normalize-space()][1]");
+            if (await codeGroupDescEl.isDisplayed().catch(() => false)) {
+                console.log(`Code Group Description: '${(await codeGroupDescEl.getText()).trim()}'`);
+            }
+        } catch (e) { void e; }
+
+        console.log("Closing Function detail page...");
+        let closed = false;
+        for (const btn of await this.closeBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn);
+                await browser.pause(2000);
+                closed = true;
+                break;
+            }
+        }
+        if (!closed) {
+            console.log("No visible Decline button found to close Function detail page");
+        } else {
+            console.log("Function detail page closed");
+        }
+    }
+
+    public async verifyFunctionalFailureDetail() {
+        if (!this.functionalFailureValue) {
+            throw new AssertionError({ message: "AssertionError: functionalFailureValue not set - assignFunctionalFailure must run first" });
+        }
+        const baseName = this.functionalFailureValue.split(' (')[0].trim();
+        const codeId = this.functionalFailureValue.match(/\((.*?)\)/)?.[1] || '';
+        console.log(`Opening Functional Failure detail page for '${this.functionalFailureValue}' (baseName='${baseName}', codeId='${codeId}')...`);
+        await utils.clickWithWait(this.functionalFailureRowClick(this.functionalFailureValue));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        console.log(`Verifying Functional Failure detail page header shows '${baseName}'...`);
+        const ffHeaderTitleEls = await $$(`//header[@aria-roledescription='Object page header']//div[@role='heading']//span[@dir='auto'][normalize-space()="${baseName}"]`);
+        let ffHeaderShown = false;
+        await browser.waitUntil(async () => {
+            for (const el of ffHeaderTitleEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    ffHeaderShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 60000, interval: 1000, timeoutMsg: `AssertionError: Functional Failure detail header did not show '${baseName}'` });
+        if (!ffHeaderShown) {
+            throw new AssertionError({ message: `AssertionError: Functional Failure detail header did not show '${baseName}'` });
+        }
+        console.log(`Functional Failure detail page header shows '${baseName}'`);
+
+        console.log("Opening Assign menu on Functional Failure detail...");
+        const assignMenuBtn = $("//button[.//bdi[normalize-space()='Assign']]");
+        if (!(await assignMenuBtn.isDisplayed().catch(() => false))) {
+            for (const ovBtn of await $$("//button[@aria-label='Additional Options']")) {
+                if ((await ovBtn.isDisplayed().catch(() => false)) && (await ovBtn.isClickable().catch(() => false))) {
+                    await utils.clickWithWait(ovBtn);
+                    await browser.pause(1500);
+                    break;
+                }
+            }
+        }
+        await assignMenuBtn.waitForClickable({ timeout: 30000, timeoutMsg: "AssertionError: Assign menu button not clickable on Functional Failure detail page" });
+        await utils.clickWithWait(assignMenuBtn);
+        await browser.pause(1500);
+
+        const useEquipment = !!(this.selectedEquipmentData && this.selectedEquipmentData.equipmentId);
+        const menuText = useEquipment ? "Equipment" : "Functional Location";
+        const selectDialogTitle = useEquipment ? "Select Equipment" : "Select Functional Location";
+        console.log(`Choosing '${menuText}' from Assign menu...`);
+        let itemClicked = false;
+        try {
+            await browser.waitUntil(async () => {
+                const menuItemEls = await $$(`//li[@role='menuitem' and .//span[normalize-space()="${menuText}"]] | //div[@role='menuitem' and .//span[normalize-space()="${menuText}"]] | //span[normalize-space()="${menuText}"]`);
+                for (const el of menuItemEls) {
+                    if (!(await el.isDisplayed().catch(() => false))) continue;
+                    try {
+                        await utils.clickWithWait(el);
+                        itemClicked = true;
+                        return true;
+                    } catch {
+                        try {
+                            await browser.execute((n: HTMLElement) => n.click(), el);
+                            itemClicked = true;
+                            return true;
+                        } catch { /* try next */ }
+                    }
+                }
+                return false;
+            }, { timeout: 30000, interval: 1000, timeoutMsg: `AssertionError: '${menuText}' menu item not shown` });
+        } catch (e) {
+            if (!itemClicked) {
+                throw new AssertionError({ message: `AssertionError: '${menuText}' menu item not shown` });
+            }
+        }
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        const dialogHeader = $(`//div[@role='dialog' and .//h1[normalize-space()='${selectDialogTitle}']]`);
+        await dialogHeader.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: '${selectDialogTitle}' dialog did not open` });
+
+        const equipmentId = this.selectedEquipmentData.equipmentId;
+        const equipmentName = this.selectedEquipmentData.equipmentName;
+        console.log(`Verifying equipment '${equipmentName} (${equipmentId})' is present in '${selectDialogTitle}' dialog...`);
+        const equipmentRow = $(`//div[@role='dialog' and .//h1[normalize-space()='${selectDialogTitle}']]//tr[@role='row' and @aria-rowindex>1][.//span[normalize-space()="${equipmentId}"]]`);
+        const equipmentPresent = await equipmentRow.isExisting().catch(() => false)
+            && await equipmentRow.isDisplayed().catch(() => false);
+
+        if (!equipmentPresent) {
+            console.log(`Equipment '${equipmentName} (${equipmentId})' NOT present in '${selectDialogTitle}' dialog. Clicking Close and failing.`);
+            const closeBtn = $(`//div[@role='dialog' and .//h1[normalize-space()='${selectDialogTitle}']]//footer//button[.//bdi[normalize-space()='Close']]`);
+            if (await closeBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(closeBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+            throw new AssertionError({ message: `AssertionError: Equipment '${equipmentName} (${equipmentId})' not present in '${selectDialogTitle}' dialog on Functional Failure detail page` });
+        }
+
+        console.log(`Selecting equipment '${equipmentName} (${equipmentId})' and clicking Confirm...`);
+        const rowCheckbox = $(`//div[@role='dialog' and .//h1[normalize-space()='${selectDialogTitle}']]//tr[@role='row' and @aria-rowindex>1][.//span[normalize-space()="${equipmentId}"]]//div[@role='checkbox']`);
+        await rowCheckbox.waitForClickable({ timeout: 30000 });
+        await utils.clickWithWait(rowCheckbox);
+        await browser.pause(1500);
+        const confirmBtn = $(`//div[@role='dialog' and .//h1[normalize-space()='${selectDialogTitle}']]//footer//button[.//bdi[normalize-space()='Confirm']]`);
+        await confirmBtn.waitForClickable({ timeout: 30000, timeoutMsg: "AssertionError: Confirm button did not become clickable" });
+        await utils.clickWithWait(confirmBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+        console.log(`Equipment '${equipmentName} (${equipmentId})' assigned to Functional Failure '${baseName}'`);
+
+        console.log(`Verifying equipment row '${equipmentName} (${equipmentId})' is now listed under Technical Objects on Functional Failure detail page...`);
+        const assignedRow = $(`//span[@dir='auto'][normalize-space()="${equipmentName} (${equipmentId})"]`);
+        await assignedRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `AssertionError: Equipment '${equipmentName} (${equipmentId})' not reflected under Technical Objects on Functional Failure detail page after Confirm` });
+        console.log(`Equipment '${equipmentName} (${equipmentId})' verified under Technical Objects on Functional Failure detail page`);
+    }
+
+    public async addMaintainableItemsFromFFDetail() {
+        if (!this.functionalFailureValue) {
+            throw new AssertionError({ message: "AssertionError: functionalFailureValue not set - verifyFunctionalFailureDetail must run first" });
+        }
+        if (!this.selectedEquipmentData || !this.selectedEquipmentData.equipmentId) {
+            throw new AssertionError({ message: "AssertionError: selectedEquipmentData not set" });
+        }
+        const equipmentId = this.selectedEquipmentData.equipmentId;
+        const equipmentName = this.selectedEquipmentData.equipmentName;
+        const equipmentDisplayText = `${equipmentName} (${equipmentId})`;
+        const baseName = this.functionalFailureValue.split(' (')[0].trim();
+
+        console.log(`Clicking + on equipment row '${equipmentDisplayText}' inside Functional Failure detail page to add Maintainable Items...`);
+        await utils.clickWithWait(this.addMaintainableBtn(equipmentDisplayText));
+        await browser.pause(2000);
+
+        let miClicked = false;
+        for (const btn of await this.assignMaintainableItemsBtns) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+                miClicked = true;
+                console.log("'Assign Maintainable Items' button clicked");
+                break;
+            }
+        }
+        if (!miClicked) {
+            throw new AssertionError({ message: `AssertionError: 'Assign Maintainable Items' not available on equipment row '${equipmentDisplayText}' inside Functional Failure detail page` });
+        }
+
+        await this.assignMaintainableItemsHeader.waitForDisplayed({ timeout: 60000, timeoutMsg: "AssertionError: Assign Maintainable Items dialog did not open" });
+        const miText = await this.maintainableItemsText.getText();
+        const miCount = await utils.getAssignedValue(miText);
+        console.log(`Available Maintainable Items: ${miCount}`);
+        if (miCount === 0) {
+            console.log("No Maintainable Items available to assign; cancelling dialog");
+            await utils.clickWithWait(this.cancelBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            this.maintainableItemFunLoc = true;
+        } else {
+            const miValue = (await this.maintainableItemValue.getText() || "").trim();
+            this.maintainableItemValueFunLoc = miValue;
+            console.log(`Selected Maintainable Item: '${miValue}'`);
+            await utils.clickWithWait(this.maintainableItemRow);
+            await utils.clickWithWait(this.assignBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2500);
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.okBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+            console.log(`Maintainable Item '${miValue}' assigned to equipment '${equipmentDisplayText}' under Functional Failure '${baseName}'`);
+        }
+    }
+
+    public async verifyMaintainableItemAddedUnderEquipment() {
+        if (this.maintainableItemFunLoc === true) {
+            console.log("No Maintainable Item was added (count was 0); skipping verification");
+            return;
+        }
+        if (!this.maintainableItemValueFunLoc) {
+            throw new AssertionError({ message: "AssertionError: maintainableItemValueFunLoc not set - addMaintainableItemsFromFFDetail must run first" });
+        }
+        if (!this.selectedEquipmentData || !this.selectedEquipmentData.equipmentId) {
+            throw new AssertionError({ message: "AssertionError: selectedEquipmentData not set" });
+        }
+        const equipmentId = this.selectedEquipmentData.equipmentId;
+        const equipmentName = this.selectedEquipmentData.equipmentName;
+        const equipmentDisplayText = `${equipmentName} (${equipmentId})`;
+
+        console.log(`Expanding equipment row '${equipmentDisplayText}' in hierarchy to verify Maintainable Item '${this.maintainableItemValueFunLoc}'...`);
+        const miSpan = $(`//span[@dir='auto'][normalize-space()="${this.maintainableItemValueFunLoc}"]`);
+        if (!(await miSpan.isDisplayed().catch(() => false))) {
+            const expandChevron = await $(`(//tr[.//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]]//span[@role='button' and @title='Expand/Collapse Node' and @aria-expanded='false'])[1]`);
+            if (await expandChevron.isExisting().catch(() => false)) {
+                await browser.execute((el: HTMLElement) => el.click(), await expandChevron);
+                await browser.pause(2500);
+                console.log(`Clicked expand chevron on equipment row '${equipmentDisplayText}'`);
+            } else {
+                const nodeIcon = await $(`(//tr[.//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]]//span[@aria-label='Node'])[1]`);
+                if (await nodeIcon.isExisting().catch(() => false)) {
+                    await browser.execute((el: HTMLElement) => el.click(), await nodeIcon);
+                    await browser.pause(2500);
+                    console.log(`Fallback: JS-clicked tree Node icon on equipment row '${equipmentDisplayText}'`);
+                }
+            }
+        }
+        await miSpan.waitForDisplayed({ timeout: 60000, timeoutMsg: `AssertionError: Maintainable Item '${this.maintainableItemValueFunLoc}' not visible under equipment '${equipmentDisplayText}' after expand` });
+        console.log(`Maintainable Item '${this.maintainableItemValueFunLoc}' verified under equipment '${equipmentDisplayText}'`);
+    }
+
+    public async addFailureModesFromFFDetail() {
+        if (this.maintainableItemFunLoc === true) {
+            console.log("No Maintainable Item was added; skipping Failure Modes step");
+            return;
+        }
+        if (!this.maintainableItemValueFunLoc) {
+            throw new AssertionError({ message: "AssertionError: maintainableItemValueFunLoc not set - addMaintainableItemsFromFFDetail must run first" });
+        }
+        console.log(`Clicking + on Maintainable Item '${this.maintainableItemValueFunLoc}' inside Functional Failure detail page to add Failure Modes...`);
+        await utils.clickWithWait(this.failureModeAddBtn(this.maintainableItemValueFunLoc));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        let fmClicked = false;
+        for (const btn of await this.assignFailureModeBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await btn.scrollIntoView();
+                await browser.pause(500);
+                await utils.clickWithWait(btn);
+                const opened = await this.assignFailureModeHeader.waitForDisplayed({ timeout: 15000 }).then(() => true).catch(() => false);
+                if (opened) {
+                    fmClicked = true;
+                    console.log("'Assign Failure Modes' button clicked");
+                    break;
+                }
+            }
+        }
+        if (!fmClicked) {
+            throw new AssertionError({ message: `AssertionError: 'Assign Failure Modes' not available on Maintainable Item '${this.maintainableItemValueFunLoc}' inside Functional Failure detail page` });
+        }
+
+        const fmText = await this.failureModeCountText.getText();
+        const fmCount = await utils.getAssignedValue(fmText);
+        console.log(`Available Failure Modes: ${fmCount}`);
+        if (fmCount === 0) {
+            console.log("No Failure Modes available to assign; cancelling dialog");
+            await utils.clickWithWait(this.cancelBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            this.failureModeFunLoc = true;
+        } else {
+            const fmValue = (await this.failureModeValue.getText() || "").trim();
+            this.failureModeValueFunLoc = fmValue;
+            console.log(`Selected Failure Mode: '${fmValue}'`);
+            await utils.clickWithWait(this.failureModeCheckbox);
+            await utils.clickWithWait(this.assignBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2500);
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.okBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+            this.failureModeFunLoc = true;
+            console.log(`Failure Mode '${fmValue}' assigned to Maintainable Item '${this.maintainableItemValueFunLoc}'`);
+        }
+    }
+
+    public async verifyTechnicalObjectDetailFromFF() {
+        if (!this.selectedEquipmentData || !this.selectedEquipmentData.equipmentId) {
+            throw new AssertionError({ message: "AssertionError: selectedEquipmentData not set" });
+        }
+        if (!this.functionalFailureValue) {
+            throw new AssertionError({ message: "AssertionError: functionalFailureValue not set" });
+        }
+        const equipmentId = this.selectedEquipmentData.equipmentId;
+        const equipmentName = this.selectedEquipmentData.equipmentName;
+        const equipmentDisplayText = `${equipmentName} (${equipmentId})`;
+        const ffBaseName = this.functionalFailureValue.split(' (')[0].trim();
+
+        console.log(`Opening Technical Object detail page for '${equipmentDisplayText}' from Functional Failure detail...`);
+        const equipmentRowClick = $(`//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]/ancestor::div[4]`);
+        await utils.clickWithWait(equipmentRowClick);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        console.log(`Verifying Technical Object detail page header shows '${equipmentName}'...`);
+        let nameFound = false;
+        for (const el of await this.headerTechnicalObjectName(equipmentName)) {
+            if (await el.isDisplayed().catch(() => false)) {
+                nameFound = true;
+                break;
+            }
+        }
+        if (!nameFound) {
+            throw new AssertionError({ message: `AssertionError: Equipment name '${equipmentName}' not visible on Technical Object detail page header` });
+        }
+        console.log(`Header name verified: '${equipmentName}'`);
+
+        let idFound = false;
+        for (const el of await this.headerTechnicalObjectId(equipmentId)) {
+            if (await el.isDisplayed().catch(() => false)) {
+                idFound = true;
+                break;
+            }
+        }
+        if (!idFound) {
+            throw new AssertionError({ message: `AssertionError: Equipment id '${equipmentId}' not visible on Technical Object detail page header` });
+        }
+        console.log(`Header id verified: '${equipmentId}'`);
+
+        try {
+            const fdpEl = $("//bdi[normalize-space()='Failure Data Profile:']/ancestor::div[1]/following::span[normalize-space()][1]");
+            if (await fdpEl.isDisplayed().catch(() => false)) {
+                console.log(`Failure Data Profile: '${(await fdpEl.getText()).trim()}'`);
+            }
+        } catch (e) { void e; }
+        try {
+            const classEl = $("//bdi[normalize-space()='Class:']/ancestor::div[1]/following::span[normalize-space()][1]");
+            if (await classEl.isDisplayed().catch(() => false)) {
+                console.log(`Class: '${(await classEl.getText()).trim()}'`);
+            }
+        } catch (e) { void e; }
+        try {
+            const critEl = $("//bdi[normalize-space()='Criticality:']/ancestor::div[1]/following::span[normalize-space()][1]");
+            if (await critEl.isDisplayed().catch(() => false)) {
+                console.log(`Criticality: '${(await critEl.getText()).trim()}'`);
+            }
+        } catch (e) { void e; }
+
+        console.log("Verifying and editing Risk Information section on Technical Object detail page (reusing verifyRiskInfoDetails)...");
+        try {
+            await this.verifyRiskInfoDetails();
+        } catch (e) {
+            console.log(`Risk Information edit encountered an issue: ${(e as Error).message}`);
+        }
+
+        console.log("Verifying Maintenance and Service section on Technical Object detail page...");
+        for (const el of await this.maintenanceServiceSections) {
+            if ((await el.isDisplayed().catch(() => false)) && (await el.isClickable().catch(() => false))) {
+                await utils.clickWithWait(el);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+                break;
+            }
+        }
+        try {
+            const mnText = await this.maintenanceNotifText.getText();
+            console.log(`Maintenance Notifications: ${await utils.getAssignedValue(mnText)}`);
+        } catch (e) { void e; }
+        try {
+            const moText = await this.maintenanceOrdersText.getText();
+            console.log(`Maintenance Orders: ${await utils.getAssignedValue(moText)}`);
+        } catch (e) { void e; }
+        try {
+            const mpText = await this.maintenancePlansText.getText();
+            console.log(`Maintenance Plans: ${await utils.getAssignedValue(mpText)}`);
+        } catch (e) { void e; }
+
+        console.log("Closing Technical Object detail page (Functional Failure detail stays open)...");
+        void ffBaseName;
+        const techObjCloseBtn = $(`//header[@aria-roledescription='Object page header'][.//span[@dir='auto'][normalize-space()="${equipmentName}"]]//button[@aria-label='Decline']`);
+        if (await techObjCloseBtn.isDisplayed().catch(() => false) && await techObjCloseBtn.isClickable().catch(() => false)) {
+            await utils.clickWithWait(techObjCloseBtn);
+            await browser.pause(2000);
+        } else {
+            for (const btn of await this.closeBtn) {
+                if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                    await utils.clickWithWait(btn);
+                    await browser.pause(2000);
+                    break;
+                }
+            }
+        }
+        console.log("Technical Object detail page closed");
+    }
+
+    public async verifyFailureModeDetail() {
+        if (this.failureModeFunLoc !== true) {
+            console.log("Failure Mode was not added; skipping Failure Mode detail verification");
+            return;
+        }
+        if (!this.failureModeValueFunLoc) {
+            throw new AssertionError({ message: "AssertionError: failureModeValueFunLoc not set - addFailureModesFromFFDetail must run first" });
+        }
+        const baseName = this.failureModeValueFunLoc.split(' (')[0].trim();
+        const codeId = this.failureModeValueFunLoc.match(/\((.*?)\)/)?.[1] || '';
+        console.log(`Opening Failure Mode detail page for '${this.failureModeValueFunLoc}' (baseName='${baseName}', codeId='${codeId}')...`);
+
+        const fmSpan = $(`//span[@dir='auto'][normalize-space()="${this.failureModeValueFunLoc}"]`);
+        if (!(await fmSpan.isDisplayed().catch(() => false))) {
+            console.log(`Expanding Maintainable Item '${this.maintainableItemValueFunLoc}' to reveal Failure Mode '${this.failureModeValueFunLoc}'...`);
+            for (const btn of await this.expandBtn(this.maintainableItemValueFunLoc)) {
+                if ((await btn.isDisplayed().catch(() => false)) && (await btn.getAttribute("aria-expanded")) === "false") {
+                    await utils.clickWithWait(btn);
+                    await browser.pause(2500);
+                    break;
+                }
+            }
+            if (!(await fmSpan.isDisplayed().catch(() => false))) {
+                const nodeIcon = await $(`(//tr[.//span[@dir='auto'][normalize-space()="${this.maintainableItemValueFunLoc}"]]//span[@role='button' and @title='Expand/Collapse Node' and @aria-expanded='false'])[1]`);
+                if (await nodeIcon.isExisting().catch(() => false)) {
+                    await browser.execute((el: HTMLElement) => el.click(), await nodeIcon);
+                    await browser.pause(2500);
+                }
+            }
+        }
+
+        await utils.clickWithWait(this.failureModeRow(this.failureModeValueFunLoc));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        console.log(`Verifying Failure Mode detail page header shows '${baseName}'...`);
+        const fmHeaderTitleEls = await $$(`//header[@aria-roledescription='Object page header']//div[@role='heading']//span[@dir='auto'][normalize-space()="${baseName}"]`);
+        let fmHeaderShown = false;
+        await browser.waitUntil(async () => {
+            for (const el of fmHeaderTitleEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    fmHeaderShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 60000, interval: 1000, timeoutMsg: `AssertionError: Failure Mode detail header did not show '${baseName}'` });
+        if (!fmHeaderShown) {
+            throw new AssertionError({ message: `AssertionError: Failure Mode detail header did not show '${baseName}'` });
+        }
+        console.log(`Failure Mode detail page header shows '${baseName}'`);
+
+        if (codeId) {
+            console.log(`Verifying Code ID '${codeId}' is present on Failure Mode detail page...`);
+            const codeIdEl = $(`//span[normalize-space()='Code ID']/following-sibling::span[normalize-space()="${codeId}"]`);
+            await codeIdEl.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: Code ID '${codeId}' not shown on Failure Mode detail page` });
+            console.log(`Code ID matches: '${codeId}'`);
+        }
+
+        try {
+            const cgIdEl = $("//span[normalize-space()='Code Group ID']/following-sibling::span[normalize-space()][1]");
+            if (await cgIdEl.isDisplayed().catch(() => false)) {
+                console.log(`Code Group ID: '${(await cgIdEl.getText()).trim()}'`);
+            }
+        } catch (e) { void e; }
+        try {
+            const cgsdEl = $("//bdi[normalize-space()='Code Group Short Description:']/ancestor::span[1]/following::span[normalize-space() and not(@aria-hidden='true')][1]");
+            if (await cgsdEl.isDisplayed().catch(() => false)) {
+                console.log(`Code Group Short Description: '${(await cgsdEl.getText()).trim()}'`);
+            }
+        } catch (e) { void e; }
+
+        const sectionFailures: string[] = [];
+        console.log("========== Failure Mode Detail Verification: START ==========");
+        this.analysisFailures = [];
+        try {
+            await this.verifyAnalysisDetails();
+        } catch (e) {
+            const msg = (e as Error).message || String(e);
+            console.log("Analysis Details error: " + msg);
+            sectionFailures.push("Analysis Details: " + msg);
+        }
+        if (this.analysisFailures && this.analysisFailures.length > 0) {
+            for (const f of this.analysisFailures) sectionFailures.push("Analysis Details: " + f);
+        }
+        await this.dismissOpenDialogs("after Analysis Details on FM detail");
+
+        try { await this.verifyRiskInfoDetails(); } catch (e) {
+            const msg = (e as Error).message || String(e);
+            console.log("Risk Information error: " + msg);
+            sectionFailures.push("Risk Information: " + msg);
+        }
+        await this.dismissOpenDialogs("after Risk Information on FM detail");
+
+        try { await this.verifyRiskMatrix(); } catch (e) {
+            const msg = (e as Error).message || String(e);
+            console.log("Risk Matrix error: " + msg);
+            sectionFailures.push("Risk Matrix: " + msg);
+        }
+        console.log("========== Failure Mode Detail Verification: END ==========");
+
+        console.log("Closing Failure Mode detail page (if still open)...");
+        let fmStillOpen = false;
+        for (const el of fmHeaderTitleEls) {
+            if (await el.isDisplayed().catch(() => false)) {
+                fmStillOpen = true;
+                break;
+            }
+        }
+        if (fmStillOpen) {
+            const fmCloseBtn = $(`//header[@aria-roledescription='Object page header'][.//span[@dir='auto'][normalize-space()="${baseName}"]]//button[@aria-label='Decline']`);
+            if (await fmCloseBtn.isDisplayed().catch(() => false) && await fmCloseBtn.isClickable().catch(() => false)) {
+                await utils.clickWithWait(fmCloseBtn);
+                await browser.pause(2000);
+                console.log("Failure Mode detail page closed");
+            }
+        } else {
+            console.log("Failure Mode detail already closed (likely by verifyRiskMatrix)");
+        }
+
+        const ffBase = (this.functionalFailureValue || '').split(' (')[0].trim();
+        console.log("Closing Functional Failure detail page...");
+        const ffCloseBtn = $(`//header[@aria-roledescription='Object page header'][.//span[@dir='auto'][normalize-space()="${ffBase}"]]//button[@aria-label='Decline']`);
+        if (await ffCloseBtn.isDisplayed().catch(() => false) && await ffCloseBtn.isClickable().catch(() => false)) {
+            await utils.clickWithWait(ffCloseBtn);
+            await browser.pause(2000);
+            console.log("Functional Failure detail page closed");
+        } else {
+            for (const btn of await this.closeBtn) {
+                if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                    await utils.clickWithWait(btn);
+                    await browser.pause(2000);
+                    console.log("Functional Failure detail page closed (via fallback)");
+                    break;
+                }
+            }
+        }
+
+        if (sectionFailures.length > 0) {
+            throw new AssertionError({ message: `AssertionError: Failure Mode detail verification had ${sectionFailures.length} issue(s):\n` + sectionFailures.join("\n") });
+        }
+    }
+
+    public async downloadCreateSystemSummaryReport() {
+        if (!this.systemName) {
+            throw new AssertionError({ message: "AssertionError: systemName not set - create-system flow must run first" });
+        }
+        console.log("Downloading Summary Report for Create-System RCM flow...");
+        await (await this.summaryReportBtn).click();
+        await (await this.downloadReportHeader).waitForDisplayed({ timeout: 20000 });
+        if (await (await this.includeAllTechObjText).isDisplayed().catch(() => false)) {
+            await (await this.includeAllTechObjText).click();
+        }
+        await (await this.downloadReportOkBtn).click();
+        await browser.pause(3000);
+        await utils.waitForBusyIndicatorToDisappear();
+        if (await (await this.confirmationYesBtn).isDisplayed().catch(() => false)) {
+            await (await this.confirmationYesBtn).click();
+        }
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
+        await utils.clickWithWait(this.okBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        const filePath = await utils.waitForDownload(".pdf");
+        const pdfContent = await utils.extractTextFromPDF(filePath);
+        console.log("----- PDF CONTENT START -----");
+        console.log(pdfContent);
+        console.log("----- PDF CONTENT END -----");
+        const normalize = (val: string) => (val || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const content = normalize(pdfContent);
+        const failures: string[] = [];
+        const verifyValue = (label: string, value: string) => {
+            if (!value) {
+                console.log(`${label} skipped (empty)`);
+                return;
+            }
+            console.log(`\nVerifying ${label}: ${value}`);
+            const norm = normalize(value);
+            if (value.includes("(")) {
+                const match = value.match(/^(.*?)\s*\((.*?)\)$/);
+                if (match) {
+                    const name = normalize(match[1].trim());
+                    const id = normalize(match[2].trim());
+                    const hasName = content.includes(name);
+                    const hasId = content.includes(id);
+                    console.log(`Name check (${name}): ${hasName}`);
+                    console.log(`ID check (${id}): ${hasId}`);
+                    if (!hasName || !hasId) {
+                        failures.push(`${label}: "${value}" | Name Found=${hasName}, ID Found=${hasId}`);
+                    }
+                    return;
+                }
+            }
+            const found = content.includes(norm);
+            console.log(`Check (${norm}): ${found}`);
+            if (!found) {
+                failures.push(`${label}: "${value}" not found in PDF`);
+            }
+        };
+
+        verifyValue("systemName", this.systemName);
+        verifyValue("subSystemName", this.subSystemName);
+        if (this.selectedEquipmentData && this.selectedEquipmentData.equipmentId && this.selectedEquipmentData.equipmentName) {
+            const equipmentDisplayText = `${this.selectedEquipmentData.equipmentName} (${this.selectedEquipmentData.equipmentId})`;
+            verifyValue("equipmentAssignedToSubSystem", equipmentDisplayText);
+        }
+        verifyValue("functionValue", this.functionValue);
+        verifyValue("functionalFailureValue", this.functionalFailureValue);
+        verifyValue("maintainableItemValueFunLoc", this.maintainableItemValueFunLoc);
+        verifyValue("failureModeValueFunLoc", this.failureModeValueFunLoc);
+
+        if (failures.length > 0) {
+            console.log("\n===== CREATE-SYSTEM PDF VALIDATION FAILURES =====");
+            failures.forEach((failure, index) => {
+                console.log(`${index + 1}. ${failure}`);
+            });
+            console.log("=================================================\n");
+            throw new AssertionError({ message: `AssertionError: Create-System PDF Summary Report Validation Failed:\n\n${failures.join("\n")}` });
+        }
+        console.log("Create-System PDF Summary report verification completed");
     }
 }
 export default new assetRCMDetailView();
