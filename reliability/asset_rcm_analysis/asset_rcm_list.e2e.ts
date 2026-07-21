@@ -24,8 +24,8 @@ describe('BTP - RCM Analysis Application - Functional Test', () => {
     });
 
     it('should add maintainable items for technical objects' , async () => {
-        await assetRCMDetailView.addMaintanableItems();
-        await assetRCMDetailView.verifyMaintainableDetails();
+        await assetRCMDetailView.addMaintanableItemsOrFunctions();
+        await assetRCMDetailView.verifyMaintainableOrFunctionsDetails();
     });
 
     it('should add failure modes for added maintainable items of technical objects' , async () => {
@@ -47,11 +47,11 @@ describe('BTP - RCM Analysis Application - Functional Test', () => {
     });
 
     it('should add maintainable items for functional location technical objects' , async () => {
-        await assetRCMDetailView.addMaintainableItemsForFuncLoc();
+        await assetRCMDetailView.addMaintainableItemsForFunction();
     });
 
     it('should add failure modes for added maintainable items of functional location technical objects' , async () => {
-        await assetRCMDetailView.addFailureModesForFuncLoc();
+        await assetRCMDetailView.addFailureModesForFunction();
         await assetRCMDetailView.verifyFailureModesDetails();
     });
 
