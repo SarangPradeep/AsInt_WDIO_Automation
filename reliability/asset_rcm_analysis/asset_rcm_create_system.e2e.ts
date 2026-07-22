@@ -12,11 +12,11 @@ describe('BTP - RCM Analysis Application - Create Assessment via Create System',
         await assetRCMList.createAssetRCM();
     });
 
-    // it('should verify and edit information tab', async () => {
-    //     await assetRCMDetailView.verifyAndEditGenInfo();
-    //     await assetRCMDetailView.verifyAndEditPlanningData();
-    //     await assetRCMDetailView.addRoles();
-    // });
+    it('should verify and edit information tab', async () => {
+        await assetRCMDetailView.verifyAndEditGenInfo();
+        await assetRCMDetailView.verifyAndEditPlanningData();
+        await assetRCMDetailView.addRoles();
+    });
 
     it('should create assessment by choosing technical object and creating a new System', async () => {
         await assetRCMDetailView.createAssessmentFlowWithCreateSystem();
