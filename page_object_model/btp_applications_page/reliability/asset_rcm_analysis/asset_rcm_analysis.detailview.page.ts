@@ -3061,7 +3061,7 @@ class assetRCMDetailView {
         await this.technicalObjectsHeader.waitForDisplayed();
         let assessmentCreated = false;
         let lastFailureReason = "";
-        /*
+
         for (let i = 2; i <= 81; i++) {
             console.log(`Trying checkbox index: ${i}`);
             await utils.clickWithWait(this.equipmentValueBtn);
@@ -3138,101 +3138,6 @@ class assetRCMDetailView {
                 await utils.clickWithWait(this.removeSelectedToken);
             }
         }
-        */
-
-        // ********** START: TEST-MODE FIXED EQUIPMENT (remove this block and uncomment the original loop above) **********
-        const testEquipmentId = "10000127";
-        console.log(`[TEST MODE] Using fixed Technical Object '${testEquipmentId}' for Create System flow`);
-        await utils.clickWithWait(this.equipmentValueBtn);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
-
-        const equipmentDialog = $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
-        await equipmentDialog.waitForDisplayed({ timeout: 30000, timeoutMsg: "AssertionError: Equipment value help dialog did not open" });
-
-        const dialogSearchInput = $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//input[@type='search']`);
-        await dialogSearchInput.waitForDisplayed({ timeout: 30000 });
-        await dialogSearchInput.clearValue().catch(() => { void 0; });
-        await utils.setValueWithWait(dialogSearchInput, testEquipmentId);
-        console.log(`Searched for equipment: ${testEquipmentId}`);
-
-        const goBtn = $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//button[.//bdi[normalize-space()='Go']]`);
-        await goBtn.waitForClickable({ timeout: 30000, timeoutMsg: "AssertionError: 'Go' button not clickable in Equipment value help dialog" });
-        await utils.clickWithWait(goBtn);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(3000);
-
-        const targetRow = $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[@role='row' and .//span[normalize-space()="${testEquipmentId}"]]`);
-        await targetRow.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: Equipment row '${testEquipmentId}' not found after Go` });
-        const targetCheckbox = targetRow.$(".//div[@role='checkbox']");
-        await targetCheckbox.waitForClickable({ timeout: 30000, timeoutMsg: `AssertionError: Checkbox for equipment '${testEquipmentId}' not clickable` });
-        await utils.clickWithWait(targetCheckbox);
-        console.log(`Selected equipment row '${testEquipmentId}'`);
-
-        const equipmentName = (await targetRow.$(".//td[@aria-colindex='2']//div[contains(@class,'Text')]/span[last()]").getText().catch(() => "")).trim();
-        this.selectedEquipmentData = {
-            equipmentId: testEquipmentId,
-            equipmentName,
-            category: "",
-            objectType: "",
-            catalogProfile: ""
-        };
-        console.log("Store equipment data (test mode):", this.selectedEquipmentData);
-
-        await utils.clickWithWait(this.confirmBtn);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        await utils.clickWithWait(this.nextBtn);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-
-        console.log("Switching to 'Create System' tab...");
-        await this.createSystemTab.waitForDisplayed({ timeout: 30000, timeoutMsg: "'Create System' segmented option not visible" });
-        await utils.clickWithWait(this.createSystemTab);
-        await browser.pause(2000);
-        const stamp = Date.now();
-        const systemName = `Auto_System_${stamp}`;
-        const systemDesc = `Automation System Description ${stamp}`;
-        console.log(`Filling System Name='${systemName}', Description='${systemDesc}'`);
-        await this.systemNameInput.waitForDisplayed({ timeout: 30000 });
-        await utils.setValueWithWait(this.systemNameInput, systemName);
-        await utils.setValueWithWait(this.systemDescInput, systemDesc);
-        await utils.clickWithWait(this.createBtnFooter);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(5000);
-        await browser.waitUntil(async () =>
-            (await this.okBtn.isDisplayed().catch(() => false))
-            || (await this.warningMsg.isDisplayed().catch(() => false))
-            || (await this.errorDialogHeader.isDisplayed().catch(() => false)),
-            { timeout: 60000, timeoutMsg: `No Success / Warning / Error popup detected for equipment '${testEquipmentId}' (Create System)` }
-        );
-        if (await this.okBtn.isDisplayed().catch(() => false)) {
-            console.log(`Assessment created successfully with new system '${systemName}'`);
-            await utils.clickWithWait(this.okBtn);
-            this.systemName = systemName;
-            assessmentCreated = true;
-        } else if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
-            let errMsg = "";
-            try {
-                const bodyEl = $("//header[.//text()='Error']/following::section//span[normalize-space()][1]");
-                if (await bodyEl.isDisplayed().catch(() => false)) {
-                    errMsg = (await bodyEl.getText().catch(() => "")).trim();
-                }
-            } catch (e) { void e; }
-            lastFailureReason = `Error: ${errMsg || "unknown"}`;
-            console.log(`Error dialog displayed ('${errMsg}') in test-mode create system for '${testEquipmentId}'`);
-            if (await this.errorDialogOkBtn.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.errorDialogOkBtn);
-            } else if (await this.genericCloseBtn.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.genericCloseBtn);
-            }
-        } else if (await this.warningMsg.isDisplayed().catch(() => false)) {
-            lastFailureReason = "Warning displayed on Create (Create System)";
-            console.log(`Warning displayed in test-mode create system for '${testEquipmentId}'`);
-            await utils.clickWithWait(this.warningOkBtn);
-        }
-        // ********** END: TEST-MODE FIXED EQUIPMENT (remove this block and uncomment the original loop above) **********
-
         if (!assessmentCreated) {
             throw new AssertionError({ message: `RCM assessment (Create System) could not be created after trying checkbox indexes 2..81. Last failure: ${lastFailureReason || "none captured"}` });
         }
