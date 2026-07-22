@@ -127,9 +127,9 @@ class assetRCMDetailView {
     private get consequenceSaveBtn() { return $("//bdi[contains(text(),'Safe Life')]/following::button[.//text()='Save']"); }
     private get consequenceNotesBtn() { return $("//div[@role='toolbar'][.//*[normalize-space()='Consequence Evaluation']]//button[@aria-label='No Notes' or @aria-label='Notes']"); }
     private get failureModeNotesBtn() { return $("//div[@aria-roledescription='Overflow Toolbar']//button[@aria-label='Notes Present' or @aria-label='No Notes']"); }
-    private get notesTextarea() { return $("//*[contains(text(),'characters remaining')]/preceding::textarea[1]"); }
-    private get notesSaveBtn() { return $("//*[contains(text(),'characters remaining')]/following::button[.//bdi[normalize-space()='Save']][1]"); }
-    private get notesCloseBtn() { return $("//*[contains(text(),'characters remaining')]/following::button[.//bdi[normalize-space()='Close']][1]"); }
+    private get notesTextarea() { return $("(//div[.//textarea and .//div[@aria-roledescription='Overflow Toolbar'][.//button[.//bdi[normalize-space()='Save']] and .//button[.//bdi[normalize-space()='Close']]]])[last()]//textarea"); }
+    private get notesSaveBtn() { return $("(//div[@aria-roledescription='Overflow Toolbar'][.//button[.//bdi[normalize-space()='Save']] and .//button[.//bdi[normalize-space()='Close']]])[last()]//button[.//bdi[normalize-space()='Save']]"); }
+    private get notesCloseBtn() { return $("(//div[@aria-roledescription='Overflow Toolbar'][.//button[.//bdi[normalize-space()='Save']] and .//button[.//bdi[normalize-space()='Close']]])[last()]//button[.//bdi[normalize-space()='Close']]"); }
     private get errorDialogHeader() { return $("//header[.//text()='Error']"); }
     private get errorDialogOkBtn() { return $("//header[.//text()='Error']/following::button[.//bdi[normalize-space()='OK']]"); }
     private get causesText() { return $("(//div[@role='heading']//following::span[contains(text(),'Causes')])[1]"); }
@@ -157,7 +157,7 @@ class assetRCMDetailView {
     private get strategyStartDate() { return $("//bdi[text()='Start Date']/following::input[1]"); }
     private get strategyDueDate() { return $("//bdi[text()='Due Date']/following::input[1]"); }
     private get strategyCreateBtn() { return $("//footer//button[.//bdi[.='Create']]"); }
-    private get strategySaveBtn() { return $("//footer//button[.//bdi[.='Save']]"); }
+    private get strategySaveBtn() { return $$("//footer//button[.//bdi[.='Save']] | //div[@aria-roledescription='Overflow Toolbar' or @role='toolbar'][.//button[.//bdi[normalize-space()='Save']]]//button[.//bdi[normalize-space()='Save']]"); }
     private get strategyFirstRow() { return (description: string) => $$(`//tr[@role='row']//span[contains(text(),'${description}')]/following::div[@title="Click to Select"][1]`); }
     private get strategyEditBtn() { return $("(//div[@role='heading']//following::span[contains(text(),'Causes')])[1]/following::button[.='Edit & Update']"); }
     private get selectAllStrategyCheckbox() { return $$("//div[@role='form' and .//*[contains(text(),'Strategies')]]//div[@title='Select All']"); }
@@ -188,6 +188,12 @@ class assetRCMDetailView {
     private get finRiskDropdownRow4() { return $("(//th[@aria-colindex='5']//span[text()='FIN Risk']/following::tr[@aria-rowindex='4']/following::td[@aria-colindex='5']//input)[1]"); }
     private get finConsequenceRow4() { return $("(//th[@aria-colindex='6']//span[text()='FIN Consequence ($K)']/following::tr[@aria-rowindex='4']/following::td[@aria-colindex='6']//input)[1]"); }
     private get finPofRow4() { return $$("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[4]"); }
+    private get transitionTextRow5() { return $("(//th[@aria-colindex='2']//span[text()='Transition']/following::tr[@aria-rowindex='5']/following::td[@aria-colindex='2']//span)[1]"); }
+    private get lastTransitionDateRow5() { return $("(//th[@aria-colindex='3']//span[text()='Last Transition Date']/following::tr[@aria-rowindex='5']/following::td[@aria-colindex='3']//input)[1]"); }
+    private get sheRiskDropdownRow5() { return $("(//th[@aria-colindex='4']//span[text()='SHE Risk']/following::tr[@aria-rowindex='5']/following::td[@aria-colindex='4']//input)[1]"); }
+    private get finRiskDropdownRow5() { return $("(//th[@aria-colindex='5']//span[text()='FIN Risk']/following::tr[@aria-rowindex='5']/following::td[@aria-colindex='5']//input)[1]"); }
+    private get finConsequenceRow5() { return $("(//th[@aria-colindex='6']//span[text()='FIN Consequence ($K)']/following::tr[@aria-rowindex='5']/following::td[@aria-colindex='6']//input)[1]"); }
+    private get finPofRow5() { return $$("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[5]"); }
     private get saveRiskBtn() { return $("//button[.//text()='Save']"); }
     private get riskMatrixSections() { return $$("//bdi[normalize-space()='Risk Matrix']"); }
     private get riskMatrixTitle() { return $("//div[text()='Exxon 4x5 FIN Risk Matrix']"); }
@@ -255,6 +261,13 @@ class assetRCMDetailView {
     public analysisFailures: string[] = [];
     public systemName!: string;
     public subSystemName!: string;
+    public failureEffectsCaptured: Array<{ name: string, codeId: string, codeGroup: string }> = [];
+    public failureMechanismsCaptured: Array<{ name: string, codeId: string, codeGroup: string }> = [];
+    public failureCausesCaptured: Array<{ name: string, codeId: string, codeGroup: string }> = [];
+    public failureScenarioTextCaptured: string = "";
+    public consequenceEvaluationCaptured: { typeOfFailure: string, failurePattern: string, safeLife: string, pfInterval: string } = { typeOfFailure: "", failurePattern: "", safeLife: "", pfInterval: "" };
+    public failureStrategiesCaptured: Array<{ description: string, longDescription: string, mda: string, type: string, subtype: string, startDate: string, dueDate: string, sheRiskAtDueDate: string, finRiskAtDueDate: string, sheMRAtDueDate: string, finMRAtDueDate: string, finPof: string, mitigatedFinPof: string, finConsequence: string, mitigatedFinConsequence: string, inspectionType: string, inspectionStage: string }> = [];
+    public riskInformationCaptured: Array<{ transition: string, lastTransitionDate: string, sheRisk: string, finRisk: string, finConsequence: string, finPof: string }> = [];
 
     public async verifyAndEditGenInfo(){
         console.log("Navigating to Information Tab");
@@ -979,13 +992,11 @@ class assetRCMDetailView {
                 await utils.clickWithWait(this.cancelBtn);
                 await utils.waitForBusyIndicatorToDisappear();
             }
-            for (const btn of await this.closeBtn) {
-                if (await btn.isDisplayed().catch(() => false) && await btn.isClickable().catch(() => false)) {
-                    console.log(`Closing leftover dialog ${stage}...`);
-                    await utils.clickWithWait(btn);
-                    await utils.waitForBusyIndicatorToDisappear();
-                    break;
-                }
+            if (await this.notesCloseBtn.isDisplayed().catch(() => false) &&
+                await this.notesCloseBtn.isClickable().catch(() => false)) {
+                console.log(`Closing leftover Notes popover ${stage}...`);
+                await utils.clickWithWait(this.notesCloseBtn);
+                await utils.waitForBusyIndicatorToDisappear();
             }
         } catch (cleanupErr) {
             console.log(`Dialog cleanup ${stage} encountered: ` + (cleanupErr as Error).message);
@@ -998,17 +1009,297 @@ class assetRCMDetailView {
         console.log("Failure Mode Flow starts...");
         this.analysisFailures = [];
         await this.openFailureModeDetailHeader();
-        await this.addFailureModeNote();
-        await this.openAnalysisDetailsSection();
-        await this.assignFailureEffects();
-        await this.editFailureScenario();
-        await this.assignFailureMechanism();
-        await this.performConsequenceEvaluation();
-        await this.addConsequenceNote();
-        await this.assignCauses();
-        await this.createEditStrategy();
+
+        const steps: Array<{ name: string, run: () => Promise<void> }> = [
+            { name: "Failure Mode Notes", run: () => this.addFailureModeNote() },
+            { name: "Open Analysis Details section", run: () => this.openAnalysisDetailsSection() },
+            { name: "Failure Effects", run: () => this.assignFailureEffects() },
+            { name: "Failure Scenario", run: () => this.editFailureScenario() },
+            { name: "Failure Mechanisms", run: () => this.assignFailureMechanism() },
+            { name: "Consequence Evaluation", run: () => this.performConsequenceEvaluation() },
+            { name: "Consequence Notes", run: () => this.addConsequenceNote() },
+            { name: "Causes", run: () => this.assignCauses() },
+            { name: "Strategies", run: () => this.createEditStrategy() }
+        ];
+
+        for (const step of steps) {
+            try {
+                console.log(`>>> Analysis step: ${step.name}`);
+                await step.run();
+            } catch (err) {
+                const msg = (err as Error).message || String(err);
+                const failure = `${step.name} failed: ${msg}`;
+                console.log(`ERROR in step '${step.name}': ${msg}`);
+                this.analysisFailures.push(failure);
+            }
+            await this.dismissOpenDialogs(`after ${step.name}`);
+        }
+
+        try {
+            await this.captureFailureModeAnalysisData();
+        } catch (e) {
+            console.log(`captureFailureModeAnalysisData encountered an issue: ${(e as Error).message}`);
+        }
+
         console.log("Failure Mode Flow ends");
     }
+
+    public async captureFailureModeAnalysisData(): Promise<void> {
+        console.log("Capturing Failure Mode Analysis Details from DOM (for PDF verification)...");
+        const captured = await browser.execute(() => {
+            const norm = (t: string | null | undefined) => (t || "").replace(/\s+/g, " ").trim();
+            const visible = (el: HTMLElement | null) => {
+                if (!el) return false;
+                const r = el.getBoundingClientRect();
+                if (r.width <= 0 || r.height <= 0) return false;
+                const s = window.getComputedStyle(el);
+                return s.visibility !== "hidden" && s.display !== "none";
+            };
+            const findPanelByTitlePrefix = (titlePrefix: string): HTMLElement | null => {
+                const titles = Array.from(document.querySelectorAll<HTMLElement>("span[dir='auto']"));
+                for (const t of titles) {
+                    const txt = norm(t.innerText || t.textContent || "");
+                    if (!txt.startsWith(titlePrefix)) continue;
+                    let n: HTMLElement | null = t;
+                    while (n && !(n.getAttribute && n.getAttribute("role") === "form")) n = n.parentElement;
+                    if (n) return n;
+                }
+                return null;
+            };
+            const readIdentifierTable = (panel: HTMLElement | null): Array<{ name: string, codeId: string, codeGroup: string }> => {
+                const out: Array<{ name: string, codeId: string, codeGroup: string }> = [];
+                if (!panel) return out;
+                const rows = Array.from(panel.querySelectorAll<HTMLElement>("tbody tr[role='row']"));
+                for (const tr of rows) {
+                    const cells = Array.from(tr.querySelectorAll<HTMLElement>("td[role='gridcell']"));
+                    let name = "", codeId = "", codeGroup = "";
+                    for (const c of cells) {
+                        const oi = c.querySelector<HTMLElement>(".sapMObjectIdentifierTitle span, [class*='ObjectIdentifierTitle'] span");
+                        if (oi && !name) {
+                            name = norm(oi.innerText || oi.textContent || "");
+                            const idSpan = c.querySelector<HTMLElement>(".sapMObjectIdentifierText span, [class*='ObjectIdentifierText'] span");
+                            if (idSpan) codeId = norm(idSpan.innerText || idSpan.textContent || "");
+                        }
+                    }
+                    if (cells.length >= 3) {
+                        const cg = cells[cells.length - 2]?.querySelector<HTMLElement>("span[dir='auto']");
+                        if (cg) codeGroup = norm(cg.innerText || cg.textContent || "");
+                    }
+                    if (name) out.push({ name, codeId, codeGroup });
+                }
+                return out;
+            };
+            const readFailureScenario = (): string => {
+                const panel = findPanelByTitlePrefix("Failure Scenario");
+                if (!panel) return "";
+                const descLabel = Array.from(panel.querySelectorAll<HTMLElement>("bdi")).find(b => norm(b.innerText || b.textContent || "") === "Description:");
+                if (!descLabel) return "";
+                let node: HTMLElement | null = descLabel;
+                for (let i = 0; i < 8 && node; i++) node = node.parentElement;
+                if (!node) return "";
+                const textSpans = Array.from(node.querySelectorAll<HTMLElement>("span[dir='auto'], span[class*='ExTextString']"));
+                for (const s of textSpans) {
+                    const t = norm(s.innerText || s.textContent || "");
+                    if (t && t !== "Description:" && t !== "Description" && t !== "Show the full text") return t;
+                }
+                return "";
+            };
+            const readConsequence = (): { typeOfFailure: string, failurePattern: string, safeLife: string, pfInterval: string } => {
+                const result = { typeOfFailure: "", failurePattern: "", safeLife: "", pfInterval: "" };
+                const panel = findPanelByTitlePrefix("Consequence Evaluation");
+                if (!panel) return result;
+                const labelPairs: Array<[string, keyof typeof result]> = [
+                    ["Type of Failure", "typeOfFailure"],
+                    ["Failure Pattern", "failurePattern"],
+                    ["Safe Life", "safeLife"],
+                    ["P-F Interval", "pfInterval"]
+                ];
+                const bdis = Array.from(panel.querySelectorAll<HTMLElement>("bdi"));
+                for (const [label, key] of labelPairs) {
+                    const bdi = bdis.find(b => norm(b.innerText || b.textContent || "") === label);
+                    if (!bdi) continue;
+                    let container: HTMLElement | null = bdi;
+                    for (let i = 0; i < 6 && container; i++) container = container.parentElement;
+                    if (!container) continue;
+                    const valueSpans = Array.from(container.querySelectorAll<HTMLElement>("span[dir='auto']"));
+                    for (const s of valueSpans) {
+                        const t = norm(s.innerText || s.textContent || "");
+                        if (t && t !== label && t !== `${label}:`) {
+                            result[key] = t;
+                            break;
+                        }
+                    }
+                }
+                return result;
+            };
+            const readStrategies = (): Array<any> => {
+                const panel = findPanelByTitlePrefix("Strategies");
+                if (!panel) return [];
+                const headerCells = Array.from(panel.querySelectorAll<HTMLElement>("td[role='columnheader']"));
+                const headerLabels: string[] = [];
+                for (const h of headerCells) {
+                    const span = h.querySelector<HTMLElement>("span[dir='auto']");
+                    headerLabels.push(norm(span?.innerText || span?.textContent || ""));
+                }
+                const rows: any[] = [];
+                const rowMap = new Map<string, Map<number, string>>();
+                const dataRows = Array.from(panel.querySelectorAll<HTMLElement>("tr[role='row'][data-sap-ui-rowindex]"));
+                for (const tr of dataRows) {
+                    const rowIdx = tr.getAttribute("data-sap-ui-rowindex") || "";
+                    if (!rowIdx) continue;
+                    const cells = Array.from(tr.querySelectorAll<HTMLElement>("td[role='gridcell']"));
+                    if (!rowMap.has(rowIdx)) rowMap.set(rowIdx, new Map());
+                    const map = rowMap.get(rowIdx)!;
+                    for (const c of cells) {
+                        const colIdxRaw = c.getAttribute("aria-colindex");
+                        if (!colIdxRaw) continue;
+                        const colIdx = Number(colIdxRaw);
+                        let text = "";
+                        const linkEl = c.querySelector<HTMLElement>("a");
+                        if (linkEl) text = norm(linkEl.innerText || linkEl.textContent || "");
+                        if (!text) {
+                            const titleEl = c.querySelector<HTMLElement>("[role='heading'] span[dir='auto'], .sapMTitle span[dir='auto']");
+                            if (titleEl) text = norm(titleEl.innerText || titleEl.textContent || "");
+                        }
+                        if (!text) {
+                            const exStr = c.querySelector<HTMLElement>("span[class*='ExTextString']");
+                            if (exStr) text = norm(exStr.innerText || exStr.textContent || "");
+                        }
+                        if (!text) {
+                            const tag = c.querySelector<HTMLElement>("[role='button'][aria-roledescription='Object Tag'] span, [role='button'] span");
+                            if (tag) text = norm(tag.innerText || tag.textContent || "");
+                        }
+                        if (!text) {
+                            const anySpan = c.querySelector<HTMLElement>("span[dir='auto']");
+                            if (anySpan) text = norm(anySpan.innerText || anySpan.textContent || "");
+                        }
+                        if (!text) {
+                            const tokenTxts = Array.from(c.querySelectorAll<HTMLElement>("[class*='TokenText']")).map(t => norm(t.innerText || t.textContent || "")).filter(Boolean);
+                            if (tokenTxts.length) text = tokenTxts.join(",");
+                        }
+                        if (colIdx >= 2 && !map.has(colIdx)) map.set(colIdx, text);
+                        if (colIdx >= 2 && text && !map.get(colIdx)) map.set(colIdx, text);
+                    }
+                }
+                const sortedRowKeys = Array.from(rowMap.keys()).sort((a, b) => Number(a) - Number(b));
+                for (const k of sortedRowKeys) {
+                    const map = rowMap.get(k)!;
+                    const row: any = { description: "", longDescription: "", mda: "", type: "", subtype: "", startDate: "", dueDate: "", sheRiskAtDueDate: "", finRiskAtDueDate: "", sheMRAtDueDate: "", finMRAtDueDate: "", finPof: "", mitigatedFinPof: "", finConsequence: "", mitigatedFinConsequence: "", inspectionType: "", inspectionStage: "" };
+                    for (const [colIdx, txt] of map.entries()) {
+                        const header = headerLabels[colIdx - 2] || "";
+                        const H = header.toLowerCase();
+                        if (H === "description") row.description = txt;
+                        else if (H === "mda") row.mda = txt;
+                        else if (H === "type") row.type = txt;
+                        else if (H === "subtype") row.subtype = txt;
+                        else if (H === "start date") row.startDate = txt;
+                        else if (H === "due date") row.dueDate = txt;
+                        else if (H === "she risk at due date") row.sheRiskAtDueDate = txt;
+                        else if (H === "fin risk at due date") row.finRiskAtDueDate = txt;
+                        else if (H === "she mr at due date") row.sheMRAtDueDate = txt;
+                        else if (H === "fin mr at due date") row.finMRAtDueDate = txt;
+                        else if (H === "fin pof") row.finPof = txt;
+                        else if (H === "mitigated fin pof") row.mitigatedFinPof = txt;
+                        else if (H === "fin consequence ($k)") row.finConsequence = txt;
+                        else if (H === "mitigated fin consequence ($k)") row.mitigatedFinConsequence = txt;
+                        else if (H === "inspection type") row.inspectionType = txt;
+                        else if (H === "inspection stage") row.inspectionStage = txt;
+                    }
+                    if (row.description || row.type || row.startDate) rows.push(row);
+                }
+                return rows;
+            };
+            const readRiskInfo = (): Array<{ transition: string, lastTransitionDate: string, sheRisk: string, finRisk: string, finConsequence: string, finPof: string }> => {
+                const out: Array<{ transition: string, lastTransitionDate: string, sheRisk: string, finRisk: string, finConsequence: string, finPof: string }> = [];
+                const titleAnchors = Array.from(document.querySelectorAll<HTMLElement>("span[dir='auto']"));
+                let riskTable: HTMLElement | null = null;
+                for (const t of titleAnchors) {
+                    if (norm(t.innerText || t.textContent || "") !== "Risk Information") continue;
+                    let n: HTMLElement | null = t;
+                    for (let i = 0; i < 20 && n; i++) {
+                        const grid = n.querySelector<HTMLElement>("table[role='grid'][aria-colcount='6']");
+                        if (grid) { riskTable = grid; break; }
+                        n = n.parentElement;
+                    }
+                    if (riskTable) break;
+                }
+                if (!riskTable) return out;
+                const bodyRows = Array.from(riskTable.querySelectorAll<HTMLElement>("tbody tr[role='row'][aria-rowindex]"));
+                const subMap = new Map<string, HTMLElement>();
+                const subRows = Array.from(riskTable.querySelectorAll<HTMLElement>("tbody tr[data-sap-ui-related]"));
+                for (const sr of subRows) {
+                    const rel = sr.getAttribute("data-sap-ui-related");
+                    if (rel) subMap.set(rel, sr);
+                }
+                for (const tr of bodyRows) {
+                    const rowIdx = tr.getAttribute("aria-rowindex") || "";
+                    if (!rowIdx || rowIdx === "1") continue;
+                    const trId = tr.id || "";
+                    const cells = Array.from(tr.querySelectorAll<HTMLElement>("td[role='gridcell']"));
+                    const getCellText = (colIdx: string): string => {
+                        const c = cells.find(cell => cell.getAttribute("aria-colindex") === colIdx);
+                        if (!c) return "";
+                        const visSpans = Array.from(c.querySelectorAll<HTMLElement>("span[dir='auto']")).filter(s => {
+                            const r = s.getBoundingClientRect();
+                            const st = window.getComputedStyle(s);
+                            if (r.width <= 0 && r.height <= 0) return false;
+                            if (st.visibility === "hidden" || st.display === "none") return false;
+                            if (s.getAttribute("aria-hidden") === "true") return false;
+                            return !!norm(s.innerText || s.textContent || "");
+                        });
+                        return norm(visSpans[0]?.innerText || visSpans[0]?.textContent || "");
+                    };
+                    const getTagText = (colIdx: string): string => {
+                        const c = cells.find(cell => cell.getAttribute("aria-colindex") === colIdx);
+                        if (!c) return "";
+                        const tag = c.querySelector<HTMLElement>("[role='button'][aria-roledescription='Object Tag'] span, [role='button'] span[class*='GenericTagText']");
+                        return norm(tag?.innerText || tag?.textContent || "");
+                    };
+                    const transition = getCellText("2");
+                    if (!transition) continue;
+                    const lastTransitionDate = getCellText("3");
+                    const sheRisk = getTagText("4");
+                    const finRisk = getTagText("5");
+                    let finConsequence = "";
+                    let finPof = "";
+                    const subRow = subMap.get(trId);
+                    if (subRow) {
+                        const finConsSpan = subRow.querySelector<HTMLElement>("span[title^='FIN Consequence']");
+                        finConsequence = norm(finConsSpan?.innerText || finConsSpan?.textContent || "");
+                        const finPofSpan = subRow.querySelector<HTMLElement>("span[title^='FIN POF']");
+                        finPof = norm(finPofSpan?.innerText || finPofSpan?.textContent || "");
+                    }
+                    out.push({ transition, lastTransitionDate, sheRisk, finRisk, finConsequence, finPof });
+                }
+                return out;
+            };
+
+            return {
+                failureEffects: readIdentifierTable(findPanelByTitlePrefix("Failure Effects")),
+                failureMechanisms: readIdentifierTable(findPanelByTitlePrefix("Failure Mechanisms")),
+                failureCauses: readIdentifierTable(findPanelByTitlePrefix("Causes")),
+                failureScenario: readFailureScenario(),
+                consequence: readConsequence(),
+                strategies: readStrategies(),
+                riskInfo: readRiskInfo()
+            };
+        });
+        this.failureEffectsCaptured = captured?.failureEffects || [];
+        this.failureMechanismsCaptured = captured?.failureMechanisms || [];
+        this.failureCausesCaptured = captured?.failureCauses || [];
+        this.failureScenarioTextCaptured = captured?.failureScenario || "";
+        this.consequenceEvaluationCaptured = captured?.consequence || { typeOfFailure: "", failurePattern: "", safeLife: "", pfInterval: "" };
+        this.failureStrategiesCaptured = captured?.strategies || [];
+        this.riskInformationCaptured = captured?.riskInfo || [];
+        console.log("Captured Failure Effects:", JSON.stringify(this.failureEffectsCaptured));
+        console.log("Captured Failure Mechanisms:", JSON.stringify(this.failureMechanismsCaptured));
+        console.log("Captured Failure Causes:", JSON.stringify(this.failureCausesCaptured));
+        console.log("Captured Failure Scenario Description:", this.failureScenarioTextCaptured);
+        console.log("Captured Consequence Evaluation:", JSON.stringify(this.consequenceEvaluationCaptured));
+        console.log("Captured Failure Strategies:", JSON.stringify(this.failureStrategiesCaptured, null, 2));
+        console.log("Captured Risk Information:", JSON.stringify(this.riskInformationCaptured, null, 2));
+    }
+
 
     public async openFailureModeDetailHeader()
     {
@@ -1456,7 +1747,17 @@ class assetRCMDetailView {
         await browser.pause(3000);
         const newDescription = `${this.createdStrategies[0].description} - Edited`;
         await utils.setValueWithWait(this.strategyDescInput, newDescription);
-        await utils.clickWithWait(this.strategySaveBtn,1500);
+        let strategySaveClicked = false;
+        for (const btn of await this.strategySaveBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn, 1500);
+                strategySaveClicked = true;
+                break;
+            }
+        }
+        if (!strategySaveClicked) {
+            throw new AssertionError({ message: "AssertionError: Strategy Save button not visible/clickable" });
+        }
         await utils.waitForBusyIndicatorToDisappear();
         this.createdStrategies[0].description = newDescription;
         console.log("Updated Strategy:");
@@ -1585,7 +1886,17 @@ class assetRCMDetailView {
         }
         console.log("Editing All the Strategies....");
         await utils.setValueWithWait(this.strategyDescInput, "Edited All Strategies", 1500);
-        await utils.clickWithWait(this.saveBtnFooter);
+        let strategySaveAllClicked = false;
+        for (const btn of await this.strategySaveBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn, 1500);
+                strategySaveAllClicked = true;
+                break;
+            }
+        }
+        if (!strategySaveAllClicked) {
+            throw new AssertionError({ message: "AssertionError: Edit-All Strategies Save button not visible/clickable" });
+        }
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickSuccessOkButton();
         const expectedDescription = "Edited All Strategies";
@@ -1600,6 +1911,180 @@ class assetRCMDetailView {
             await expect(description).toHaveText(expectedDescription);
         }
         console.log("Verification done for all the edited startegies");
+    }
+
+    private extractBaseFromTransition(transitionText: string): string {
+        const t = (transitionText || "").trim();
+        if (!t) return "";
+        const m = t.match(/[A-Za-z]/);
+        return m ? m[0].toUpperCase() : "";
+    }
+
+    private async clickHeaderActionWithOverflowFallback(labelText: string): Promise<boolean> {
+        const directSelectors = [
+            `//button[.//bdi[normalize-space()="${labelText}"]]`,
+            `//button[.//text()="${labelText}"]`,
+            `//button[normalize-space()="${labelText}"]`
+        ];
+        for (const sel of directSelectors) {
+            const cands = await $$(sel);
+            for (const btn of cands) {
+                if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                    try {
+                        await utils.clickWithWait(btn);
+                        console.log(`Clicked '${labelText}' directly via: ${sel}`);
+                        await browser.pause(800);
+                        return true;
+                    } catch { /* try next */ }
+                }
+            }
+        }
+        console.log(`'${labelText}' not directly clickable - trying 'Additional Options' overflow buttons...`);
+        const overflowBtns = await $$("//button[@aria-label='Additional Options' or @title='Additional Options']");
+        for (const ovBtn of overflowBtns) {
+            if (!(await ovBtn.isDisplayed().catch(() => false)) || !(await ovBtn.isClickable().catch(() => false))) continue;
+            try {
+                await utils.clickWithWait(ovBtn);
+            } catch {
+                try { await browser.execute((n: HTMLElement) => n.click(), await ovBtn); } catch { continue; }
+            }
+            await browser.pause(1200);
+            const menuItemSelectors = [
+                `//li[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][.//bdi[normalize-space()="${labelText}"]]`,
+                `//li[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][normalize-space()="${labelText}"]`,
+                `//div[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][normalize-space()="${labelText}"]`,
+                `//*[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][.//span[normalize-space()="${labelText}"]]`,
+                `//li[.//bdi[normalize-space()="${labelText}"]]`,
+                `//bdi[normalize-space()="${labelText}"]/ancestor::li[1]`
+            ];
+            for (const mSel of menuItemSelectors) {
+                const items = await $$(mSel);
+                for (const item of items) {
+                    if (!(await item.isDisplayed().catch(() => false))) continue;
+                    try {
+                        await utils.clickWithWait(item);
+                        console.log(`Clicked '${labelText}' via overflow menu selector: ${mSel}`);
+                        await browser.pause(800);
+                        return true;
+                    } catch {
+                        try {
+                            await browser.execute((n: HTMLElement) => n.click(), await item);
+                            console.log(`Clicked '${labelText}' via overflow menu (JS click) selector: ${mSel}`);
+                            await browser.pause(800);
+                            return true;
+                        } catch { /* try next */ }
+                    }
+                }
+            }
+            console.log(`Opened overflow but '${labelText}' menu item not found; trying next overflow button if any`);
+        }
+        return false;
+    }
+
+    private async closeTopMostDetailPanel(panelTitle?: string): Promise<boolean> {
+        const anchoredToolbar = "//div[@role='toolbar' and @aria-roledescription='Overflow Toolbar'][.//button[@aria-label='Enter Full Screen Mode' or @aria-label='Exit Full Screen Mode']]";
+        const candidateSelectors: string[] = [];
+        if (panelTitle) {
+            candidateSelectors.push(
+                `//*[self::span or self::bdi or self::div or self::h1 or self::h2][normalize-space()="${panelTitle}"]/ancestor::*[.//div[@role='toolbar' and @aria-roledescription='Overflow Toolbar'][.//button[@aria-label='Enter Full Screen Mode' or @aria-label='Exit Full Screen Mode']]][1]${anchoredToolbar}//button[@aria-label='Decline']`
+            );
+        }
+        candidateSelectors.push(`${anchoredToolbar}//button[@aria-label='Decline']`);
+
+        for (const sel of candidateSelectors) {
+            const cands = Array.from(await $$(sel));
+            for (let i = cands.length - 1; i >= 0; i--) {
+                const btn = cands[i];
+                if (!(await btn.isDisplayed().catch(() => false))) continue;
+                if (!(await btn.isClickable().catch(() => false))) continue;
+                try { await btn.scrollIntoView({ block: "center" }); } catch { /* ignore */ }
+                try {
+                    await utils.clickWithWait(btn);
+                } catch {
+                    try { await browser.execute((n: HTMLElement) => n.click(), await btn); } catch { continue; }
+                }
+                await browser.pause(1200);
+                const confirmDialog = $("//header[.//text()='Confirmation'][.//following::span[contains(normalize-space(),'Removing the selected technical object(s)')]] | //div[@role='dialog'][.//text()='Confirmation'][.//span[contains(normalize-space(),'Removing the selected technical object(s)')]]");
+                if (await confirmDialog.isDisplayed().catch(() => false)) {
+                    console.log("WARNING: Wrong Decline clicked → 'Removing technical object(s)' confirmation appeared. Clicking 'No' to abort.");
+                    const noBtn = $("//header[.//text()='Confirmation']/following::button[.//bdi[normalize-space()='No'] or .//text()='No']");
+                    if (await noBtn.isDisplayed().catch(() => false)) {
+                        try { await utils.clickWithWait(noBtn); } catch { /* ignore */ }
+                        await browser.pause(800);
+                    }
+                    continue;
+                }
+                console.log(`Closed panel via selector: ${sel} (candidate index ${i} of ${cands.length})`);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private async setFinConsequenceForRow(base: string, value: string, fallbackEls: any): Promise<boolean> {
+        const candidates: any[] = [];
+        if (base) {
+            const dynamicXpath = `//div[@title="FIN Consequence ($K) at Base ${base}"]//input`;
+            console.log(`FIN Consequence: collecting dynamic xpath -> ${dynamicXpath}`);
+            try {
+                const dynamicEls = await $$(dynamicXpath);
+                for (const el of dynamicEls) candidates.push({ el, source: `dynamic Base ${base}` });
+            } catch { /* ignore */ }
+        }
+        console.log("FIN Consequence: collecting fallback xpath");
+        try {
+            const resolved = await fallbackEls;
+            if (resolved && typeof (resolved as any)[Symbol.iterator] === "function") {
+                for (const el of resolved) candidates.push({ el, source: "fallback (array)" });
+            } else if (resolved) {
+                candidates.push({ el: resolved, source: "fallback (single)" });
+            }
+        } catch { /* ignore */ }
+
+        for (const c of candidates) {
+            const visible = await c.el.isDisplayed().catch(() => false);
+            const clickable = await c.el.isClickable().catch(() => false);
+            if (visible && clickable) {
+                await utils.setValueWithWait(c.el, value);
+                console.log(`FIN Consequence: set via ${c.source}`);
+                return true;
+            }
+        }
+        console.log(`FIN Consequence: no visible/clickable input from ${candidates.length} candidate(s)`);
+        return false;
+    }
+
+    private async setFinPofForRow(base: string, value: string, fallbackEls: any): Promise<boolean> {
+        const candidates: any[] = [];
+        if (base) {
+            const dynamicXpath = `//div[@title="FIN POF at Base ${base}"]//input`;
+            console.log(`FIN POF: collecting dynamic xpath -> ${dynamicXpath}`);
+            try {
+                const dynamicEls = await $$(dynamicXpath);
+                for (const el of dynamicEls) candidates.push({ el, source: `dynamic Base ${base}` });
+            } catch { /* ignore */ }
+        }
+        console.log("FIN POF: collecting fallback xpath");
+        try {
+            const resolved = await fallbackEls;
+            if (resolved && typeof (resolved as any)[Symbol.iterator] === "function") {
+                for (const el of resolved) candidates.push({ el, source: "fallback (array)" });
+            } else if (resolved) {
+                candidates.push({ el: resolved, source: "fallback (single)" });
+            }
+        } catch { /* ignore */ }
+
+        for (const c of candidates) {
+            const visible = await c.el.isDisplayed().catch(() => false);
+            const clickable = await c.el.isClickable().catch(() => false);
+            if (visible && clickable) {
+                await utils.setValueWithWait(c.el, value);
+                console.log(`FIN POF: set via ${c.source}`);
+                return true;
+            }
+        }
+        console.log(`FIN POF: no visible/clickable input from ${candidates.length} candidate(s)`);
+        return false;
     }
 
     public async verifyRiskInfoDetails()
@@ -1620,25 +2105,22 @@ class assetRCMDetailView {
         const today = new Date();
 
         const t1 = await this.transitionTextRow1.getText();
-        console.log("Editing Transition " + t1);
+        const base1 = this.extractBaseFromTransition(t1);
+        console.log(`Editing Transition '${t1}' (Base '${base1}')`);
         await utils.setValueWithWait(this.lastTransitionDateRow1, format(today));
         const getRandomRisk1 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
         await utils.setValueWithWait(this.sheRiskDropdownRow1, getRandomRisk1());
         await browser.pause(2000);
         await utils.setValueWithWait(this.finRiskDropdownRow1, getRandomRisk1());
         await browser.pause(2000);
-        await utils.setValueWithWait( this.finConsequenceRow1, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
+        await this.setFinConsequenceForRow(base1, (Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000).toString(), this.finConsequenceRow1);
         await browser.pause(2000);
-        for (const el of await this.finPofRow1) {
-            if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
-                await utils.setValueWithWait(el, (Math.random()).toFixed(2));
-                break;
-            }
-        }
+        await this.setFinPofForRow(base1, (Math.random()).toFixed(2), this.finPofRow1);
         await browser.pause(2000);
 
         const t2 = await this.transitionTextRow2.getText();
-        console.log("Editing Transition " + t2);
+        const base2 = this.extractBaseFromTransition(t2);
+        console.log(`Editing Transition '${t2}' (Base '${base2}')`);
         await utils.setValueWithWait(this.lastTransitionDateRow2, format(today));
         await browser.pause(2000);
         const getRandomRisk2 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
@@ -1646,17 +2128,13 @@ class assetRCMDetailView {
         await browser.pause(2000);
         await utils.setValueWithWait(this.finRiskDropdownRow2, getRandomRisk2());
         await browser.pause(2000);
-        await utils.setValueWithWait(this.finConsequenceRow2, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
+        await this.setFinConsequenceForRow(base2, (Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000).toString(), this.finConsequenceRow2);
         await browser.pause(2000);
-        for (const el of await this.finPofRow2) {
-            if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
-                await utils.setValueWithWait(el, (Math.random()).toFixed(2));
-                break;
-            }
-        }
+        await this.setFinPofForRow(base2, (Math.random()).toFixed(2), this.finPofRow2);
 
         const t3 = await this.transitionTextRow3.getText();
-        console.log("Editing Transition " + t3);
+        const base3 = this.extractBaseFromTransition(t3);
+        console.log(`Editing Transition '${t3}' (Base '${base3}')`);
         await utils.setValueWithWait(this.lastTransitionDateRow3, format(today));
         await browser.pause(2000);
         const getRandomRisk3 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
@@ -1664,17 +2142,13 @@ class assetRCMDetailView {
         await browser.pause(2000);
         await utils.setValueWithWait(this.finRiskDropdownRow3, getRandomRisk3());
         await browser.pause(2000);
-        await utils.setValueWithWait(this.finConsequenceRow3, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
+        await this.setFinConsequenceForRow(base3, (Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000).toString(), this.finConsequenceRow3);
         await browser.pause(2000);
-        for (const el of await this.finPofRow3) {
-            if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
-                await utils.setValueWithWait(el, (Math.random()).toFixed(2));
-                break;
-            }
-        }
+        await this.setFinPofForRow(base3, (Math.random()).toFixed(2), this.finPofRow3);
 
         const t4 = await this.transitionTextRow4.getText();
-        console.log("Editing Transition " + t4);
+        const base4 = this.extractBaseFromTransition(t4);
+        console.log(`Editing Transition '${t4}' (Base '${base4}')`);
         await utils.setValueWithWait(this.lastTransitionDateRow4, format(today));
         await browser.pause(2000);
         const getRandomRisk4 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
@@ -1682,18 +2156,154 @@ class assetRCMDetailView {
         await browser.pause(2000);
         await utils.setValueWithWait(this.finRiskDropdownRow4, getRandomRisk4());
         await browser.pause(2000);
-        await utils.setValueWithWait(this.finConsequenceRow4, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
+        await this.setFinConsequenceForRow(base4, (Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000).toString(), this.finConsequenceRow4);
         await browser.pause(2000);
-        for (const el of await this.finPofRow4) {
-            if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
-                await utils.setValueWithWait(el, (Math.random()).toFixed(2));
-                break;
-            }
-        }
+        await this.setFinPofForRow(base4, (Math.random()).toFixed(2), this.finPofRow4);
 
-        await utils.clickWithWait(this.saveRiskBtn);
+        // try {
+        //     const t5 = await this.transitionTextRow5.getText();
+        //     console.log("Editing Transition " + t5);
+        //     await utils.setValueWithWait(this.lastTransitionDateRow5, format(today));
+        //     await browser.pause(2000);
+        //     const getRandomRisk5 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        //     await utils.setValueWithWait(this.sheRiskDropdownRow5, getRandomRisk5());
+        //     await browser.pause(2000);
+        //     await utils.setValueWithWait(this.finRiskDropdownRow5, getRandomRisk5());
+        //     await browser.pause(2000);
+        //     await utils.setValueWithWait(this.finConsequenceRow5, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
+        //     await browser.pause(2000);
+        //     for (const el of await this.finPofRow5) {
+        //         if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
+        //             await utils.setValueWithWait(el, (Math.random()).toFixed(2));
+        //             break;
+        //         }
+        //     }
+        // } catch (e) {
+        //     console.log("Row 5 not present or not editable: " + (e as Error).message);
+        // }
+
+        console.log("Clicking 'Save' on Risk Information panel toolbar after editing all 4 rows...");
+        const riskInfoSaveSelectors = [
+            "//div[@role='toolbar'][.//span[@dir='auto' and normalize-space()='Risk Information']]//button[.//bdi[normalize-space()='Save']]",
+            "//div[@aria-roledescription='Overflow Toolbar'][.//span[@dir='auto' and normalize-space()='Risk Information']]//button[.//bdi[normalize-space()='Save']]",
+            "//span[@dir='auto' and normalize-space()='Risk Information']/ancestor::div[@role='toolbar' or @aria-roledescription='Overflow Toolbar'][1]//button[.//bdi[normalize-space()='Save']]",
+            "//span[@dir='auto' and normalize-space()='Risk Information']/ancestor::*[.//button[@title='Save' or .//bdi[normalize-space()='Save']]][1]//button[@title='Save' or .//bdi[normalize-space()='Save']]"
+        ];
+        let riskSaveClicked = false;
+        for (const sel of riskInfoSaveSelectors) {
+            const cands = await $$(sel);
+            for (const btn of cands) {
+                if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                    try {
+                        await utils.clickWithWait(btn);
+                        console.log(`Risk Information: clicked Save via ${sel}`);
+                        riskSaveClicked = true;
+                        break;
+                    } catch { /* try next candidate/selector */ }
+                }
+            }
+            if (riskSaveClicked) break;
+        }
+        if (!riskSaveClicked) {
+            console.log("Risk Information: scoped Save not found; falling back to generic saveRiskBtn");
+            await utils.clickWithWait(this.saveRiskBtn);
+        }
         await browser.pause(1500);
         console.log("Handle Risk Information ends");
+    }
+
+    public async verifyTechnicalObjectRiskInfo()
+    {
+        console.log("Reading Risk Information section on Technical Object detail page (read-only)...");
+        try {
+            const titleEls = await $$("//div[@role='heading']//span[contains(text(),'Risk Information')]");
+            for (const el of titleEls) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    console.log(`Risk Information title: '${(await el.getText()).trim()}'`);
+                    break;
+                }
+            }
+        } catch (e) { void e; }
+
+        try {
+            const expandBtn = await $("//span[contains(text(),'Risk Information')]/ancestor::div[.//button[@aria-label='Expand/Collapse']][1]//button[@aria-label='Expand/Collapse']");
+            if (await expandBtn.isDisplayed().catch(() => false)) {
+                const expanded = await expandBtn.getAttribute("aria-expanded").catch(() => "false");
+                if (expanded !== "true") {
+                    await utils.clickWithWait(expandBtn);
+                    await browser.pause(1500);
+                    console.log("Expanded Risk Information panel");
+                } else {
+                    console.log("Risk Information panel already expanded");
+                }
+            } else {
+                console.log("Risk Information expand button not visible; assuming panel already open");
+            }
+        } catch (e) {
+            console.log(`Could not expand Risk Information panel: ${(e as Error).message}`);
+        }
+
+        try {
+            const result = await browser.execute(() => {
+                const norm = (t: string | null | undefined) => (t || "").replace(/\s+/g, " ").trim();
+                const grids = Array.from(document.querySelectorAll<HTMLElement>("[role='treegrid']"));
+                let target: HTMLElement | null = null;
+                for (const g of grids) {
+                    const cc = g.getAttribute("aria-colcount");
+                    if (cc === "26") { target = g; break; }
+                }
+                if (!target) return { headers: [] as string[], rows: [] as Array<{ rowIndex: string, values: Array<{ col: string, text: string }> }> };
+
+                const headerBdis = Array.from(target.querySelectorAll<HTMLElement>("thead td[role='columnheader'] bdi"));
+                const headers = headerBdis.map(b => norm(b.innerText || b.textContent));
+
+                const dataRows = Array.from(target.querySelectorAll<HTMLElement>("tr[role='row']"));
+                const rowMap = new Map<string, Array<{ col: string, text: string }>>();
+                for (const tr of dataRows) {
+                    const rowIdx = tr.getAttribute("aria-rowindex");
+                    if (!rowIdx || rowIdx === "1") continue;
+                    const cells = Array.from(tr.querySelectorAll<HTMLElement>("td[role='gridcell']"));
+                    const values: Array<{ col: string, text: string }> = cells.map(td => ({
+                        col: td.getAttribute("aria-colindex") || "",
+                        text: norm(td.innerText || td.textContent)
+                    }));
+                    const existing = rowMap.get(rowIdx) || [];
+                    rowMap.set(rowIdx, existing.concat(values));
+                }
+                const rows: Array<{ rowIndex: string, values: Array<{ col: string, text: string }> }> = [];
+                for (const [k, v] of rowMap.entries()) {
+                    rows.push({ rowIndex: k, values: v });
+                }
+                rows.sort((a, b) => Number(a.rowIndex) - Number(b.rowIndex));
+                return { headers, rows };
+            });
+
+            if (result && result.headers && result.headers.length) {
+                console.log(`Risk Info headers (${result.headers.length}): [${result.headers.join(" | ")}]`);
+            } else {
+                console.log("Risk Info: could not read headers (table not found)");
+            }
+            if (result && result.rows && result.rows.length) {
+                for (const r of result.rows) {
+                    const parts: string[] = [];
+                    for (const cell of (r.values || [])) {
+                        if (cell.text && cell.text.length > 0) {
+                            const label = result.headers && result.headers[Number(cell.col) - 1]
+                                ? result.headers[Number(cell.col) - 1]
+                                : `col${cell.col}`;
+                            parts.push(`${label}=${cell.text}`);
+                        }
+                    }
+                    if (parts.length > 0) {
+                        console.log(`Risk Info Row ${r.rowIndex}: ${parts.join(" | ")}`);
+                    }
+                }
+            } else {
+                console.log("Risk Info: no data rows found");
+            }
+        } catch (e) {
+            console.log(`Could not read Risk Info rows: ${(e as Error).message}`);
+        }
     }
 
     public async verifyRiskMatrix()
@@ -2309,7 +2919,10 @@ class assetRCMDetailView {
 
     public async downloadSummaryReport() {
         console.log("Downloading Summary Report for RCM...");
-        await (await this.summaryReportBtn).click();
+        const srClicked = await this.clickHeaderActionWithOverflowFallback("Summary Report");
+        if (!srClicked) {
+            throw new AssertionError({ message: "AssertionError: 'Summary Report' button not found (directly or via Additional Options overflow)" });
+        }
         await (await this.downloadReportHeader).waitForDisplayed({ timeout: 20000 });
         if (await (await this.includeAllTechObjText).isDisplayed().catch(() => false)) {
             await (await this.includeAllTechObjText).click();
@@ -2391,11 +3004,10 @@ class assetRCMDetailView {
     {
         console.log("Deleting the RCM...");
         console.log("Deleting :"+assetRCMListView.assetRCMDisplayID);
-        if (await this.headerMoreBtn.isDisplayed().catch(() => false)) {
-            await utils.clickWithWait(this.headerMoreBtn);
-            await browser.pause(1000);
+        const manageClicked = await this.clickHeaderActionWithOverflowFallback("Manage");
+        if (!manageClicked) {
+            throw new AssertionError({ message: "AssertionError: 'Manage' button not found (directly or via Additional Options overflow)" });
         }
-        await utils.clickWithWait(this.manageBtn);
         await browser.pause(1000);
         await browser.keys("ArrowDown");
         await browser.keys("Enter");
@@ -2449,6 +3061,7 @@ class assetRCMDetailView {
         await this.technicalObjectsHeader.waitForDisplayed();
         let assessmentCreated = false;
         let lastFailureReason = "";
+        /*
         for (let i = 2; i <= 81; i++) {
             console.log(`Trying checkbox index: ${i}`);
             await utils.clickWithWait(this.equipmentValueBtn);
@@ -2525,6 +3138,101 @@ class assetRCMDetailView {
                 await utils.clickWithWait(this.removeSelectedToken);
             }
         }
+        */
+
+        // ********** START: TEST-MODE FIXED EQUIPMENT (remove this block and uncomment the original loop above) **********
+        const testEquipmentId = "10000127";
+        console.log(`[TEST MODE] Using fixed Technical Object '${testEquipmentId}' for Create System flow`);
+        await utils.clickWithWait(this.equipmentValueBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(4000);
+
+        const equipmentDialog = $(`(//div[@role='dialog'][.//input[@type='search']])[last()]`);
+        await equipmentDialog.waitForDisplayed({ timeout: 30000, timeoutMsg: "AssertionError: Equipment value help dialog did not open" });
+
+        const dialogSearchInput = $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//input[@type='search']`);
+        await dialogSearchInput.waitForDisplayed({ timeout: 30000 });
+        await dialogSearchInput.clearValue().catch(() => { void 0; });
+        await utils.setValueWithWait(dialogSearchInput, testEquipmentId);
+        console.log(`Searched for equipment: ${testEquipmentId}`);
+
+        const goBtn = $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//button[.//bdi[normalize-space()='Go']]`);
+        await goBtn.waitForClickable({ timeout: 30000, timeoutMsg: "AssertionError: 'Go' button not clickable in Equipment value help dialog" });
+        await utils.clickWithWait(goBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        const targetRow = $(`(//div[@role='dialog'][.//input[@type='search']])[last()]//tr[@role='row' and .//span[normalize-space()="${testEquipmentId}"]]`);
+        await targetRow.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: Equipment row '${testEquipmentId}' not found after Go` });
+        const targetCheckbox = targetRow.$(".//div[@role='checkbox']");
+        await targetCheckbox.waitForClickable({ timeout: 30000, timeoutMsg: `AssertionError: Checkbox for equipment '${testEquipmentId}' not clickable` });
+        await utils.clickWithWait(targetCheckbox);
+        console.log(`Selected equipment row '${testEquipmentId}'`);
+
+        const equipmentName = (await targetRow.$(".//td[@aria-colindex='2']//div[contains(@class,'Text')]/span[last()]").getText().catch(() => "")).trim();
+        this.selectedEquipmentData = {
+            equipmentId: testEquipmentId,
+            equipmentName,
+            category: "",
+            objectType: "",
+            catalogProfile: ""
+        };
+        console.log("Store equipment data (test mode):", this.selectedEquipmentData);
+
+        await utils.clickWithWait(this.confirmBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+        await utils.clickWithWait(this.nextBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        console.log("Switching to 'Create System' tab...");
+        await this.createSystemTab.waitForDisplayed({ timeout: 30000, timeoutMsg: "'Create System' segmented option not visible" });
+        await utils.clickWithWait(this.createSystemTab);
+        await browser.pause(2000);
+        const stamp = Date.now();
+        const systemName = `Auto_System_${stamp}`;
+        const systemDesc = `Automation System Description ${stamp}`;
+        console.log(`Filling System Name='${systemName}', Description='${systemDesc}'`);
+        await this.systemNameInput.waitForDisplayed({ timeout: 30000 });
+        await utils.setValueWithWait(this.systemNameInput, systemName);
+        await utils.setValueWithWait(this.systemDescInput, systemDesc);
+        await utils.clickWithWait(this.createBtnFooter);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(5000);
+        await browser.waitUntil(async () =>
+            (await this.okBtn.isDisplayed().catch(() => false))
+            || (await this.warningMsg.isDisplayed().catch(() => false))
+            || (await this.errorDialogHeader.isDisplayed().catch(() => false)),
+            { timeout: 60000, timeoutMsg: `No Success / Warning / Error popup detected for equipment '${testEquipmentId}' (Create System)` }
+        );
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            console.log(`Assessment created successfully with new system '${systemName}'`);
+            await utils.clickWithWait(this.okBtn);
+            this.systemName = systemName;
+            assessmentCreated = true;
+        } else if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
+            let errMsg = "";
+            try {
+                const bodyEl = $("//header[.//text()='Error']/following::section//span[normalize-space()][1]");
+                if (await bodyEl.isDisplayed().catch(() => false)) {
+                    errMsg = (await bodyEl.getText().catch(() => "")).trim();
+                }
+            } catch (e) { void e; }
+            lastFailureReason = `Error: ${errMsg || "unknown"}`;
+            console.log(`Error dialog displayed ('${errMsg}') in test-mode create system for '${testEquipmentId}'`);
+            if (await this.errorDialogOkBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.errorDialogOkBtn);
+            } else if (await this.genericCloseBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.genericCloseBtn);
+            }
+        } else if (await this.warningMsg.isDisplayed().catch(() => false)) {
+            lastFailureReason = "Warning displayed on Create (Create System)";
+            console.log(`Warning displayed in test-mode create system for '${testEquipmentId}'`);
+            await utils.clickWithWait(this.warningOkBtn);
+        }
+        // ********** END: TEST-MODE FIXED EQUIPMENT (remove this block and uncomment the original loop above) **********
+
         if (!assessmentCreated) {
             throw new AssertionError({ message: `RCM assessment (Create System) could not be created after trying checkbox indexes 2..81. Last failure: ${lastFailureReason || "none captured"}` });
         }
@@ -2786,17 +3494,9 @@ class assetRCMDetailView {
         console.log(`Sub-System detail page shows same Technical Object: '${equipmentName} (${equipmentId})'`);
 
         console.log("Closing Sub-System detail page...");
-        let subSysClosed = false;
-        for (const btn of await this.closeBtn) {
-            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
-                await utils.clickWithWait(btn);
-                await browser.pause(2000);
-                subSysClosed = true;
-                break;
-            }
-        }
+        const subSysClosed = await this.closeTopMostDetailPanel(subSystemName);
         if (!subSysClosed) {
-            console.log("No visible Decline button found to close Sub-System detail page");
+            console.log("No visible panel-Decline button found to close Sub-System detail page");
         } else {
             console.log("Sub-System detail page closed");
         }
@@ -3011,7 +3711,14 @@ class assetRCMDetailView {
         let itemClicked = false;
         try {
             await browser.waitUntil(async () => {
-                const menuItemEls = await $$(`//li[@role='menuitem' and .//span[normalize-space()="${menuText}"]] | //div[@role='menuitem' and .//span[normalize-space()="${menuText}"]] | //span[normalize-space()="${menuText}"]`);
+                const xpath =
+                    `//li[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][normalize-space()="${menuText}"]` +
+                    ` | //div[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][normalize-space()="${menuText}"]` +
+                    ` | //li[@title="${menuText}"]` +
+                    ` | //*[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][.//bdi[normalize-space()="${menuText}"] or .//span[normalize-space()="${menuText}"]]` +
+                    ` | //span[normalize-space()="${menuText}"]` +
+                    ` | //bdi[normalize-space()="${menuText}"]`;
+                const menuItemEls = await $$(xpath);
                 for (const el of menuItemEls) {
                     if (!(await el.isDisplayed().catch(() => false))) continue;
                     try {
@@ -3025,6 +3732,42 @@ class assetRCMDetailView {
                             return true;
                         } catch { /* try next */ }
                     }
+                }
+                const jsClicked = await browser.execute((label: string) => {
+                    const norm = (t: string | null | undefined) => (t || "").replace(/\s+/g, " ").trim();
+                    const visible = (el: HTMLElement) => {
+                        const r = el.getBoundingClientRect();
+                        if (r.width <= 0 || r.height <= 0) return false;
+                        const s = window.getComputedStyle(el);
+                        return s.visibility !== "hidden" && s.display !== "none";
+                    };
+                    const roleSel = "[role='menuitem'],[role='menuitemradio'],[role='menuitemcheckbox']";
+                    const items = Array.from(document.querySelectorAll<HTMLElement>(roleSel));
+                    for (const it of items) {
+                        if (!visible(it)) continue;
+                        if (norm(it.innerText) === label || norm(it.textContent) === label || it.getAttribute("title") === label) {
+                            it.click();
+                            return true;
+                        }
+                    }
+                    const anyLi = Array.from(document.querySelectorAll<HTMLElement>("li"));
+                    for (const li of anyLi) {
+                        if (!visible(li)) continue;
+                        if (norm(li.innerText) === label || norm(li.textContent) === label || li.getAttribute("title") === label) {
+                            li.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                }, menuText);
+                if (jsClicked) {
+                    itemClicked = true;
+                    return true;
+                }
+                if (await assignMenuBtn.isDisplayed().catch(() => false) &&
+                    await assignMenuBtn.isClickable().catch(() => false)) {
+                    try { await utils.clickWithWait(assignMenuBtn); } catch { /* ignore */ }
+                    await browser.pause(1000);
                 }
                 return false;
             }, { timeout: 30000, interval: 1000, timeoutMsg: `AssertionError: '${menuText}' menu item not shown` });
@@ -3119,6 +3862,23 @@ class assetRCMDetailView {
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
             this.maintainableItemFunLoc = true;
+
+            console.log("Closing Functional Failure detail page (no Maintainable Items available; skipping downstream FM steps)...");
+            const ffCloseBtn = $(`//header[@aria-roledescription='Object page header'][.//span[@dir='auto'][normalize-space()="${baseName}"]]//button[@aria-label='Decline']`);
+            if (await ffCloseBtn.isDisplayed().catch(() => false) && await ffCloseBtn.isClickable().catch(() => false)) {
+                await utils.clickWithWait(ffCloseBtn);
+                await browser.pause(2000);
+                console.log("Functional Failure detail page closed");
+            } else {
+                for (const btn of await this.closeBtn) {
+                    if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                        await utils.clickWithWait(btn);
+                        await browser.pause(2000);
+                        console.log("Functional Failure detail page closed (via fallback)");
+                        break;
+                    }
+                }
+            }
         } else {
             const miValue = (await this.maintainableItemValue.getText() || "").trim();
             this.maintainableItemValueFunLoc = miValue;
@@ -3151,23 +3911,65 @@ class assetRCMDetailView {
         const equipmentDisplayText = `${equipmentName} (${equipmentId})`;
 
         console.log(`Expanding equipment row '${equipmentDisplayText}' in hierarchy to verify Maintainable Item '${this.maintainableItemValueFunLoc}'...`);
-        const miSpan = $(`//span[@dir='auto'][normalize-space()="${this.maintainableItemValueFunLoc}"]`);
-        if (!(await miSpan.isDisplayed().catch(() => false))) {
-            const expandChevron = await $(`(//tr[.//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]]//span[@role='button' and @title='Expand/Collapse Node' and @aria-expanded='false'])[1]`);
-            if (await expandChevron.isExisting().catch(() => false)) {
-                await browser.execute((el: HTMLElement) => el.click(), await expandChevron);
-                await browser.pause(2500);
-                console.log(`Clicked expand chevron on equipment row '${equipmentDisplayText}'`);
+        const miSpanXpath = `//span[@dir='auto'][normalize-space()="${this.maintainableItemValueFunLoc}"]`;
+        const miSpanFirst = $(miSpanXpath);
+        if (!(await miSpanFirst.isDisplayed().catch(() => false))) {
+            const chevronXpath =
+                `//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]` +
+                `/ancestor::div[span[@role='button' and @title='Expand/Collapse Node']][1]` +
+                `/span[@role='button' and @title='Expand/Collapse Node']`;
+            const chevron = await $(chevronXpath);
+            if (await chevron.isExisting().catch(() => false)) {
+                let expanded = (await chevron.getAttribute("aria-expanded").catch(() => "false")) || "false";
+                if (expanded !== "true") {
+                    try { await chevron.scrollIntoView({ block: "center" }); } catch { /* ignore */ }
+                    await browser.pause(300);
+                    try {
+                        await utils.clickWithWait(chevron);
+                    } catch {
+                        try { await browser.execute((el: HTMLElement) => el.click(), await chevron); } catch { /* ignore */ }
+                    }
+                    await browser.pause(2000);
+                    expanded = (await chevron.getAttribute("aria-expanded").catch(() => "false")) || "false";
+                    if (expanded !== "true") {
+                        try {
+                            await browser.execute((el: HTMLElement) => {
+                                el.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+                                el.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+                                el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+                            }, await chevron);
+                        } catch { /* ignore */ }
+                        await browser.pause(2000);
+                        expanded = (await chevron.getAttribute("aria-expanded").catch(() => "false")) || "false";
+                    }
+                    console.log(`Chevron aria-expanded after click: '${expanded}'`);
+                } else {
+                    console.log("Equipment row already expanded (aria-expanded='true')");
+                }
             } else {
-                const nodeIcon = await $(`(//tr[.//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]]//span[@aria-label='Node'])[1]`);
+                const nodeIcon = await $(`//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]/ancestor::div[.//span[@aria-label='Node']][1]//span[@aria-label='Node']`);
                 if (await nodeIcon.isExisting().catch(() => false)) {
-                    await browser.execute((el: HTMLElement) => el.click(), await nodeIcon);
+                    try { await utils.clickWithWait(nodeIcon); }
+                    catch { await browser.execute((el: HTMLElement) => el.click(), await nodeIcon); }
                     await browser.pause(2500);
-                    console.log(`Fallback: JS-clicked tree Node icon on equipment row '${equipmentDisplayText}'`);
+                    console.log(`Fallback: clicked tree Node icon on equipment row '${equipmentDisplayText}'`);
                 }
             }
         }
-        await miSpan.waitForDisplayed({ timeout: 60000, timeoutMsg: `AssertionError: Maintainable Item '${this.maintainableItemValueFunLoc}' not visible under equipment '${equipmentDisplayText}' after expand` });
+        let miShown = false;
+        await browser.waitUntil(async () => {
+            const els = await $$(miSpanXpath);
+            for (const el of els) {
+                if (await el.isDisplayed().catch(() => false)) {
+                    miShown = true;
+                    return true;
+                }
+            }
+            return false;
+        }, { timeout: 60000, interval: 1000, timeoutMsg: `AssertionError: Maintainable Item '${this.maintainableItemValueFunLoc}' not visible under equipment '${equipmentDisplayText}' after expand` });
+        if (!miShown) {
+            throw new AssertionError({ message: `AssertionError: Maintainable Item '${this.maintainableItemValueFunLoc}' not visible under equipment '${equipmentDisplayText}' after expand` });
+        }
         console.log(`Maintainable Item '${this.maintainableItemValueFunLoc}' verified under equipment '${equipmentDisplayText}'`);
     }
 
@@ -3210,7 +4012,25 @@ class assetRCMDetailView {
             await utils.clickWithWait(this.cancelBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
-            this.failureModeFunLoc = true;
+            this.failureModeFunLoc = false;
+
+            const ffBaseName = (this.functionalFailureValue || '').split(' (')[0].trim();
+            console.log("Closing Functional Failure detail page (no Failure Modes available; skipping downstream FM detail verification)...");
+            const ffCloseBtn = $(`//header[@aria-roledescription='Object page header'][.//span[@dir='auto'][normalize-space()="${ffBaseName}"]]//button[@aria-label='Decline']`);
+            if (await ffCloseBtn.isDisplayed().catch(() => false) && await ffCloseBtn.isClickable().catch(() => false)) {
+                await utils.clickWithWait(ffCloseBtn);
+                await browser.pause(2000);
+                console.log("Functional Failure detail page closed");
+            } else {
+                for (const btn of await this.closeBtn) {
+                    if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                        await utils.clickWithWait(btn);
+                        await browser.pause(2000);
+                        console.log("Functional Failure detail page closed (via fallback)");
+                        break;
+                    }
+                }
+            }
         } else {
             const fmValue = (await this.failureModeValue.getText() || "").trim();
             this.failureModeValueFunLoc = fmValue;
@@ -3241,10 +4061,46 @@ class assetRCMDetailView {
         const ffBaseName = this.functionalFailureValue.split(' (')[0].trim();
 
         console.log(`Opening Technical Object detail page for '${equipmentDisplayText}' from Functional Failure detail...`);
-        const equipmentRowClick = $(`//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]/ancestor::div[4]`);
-        await utils.clickWithWait(equipmentRowClick);
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(3000);
+        const openTechObjSelectors = [
+            `//tr[@role='row'][.//span[@dir='auto' and normalize-space()="${equipmentDisplayText}"]]//a[normalize-space()="${equipmentDisplayText}" or contains(normalize-space(),"${equipmentId}")]`,
+            `//tr[@role='row'][.//span[@dir='auto' and normalize-space()="${equipmentDisplayText}"]]//span[@role='link']`,
+            `//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]/ancestor::tr[@role='row'][1]//span[@role='link' or @role='button']`,
+            `//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]/ancestor::div[4]`
+        ];
+        let toOpened = false;
+        for (const sel of openTechObjSelectors) {
+            const candidates = await $$(sel);
+            for (const cand of candidates) {
+                if (!(await cand.isDisplayed().catch(() => false))) continue;
+                try {
+                    await cand.scrollIntoView({ block: "center" });
+                } catch { /* ignore */ }
+                try {
+                    await utils.clickWithWait(cand);
+                } catch {
+                    try { await browser.execute((el: HTMLElement) => el.click(), await cand); } catch { /* ignore */ }
+                }
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2500);
+                const headerVisible = await browser.waitUntil(async () => {
+                    for (const el of await this.headerTechnicalObjectName(equipmentName)) {
+                        if (await el.isDisplayed().catch(() => false)) return true;
+                    }
+                    return false;
+                }, { timeout: 15000, interval: 500 }).then(() => true).catch(() => false);
+                if (headerVisible) {
+                    toOpened = true;
+                    console.log(`Technical Object detail page opened via selector: ${sel}`);
+                    break;
+                }
+                console.log(`Click on candidate did not open TO detail; trying next candidate/selector`);
+            }
+            if (toOpened) break;
+        }
+        if (!toOpened) {
+            throw new AssertionError({ message: `AssertionError: Could not open Technical Object detail page for '${equipmentDisplayText}' from Functional Failure detail (row click did not navigate)` });
+        }
+        await browser.pause(1500);
 
         console.log(`Verifying Technical Object detail page header shows '${equipmentName}'...`);
         let nameFound = false;
@@ -3290,20 +4146,45 @@ class assetRCMDetailView {
             }
         } catch (e) { void e; }
 
-        console.log("Verifying and editing Risk Information section on Technical Object detail page (reusing verifyRiskInfoDetails)...");
+        console.log("Verifying Risk Information section on Technical Object detail page (read-only)...");
         try {
-            await this.verifyRiskInfoDetails();
+            await this.verifyTechnicalObjectRiskInfo();
         } catch (e) {
-            console.log(`Risk Information edit encountered an issue: ${(e as Error).message}`);
+            console.log(`Risk Information (Technical Object) read encountered an issue: ${(e as Error).message}`);
         }
 
         console.log("Verifying Maintenance and Service section on Technical Object detail page...");
+        let msClicked = false;
         for (const el of await this.maintenanceServiceSections) {
-            if ((await el.isDisplayed().catch(() => false)) && (await el.isClickable().catch(() => false))) {
+            if (!(await el.isDisplayed().catch(() => false))) continue;
+            try { await el.scrollIntoView({ block: "center" }); } catch { /* ignore */ }
+            await browser.pause(300);
+            try {
                 await utils.clickWithWait(el);
+                msClicked = true;
+            } catch {
+                try {
+                    await browser.execute((n: HTMLElement) => n.click(), await el);
+                    msClicked = true;
+                } catch { /* try next */ }
+            }
+            if (msClicked) {
                 await utils.waitForBusyIndicatorToDisappear();
-                await browser.pause(2000);
+                await browser.pause(2500);
                 break;
+            }
+        }
+        if (!msClicked) {
+            console.log("Maintenance and Service tab not clickable on Technical Object detail page; skipping counts");
+        } else {
+            const msReady = await browser.waitUntil(async () =>
+                (await this.maintenanceNotifText.isDisplayed().catch(() => false))
+                || (await this.maintenanceOrdersText.isDisplayed().catch(() => false))
+                || (await this.maintenancePlansText.isDisplayed().catch(() => false)),
+                { timeout: 30000, interval: 1000 }
+            ).then(() => true).catch(() => false);
+            if (!msReady) {
+                console.log("Maintenance and Service content did not render within 30s on Technical Object detail page");
             }
         }
         try {
@@ -3447,32 +4328,45 @@ class assetRCMDetailView {
             }
         }
         if (fmStillOpen) {
-            const fmCloseBtn = $(`//header[@aria-roledescription='Object page header'][.//span[@dir='auto'][normalize-space()="${baseName}"]]//button[@aria-label='Decline']`);
-            if (await fmCloseBtn.isDisplayed().catch(() => false) && await fmCloseBtn.isClickable().catch(() => false)) {
-                await utils.clickWithWait(fmCloseBtn);
-                await browser.pause(2000);
+            const fmClosed = await this.closeTopMostDetailPanel(baseName);
+            if (fmClosed) {
                 console.log("Failure Mode detail page closed");
+            } else {
+                console.log("WARNING: Failure Mode detail panel-Decline not found");
             }
         } else {
             console.log("Failure Mode detail already closed (likely by verifyRiskMatrix)");
         }
 
         const ffBase = (this.functionalFailureValue || '').split(' (')[0].trim();
-        console.log("Closing Functional Failure detail page...");
-        const ffCloseBtn = $(`//header[@aria-roledescription='Object page header'][.//span[@dir='auto'][normalize-space()="${ffBase}"]]//button[@aria-label='Decline']`);
-        if (await ffCloseBtn.isDisplayed().catch(() => false) && await ffCloseBtn.isClickable().catch(() => false)) {
-            await utils.clickWithWait(ffCloseBtn);
-            await browser.pause(2000);
-            console.log("Functional Failure detail page closed");
-        } else {
-            for (const btn of await this.closeBtn) {
-                if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
-                    await utils.clickWithWait(btn);
-                    await browser.pause(2000);
-                    console.log("Functional Failure detail page closed (via fallback)");
-                    break;
-                }
+        console.log(`Closing Functional Failure detail page (title='${ffBase}')...`);
+        const ffTitleXpath = `//*[self::span or self::bdi or self::div or self::h1 or self::h2][normalize-space()="${ffBase}"]`;
+        let ffClosed = false;
+        for (let attempt = 1; attempt <= 3 && !ffClosed; attempt++) {
+            const clicked = await this.closeTopMostDetailPanel(ffBase);
+            if (!clicked) {
+                console.log(`Attempt ${attempt}: no panel-Decline candidate matched Functional Failure`);
+                await browser.pause(1000);
+                continue;
             }
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+            const gone = await browser.waitUntil(async () => {
+                const titleEls = await $$(ffTitleXpath);
+                for (const t of titleEls) {
+                    if (await t.isDisplayed().catch(() => false)) return false;
+                }
+                return true;
+            }, { timeout: 8000, interval: 500 }).then(() => true).catch(() => false);
+            if (gone) {
+                ffClosed = true;
+                console.log(`Functional Failure detail page closed (attempt ${attempt})`);
+            } else {
+                console.log(`Attempt ${attempt}: FF title still visible after Decline click; retrying`);
+            }
+        }
+        if (!ffClosed) {
+            console.log(`WARNING: Functional Failure detail page still visible after close attempts (title='${ffBase}')`);
         }
 
         if (sectionFailures.length > 0) {
@@ -3485,7 +4379,10 @@ class assetRCMDetailView {
             throw new AssertionError({ message: "AssertionError: systemName not set - create-system flow must run first" });
         }
         console.log("Downloading Summary Report for Create-System RCM flow...");
-        await (await this.summaryReportBtn).click();
+        const srClicked = await this.clickHeaderActionWithOverflowFallback("Summary Report");
+        if (!srClicked) {
+            throw new AssertionError({ message: "AssertionError: 'Summary Report' button not found (directly or via Additional Options overflow)" });
+        }
         await (await this.downloadReportHeader).waitForDisplayed({ timeout: 20000 });
         if (await (await this.includeAllTechObjText).isDisplayed().catch(() => false)) {
             await (await this.includeAllTechObjText).click();
@@ -3547,6 +4444,60 @@ class assetRCMDetailView {
         verifyValue("functionalFailureValue", this.functionalFailureValue);
         verifyValue("maintainableItemValueFunLoc", this.maintainableItemValueFunLoc);
         verifyValue("failureModeValueFunLoc", this.failureModeValueFunLoc);
+
+        for (const fe of this.failureEffectsCaptured || []) {
+            if (fe.name) verifyValue("failureEffect.name", fe.name);
+            if (fe.codeId) verifyValue("failureEffect.codeId", fe.codeId);
+        }
+        for (const fm of this.failureMechanismsCaptured || []) {
+            if (fm.name) verifyValue("failureMechanism.name", fm.name);
+            if (fm.codeId) verifyValue("failureMechanism.codeId", fm.codeId);
+        }
+        for (const fc of this.failureCausesCaptured || []) {
+            if (fc.name) verifyValue("failureCause.name", fc.name);
+            if (fc.codeId) verifyValue("failureCause.codeId", fc.codeId);
+        }
+        if (this.failureScenarioTextCaptured) {
+            verifyValue("failureScenario.description", this.failureScenarioTextCaptured);
+        }
+        if (this.consequenceEvaluationCaptured) {
+            if (this.consequenceEvaluationCaptured.typeOfFailure) verifyValue("consequenceEvaluation.typeOfFailure", this.consequenceEvaluationCaptured.typeOfFailure);
+            if (this.consequenceEvaluationCaptured.failurePattern) verifyValue("consequenceEvaluation.failurePattern", this.consequenceEvaluationCaptured.failurePattern);
+            if (this.consequenceEvaluationCaptured.safeLife) {
+                const safeLifeCore = this.consequenceEvaluationCaptured.safeLife.replace(/\s*\(\d+\)\s*$/, "").trim();
+                if (safeLifeCore) verifyValue("consequenceEvaluation.safeLife", safeLifeCore);
+            }
+            if (this.consequenceEvaluationCaptured.pfInterval) {
+                const pfCore = this.consequenceEvaluationCaptured.pfInterval.replace(/\s*\(\d+\)\s*$/, "").trim();
+                if (pfCore) verifyValue("consequenceEvaluation.pfInterval", pfCore);
+            }
+        }
+
+        for (const cs of this.failureStrategiesCaptured || []) {
+            const tag = (cs.description || "captured-strategy").toString();
+            if (cs.description) verifyValue(`strategyCaptured[${tag}].description`, cs.description);
+            if (cs.longDescription) verifyValue(`strategyCaptured[${tag}].longDescription`, cs.longDescription);
+            if (cs.mda) verifyValue(`strategyCaptured[${tag}].mda`, cs.mda);
+            if (cs.type) verifyValue(`strategyCaptured[${tag}].type`, cs.type);
+            if (cs.startDate) verifyValue(`strategyCaptured[${tag}].startDate`, cs.startDate);
+            if (cs.sheRiskAtDueDate) verifyValue(`strategyCaptured[${tag}].sheRiskAtDueDate`, cs.sheRiskAtDueDate);
+            if (cs.finRiskAtDueDate) verifyValue(`strategyCaptured[${tag}].finRiskAtDueDate`, cs.finRiskAtDueDate);
+            if (cs.sheMRAtDueDate) verifyValue(`strategyCaptured[${tag}].sheMRAtDueDate`, cs.sheMRAtDueDate);
+            if (cs.finMRAtDueDate) verifyValue(`strategyCaptured[${tag}].finMRAtDueDate`, cs.finMRAtDueDate);
+            if (cs.finPof) verifyValue(`strategyCaptured[${tag}].finPof`, cs.finPof);
+            if (cs.mitigatedFinPof) verifyValue(`strategyCaptured[${tag}].mitigatedFinPof`, cs.mitigatedFinPof);
+            if (cs.inspectionType) verifyValue(`strategyCaptured[${tag}].inspectionType`, cs.inspectionType);
+        }
+
+        for (const ri of this.riskInformationCaptured || []) {
+            const tag = (ri.transition || "riskRow").toString();
+            if (ri.transition) verifyValue(`riskInfo[${tag}].transition`, ri.transition);
+            if (ri.lastTransitionDate) verifyValue(`riskInfo[${tag}].lastTransitionDate`, ri.lastTransitionDate);
+            if (ri.sheRisk) verifyValue(`riskInfo[${tag}].sheRisk`, ri.sheRisk);
+            if (ri.finRisk) verifyValue(`riskInfo[${tag}].finRisk`, ri.finRisk);
+            if (ri.finConsequence) verifyValue(`riskInfo[${tag}].finConsequence`, ri.finConsequence);
+            if (ri.finPof) verifyValue(`riskInfo[${tag}].finPof`, ri.finPof);
+        }
 
         if (failures.length > 0) {
             console.log("\n===== CREATE-SYSTEM PDF VALIDATION FAILURES =====");

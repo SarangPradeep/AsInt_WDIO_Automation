@@ -25,7 +25,7 @@ class Utils {
     private get mspIframe() { return $('iframe[data-help-id="application-msp-manage"]'); }
     private get reccWorkbenchIframe() { return $('iframe[data-help-id="application-recommendationworkbenchplus-manage"]'); }
     private get attachSuccMsg() { return $("//span[text()='Success']"); }
-    private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]]'); }
+    private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]] | //button[.//bdi[text()="Attachment"]]'); }
     private get homeBtn() { return $('//li[@role="menuitem"]'); }
     private get navigationBtn() { return $('//div[@title="Navigation menu"]'); }
 
