@@ -83,7 +83,7 @@ class RecommendationWorkbenchListView {
                 }
                 if (attempt === 2) {
                     throw new AssertionError({ message: 
-                        `Recommendation creation failed twice. Last error: ${lastError}. Aborting recommendation_workbench spec.`
+                        `AssertionError: Recommendation creation failed twice. Last error: ${lastError}. Aborting recommendation_workbench spec.`
                      });
                 }
                 console.log("Retrying recommendation creation...");

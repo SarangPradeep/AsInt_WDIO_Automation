@@ -143,7 +143,7 @@ class MSPListView {
                 console.log("Create MSP dialog still displayed after click — retrying");
             }
             if (!dialogClosed && !(await this.errorDialog.isDisplayed().catch(() => false))) {
-                throw new AssertionError({ message: "Create MSP dialog did not close after clicking footer Create button" });
+                throw new AssertionError({ message: "AssertionError: Create MSP dialog did not close after clicking footer Create button" });
             }
             await browser.pause(1000);
 
@@ -289,7 +289,7 @@ class MSPListView {
         }, { timeout: 30000 });
 
         if (!searchBox) {
-            throw new AssertionError({ message: "Visible search box not found" });
+            throw new AssertionError({ message: "AssertionError: Visible search box not found" });
         }
         console.log("Visible search box found, searching for deleted Functional Location");
         await browser.execute((el, value) => {
@@ -318,7 +318,7 @@ class MSPListView {
             timeoutMsg: "Go button not found"
         });
         if (!goBtn) {
-            throw new AssertionError({ message: "Go button not found" });
+            throw new AssertionError({ message: "AssertionError: Go button not found" });
         }
 
         console.log("Clicking Go button to search for MSP");
@@ -352,7 +352,7 @@ class MSPListView {
 
         const rowFound = (await $$(matchingRow).length) > 0;
         if (!rowFound) {
-            throw new AssertionError({ message: `MSP Item '${shortDesc}' not found in the list view after search` });
+            throw new AssertionError({ message: `AssertionError: MSP Item '${shortDesc}' not found in the list view after search` });
         }
         console.log(`MSP Item '${shortDesc}' found in the list view`);
     }
@@ -540,7 +540,7 @@ class MSPListView {
 
         const snapshots = MSPDetailView.bulkSnapshots;
         if (!snapshots.length) {
-            throw new AssertionError({ message: "No bulkSnapshots captured; nothing to select" });
+            throw new AssertionError({ message: "AssertionError: No bulkSnapshots captured; nothing to select" });
         }
 
         for (const snap of snapshots) {
@@ -610,7 +610,7 @@ class MSPListView {
             return "";
         }) as string;
         if (!picked) {
-            throw new AssertionError({ message: "No safe Process Sub-Stage option found" });
+            throw new AssertionError({ message: "AssertionError: No safe Process Sub-Stage option found" });
         }
         return picked;
     }
@@ -698,11 +698,11 @@ class MSPListView {
         console.log("\n=== Verifying Bulk Update applied to each MSP item ===");
         const expected = MSPDetailView.bulkUpdateValues;
         if (!expected) {
-            throw new AssertionError({ message: "No bulkUpdateValues stored; run fillAndSaveBulkUpdate first" });
+            throw new AssertionError({ message: "AssertionError: No bulkUpdateValues stored; run fillAndSaveBulkUpdate first" });
         }
         const snapshots = MSPDetailView.bulkSnapshots;
         if (!snapshots.length) {
-            throw new AssertionError({ message: "No bulkSnapshots captured; nothing to verify" });
+            throw new AssertionError({ message: "AssertionError: No bulkSnapshots captured; nothing to verify" });
         }
 
         const norm = (s: string) => (s || "").trim().toLowerCase();
@@ -774,7 +774,7 @@ class MSPListView {
                 );
             }
             throw new AssertionError({ message: 
-                `Bulk update verification failed: ${mismatches.length} mismatch(es). ` +
+                `AssertionError: Bulk update verification failed: ${mismatches.length} mismatch(es). ` +
                 mismatches.map(m => `${m.displayId}/${m.field}`).join(", ")
              });
         }

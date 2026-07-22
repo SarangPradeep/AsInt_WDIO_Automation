@@ -305,7 +305,7 @@ class maintenance_detail_view{
         const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
         const finLine=lines.find(l=>l.includes(finValue));
         if(!finLine){
-            throw new AssertionError({ message: `FIN POF mismatch. Expected: ${finValue}, Found: ${finLine}` });
+            throw new AssertionError({ message: `AssertionError: FIN POF mismatch. Expected: ${finValue}, Found: ${finLine}` });
         }
         console.log("Validating FIN Risk Change History end");
     }
@@ -341,7 +341,7 @@ class maintenance_detail_view{
             console.log("Funding Status :",fundingStatus);
             const normalizedStatus = fundingStatus?.trim().replace(/\s+/g, " ");
             if (normalizedStatus !== "Ready for Funding") {
-                throw new AssertionError({ message: `Funding Status validation failed. Found: ${normalizedStatus}` });
+                throw new AssertionError({ message: `AssertionError: Funding Status validation failed. Found: ${normalizedStatus}` });
             }
             console.log("Funding Status validation passed");
         }
@@ -379,7 +379,7 @@ class maintenance_detail_view{
             console.log("Funding Status :",fundingStatus);
             const normalizedStatus = fundingStatus?.trim().replace(/\s+/g, " ");
             if (normalizedStatus !== "Planning") {
-                throw new AssertionError({ message: `Funding Status validation failed. Found: ${normalizedStatus}` });
+                throw new AssertionError({ message: `AssertionError: Funding Status validation failed. Found: ${normalizedStatus}` });
             }
             console.log("Funding Status validation passed");
             console.log("Status changed to Planning");
@@ -419,7 +419,7 @@ class maintenance_detail_view{
             console.log("Funding Status :",fundingStatus);
             const normalizedStatus = fundingStatus?.trim().replace(/\s+/g, " ");
             if (normalizedStatus !== "Deferred") {
-                throw new AssertionError({ message: `Funding Status validation failed. Found: ${normalizedStatus}` });
+                throw new AssertionError({ message: `AssertionError: Funding Status validation failed. Found: ${normalizedStatus}` });
             }
             console.log("Funding Status validation passed");
             console.log("Status changed to Deferred");
@@ -750,7 +750,7 @@ class maintenance_detail_view{
         const current = await this.readFundingStatus();
         console.log(`  Funding Status after step: '${current}'`);
         if (current.toLowerCase() !== label.toLowerCase()) {
-            throw new AssertionError({ message: `Status step failed. Expected: '${label}', Found: '${current}'` });
+            throw new AssertionError({ message: `AssertionError: Status step failed. Expected: '${label}', Found: '${current}'` });
         }
     }
 
@@ -780,7 +780,7 @@ class maintenance_detail_view{
                 steps.push("Ready for Funding", "Funded");
                 break;
             default:
-                throw new AssertionError({ message: `Status transition for '${target}' is not yet defined` });
+                throw new AssertionError({ message: `AssertionError: Status transition for '${target}' is not yet defined` });
         }
 
         for (const step of steps) {
@@ -789,7 +789,7 @@ class maintenance_detail_view{
 
         const final = await this.readFundingStatus();
         if (final.toLowerCase() !== target.toLowerCase()) {
-            throw new AssertionError({ message: `Final status mismatch. Expected: '${target}', Found: '${final}'` });
+            throw new AssertionError({ message: `AssertionError: Final status mismatch. Expected: '${target}', Found: '${final}'` });
         }
         console.log(`Status successfully changed to '${target}'`);
     }
