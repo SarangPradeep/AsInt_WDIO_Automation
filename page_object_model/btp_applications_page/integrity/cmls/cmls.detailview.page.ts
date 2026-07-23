@@ -563,13 +563,71 @@ class CML_Detail_Page{
             console.log("Calculate button not available on Background (FunLoc) -> skipping calculation.");
         }
 
-        await utils.clickWithWait(this.saveBtn);
-        await utils.waitForBusyIndicatorToDisappear();
-        try { await utils.clickSuccessOkButton(); } catch (e) { void e; }
-        if (await anyOkBtn.isDisplayed().catch(() => false)) {
-            await utils.clickWithWait(anyOkBtn);
-        }
+        await this.clickSaveWithBulkCalcRetry("Background (FunLoc / IDMS_PIPE)", anyOkBtn, bulkCalcInfoHeader, bulkCalcInfoBody);
         console.log("Background section (FunLoc / IDMS_PIPE) saved successfully");
+    }
+
+    private async clickSaveWithBulkCalcRetry(context: string, anyOkBtn: any, bulkCalcInfoHeader: any, bulkCalcInfoBody: any): Promise<void> {
+        const dismissBulkInfoIfPresent = async (): Promise<boolean> => {
+            const shown = (await bulkCalcInfoHeader.isDisplayed().catch(() => false))
+                || (await bulkCalcInfoBody.isDisplayed().catch(() => false));
+            if (!shown) return false;
+            console.log(`'Bulk Calculation of CMLs has been initiated' Information popup detected in ${context}; clicking OK.`);
+            if (await anyOkBtn.isDisplayed().catch(() => false)) {
+                try { await utils.clickWithWait(anyOkBtn); } catch (e) { console.log(`Failed to click Information OK for ${context}: ${(e as Error).message}`); }
+            } else {
+                try { await utils.clickInformationOkButton(); } catch (e) { console.log(`clickInformationOkButton fallback failed for ${context}: ${(e as Error).message}`); }
+            }
+            await utils.waitForBusyIndicatorToDisappear();
+            return true;
+        };
+
+        const trySave = async (): Promise<boolean> => {
+            try {
+                await utils.clickWithWait(this.saveBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                try { await utils.clickSuccessOkButton(); } catch (e) { void e; }
+                if (await anyOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(anyOkBtn);
+                }
+                return true;
+            } catch (err) {
+                console.log(`Save click failed in ${context}: ${(err as Error).message}`);
+                return false;
+            }
+        };
+
+        await dismissBulkInfoIfPresent();
+
+        if (await trySave()) return;
+
+        const dismissed = await dismissBulkInfoIfPresent();
+        if (!dismissed) {
+            throw new AssertionError({ message: `AssertionError: Save button was not clickable in ${context} and no 'Bulk Calculation of CMLs' Information popup was present to dismiss.` });
+        }
+        console.log(`Waiting 60s for backend Bulk Calculation to complete before retrying Save in ${context}...`);
+        await browser.pause(60000);
+
+        if (await trySave()) {
+            if (await this.calculateBtn.isDisplayed().catch(() => false)
+                && await this.calculateBtn.isClickable().catch(() => false)) {
+                console.log(`Save succeeded after Information-popup retry in ${context}; clicking Calculate to re-run calculation.`);
+                await utils.clickWithWait(this.calculateBtn, 1500);
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+                try { await utils.clickSuccessOkButton(); } catch (e) { void e; }
+                if (await anyOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(anyOkBtn);
+                }
+            } else {
+                console.log(`Save succeeded after Information-popup retry in ${context}; Calculate button not available, continuing.`);
+            }
+            return;
+        }
+
+        const stillShown = (await bulkCalcInfoHeader.isDisplayed().catch(() => false))
+            || (await bulkCalcInfoBody.isDisplayed().catch(() => false));
+        throw new AssertionError({ message: `AssertionError: Save failed twice in ${context}. Bulk Calculation Information popup still shown = ${stillShown}. Aborting.` });
     }
 
     public async editVerifyPressureTminSectionFunLoc()

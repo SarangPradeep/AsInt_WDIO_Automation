@@ -31,7 +31,7 @@ class CML_ListView_Page {
     private get gridDescInputs() { return $$("//span[text()='Description']/following::td[@aria-colindex='2']//input"); }
     private get createCML() { return $("//footer//button[.//text()='Create']"); }
     private get okBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
-    private get cmlSummaryHeader() { return $("//h2[.//text()='CML Summary']"); }
+    private get cmlSummaryHeader() { return $("//div[normalize-space(text())='CML Summary']"); }
 
     public selectedEquipment: string = "";
     public selectedEquTemplate: string = "";
