@@ -290,24 +290,62 @@ class assetRCMDetailView {
         await utils.setValueWithWait(this.systemBoundaryDescTextArea,"System Bounday Description");
         await utils.setValueWithWait(this.operatingContextTextArea,"Operating context");
         await utils.clickWithWait(this.saveGeneralInfoBtn);
-        await utils.clickWithWait(this.okBtn);
+        await this.acknowledgeSaveDialogOrFail("General Information");
         await browser.pause(5000);
         await assetRCMListView.verifyHeader();
         console.log("Verification and editing of Information tab done");
         console.log("Verifying if header value changed or not, after changing the description");
     }
 
+    private async acknowledgeSaveDialogOrFail(context: string, timeoutMs: number = 75000): Promise<void> {
+        const errorHeader = "//header[.//text()='Error']";
+        const errorOkBtn = $(`${errorHeader}/following::button[.//bdi[normalize-space()='OK']]`);
+        const errorCloseBtn = $(`${errorHeader}/following::button[.//bdi[normalize-space()='Close']]`);
+        const errorMsgEl = $(`${errorHeader}/following::*[self::span or self::p or self::bdi][normalize-space(text())][1]`);
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+            const successVisible = await this.okBtn.isDisplayed().catch(() => false);
+            if (successVisible) {
+                await utils.clickWithWait(this.okBtn);
+                return;
+            }
+            const errorOkVisible = await errorOkBtn.isDisplayed().catch(() => false);
+            const errorCloseVisible = await errorCloseBtn.isDisplayed().catch(() => false);
+            if (errorOkVisible || errorCloseVisible) {
+                let errorText = "Unknown error";
+                try {
+                    const t = (await errorMsgEl.getText()).trim();
+                    if (t) errorText = t;
+                } catch (readErr) {
+                    console.log(`Could not read Error dialog message: ${(readErr as Error).message}`);
+                }
+                try {
+                    if (errorCloseVisible) {
+                        await utils.clickWithWait(errorCloseBtn);
+                    } else {
+                        await utils.clickWithWait(errorOkBtn);
+                    }
+                } catch (dismissErr) {
+                    console.log(`Warning: failed to dismiss Error dialog for ${context}: ${(dismissErr as Error).message}`);
+                }
+                throw new AssertionError({ message: `AssertionError: ${context} Save failed - server returned Error dialog: "${errorText}"` });
+            }
+            await browser.pause(1000);
+        }
+        throw new AssertionError({ message: `AssertionError: Neither Success nor Error dialog appeared after saving ${context} within ${timeoutMs}ms` });
+    }
+
     public async verifyAndEditPlanningData()
     {
         console.log("Editing planning section...");
         await utils.clickWithWait(this.editPlanData);
-        const getFutureDate = (days:number)=> new Date(Date.now()+days*86400000)
+        const getRelativeDate = (daysOffset:number)=> new Date(Date.now()+daysOffset*86400000)
         .toLocaleDateString("en-US",{month:"short",day:"2-digit",year:"numeric"});
-        await utils.setValueWithWait(this.lastReviewDateInput, getFutureDate(1));
-        await utils.setValueWithWait(this.nextReviewDateInput, getFutureDate(5));
-        await utils.setValueWithWait(this.plannedReviewDateInput, getFutureDate(6));
-        await utils.setValueWithWait(this.secondTADateInput, getFutureDate(8));
-        await utils.setValueWithWait(this.nextTADateInput, getFutureDate(7));
+        await utils.setValueWithWait(this.lastReviewDateInput, getRelativeDate(-1));
+        await utils.setValueWithWait(this.nextReviewDateInput, getRelativeDate(5));
+        await utils.setValueWithWait(this.plannedReviewDateInput, getRelativeDate(6));
+        await utils.setValueWithWait(this.secondTADateInput, getRelativeDate(8));
+        await utils.setValueWithWait(this.nextTADateInput, getRelativeDate(7));
         await utils.clickWithWait(this.savePlanDataBtn);
         await utils.clickWithWait(this.okBtn);
         await browser.pause(2500);

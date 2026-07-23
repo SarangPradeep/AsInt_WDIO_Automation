@@ -151,15 +151,65 @@ class Utils {
         await el.waitForDisplayed({ timeout });
         await this.scrollIntoViewIfNeeded(el);
 
+        const isInvalidStateErr = (e: any) =>
+            /invalid element state/i.test(((e as Error)?.message) || String(e));
+
+        const safeClear = async () => {
+            try {
+                const tag = (await el.getTagName().catch(() => "")).toLowerCase();
+                const readonly = await el.getAttribute("readonly").catch(() => null);
+                const ariaReadonly = await el.getAttribute("aria-readonly").catch(() => null);
+                const disabled = await el.getAttribute("disabled").catch(() => null);
+                const isResettable = tag === "input" || tag === "textarea";
+                if (!isResettable || readonly !== null || ariaReadonly === "true" || disabled !== null) {
+                    console.log(`setValueWithWait: skipping clearValue (tag='${tag}' readonly='${readonly}' aria-readonly='${ariaReadonly}' disabled='${disabled}')`);
+                    return;
+                }
+                await el.clearValue();
+            } catch (clearErr) {
+                if (isInvalidStateErr(clearErr)) {
+                    console.log(`setValueWithWait: clearValue threw 'invalid element state' → falling back to keyboard clear`);
+                    try {
+                        await el.click().catch(() => { /* ignore */ });
+                        await browser.keys(["Control", "a"]);
+                        await browser.keys("Delete");
+                    } catch (kbErr) {
+                        console.log(`setValueWithWait: keyboard clear also failed: ${(kbErr as Error).message}`);
+                    }
+                } else {
+                    throw clearErr;
+                }
+            }
+        };
+
+        const safeSetValue = async () => {
+            try {
+                await el.setValue(value);
+            } catch (setErr) {
+                if (isInvalidStateErr(setErr)) {
+                    console.log(`setValueWithWait: setValue threw 'invalid element state' → falling back to addValue`);
+                    try {
+                        await el.addValue(value);
+                    } catch (addErr) {
+                        console.log(`setValueWithWait: addValue also failed: ${(addErr as Error).message}`);
+                        throw addErr;
+                    }
+                } else {
+                    throw setErr;
+                }
+            }
+        };
+
         try {
             await el.click();
-            await el.clearValue();
-            await el.setValue(value);
-        } catch {
+            await safeClear();
+            await safeSetValue();
+        } catch (firstErr) {
+            console.log(`setValueWithWait: first attempt failed (${(firstErr as Error).message}) → retrying after scroll`);
             await browser.pause(1000);
             await this.scrollIntoViewIfNeeded(el);
-            await el.clearValue();
-            await el.setValue(value);
+            await safeClear();
+            await safeSetValue();
         }
         await browser.keys("Enter");
         await browser.keys("Tab");
@@ -1709,8 +1759,8 @@ async addAllAdaptFilter(): Promise<void> {
         await this.attachmentsSection.click();
         await this.waitForBusyIndicatorToDisappear();
         await browser.pause(4000);
-        const addAttachmentBtn = await $('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
-        const addAttachmentBtn2 = await $('//header[.//bdi[text()="Attachments"]]/following::bdi[text()="Assign"]');
+        const addAttachmentBtn = await $('//section[.//bdi[text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Assign"]');
+        const addAttachmentBtn2 = await $('//header[.//bdi[text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Assign"]');
         if(await addAttachmentBtn.isExisting()){
             await this.clickWithWait(addAttachmentBtn,2000);
         }
@@ -1763,7 +1813,7 @@ async addAllAdaptFilter(): Promise<void> {
             return;
         }
         console.log("All attachments selected for deletion");
-        await this.clickWithWait($('//section[.//bdi[text()="Attachments"]]/following::bdi[text()="Delete"]/ancestor::button'),1000);
+        await this.clickWithWait($('//section[.//bdi[text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Delete"]/ancestor::button'),1000);
         await this.waitForBusyIndicatorToDisappear();
         await this.clickWithWait($('//button[.//bdi[text()="Yes"]]'),1000);
         await this.waitForBusyIndicatorToDisappear();
