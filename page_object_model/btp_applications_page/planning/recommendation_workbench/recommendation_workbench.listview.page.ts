@@ -23,10 +23,10 @@ class RecommendationWorkbenchListView {
     private get errorDialog() { return $("//header[.//text()='Error']"); }
     private get errorOkBtn() { return $("//header[.//text()='Error']/following::button[.//bdi[text()='OK']]"); }
     private get cancelCreateBtn() { return $("//header[.//text()='Create Recommendation']/following::button[.//bdi[text()='Cancel']]"); }
-    private get reccWorkShortDescInput(){return $("//label[.//text()='Short Description']/following::input[1]");}
-    private get reccWorkLongDescInput(){return $("//label[.//text()='Long Description']/following::textarea[1]");}
+    private get reccWorkShortDescInput(){return $("//div[@role='dialog'][.//*[normalize-space()='Create Recommendation']]//label[.//text()='Short Description']/following::*[self::input or self::textarea][1]");}
+    private get reccWorkLongDescInput(){return $("//div[@role='dialog'][.//*[normalize-space()='Create Recommendation']]//label[.//text()='Long Description']/following::textarea[1]");}
     private get convertMSPDialog() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]"); }
-    private get convertMSPShortDescInput() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//label[.//text()='Short Description']/following::input[1]"); }
+    private get convertMSPShortDescInput() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//label[.//text()='Short Description']/following::*[self::input or self::textarea][1]"); }
     private get convertMSPLongDescInput() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//label[.//text()='Long Description']/following::textarea[1]"); }
     private get convertBtn() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//button[.//bdi[normalize-space()='Convert']]"); }
     private get convertMSPCancelBtn() { return $("//div[@role='dialog'][.//*[normalize-space()='Convert To MSP Item']]//button[.//bdi[normalize-space()='Cancel']]"); }
@@ -94,6 +94,9 @@ class RecommendationWorkbenchListView {
             if (await this.okBtn.isDisplayed().catch(() => false)) {
                 await this.okBtn.click();
             }
+            if (attempt === 2) {
+                console.log("TRIED TWICE TO CREATE RECOMMENDATION - SUCCEEDED ON 2ND ATTEMPT");
+            }
             console.log("Recommendation workbench created successfully.");
             break;
         }
@@ -122,9 +125,9 @@ class RecommendationWorkbenchListView {
         await utils.waitForBusyIndicatorToDisappear();
         this.ReccWorkShortDesc = `Automation Recommendation ${Date.now()}`;
         this.ReccWorkLongDesc = `Automation Recommendation Long Desc ${Date.now()}`;
-        await this.reccWorkShortDescInput.setValue(this.ReccWorkShortDesc);
-        await this.reccWorkLongDescInput.setValue(this.ReccWorkLongDesc);
-        await utils.clickWithWait(this.typeDropdown);
+        await utils.setValueWithWait(this.reccWorkShortDescInput, this.ReccWorkShortDesc,1500);
+        await utils.setValueWithWait(this.reccWorkLongDescInput, this.ReccWorkLongDesc,1500);
+        await utils.clickWithWait(this.typeDropdown,1500);
         await browser.keys(["ArrowDown", "Enter"]);
         await utils.clickWithWait(this.assessmentTypeDropdown);
         await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
@@ -174,6 +177,9 @@ class RecommendationWorkbenchListView {
             if (await this.okBtn.isDisplayed().catch(() => false)) {
                 await this.okBtn.click();
             }
+            if (attempt === 2) {
+                console.log("TRIED TWICE TO CREATE RECOMMENDATION (FUNCTIONAL LOCATION) - SUCCEEDED ON 2ND ATTEMPT");
+            }
             console.log("Recommendation workbench (Functional Location) created successfully.");
             break;
         }
@@ -217,11 +223,11 @@ class RecommendationWorkbenchListView {
 
         this.ReccWorkShortDesc = `Automation Recommendation ${Date.now()}`;
         this.ReccWorkLongDesc = `Automation Recommendation Long Desc ${Date.now()}`;
-        await this.reccWorkShortDescInput.setValue(this.ReccWorkShortDesc);
-        await this.reccWorkLongDescInput.setValue(this.ReccWorkLongDesc);
-        await utils.clickWithWait(this.typeDropdown);
+        await utils.setValueWithWait(this.reccWorkShortDescInput, this.ReccWorkShortDesc,1500);
+        await utils.setValueWithWait(this.reccWorkLongDescInput, this.ReccWorkLongDesc,1500);
+        await utils.clickWithWait(this.typeDropdown,1500);
         await browser.keys(["ArrowDown", "Enter"]);
-        await utils.clickWithWait(this.assessmentTypeDropdown);
+        await utils.clickWithWait(this.assessmentTypeDropdown,1500);
         await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
     }
 
