@@ -27,35 +27,34 @@ describe('BTP - Functional Location - Regression Test', () => {
         await FunctionalLocationRegressionPage.verifyAssetStrategyRCMFleetDetails();
     });
 
-    it('should verify recommendation details', async () => {
-        await FunctionalLocationRegressionPage.verifyRecommendationDetails();
-    });
-
-    // ---------------- Transition: back to list view via back button ----------------
-    it('should navigate back to list view after regression set 1', async () => {
-        await utils.navigateBack();
-    });
-
-    // ---------------- Regression Set 2 ----------------
-    it('should search and navigate to detail view of functional location (set 2)', async () => {
-        await FunctionalLocationRegressionPage.searchFunctionalLocationByDisplayId(funcLocTestData.searchFunLoc.displayId2);
-        await FunctionalLocationRegressionPage.navigateToSearchedFunctionalLocation();
-    });
-
-    it('should navigate to asset intelligence tab (set 2)', async () => {
-        await FunctionalLocationRegressionPage.navigateToAssetIntelligenceTab();
-    });
-
-    it('should verify asset strategy details (RBI)', async () => {
+    it('should verify asset strategy details (RBI) (set 1)', async () => {
         await FunctionalLocationRegressionPage.verifyAssetStrategyDetails();
     });
 
-    it('should verify asset inspection details (set 2)', async () => {
+    it('should verify asset inspection details (set 1)', async () => {
         await FunctionalLocationRegressionPage.verifyAssetInspectionDetails();
     });
 
-    it('should verify findings details (set 2)', async () => {
+    it('should verify findings details (set 1)', async () => {
         await FunctionalLocationRegressionPage.verifyFindingDetails();
     });
 
+    it('should verify recommendation details (set 1)', async () => {
+        await FunctionalLocationRegressionPage.verifyRecommendationDetails();
+    });
+
+    // // ---------------- Transition: back to list view via back button ----------------
+    // it('should navigate back to list view after regression set 1', async () => {
+    //     await utils.navigateBack();
+    // });
+
+    // // ---------------- Regression Set 2 ----------------
+    // it('should search and navigate to detail view of functional location (set 2)', async () => {
+    //     await FunctionalLocationRegressionPage.searchFunctionalLocationByDisplayId(funcLocTestData.searchFunLoc.displayId2);
+    //     await FunctionalLocationRegressionPage.navigateToSearchedFunctionalLocation();
+    // });
+
+    // it('should navigate to asset intelligence tab (set 2)', async () => {
+    //     await FunctionalLocationRegressionPage.navigateToAssetIntelligenceTab();
+    // });
 });

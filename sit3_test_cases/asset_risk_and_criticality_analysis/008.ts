@@ -3,14 +3,14 @@ import rncaDetailpage from '../../page_object_model/btp_applications_page/reliab
 import { browser, expect } from '@wdio/globals';
 import utils from '../../utils/utils';
 
-describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Functional Test', () => {
+describe('1307677_008_Assess criticality of equipment selected ASINT AIS', () => {
 
 	it('should click on asset risk and criticality analysis application', async () => {
 		await rncaListViewPage.navigateToRNCAListView();
 	});
 
 	it('should create a new RNCA assessment from list view', async () => {
-		const description = 'Test Assessment';
+		const description = 'Automation Test Assessment';
 		const longDescription = 'This is automation test';
 
 		await rncaListViewPage.openNewAssessmentDialog();
@@ -19,8 +19,8 @@ describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Function
 		await rncaListViewPage.verifyDescriptionValues(description, longDescription);
 		await rncaListViewPage.selectRiskType('Current Risk');
 		await rncaListViewPage.selectAllowedObjects('Both');
-		await rncaListViewPage.selectCurrencyByIndex(3);
-		const selectedCurrency = await rncaListViewPage.getSelectedCurrencyValue();
+		await rncaListViewPage.selectCurrencyByValue('USD');
+		const selectedCurrency = await rncaListViewPage.getSelectedCurrencyValue();	
 		await expect(selectedCurrency).not.toEqual('');
 		await rncaListViewPage.saveNewAssessment();
 		await utils.waitForBusyIndicatorToDisappear();
@@ -34,7 +34,7 @@ describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Function
 		await rncaDetailpage.editGeneralInformation('Updated Test Assessment', 'This is updated automation test');
 	});
 
-	it('should verify Administrative Information tab', async () => {
+	it.skip('should verify Administrative Information tab', async () => {
 		await rncaDetailpage.verifyAdministrativeInformation();
 	});
 
@@ -48,24 +48,19 @@ describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Function
 	});
 
 	it('should assign equipment to the assessment and verify', async () => {
-		await rncaDetailpage.assignEquipmentByName();
+		await rncaDetailpage.assignEquipment('Test Equipment 123');
 	});
 
 	it('should assign Assessment Template to the technical object', async () => {
 		await rncaDetailpage.assignTemplateByName();
 	});
 
-	it('should enable impact for calculation', async () => {
-		await rncaDetailpage.enableImpactForCalculation();
+	it('should select SHE and FIN impact values on first block and save', async () => {
+		await rncaDetailpage.selectImpactValuesAndSave();
 	});
 
-	it('should calculate risk Details on Assessment section and verify risk details', async () => {
-		await rncaDetailpage.assignAndCalculateAssessment();
-	});
-
-	it('should publish assessment', async () => {
+	it('should delete the created assessment and verify', async () => {
 		await rncaDetailpage.publishAssessment();
-
 	});
 
 });

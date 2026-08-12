@@ -5,50 +5,50 @@ import utils from '../../../../utils/utils';
 class FunctionalLocationRegressionPage {
 
     private funcLocSearched() { return $("(//tr[@role='row']//span[@title='Navigation'])[1]"); }
-    private get funLocGeneralInfoTab() { return $("//bdi[text()='General Information']/ancestor::button"); }
+    private get funLocGeneralInfoTab() { return $("//*[self::span or self::bdi][text()='General Information']"); }
     private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
-    private get funLocAssetIntTab() { return $("//bdi[text()='Asset Intelligence']"); }
-    private get assetInsp() { return $("//div[text()='Asset Inspection']/following::span[1]"); }
-    private get inspectionAssessment() { return $("//div[contains(text(),'Inspection')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//a"); }
-    private get inspectionAssessmentDesc() { return $("//div[contains(text(),'Inspection')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//span"); }
-    private get inspectionEquipment() { return $("//div[contains(text(),'Inspection')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='2']//div[1]"); }
-    private get inspectionFunctionalLocation() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='3']//span)[1]"); }
-    private get inspectionFunctionalLocationDesc() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='3']//span)[2]"); }
-    private get inspectionAssessmentTemplate() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[1]"); }
-    private get inspectionAssessmentTemplateDesc() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[2]"); }
-    private get inspectionStatus() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Status']/following::tr//td[@aria-colindex='5']//span)[1]"); }
-    private get inspectionCreatedOn() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[1]"); }
-    private get inspectionCreatedBy() { return $("(//div[contains(text(),'Inspection')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[2]"); }
+    private get funLocAssetIntTab() { return $("//*[self::span or self::bdi][text()='Asset Intelligence']"); }
+    private get assetInsp() { return $("//h4//span[text()='Asset Inspection']/following::span[contains(text(),'Inspection')][1]"); }
+    private get inspectionAssessment() { return $("//span[contains(text(),'Inspection')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//a"); }
+    private get inspectionAssessmentDesc() { return $("(//span[contains(text(),'Inspection')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//span)[2]"); }
+    private get inspectionEquipment() { return $("//span[contains(text(),'Inspection')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='2']//div[1]"); }
+    private get inspectionFunctionalLocation() { return $("(//span[contains(text(),'Inspection')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='3']//span)[1]"); }
+    private get inspectionFunctionalLocationDesc() { return $("(//span[contains(text(),'Inspection')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='3']//span)[2]"); }
+    private get inspectionAssessmentTemplate() { return $("(//span[contains(text(),'Inspection')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[1]"); }
+    private get inspectionAssessmentTemplateDesc() { return $("(//span[contains(text(),'Inspection')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[2]"); }
+    private get inspectionStatus() { return $("(//span[contains(text(),'Inspection')]/following::span[text()='Status']/following::tr//td[@aria-colindex='5']//span)[1]"); }
+    private get inspectionCreatedOn() { return $("(//span[contains(text(),'Inspection')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[1]"); }
+    private get inspectionCreatedBy() { return $("(//span[contains(text(),'Inspection')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[2]"); }
     private get inspectionIframe() { return $("//*[@data-help-id='application-idms-manage']"); }
     private get inspectionHeaderFunctionalLocation() { return $("//bdi[text()='Functional Location: ']/following::a[1]"); }
-    private get inspectionHeaderFunctionalLocationDesc() { return $("//bdi[text()='Functional Location: ']/following::span[2]"); }
+    private get inspectionHeaderFunctionalLocationDesc() { return $("//bdi[text()='Functional Location: ']/following::span[3]"); }
     private get inspectionHeaderStatus() { return $("//section//span[text()='Status']/following::span[1]"); }
     private get inspectionHeaderModifiedOn() { return $("//span[contains(text(),'Modified On')]"); }
     private get inspectionHeaderAssignedTo() { return $("//section//span[contains(text(),'Assigned To')]"); }
-    private get findings() { return $("//div[text()='Findings']/following::span[1]"); }
-    private get findingsEquipment() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='1']//div)[1]"); }
-    private get findingsFunctionalLocation() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='2']//span)[1]"); }
-    private get findingsFunctionalLocationDesc() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='2']//span)[2]"); }
-    private get findingsDisplayeId() { return $("//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//a"); }
-    private get findingsDisplayeIdDesc() { return $("//div[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//a"); }
-    private get findingsNo() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Finding Number']/following::tr//td[@aria-colindex='4']//span)[1]"); }
-    private get findingsType() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Finding Type']/following::tr//td[@aria-colindex='5']//span)[2]"); }
-    private get findingsStatus() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Status']/following::tr//td[@aria-colindex='6']//span)[1]"); }
-    private get findingsAssignedTo() { return $("(//div[contains(text(),'Findings')]/following::span[text()='Assigned To']/following::tr//td[@aria-colindex='8']//span)[1]"); }
+    private get findings() { return $("//h4//span[text()='Findings']/following::span[contains(text(),'Findings')][1]"); }
+    private get findingsEquipment() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Equipment']/following::tr//td[@aria-colindex='1']//div)[1]"); }
+    private get findingsFunctionalLocation() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='2']//span)[1]"); }
+    private get findingsFunctionalLocationDesc() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Functional Location']/following::tr//td[@aria-colindex='2']//span)[2]"); }
+    private get findingsDisplayId() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//a)[1]"); }
+    private get findingsDisplayIdDesc() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Display Id']/following::tr//td[@aria-colindex='3']//a)[2]"); }
+    private get findingsNo() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Finding Number']/following::tr//td[@aria-colindex='4']//span)[1]"); }
+    private get findingsType() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Finding Type']/following::tr//td[@aria-colindex='5']//span)[2]"); }
+    private get findingsStatus() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Status']/following::tr//td[@aria-colindex='6']//span)[1]"); }
+    private get findingsAssignedTo() { return $("(//span[contains(text(),'Findings')]/following::span[text()='Assigned To']/following::tr//td[@aria-colindex='8']//span)[1]"); }
     private get findingsHeaderFunctionalLocation() { return $("//bdi[text()='Functional Location: ']/following::a[1]"); }
-    private get findingsHeaderFunctionalLocationDesc() { return $("//bdi[text()='Functional Location: ']/following::span[2]"); }
+    private get findingsHeaderFunctionalLocationDesc() { return $("//bdi[text()='Functional Location: ']/following::span[3]"); }
     private get findingsHeaderStatus() { return $("//section//span[text()='Status']/following::span[1]"); }
     private get findingsHeaderModifiedOn() { return $("//span[contains(text(),'Date Recorded')]"); }
     private get findingsHeaderAssignedTo() { return $("//bdi[text()='Assign Finding To']/following::span[2]"); }
-    private get assetStrategyRCM() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]"); }
-    private get recommendation() { return $("//div[text()='Recommendations']/following::span[1]"); }
-    private get assetStrategyAssessment() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//div//a)[1]"); }
-    private get assetStrategyAssessmentDesc() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//div//span)[1]"); }
-    private get assetStrategyAssessmentTemplate() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[1]"); }
-    private get assetStrategyAssessmentTemplateDesc() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[2]"); }
-    private get assetStrategyStatus() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Status']/following::tr//td[@aria-colindex='5']//span)[1]"); }
-    private get assetStrategyCreatedOn() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[1]"); }
-    private get assetStrategyCreatedBy() { return $("(//div[contains(text(),'Asset Strategy')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[2]"); }
+    private get assetStrategyRCM() { return $("(//span[text()='Asset Strategy']/following::li//div//div)[1]"); }
+    private get recommendation() { return $("//h4//span[text()='Recommendations']/following::span[contains(text(),'Recommendations')][1]"); }
+    private get assetStrategyAssessment() { return $("(//span[contains(text(),'Asset Strategy')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//div//a)[1]"); }
+    private get assetStrategyAssessmentDesc() { return $("(//span[contains(text(),'Asset Strategy')]/following::span[text()='Assessment']/following::tr//td[@aria-colindex='1']//div//span)[2]"); }
+    private get assetStrategyAssessmentTemplate() { return $("(//span[contains(text(),'Asset Strategy')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[1]"); }
+    private get assetStrategyAssessmentTemplateDesc() { return $("(//span[contains(text(),'Asset Strategy')]/following::span[text()='Assessment Template']/following::tr//td[@aria-colindex='4']//span)[2]"); }
+    private get assetStrategyStatus() { return $("(//span[contains(text(),'Asset Strategy')]/following::span[text()='Status']/following::tr//td[@aria-colindex='5']//span)[1]"); }
+    private get assetStrategyCreatedOn() { return $("(//span[contains(text(),'Asset Strategy')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[1]"); }
+    private get assetStrategyCreatedBy() { return $("(//span[contains(text(),'Asset Strategy')]/following::span[text()='Created On / By']/following::tr//td[@aria-colindex='6']//span)[2]"); }
     private get ASDIframe() { return $('iframe[data-help-id="application-assetstrategydevelopment-manage"]'); }
     private get ASDHeaderTemplateType() { return $("//section//span[text()='Template Type']/following::span[1]"); }
     private get ASDHeaderFunctionalLocation() { return $("//section//bdi[text()='Functional Location: ']/following::a[1]"); }
@@ -82,9 +82,9 @@ class FunctionalLocationRegressionPage {
     private get rncAsgnRiskScore() { return $("((//*[normalize-space()='Risk Score']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='4']//span)[1]"); }
     private get rncAsgnCriticality() { return $("((//*[normalize-space()='Criticality']/ancestor::table[1])[last()]//tbody/tr[1]//td[@aria-colindex='5']//span)[1]"); }
     private get rcmFleetTab() { return $("//div[contains(text(),'RCM/Fleet')]"); }
-    private rcmFleetAssessmentRow() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM_')]])[1]"); }
-    private rcmFleetAssessmentLink() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//a[starts-with(normalize-space(),'RCM_')]"); }
-    private rcmFleetAssessmentTreeIcon() { return $("(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//*[@role='button' and (contains(@title,'Expand') or contains(@title,'Collapse'))][1]"); }
+    private rcmFleetAssessmentRow() { return $("(//span[contains(text(),'Asset Strategy')]/following::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM')]])[1]"); }
+    private rcmFleetAssessmentLink() { return $("(//span[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM')]])[1]//a[starts-with(normalize-space(),'RCM')]"); }
+    private rcmFleetAssessmentTreeIcon() { return $("(//span[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM')]])[1]//*[@role='button' and (contains(@title,'Expand') or contains(@title,'Collapse'))][1]"); }
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
     private get rcmHeaderStatusTag() { return $("(//div[@role='button' and @aria-roledescription='Object Tag']//span[not(@aria-hidden='true')])[1]"); }
     private get rcmHeaderTemplateType() { return $("//bdi[starts-with(normalize-space(),'Template Type')]/following::span[1]"); }
@@ -542,8 +542,8 @@ class FunctionalLocationRegressionPage {
             equipment: await this.safeGetText(this.findingsEquipment),
             functionalLocation: await this.findingsFunctionalLocation.getText(),
             functionalLocationDesc: await this.findingsFunctionalLocationDesc.getText(),
-            displayId: await this.findingsDisplayeId.getText(),
-            displayIdDesc: await this.findingsDisplayeIdDesc.getText(),
+            displayId: await this.findingsDisplayId.getText(),
+            displayIdDesc: await this.findingsDisplayIdDesc.getText(),
             findingNo: await this.safeGetText(this.findingsNo),
             findingType: await this.safeGetText(this.findingsType),
             status: await this.findingsStatus.getText(),
@@ -554,7 +554,7 @@ class FunctionalLocationRegressionPage {
 
     public async openInspectedFindings(): Promise<void> {
         const parentWindow = await browser.getWindowHandle();
-        await this.findingsDisplayeId.click();
+        await this.findingsDisplayId.click();
         await browser.waitUntil(
             async () => (await browser.getWindowHandles()).length > 1,
             {
@@ -646,6 +646,8 @@ class FunctionalLocationRegressionPage {
         console.log("Verifying Asset Strategy details");
         const assetStraRCM = await this.assetStrategyRCM.getText();
         const as2 = await utils.getAssignedValue(assetStraRCM);
+        await utils.clickWithWait(this.assetStrategyRCM);
+        await browser.pause(2000);
         console.log("Assigned asset strategy RCM: "+as2);
         if(as2 === 0)
         {
@@ -747,7 +749,7 @@ class FunctionalLocationRegressionPage {
 
         compare(
             "Functional Location",
-            funcLocTestData.searchFunLoc.functionallocation2,
+            funcLocTestData.searchFunLoc.functionallocation1,
             this.asdHeaderDetails.functionalLocation
         );
 
@@ -1073,9 +1075,6 @@ class FunctionalLocationRegressionPage {
         console.log("Risk and Criticality Details Verification Passed");
     }
 
-    // ============================================================
-    // Asset Strategy - RCM/Fleet
-    // ============================================================
     public async verifyAssetStrategyRCMFleetDetails() {
         console.log("Verifying Asset Strategy (RCM/Fleet) details");
         await utils.switchToIframe(this.funLocIframe);
@@ -1097,94 +1096,65 @@ class FunctionalLocationRegressionPage {
         await row.scrollIntoView({ block: 'center' });
         await browser.pause(1000);
 
-        const readRow = () => browser.execute(() => {
-            const link = document.evaluate(
-                "(//div[contains(text(),'Asset Strategy')]/following::tr[.//a[starts-with(normalize-space(),'RCM_')]])[1]//a[starts-with(normalize-space(),'RCM_')]",
-                document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null
-            ).singleNodeValue as HTMLAnchorElement | null;
-            if (!link) return null;
-            const tr = link.closest('tr');
-            if (!tr) return null;
+        const assessmentLinkXPath = "(//span[contains(text(),'Asset Strategy')]/following::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM')]])[1]";
+        const assessmentIdEl = await $(`${assessmentLinkXPath}//a[starts-with(normalize-space(),'RCM')]`);
+        const assessment = (await assessmentIdEl.getText()).trim();
 
-            const isHidden = (e: HTMLElement): boolean => {
-                if (e.getAttribute('aria-hidden') === 'true') return true;
-                if (e.style && e.style.display === 'none') return true;
-                const cls = e.className || '';
-                if (typeof cls === 'string' && /sapUi(Pseudo)?InvisibleText|sapUiHiddenPlaceholder/.test(cls)) return true;
-                return false;
-            };
+        const assessmentDescEl = await $(`${assessmentLinkXPath}//td[@aria-colindex='2']//span[not(@aria-hidden='true') and string-length(normalize-space()) > 0][last()]`);
+        const assessmentDesc = await assessmentDescEl.isExisting() ? (await assessmentDescEl.getText()).trim() : '';
 
-            const visibleText = (el: Element | null): string => {
-                if (!el) return '';
-                let out = '';
-                el.childNodes.forEach(n => {
-                    if (n.nodeType === Node.TEXT_NODE) {
-                        out += (n.textContent || '');
-                    } else if (n.nodeType === Node.ELEMENT_NODE) {
-                        const e = n as HTMLElement;
-                        if (isHidden(e)) return;
-                        out += ' ' + visibleText(e);
-                    }
-                });
-                return out;
-            };
+        const statusEl = await $(`${assessmentLinkXPath}//td[@aria-colindex='7']//span[@dir='ltr' and string-length(normalize-space()) > 0]`);
+        await statusEl.waitForExist();
+        await statusEl.waitForDisplayed();
 
-            const cleanLine = (s: string) => s.replace(/\s+/g, ' ').trim();
+        const status = (await browser.execute(
+            (el) => el.textContent?.trim(),
+            statusEl
+        )) ?? '';
 
-            const assessmentCell = tr.querySelector('td[aria-colindex="2"]');
-            const statusCell = tr.querySelector('td[aria-colindex="7"]');
-            const titleDiv = assessmentCell?.querySelector('.sapMObjectIdentifierTitle') || null;
-            const descDiv = assessmentCell?.querySelector('.sapMObjectIdentifierText') || null;
-            const assessment = cleanLine(visibleText(titleDiv) || (link.textContent || ''));
-            const assessmentDesc = cleanLine(visibleText(descDiv));
-            const status = cleanLine(visibleText(statusCell));
+        console.log("Status:", status);
 
-            const allRows = Array.from(tr.parentElement?.children || []) as HTMLElement[];
-            const startIdx = allRows.indexOf(tr as HTMLElement);
-            let maintainableItem = '';
-            let failureMode = '';
-            for (let i = startIdx + 1; i < allRows.length; i++) {
-                const r = allRows[i];
-                const level = parseInt(r.getAttribute('aria-level') || '0', 10);
-                if (level <= 1) break;
-                if (level === 2 && !maintainableItem) {
-                    const t = cleanLine(visibleText(r.querySelector('td[aria-colindex="3"]')));
-                    if (t) maintainableItem = t;
-                }
-                if (level === 3 && !failureMode) {
-                    const t = cleanLine(visibleText(r.querySelector('td[aria-colindex="4"]')));
-                    if (t) failureMode = t;
-                }
-                if (maintainableItem && failureMode) break;
+        const expandBtn = await $(`${assessmentLinkXPath}//*[@role='button' and (contains(@title,'Expand') or contains(@title,'Collapse'))]`);
+        if (await expandBtn.isExisting()) {
+            const isExpanded = await expandBtn.getAttribute('aria-expanded');
+            if (isExpanded !== 'true') {
+                await utils.clickWithWait(expandBtn);
+                await browser.pause(1500);
             }
-
-            return { assessment, assessmentDesc, status, maintainableItem, failureMode };
-        }) as Promise<{
-            assessment: string; assessmentDesc: string; status: string;
-            maintainableItem: string; failureMode: string;
-        } | null>;
-
-        const tree1 = this.rcmFleetAssessmentTreeIcon();
-        if (await tree1.isExisting()) {
-            await utils.clickWithWait(tree1);
-            await browser.pause(1500);
-        }
-        const childExpand = await $("(//div[contains(text(),'Asset Strategy')]/following::tr[@aria-level='2']//*[@role='button' and contains(@title,'Expand')])[1]");
-        if (await childExpand.isExisting()) {
-            await utils.clickWithWait(childExpand);
-            await browser.pause(1500);
         }
 
-        const rowData = await readRow();
-        const assessment = rowData?.assessment || (await this.rcmFleetAssessmentLink().getText()).trim();
-        const status = rowData?.status || '';
+        const maintainableItemXPath = "(//span[contains(text(),'Asset Strategy')]/following::tr[@aria-level='2' and preceding-sibling::tr[@aria-level='1' and .//a[starts-with(normalize-space(),'RCM')]]])[1]";
+        const maintainableItemEl = await $(`${maintainableItemXPath}//td[@aria-colindex='3']//span[not(@aria-hidden='true') and string-length(normalize-space()) > 0]`);
+        let maintainableItem = '';
+        
+        if (await maintainableItemEl.isExisting()) {
+            maintainableItem = (await maintainableItemEl.getText()).trim();
+            
+            const childExpandBtn = await $(`${maintainableItemXPath}//*[@role='button' and contains(@title,'Expand')]`);
+            if (await childExpandBtn.isExisting()) {
+                const childExpanded = await childExpandBtn.getAttribute('aria-expanded');
+                if (childExpanded !== 'true') {
+                    await utils.clickWithWait(childExpandBtn);
+                    await browser.pause(1500);
+                }
+            }
+        }
+
+        let failureMode = '';
+        if (maintainableItem) {
+            const failureModeXPath = "(//span[contains(text(),'Asset Strategy')]/following::tr[@aria-level='3'])[1]";
+            const failureModeEl = await $(`${failureModeXPath}//td[@aria-colindex='4']//span[not(@aria-hidden='true') and string-length(normalize-space()) > 0]`);
+            if (await failureModeEl.isExisting()) {
+                failureMode = (await failureModeEl.getText()).trim();
+            }
+        }
 
         this.rcmFleetDetails = {
             assessment,
-            assessmentDesc: rowData?.assessmentDesc || '',
+            assessmentDesc,
             status,
-            maintainableItem: rowData?.maintainableItem || '',
-            failureMode: rowData?.failureMode || ''
+            maintainableItem,
+            failureMode
         };
         console.log("RCM/Fleet Row Details:");
         console.log(JSON.stringify(this.rcmFleetDetails, null, 2));

@@ -1,19 +1,20 @@
 import { AssertionError } from 'node:assert';
 import HomePage from '../../home.page';
 import utils from '../../../../utils/utils';
+import { RNCARiskData } from '../../../../test_data/btp_applications/reliability/asset_criticality_analysis.data';
 
 class RNCADetailPage {
 
     private get rncaIframe() { return $('iframe[data-help-id="application-rca-manage"]'); }
 
     private get generalInfoEditBtn() {
-        return $(`//div[text()='General Information']//following::bdi[text()='Edit'][1]`);
+        return $(`//span[text()='General Information']//following::bdi[text()='Edit'][1]`);
     }
     private get validityInfoEditBtn() {
-        return $(`//div[text()='Validity']//following::bdi[text()='Edit'][1]`);
+        return $(`//span[text()='Validity']//following::bdi[text()='Edit'][1]`);
     }
     private get scopeInfoEditBtn() {
-        return $(`//div[text()='Scope']//following::bdi[text()='Edit'][1]`);
+        return $(`//span[text()='Scope']//following::bdi[text()='Edit'][1]`);
     }
 
     private async clickSuccessOkIfPresent(timeout = 5000) {
@@ -48,13 +49,13 @@ class RNCADetailPage {
         const longDescriptionInput = await $("//bdi[text()='Long Description']/following::textarea[1]");
         await longDescriptionInput.setValue(longDescription);
 
-        const saveBtn = await $("//div[text()='General Information']//following::bdi[text()='Save'][1]");
+        const saveBtn = await $("//span[text()='General Information']//following::bdi[text()='Save'][1]");
         await saveBtn.waitForClickable({ timeout: 50000 });
         await saveBtn.click();
 
         await utils.waitForBusyIndicatorToDisappear();
 
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await console.log("General Information edited successfully");
         await utils.waitForBusyIndicatorToDisappear();
     }
@@ -69,13 +70,13 @@ class RNCADetailPage {
         const validToInput = await $("//bdi[text()='Valid To']/following::input[1]");
         await validToInput.setValue(validTo);
 
-        const saveBtn = await $("//div[text()='Validity']//following::bdi[text()='Save'][1]");
+        const saveBtn = await $("//span[text()='Validity']//following::bdi[text()='Save'][1]");
         await saveBtn.waitForClickable({ timeout: 50000 });
         await saveBtn.click();
 
         await utils.waitForBusyIndicatorToDisappear();
 
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await console.log("Validity edited successfully");
 
@@ -87,16 +88,16 @@ class RNCADetailPage {
         await utils.waitForBlockLayerToDisappear();
         await utils.clickWithWait(this.scopeInfoEditBtn);
 
-        const descriptionInput = await $(`//div[text()='Scope']//following::bdi[text()='Description']/following::textarea[1]`);
+        const descriptionInput = await $(`//span[text()='Scope']//following::bdi[text()='Description']/following::textarea[1]`);
         await descriptionInput.setValue(description);
 
-        const saveBtn = await $("//div[text()='Scope']//following::bdi[text()='Save'][1]");
+        const saveBtn = await $("//span[text()='Scope']//following::bdi[text()='Save'][1]");
         await saveBtn.waitForClickable({ timeout: 50000 });
         await saveBtn.click();
 
         await utils.waitForBusyIndicatorToDisappear();
 
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await console.log("Scope edited successfully");
         await browser.pause(3000);
@@ -183,7 +184,7 @@ class RNCADetailPage {
     async assignEquipment(equipmentName: string) {
         await console.log("Assigning equipment:", equipmentName);
         await utils.switchToIframe(this.rncaIframe);
-        await utils.clickWithWait($("//bdi[normalize-space()='Assignments']"));
+        await utils.clickWithWait($("//span[normalize-space()='Assignments']"));
         // let count = 0;
         // while(true) {
         //     await console.log("Attempting to assign equipment, batch starting at index:", count);
@@ -250,7 +251,7 @@ class RNCADetailPage {
         //     await yesBtn.waitForClickable({ timeout: 10000 });
         //     await yesBtn.click();
         //     await utils.waitForBusyIndicatorToDisappear();
-        //     await this.clickSuccessOkIfPresent(50000);
+        //     await utils.clickSuccessOkButton();
         //     await utils.waitForBusyIndicatorToDisappear();
         //     await console.log("Equipment assigned successfully");
         //     break;
@@ -325,7 +326,7 @@ class RNCADetailPage {
                 await yesBtn.waitForClickable({ timeout: 10000 });
                 await yesBtn.click();
                 await utils.waitForBusyIndicatorToDisappear();
-                await this.clickSuccessOkIfPresent(50000);
+                await utils.clickSuccessOkButton();
                 await browser.pause(3000);
                 const noDataCell = await $("//td[normalize-space()='No data']");
                 if (await noDataCell.isDisplayed()) {
@@ -348,7 +349,7 @@ class RNCADetailPage {
             await yesBtn.click();
 
             await utils.waitForBusyIndicatorToDisappear();
-            await this.clickSuccessOkIfPresent(50000);
+            await utils.clickSuccessOkButton();
 
             console.log("✅ Batch assigned successfully");
 
@@ -394,7 +395,7 @@ class RNCADetailPage {
     //     await yesBtn.waitForClickable({ timeout: 10000 });
     //     await yesBtn.click();
     //     await utils.waitForBusyIndicatorToDisappear();
-    //     await this.clickSuccessOkIfPresent(50000);
+    //     await utils.clickSuccessOkButton();
     //     await console.log("Equipment assigned successfully");
     //     await utils.waitForBusyIndicatorToDisappear();
     // }
@@ -436,7 +437,7 @@ class RNCADetailPage {
         await yesBtn.waitForClickable({ timeout: 10000 });
         await yesBtn.click();
         await utils.waitForBusyIndicatorToDisappear();
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
     }
@@ -472,7 +473,7 @@ class RNCADetailPage {
 
         await utils.clickWithWait($(`//button[.//bdi[normalize-space()='Cancel']]/preceding::button[.//bdi[normalize-space()='Assign']][1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await console.log("Template assigned successfully");
         await browser.pause(3000);
@@ -480,97 +481,135 @@ class RNCADetailPage {
     async calculateRiskOnAssessment() {
         await console.log("Calculating risk on assessment");
         await utils.switchToIframe(this.rncaIframe);
-        await utils.clickWithWait($("//bdi[normalize-space()='Assessment']"));
+        const assessmentElements = await $$("//span[normalize-space()='Assessment']");
+        for (const element of assessmentElements) {
+            if (await element.isDisplayed() && await element.isClickable()) {
+                await element.click();
+                break;
+            }
+        }
         await utils.clickWithWait($(`(//li[@role='listitem']//div[@role='checkbox'])[1]`));
-        // Step 1: get all expand/collapse buttons
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(3000);
+
         const expcolBtns = (await $$("//button[@title='Expand/Collapse']")) as unknown as any[];
+        const totalPanels = expcolBtns.length;
+        console.log("Total panels:", totalPanels);
 
-        console.log("Total panels:", expcolBtns.length);
-
-        // Step 2: loop each panel
-        for (let i = 0; i < expcolBtns.length; i++) {
-            await console.log(`Processing panel ${i + 1}`);
-            const btn = expcolBtns[i];
-
-            //await btn.scrollIntoView();
-            await browser.execute((el: any) => el.scrollIntoView({ block: 'center' }), btn);
-            await browser.pause(300);
-            await btn.waitForClickable({ timeout: 10000 });
-
-            // Expand only if collapsed
-            const isExpanded = await btn.getAttribute("aria-expanded");
-
-            if (isExpanded === "false") {
-                await btn.click();
-            }
-
-            console.log(`Panel ${i + 1} expanded`);
-
-            // Step 3: get corresponding panel (relative to button)
-            const panel = await btn.$("./ancestor::div[contains(@id,'idImpactPanels')]");
-
-            // Step 4: check content
-            const content = (await panel.$$("//*[normalize-space()!='']")) as unknown as any[];
-
-            if (content.length === 0) {
-                console.log(`Panel ${i + 1}: empty`);
-                continue;
-            }
-
-            console.log(`Panel ${i + 1}: has content`);
-
-            // Step 5: get tables inside THIS panel only
-            const tables = (await panel.$$("//table[@role='grid']")) as unknown as any[];
-
-            console.log(`Panel ${i + 1}: tables =`, tables.length);
-
-            // Step 6: loop tables
-            for (let j = 0; j < tables.length; j++) {
-                await console.log(`Processing table ${j + 1} in panel ${i + 1}`);
-                const table = tables[j];
-
-                try {
-                    // Try to find radios quickly (2 seconds max)
-                    const radios = (await table.$$("//tbody//div[@role='radio']")) as unknown as any[];
-
-                    if (radios.length === 0) {
-                        console.log(`Panel ${i + 1} - Table ${j + 1}: No radios`);
-                        continue;
-                    }
-
-                    const radio = radios[0];
-
-                    // Wait only briefly for radio to be displayed
-                    await radio.waitForExist({ timeout: 2000 });
-
-                    const isSelected = await radio.getAttribute("aria-checked");
-
-                    if (isSelected !== "true") {
-                        await radio.scrollIntoView();
-
-                        try {
-                            await radio.click();
-                        } catch (e) {
-                            await browser.execute((el: any) => el.click(), radio);
-                        }
-
-                        console.log(`Panel ${i + 1} - Table ${j + 1}: Radio selected`);
-                    } else {
-                        console.log(`Panel ${i + 1} - Table ${j + 1}: Already selected`);
-                    }
-
-                } catch (err) {
-                    // If timeout or slow loading → skip
-                    console.log(`Panel ${i + 1} - Table ${j + 1}: Skipped due to timeout`);
+        for (let i = 0; i < totalPanels; i++) {
+            try {
+                await console.log(`Processing panel ${i + 1}`);
+                
+                const buttons = (await $$("//button[@title='Expand/Collapse']")) as unknown as any[];
+                if (i >= buttons.length) {
+                    console.log(`Panel ${i + 1}: Button no longer exists, skipping`);
                     continue;
                 }
+                
+                const btn = buttons[i];
+
+                try {
+                    await browser.execute((el: any) => el.scrollIntoView({ block: 'center' }), btn);
+                } catch (scrollErr) {
+                    console.log(`Panel ${i + 1}: Scroll failed, continuing...`);
+                }
+                
+                await browser.pause(300);
+                
+                const isClickable = await btn.isClickable().catch(() => false);
+                if (!isClickable) {
+                    console.log(`Panel ${i + 1}: Button not clickable, skipping`);
+                    continue;
+                }
+
+                const isExpanded = await btn.getAttribute("aria-expanded").catch(() => "true");
+                if (isExpanded === "false") {
+                    await btn.click().catch(() => console.log(`Panel ${i + 1}: Click failed`));
+                    await browser.pause(500);
+                }
+
+                console.log(`Panel ${i + 1} expanded`);
+
+                const panel = await btn.$("./ancestor::div[contains(@id,'idImpactPanels')]").catch(() => null);
+                if (!panel) {
+                    console.log(`Panel ${i + 1}: Panel not found, skipping`);
+                    continue;
+                }
+
+                const tables = ((await panel.$$("//table[@role='grid']").catch(() => [])) as unknown as any[]);
+                console.log(`Panel ${i + 1}: tables =`, tables.length);
+
+                for (let j = 0; j < tables.length; j++) {
+                    try {
+                        await console.log(`Processing table ${j + 1} in panel ${i + 1}`);
+                        
+                        const freshButtons = (await $$("//button[@title='Expand/Collapse']")) as unknown as any[];
+                        if (i >= freshButtons.length) continue;
+                        
+                        const freshPanel: any = await freshButtons[i].$("./ancestor::div[contains(@id,'idImpactPanels')]").catch(() => null);
+                        if (!freshPanel) continue;
+                        
+                        const freshTables = ((await freshPanel.$$(".//table[@role='grid']").catch(() => [])) as unknown as any[]);
+                        if (j >= freshTables.length) continue;
+                        
+                        const table = freshTables[j];
+                        
+                        const radios = ((await table.$$(".//tbody//div[@role='radio']").catch(() => [])) as unknown as any[]);
+                        if (radios.length === 0) {
+                            console.log(`Panel ${i + 1} - Table ${j + 1}: No radios`);
+                            continue;
+                        }
+
+                        for (const radio of radios) {
+                            try {
+                                const isDisplayed = await radio.isDisplayed().catch(() => false);
+                                const isClickable = await radio.isClickable().catch(() => false);
+                                
+                                if (!isDisplayed || !isClickable) continue;
+                                
+                                const isSelected = await radio.getAttribute("aria-checked").catch(() => "true");
+                                
+                                if (isSelected !== "true") {
+                                    try {
+                                        await browser.execute((el: any) => el.scrollIntoView({ block: 'center' }), radio);
+                                    } catch (scrollErr) {}
+                                    
+                                    await browser.pause(200);
+                                    
+                                    try {
+                                        await radio.click();
+                                        console.log(`Panel ${i + 1} - Table ${j + 1}: Radio selected`);
+                                        break;
+                                    } catch (clickErr) {
+                                        try {
+                                            await browser.execute((el: any) => el.click(), radio);
+                                            console.log(`Panel ${i + 1} - Table ${j + 1}: Radio selected via JS`);
+                                            break;
+                                        } catch (jsErr) {}
+                                    }
+                                } else {
+                                    console.log(`Panel ${i + 1} - Table ${j + 1}: Already selected`);
+                                    break;
+                                }
+                            } catch (radioErr) {
+                                continue;
+                            }
+                        }
+
+                    } catch (tableErr) {
+                        console.log(`Panel ${i + 1} - Table ${j + 1}: Error - ${(tableErr as Error).message}`);
+                        continue;
+                    }
+                }
+                
+            } catch (panelErr) {
+                console.log(`Panel ${i + 1}: Error - ${(panelErr as Error).message}, continuing...`);
+                continue;
             }
         }
         await utils.clickWithWait($(`//bdi[normalize-space()='Action:']/following::button[.//bdi[normalize-space()='Save']][1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
 
@@ -583,12 +622,11 @@ class RNCADetailPage {
 
 
             if (rows.length === 0) {
-                console.log("❌ Risk Details present but empty");
+                console.log("Risk Details present but empty");
             } else {
-                console.log(`✅ Risk Details found (${rows.length} rows)`);
+                console.log(`Risk Details found (${rows.length} rows)`);
 
                 for (let row of rows) {
-                    // ✅ skip hidden rows (important for SAP)
                     if (!(await row.isDisplayed())) continue;
 
                     const impact = await row.$("./td[2]//span").getText();
@@ -599,7 +637,7 @@ class RNCADetailPage {
             }
 
         } else {
-            console.log("❌ Risk Details section not found");
+            console.log("Risk Details section not found");
         }
 
         const riskScore = await $(
@@ -607,6 +645,164 @@ class RNCADetailPage {
         ).getText();
         await console.log("Risk Score:", riskScore);
     }
+
+    async selectImpactValuesAndSave() {
+        await console.log("Selecting random impact values on first block");
+        await utils.switchToIframe(this.rncaIframe);
+
+        const assessmentTabs = await $$("//span[normalize-space()='Assessment']");
+        for (const tab of assessmentTabs) {
+            if (await tab.isDisplayed() && await tab.isClickable()) {
+                await tab.click();
+                break;
+            }
+        }
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        await utils.clickWithWait($(`(//li[@role='listitem']//div[@role='checkbox'])[1]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        const firstExpandBtn = await $("(//button[@title='Expand/Collapse'])[1]");
+        await firstExpandBtn.waitForClickable({ timeout: 50000 });
+        const isExpanded = await firstExpandBtn.getAttribute("aria-expanded").catch(() => "true");
+        if (isExpanded === "false") {
+            await firstExpandBtn.click();
+            await browser.pause(1000);
+        }
+
+        const panel = await firstExpandBtn.$("./ancestor::div[contains(@id,'idImpactPanels')]");
+
+        const selectRandomRadio = async (sectionTitle: string, label: string) => {
+            const rowsXpath = `//span[normalize-space()='${sectionTitle}']/ancestor::div[contains(@class,'sapMPanel')][1]//table[@role='grid']//tbody//tr[@role='row' and .//div[@role='radio']]`;
+            const rows = ((await $$(rowsXpath)) as unknown as any[]);
+            const visibleRows: any[] = [];
+            for (const r of rows) {
+                if (await r.isDisplayed().catch(() => false)) visibleRows.push(r);
+            }
+            if (visibleRows.length === 0) {
+                console.log(`${label}: no rows found under '${sectionTitle}'`);
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * visibleRows.length);
+            const row = visibleRows[randomIndex];
+            const value = await row.$("./td[3]//span").getText().catch(() => "");
+            console.log(`${label}: randomly selected row ${randomIndex + 1} of ${visibleRows.length} (value='${value}')`);
+            const radio = await row.$(".//div[@role='radio']");
+            await browser.execute((el: any) => el.scrollIntoView({ block: 'center' }), radio);
+            await browser.pause(300);
+            const checked = await radio.getAttribute("aria-checked").catch(() => "false");
+            if (checked !== "true") {
+                try {
+                    await radio.click();
+                } catch (e) {
+                    await browser.execute((el: any) => el.click(), radio);
+                }
+            }
+            await browser.pause(300);
+        };
+
+        const notesXpath = (sectionTitle: string) =>
+            `//span[normalize-space()='${sectionTitle}']/following::textarea[1]`;
+
+        const oversizeText = "A".repeat(5200);
+
+        const enterNotes = async (sectionTitle: string, text: string) => {
+            const textarea = await $(notesXpath(sectionTitle));
+            if (await textarea.isDisplayed().catch(() => false)) {
+                await textarea.scrollIntoView();
+                await textarea.click();
+                await browser.execute((el: any, val: string) => {
+                    el.value = val;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }, textarea, text);
+                console.log(`Entered ${text.length} chars in section '${sectionTitle}'`);
+            } else {
+                console.log(`Textarea not found under section '${sectionTitle}'`);
+            }
+        };
+
+        const choosingExternalReference = async () => {
+            const externalRefBtn = await $("//span[normalize-space()='External reference']/following::span[@aria-label='Select Options']");
+            await externalRefBtn.waitForClickable({ timeout: 10000 });
+            await externalRefBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+            const options = await $$("//li[@role='option']");
+            for (const option of options) {
+                const text = await option.getText().catch(() => "");
+                console.log(`External reference option: ${text}`);
+            }
+            await options[0].click();
+            await utils.waitForBusyIndicatorToDisappear();
+            console.log("External reference selected");
+        };
+
+        const enterNotesForExternalReference = async (text: string) => {
+            const noteOpt = await $("//span[normalize-space()='External reference']/following::button[@title='course-book']");
+            if (await noteOpt.isDisplayed().catch(() => false)) {
+                await noteOpt.scrollIntoView();
+                await noteOpt.click();
+                await browser.execute((el: any, val: string) => {
+                    el.value = val;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }, noteOpt, text);
+                console.log(`Entered ${text.length} chars in External reference section`);
+            } else {
+                console.log(`Note Button not found under External reference section`);
+            }
+            const noteTextarea = await $("//span[normalize-space()='Notes']/following::textarea[1]");
+            if (await noteTextarea.isDisplayed().catch(() => false)) {
+                await noteTextarea.scrollIntoView();
+                await noteTextarea.click();
+                await browser.execute((el: any, val: string) => {
+                    el.value = val;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }, noteTextarea, text);
+                console.log(`Entered ${text.length} chars in Notes section`);
+                await browser.pause(300);   
+                const addNotesBtn = await $("//span[normalize-space()='Notes']/following::button[.//text()='Add']");
+                if (await addNotesBtn.isDisplayed().catch(() => false)) {
+                    await addNotesBtn.scrollIntoView();
+                    await addNotesBtn.click();
+                }
+            } else {
+                console.log(`Notes textarea not found under External reference section`);
+            }
+        };
+
+        await selectRandomRadio("Criticality : Operation", "SHE");
+        await enterNotes("Criticality : Operation", oversizeText);
+        await selectRandomRadio("Consequence", "FIN");
+        await enterNotes("Consequence", oversizeText);
+
+        await choosingExternalReference();
+        await enterNotesForExternalReference(oversizeText);
+
+        await utils.clickWithWait($(`//bdi[normalize-space()='Action:']/following::button[.//bdi[normalize-space()='Save']][1]`));
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickSuccessOkButton();
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        await console.log("Impact values saved");
+
+        const savedTextarea = await $(notesXpath("Criticality : Operation"));
+        await savedTextarea.waitForDisplayed({ timeout: 30000 });
+        await savedTextarea.scrollIntoView();
+        const savedValue = await browser.execute((el: any) => el.value, savedTextarea) as string;
+        const savedLength = (savedValue || "").length;
+        console.log(`Saved notes length after save: ${savedLength}`);
+        if (savedLength !== 5000) {
+            throw new AssertionError({
+                message: `Notes truncation failed: expected exactly 5000 characters after save but got ${savedLength}`
+            });
+        }
+        console.log("Notes truncated to exactly 5000 characters as expected");
+    }
+
     async deleteAssessment() {
         await console.log("Deleting assessment");
         await utils.switchToIframe(this.rncaIframe);
@@ -617,7 +813,7 @@ class RNCADetailPage {
         await utils.waitForBusyIndicatorToDisappear();
         await utils.clickWithWait($(`//button[.//bdi[normalize-space()='OK']]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await console.log("Assessment deleted successfully");
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(3000);
@@ -677,7 +873,7 @@ class RNCADetailPage {
         await utils.waitForBusyIndicatorToDisappear();
         const assignedSuccessDialog = await $("//div[@role='alertdialog']//span[text()='Technical Object Assigned successfully.']");
         await assignedSuccessDialog.waitForDisplayed({ timeout: 30000 });
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
         await utils.clickWithWait($("//a[text()='10000099']/ancestor::tr//div[@role='checkbox']"));
@@ -696,6 +892,17 @@ class RNCADetailPage {
         console.log("[STEP 1] Switching to RNCA iframe...");
         await utils.switchToIframe(this.rncaIframe);
         console.log("✓ Successfully switched to RNCA iframe.");
+        await browser.pause(3000);
+        await utils.switchToIframe(this.rncaIframe);
+        const firstCheckbox = await $("(//tbody//tr[@role='row']//div[@role='checkbox' and @tabindex='0' and not(ancestor::*[@aria-hidden='true'])])[1]");
+        await firstCheckbox.scrollIntoView();
+        await firstCheckbox.click();
+        const manageTemplateBtn = await $(`//button[.//bdi[normalize-space()='Manage Template'] or .//span[normalize-space()='Manage Template']]`);
+        await manageTemplateBtn.waitForClickable({ timeout: 50000 });
+        await manageTemplateBtn.click();
+        await browser.pause(3000);
+        await browser.keys(['Enter']);
+        await browser.pause(4000);
         console.log("[STEP 2] Locating Template Search textbox...");
         const searchTemplateBox = await $(
             "//div[@role='dialog']//input[@aria-label='Search']"
@@ -706,8 +913,8 @@ class RNCADetailPage {
         console.log("[STEP 4] Clearing existing text from Search textbox...");
         await searchTemplateBox.clearValue();
         console.log("✓ Search textbox cleared.");
-        console.log("[STEP 5] Entering template name: AT_ASINT_35");
-        await searchTemplateBox.setValue("AT_ASINT_35");
+        console.log("[STEP 5] Entering template name: " + RNCARiskData.templates.template_id);
+        await searchTemplateBox.setValue(RNCARiskData.templates.template_id);
         console.log("✓ Template name entered successfully.");
         console.log("[STEP 6] Locating Search icon...");
         const searchIcon = await $(
@@ -741,7 +948,7 @@ class RNCADetailPage {
         await assignedSuccessDialog.waitForDisplayed({ timeout: 30000 });
         console.log("✓ Success dialog displayed.");
         console.log("[STEP 14] Closing Success dialog...");
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         console.log("✓ Success dialog closed.");
         console.log("[STEP 15] Waiting for Busy Indicator after dialog...");
         await utils.waitForBusyIndicatorToDisappear();
@@ -801,7 +1008,7 @@ class RNCADetailPage {
         await assignedSuccessDialog.waitForDisplayed({ timeout: 30000 });
         console.log("✓ Template assigned successfully");
         console.log("Closing success dialog...");
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         console.log("========== Template Assignment Completed Successfully ==========");
         await browser.pause(5000);
@@ -838,7 +1045,7 @@ class RNCADetailPage {
         await assignedSuccessDialog.waitForDisplayed({ timeout: 30000 });
         console.log("✓ Success dialog displayed.");
         console.log("[STEP 12] Closing success dialog...");
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         console.log("✓ Success dialog closed.");
         console.log("[STEP 13] Waiting for Busy Indicator...");
         await utils.waitForBusyIndicatorToDisappear();
@@ -871,7 +1078,7 @@ class RNCADetailPage {
         await utils.waitForBusyIndicatorToDisappear();
         const assignedSuccessDialog = await $("//div[@role='alertdialog']//span[text()='Technical Object Assigned successfully.']");
         await assignedSuccessDialog.waitForDisplayed({ timeout: 30000 });
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
         await utils.clickWithWait($("//a[text()='10000099']/ancestor::tr//div[@role='checkbox']"));
@@ -930,7 +1137,7 @@ class RNCADetailPage {
         await assignedSuccessDialog.waitForDisplayed({ timeout: 30000 });
         console.log("✓ Template assigned successfully");
         console.log("Closing success dialog...");
-        await this.clickSuccessOkIfPresent(50000);
+        await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         console.log("========== Template Assignment Completed Successfully ==========");
         await browser.pause(5000);

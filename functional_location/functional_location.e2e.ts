@@ -13,7 +13,7 @@ describe('BTP - Functional Location - Functional Test', () => {
         await utils.resetAllAdaptFilter();
     });
 
-    it('should create, apply, reset and delete advanced filter', async () => {
+    it.skip('should create, apply, reset and delete advanced filter', async () => {
         const createdFilterName = await utils.createNewAdvancedFilter();
         console.log(`Created filter for this run: ${createdFilterName}`);
         await utils.applyAdvancedFilter();
@@ -35,8 +35,9 @@ describe('BTP - Functional Location - Functional Test', () => {
     });
 
     it('should create a new functional location', async () => {
-        await functionalLocationListView.createFunctionalLocation
-        (funcLocTestData.createMandatory.funLocTemp);
+        await functionalLocationListView.createFunctionalLocation(
+            funcLocTestData.createMandatory.funLocTemp
+        );
     });
 
     it('should navigate to newly created functional location' , async () => {

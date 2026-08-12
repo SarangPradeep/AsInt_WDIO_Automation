@@ -42,6 +42,6 @@
         "integrity",
         "planning/maintenance_orders",
         "wdio.conf.ts",
-        "planning/recommendation_workbench"    
-    ]
+        "planning/recommendation_workbench",    
+        "test_data/btp_applications/reliability/asset_criticality_analysis.data.ts"    ]
 }

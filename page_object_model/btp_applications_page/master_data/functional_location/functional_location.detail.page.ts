@@ -40,9 +40,9 @@ class functionalLocationDetailView {
     private get cntryBox() { return $("//span[text()='Select Country']"); }
     private get cntryBoxSelect() { return $("//span[.='Select Country']/ancestor::header/following::*[name()='circle'][2]"); }
     private get cntrySave() { return $("//footer//*[name()='bdi' and text()='Save']"); }
-    private get cnstYear() { return $("(//bdi[text()='Construction Year / Month']/ancestor::label/../following-sibling::div//span)[1]"); }
+    private get cnstYear() { return $("//bdi[text()='Construction Year / Month']/ancestor::label/../following-sibling::div//span[@aria-label='Open Picker']"); }
     private get cnstYearSelect() { return $(`//div[text()='${funcLocTestData.generalInfoEdit.constructionYear}']`); }
-    private get cnstMon() { return $("(//bdi[text()='Construction Year / Month']/ancestor::label/../following-sibling::div//span)[2]"); }
+    private get cnstMon() { return $("//bdi[text()='Construction Year / Month']/ancestor::label/../following-sibling::div//span[@aria-label='Select Options']"); }
     private get cnstMonSelect() { return $(`//span[text()='${funcLocTestData.generalInfoEdit.constructionMonth}']`); }
     private get mntPlant() { return $("//bdi[text()='Maintenance Plant']/following::input[1]"); }
     private get mntPlantBox() { return $("//span[text()='Select Maintenance Plant']"); }
@@ -80,12 +80,12 @@ class functionalLocationDetailView {
     private get infoSave() { return $("//bdi[normalize-space()='Save']/ancestor::button"); }
     private get infoSuccUpdate() { return $("//span[normalize-space()='Updated successfully']"); }
     private get infoUpdateOK() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
-    private get funLocStrucTab() { return $("//bdi[text()='Structure']"); }
-    private get funLocAssetIntTab() { return $("//bdi[text()='Asset Intelligence']"); }
-    private get funLocRiskSumTab() { return $("//bdi[text()='Risk Summary']"); }
-    private get funLocMainSerTab() { return $("//bdi[text()='Maintenance and Service']"); }
-    private get funLocAttach() { return $("//bdi[text()='Attachments']"); }
-    private get funLocChngHist() { return $("//bdi[text()='Change History']"); }
+    private get funLocStrucTab() { return $("//*[self::span or self::bdi][text()='Structure']"); }
+    private get funLocAssetIntTab() { return $("//*[self::span or self::bdi][text()='Asset Intelligence']"); }
+    private get funLocRiskSumTab() { return $("//*[self::span or self::bdi][text()='Risk Summary']"); }
+    private get funLocMainSerTab() { return $("//*[self::span or self::bdi][text()='Maintenance and Service']"); }
+    private get funLocAttach() { return $("//*[self::span or self::bdi][text()='Attachments']"); }
+    private get funLocChngHist() { return $("//*[self::span or self::bdi][text()='Change History']"); }
     private get editStrucInfo() { return $("//bdi[text()='Edit']"); }
     private get superFunLoc() { return $("//bdi[text()='Superior Functional Location']/following::input[1]"); }
     private get superFunLocBox() { return $("//span[text()='Select Functional Location']"); }
@@ -99,39 +99,40 @@ class functionalLocationDetailView {
     private get okBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
     private get okBtn2() { return $("//bdi[text()='Ok']"); }
     private get compInfoFunLocAsgn() { return $("//li[contains(.,'Functional Location')]"); }
-    private get groups() { return $("//div[text()='Groups']/following::span[1]"); }
-    private get components() { return $("//div[text()='Component Information']/following::span[1]"); }
-    private get funLocAsgnTab() { return $("//bdi[text()='Assignments']"); }
-    private get funLocMDATab() { return $("//bdi[text()='Classification & MDA']"); }
-    private get asgnFunLocTemp() { return $("(//div[text()='Functional Location Templates']/following::bdi[text()='Assign'])[1]"); }
-    private get asgnClsAndChr() { return $("(//div[text()='Class & Characteristics']/following::bdi[text()='Assign'])[1]"); }
+    private get groups() { return $("//span[text()='Groups']/following::span[1]"); }
+    private get components() { return $("//h2//span[contains(text(),'Components')]"); }
+    private get funLocAsgnTab() { return $("//*[self::span or self::bdi][text()='Assignments']"); }
+    private get funLocMDATab() { return $("//*[self::span or self::bdi][text()='Classification & MDA']"); }
+    private get asgnFunLocTemp() { return $("(//span[text()='Functional Location Templates']/following::bdi[text()='Assign'])[1]"); }
+    private get asgnClsAndChr() { return $("(//span[text()='Class & Characteristics']/following::bdi[text()='Assign'])[1]"); }
     private get asgnChrMDA() { return $("//span[text()='Maintenance Data Attribute']/following::bdi[text()='Assign']"); }
     private get autoAsgnClsAndChr() { return $("//footer//div[@role='checkbox' and .//bdi[text()='Auto assign Class and Characteristics']]"); }
     private get class() { return $("//div[text()='Class & Characteristics']/following::span[1]"); }
     private get noOfClassMDA() { return $("//span[text()='Assign Classes']/following::span[2]"); }
     private get characteristics() { return $("//div[text()='Class & Characteristics']/following::h2[2]"); }
     private get noOfCharMDA() { return $("//span[text()='Maintenance Data Attribute']/following::h2//span"); }
-    private get riskAndCriticality() { return $("//div[text()='Risk and Criticality']/following::span[1]"); }
-    private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]]'); }
-    private get assetInsp() { return $("//div[text()='Asset Inspection']/following::span[1]"); }
-    private get findings() { return $("//div[text()='Findings']/following::span[1]"); }
-    private get recommend() { return $("//div[text()='Recommendations']/following::span[1]"); }
-    private get maintainNoti() { return $("//div[text()='Maintenance Notification']/following::span[1]"); }
-    private get maintainOrder() { return $("//div[text()='Maintenance Order']/following::span[1]"); }
-    private get maintainPlan() { return $("//div[text()='Maintenance Plan']/following::span[1]"); }
-    private get recomWrk() { return $("//div[text()='Recommendation Workbench']/following::span[1]"); }
-    private get maintaintask() { return $("//div[text()='Maintenance Tasks']/following::span[5]"); }
-    private get assetStrategyRBI() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[1]"); }
-    private get assetStrategyRCM() { return $("(//div[text()='Asset Strategy']/following::li//div//div)[2]"); }
-    private get riskProfile() { return $("//bdi[text()='Risk Summary']//following::h2[1]"); }
-    private get component() { return $("//bdi[text()='Risk Summary']//following::h2[2]"); }
-    private get recommendation() { return $("//bdi[text()='Risk Summary']//following::div[@aria-level='2']//span"); }
-    private get funLocTemp() { return $("//div[text()='Functional Location Templates']/following::span[1]"); }
+    private get riskAndCriticality() { return $("//span[text()='Risk and Criticality']/following::span[1]"); }
+    private get assetInsp() { return $("//span[text()='Asset Inspection']/following::span[1]"); }
+    private get findings() { return $("//span[text()='Findings']/following::span[1]"); }
+    private get recommend() { return $("//span[text()='Recommendations']/following::span[1]"); }
+    private get maintainNoti() { return $("//span[text()='Maintenance Notification']/following::span[1]"); }
+    private get maintainOrder() { return $("//span[text()='Maintenance Order']/following::span[1]"); }
+    private get maintainPlan() { return $("//span[text()='Maintenance Plan']/following::span[1]"); }
+    private get recomWrk() { return $("//span[text()='Recommendation Workbench']/following::span[1]"); }
+    private get maintaintask() { return $("//span[text()='Maintenance Tasks']/following::span[5]"); }
+    private get assetStrategyRBI() { return $("(//span[text()='Asset Strategy']/following::li//div//div)[1]"); }
+    private get assetStrategyRCM() { return $("(//span[text()='Asset Strategy']/following::li//div//div)[2]"); }
+    private get riskProfile() { return $("//span[text()='Risk Summary']//following::h2[1]"); }
+    private get component() { return $("//span[text()='Risk Summary']//following::h2[2]"); }
+    private get recommendation() { return $("//span[text()='Risk Summary']//following::div[@aria-level='2']//span"); }
+    private get funLocTemp() { return $("//span[text()='Functional Location Templates']/following::span[1]"); }
     private get noOfCML() { return $("//h2//span[contains(text(),'CML')]"); }
     private get deleteBtn() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Delete']]"); }
     private get downloadReport() { return $("//*[contains(@class,'sapUxAPObjectPageLayout')]//header//button[.//bdi[normalize-space()='Download Report']]"); }
     private get attachSuccMsg() { return $("//span[text()='Success']"); }
     private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
+    private get funLocGeneralInfoTab() { return $("//*[self::span or self::bdi][text()='General Information']"); }
+    private get tabOptions() { return $$("//span[@aria-label='slim-arrow-down']/ancestor::div[@role='button']"); }
     
     public superFuncLocValue!: string;
     public funcLocHeadValue!: string;
@@ -174,6 +175,7 @@ class functionalLocationDetailView {
 
     public async verifyAndEditGeneralInfo() {
         console.log("Verifying and editing General Information");
+        await utils.clickWithWait(this.funLocGeneralInfoTab);
         await utils.clickWithWait(this.editGenInfo);
         await utils.clickWithWait(this.objectType);
         await this.selectObjGrpBox.waitForDisplayed({ timeout: 90000 });
@@ -805,7 +807,7 @@ class functionalLocationDetailView {
         console.log("Header edited successfully");
 
         console.log("Navigating to Change History tab");
-        await utils.clickWithWait(this.funLocChngHist);
+        await utils.selectTabFromDropdown("Change History");
         await this.funLocChngHist.waitForDisplayed({ timeout: 30000 });
         console.log("Navigated to Change History tab successfully");
         console.log("Fetching latest change history entry");
@@ -993,11 +995,23 @@ class functionalLocationDetailView {
         await utils.clickWithWait(this.downloadReport);
         const expectedFilters: string[] = [];
         try {
+            const confirmYesBtn = await $("//header[.//text()='Confirmation']/following::button[.//text()='Yes']");
+            if(await confirmYesBtn.isExisting()) {
+                console.log("Confirmation popup detected, clicking Yes");
+                await utils.clickWithWait(confirmYesBtn);
+            }
+            await utils.clickSuccessOkButton();
             const info = await $("//*[contains(text(),'Failed to export')]");
-            await info.waitForDisplayed({ timeout: 7000 });
-            console.log(await info.getText());
+            if(await info.isExisting()) {
+                console.log("Export failed popup detected, capturing details");
+            }
             const viewDetails = await $("//span[.='Failed to export the following']/following::a");
-            await utils.clickWithWait(viewDetails);
+            if(await viewDetails.isExisting()) {
+                console.log("View Details link detected, clicking to view details");
+            }
+            if(await viewDetails.isExisting()) {
+                await utils.clickWithWait(viewDetails);
+            }
             const filterNames = await $$("//span[.='Failed to export the following']/following-sibling::div//li");
             for (const el of filterNames) {
                 const text = (await el.getText()).trim();
@@ -1010,6 +1024,7 @@ class functionalLocationDetailView {
         } catch (e) {
             console.log("Export success popup not shown");
         }
+        
         console.log("Download initiated, waiting for file to be downloaded...");
         const filePath = await utils.waitForDownload('.pdf');
         console.log("File downloaded at:", filePath);

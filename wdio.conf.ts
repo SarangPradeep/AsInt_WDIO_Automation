@@ -34,7 +34,8 @@ export const config: WebdriverIO.Config = {
         './planning/notifications/*.e2e.ts',
         './planning/maintenance_orders/*.e2e.ts',
         './integrity/cmls/*.e2e.ts',
-
+        './sit3_test_cases/recommendation_workbench/052.ts',
+        './sit3_test_cases/asset_risk_and_criticality_analysis/008.ts',
         // './safety_group/safety.e2e.ts',
     ],
     exclude: [],

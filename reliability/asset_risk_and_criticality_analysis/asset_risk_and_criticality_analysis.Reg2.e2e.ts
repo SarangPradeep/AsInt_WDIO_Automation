@@ -3,7 +3,7 @@ import rncaDetailpage from '../../page_object_model/btp_applications_page/reliab
 import { browser, expect } from '@wdio/globals';
 import utils from '../../utils/utils';
 
-describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Functional Test', () => {
+describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Regression Test', () => {
 
 	it('should click on asset risk and criticality analysis application', async () => {
 		await rncaListViewPage.navigateToRNCAListView();
@@ -20,7 +20,7 @@ describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Function
 		await rncaListViewPage.selectRiskType('Current Risk');
 		await rncaListViewPage.selectAllowedObjects('Both');
 		await rncaListViewPage.selectCurrencyByIndex(3);
-		const selectedCurrency = await rncaListViewPage.getSelectedCurrencyValue();	
+		const selectedCurrency = await rncaListViewPage.getSelectedCurrencyValue();
 		await expect(selectedCurrency).not.toEqual('');
 		await rncaListViewPage.saveNewAssessment();
 		await utils.waitForBusyIndicatorToDisappear();
@@ -34,7 +34,7 @@ describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Function
 		await rncaDetailpage.editGeneralInformation('Updated Test Assessment', 'This is updated automation test');
 	});
 
-	it.skip('should verify Administrative Information tab', async () => {
+	it('should verify Administrative Information tab', async () => {
 		await rncaDetailpage.verifyAdministrativeInformation();
 	});
 
@@ -48,19 +48,28 @@ describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Function
 	});
 
 	it('should assign equipment to the assessment and verify', async () => {
-		await rncaDetailpage.assignEquipment('Test Equipment 123');
+		await rncaDetailpage.assignEquipmentByName();
 	});
 
-	it('should assign Assessment Template to the technical object', async () => {
-		await rncaDetailpage.assignTemplate('Test Template');
+	it('should assign Technical Object and Assessment Template for AlphaNumeric Risk type', async () => {
+		await rncaDetailpage.assignTemplateByAlphaNumericRisk();
 	});
 
-	it('should calculate risk Details on Assessment section and verify risk details', async () => {
-		await rncaDetailpage.calculateRiskOnAssessment();
+	it('should remove Assessment Template from the technical object', async () => {
+		await rncaDetailpage.removeTemplate();
 	});
 
-	it('should delete the created assessment and verify', async () => {
-		await rncaDetailpage.deleteAssessment();
+	it('should assign equipment again to the assessment and verify', async () => {
+		await rncaDetailpage.assignEquipmentAgainForNumericRisk();
 	});
+
+	it('should assign Technical Object and Assessment Template for Numeric Risk type', async () => {
+		await rncaDetailpage.assignTemplateByNumericRisk();
+	});
+
+	it('should remove Assessment Template from the technical object', async () => {
+		await rncaDetailpage.removeTemplate();
+	});
+
 
 });

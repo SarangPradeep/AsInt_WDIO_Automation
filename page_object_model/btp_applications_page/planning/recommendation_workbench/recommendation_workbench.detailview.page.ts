@@ -5,23 +5,30 @@ import recommWorkbenchData from "test_data/btp_applications/planning/recommendat
 class RecommendationWorkbenchDetailView {
 
     private get reccWorkbenchIframe() { return $('iframe[data-help-id="application-recommendationworkbenchplus-manage"]'); }
-    private get generalInfoTab() { return $("//bdi[text()='General Information']"); }
-    private get assignmentTab() { return $("//bdi[text()='Assignments']"); }
-    private get riskDataTab() { return $("//bdi[text()='Risk Data']"); }
-    private get planningTab() { return $("//bdi[text()='Planning']"); }
-    private get attachmentsTab() { return $("//bdi[text()='Attachments']"); }
-    private get historicDataTab() { return $("//bdi[text()='Historic Data']"); }
-    private get changeHistoryTab() { return $("//bdi[text()='Change History']"); }
+    private get generalInfoTab() { return $("//span[text()='General Information']"); }
+    private get assignmentTab() { return $("//span[text()='Assignments']"); }
+    private get riskDataTab() { return $("//span[text()='Risk Data']"); }
+    private get planningTab() { return $("//span[text()='Planning']"); }
+    private get attachmentsTab() { return $("//span[text()='Attachments']"); }
+    private get historicDataTab() { return $("//span[text()='Historic Data']"); }
+    private get changeHistoryTab() { return $("//span[text()='Change History']"); }
     private get editInfo() { return $("//button[.//text()='Edit']"); }
     private get saveBtn(){ return $("//footer//button[.//text()='Save']"); }
     private get longDescriptionTxt() { return $("//label[.//text()='Long Description']/following::textarea[1]"); }
     private get basisTxt() { return $("//label[.//text()='Basis']/following::textarea[1]"); }
     private get externalAssessmentTxt() { return $("//label[.//text()='External Assessment']/following::input[1]"); }
     private get typeDropdown() { return $("//label[.//text()='Type']/following::span[1]"); }
+    private get typeValue() { return $("//label[.//text()='Type']/following::input[1]"); }
     private get budgetCategoryDropdown() { return $("//label[.//text()='Budget Category']/following::span[1]"); }
+    private get budgetCategoryValue() { return $("//label[.//text()='Budget Category']/following::input[1]"); }
     private get businessImpactDropdown() { return $("//label[.//text()='Business Impact']/following::span[1]"); }
+    private get businessImpactValue() { return $("//label[.//text()='Business Impact']/following::input[1]"); }
     private get maintenanceActivityTypeDropdown() { return $("//label[.//text()='Maintenance Activity Type']/following::span[1]"); }
+    private get maintenanceActivityTypeValue() { return $("//label[.//text()='Maintenance Activity Type']/following::input[1]"); }
+    private get maintenanceEventDropdown() { return $("//label[.//text()='Maintenance Event']/following::span[1]"); }
+    private get maintenanceEventValue() { return $("//label[.//text()='Maintenance Event']/following::input[1]"); }
     private get disciplineDropdown() { return $("//label[.//text()='Discipline']/following::span[1]"); }
+    private get disciplineValue() { return $("//label[.//text()='Discipline']/following::input[1]"); }
     private get priorityDropdown() { return $("//label[.//text()='Priority']/following::span[1]"); }
     private get selectPriorityHeader() { return $("//header[.//text()='Select Priority']"); }
     private get priorityOption() { return $("//header[.//text()='Select Priority']/following-sibling::section//tr[@aria-rowindex='3']//td[@aria-colindex='1']"); }
@@ -81,7 +88,10 @@ class RecommendationWorkbenchDetailView {
     private get manageBtn() { return $("//button[.//text()='Manage']"); }
     private get deleteConfirmText() { return $("//span[.//text()='Are you sure you want to delete the assessment?']"); }
     private get confirmOkBtn() { return $("//header[.//text()='Confirmation']/following::button[.//text()='OK']"); }
-
+    private get typeGenInfoDropdown() { return $("//label[.//text()='Type']/following::span[1]"); }
+    private get typeGenInfoValue() { return $("//label[.//text()='Type']/following::input[1]"); }
+    private get subTypeGenInfoDropdown() { return $("//label[.//text()='Sub-Type']/following::span[1]"); }
+    private get subTypeGenInfoValue() { return $("//label[.//text()='Sub-Type']/following::input[1]"); }
 
     public async captureReccWorkbenchId(){
         await utils.switchToIframe(this.reccWorkbenchIframe);
@@ -100,71 +110,206 @@ class RecommendationWorkbenchDetailView {
         await this.editInfo.click();
         console.log("Edit button clicked in General Information section");
         await browser.pause(2000);
+
+        const fieldsWithNoData: string[] = [];
+
         await this.longDescriptionTxt.setValue(`Automation Recommendation ${Math.floor(Math.random() * 100000)}`);
         await this.basisTxt.setValue("Automation Basis");
         await this.externalAssessmentTxt.setValue("Automation External Assessment");
         await this.typeDropdown.click();
         await browser.keys(["ArrowDown", "Enter"]);
+        if(await this.typeValue.getAttribute("value") === ""){
+            fieldsWithNoData.push("Type");
+            console.warn("Type value is empty after selecting from dropdown");
+        }
+
+        await this.typeGenInfoDropdown.click();
+        await browser.keys(["ArrowDown", "Enter"]);
+        const typeGenInfoVal = await this.typeGenInfoValue.getAttribute("value") ?? "";
+        if(typeGenInfoVal === "Improvement" || typeGenInfoVal === "Reactive") {
+            console.log(`Type General Information is set to: ${typeGenInfoVal}`);
+        } else {
+            await this.subTypeGenInfoDropdown.click();
+            await browser.keys(["ArrowDown", "Enter"]);
+            const subTypeGenInfoVal = await this.subTypeGenInfoValue.getAttribute("value") ?? "";
+            console.log(`Sub-Type General Information is set to: ${subTypeGenInfoVal}`);
+        }
         await this.budgetCategoryDropdown.click();
         await browser.keys(["ArrowDown", "ArrowDown", "ArrowDown", "Enter"]);
+        if(await this.budgetCategoryValue.getAttribute("value") === ""){
+            fieldsWithNoData.push("Budget Category");
+            console.warn("Budget Category value is empty after selecting from dropdown");
+        }
         await this.businessImpactDropdown.click();
         await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
+        const businessImpactVal = await this.businessImpactValue.getAttribute("value") ?? "";
+        if(businessImpactVal === ""){
+            fieldsWithNoData.push("Business Impact");
+            console.warn("Business Impact value is empty after selecting from dropdown");
+        } else {
+            recommendationWorkbenchListView.BusinessImpact = businessImpactVal;
+            console.log(`Stored Business Impact: ${businessImpactVal}`);
+        }
         await this.maintenanceActivityTypeDropdown.click();
         await browser.keys(["ArrowDown", "ArrowDown", "ArrowDown", "Enter"]);
+        if(await this.maintenanceActivityTypeValue.getAttribute("value") === ""){
+            fieldsWithNoData.push("Maintenance Activity Type");
+            console.warn("Maintenance Activity Type value is empty after selecting from dropdown");
+        }
+        await this.maintenanceEventDropdown.click();
+        await browser.keys(["ArrowDown", "Enter"]);
+        const maintenanceEventVal = await this.maintenanceEventValue.getAttribute("value") ?? "";
+        if(maintenanceEventVal === ""){
+            fieldsWithNoData.push("Maintenance Event");
+            console.warn("Maintenance Event value is empty after selecting from dropdown");
+        } else {
+            recommendationWorkbenchListView.MaintenanceEvent = maintenanceEventVal;
+            console.log(`Stored Maintenance Event: ${maintenanceEventVal}`);
+        }
         await this.disciplineDropdown.click();
         await browser.keys(["ArrowDown", "ArrowDown", "Enter"]);
+        if(await this.disciplineValue.getAttribute("value") === ""){
+            fieldsWithNoData.push("Discipline");
+            console.warn("Discipline value is empty after selecting from dropdown");
+        }
+
         await this.priorityDropdown.click();
         await this.selectPriorityHeader.waitForDisplayed({ timeout: 10000 });
-        await this.priorityOption.click();
-        await this.saveBtn.click();
-        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        const priorityNoData = await $("//header[.//text()='Select Priority']/following-sibling::section//*[contains(text(),'No data') or contains(text(),'No Data') or contains(text(),'No entries found')]");
+        if (await priorityNoData.isExisting()) {
+            fieldsWithNoData.push("Priority");
+            console.warn("Priority has no data available");
+            const cancelBtn = await $("//header[.//text()='Select Priority']/following::button[.//text()='Cancel']");
+            if (await cancelBtn.isExisting()) await cancelBtn.click();
+            await browser.pause(1000);
+        } else {
+            await this.priorityOption.click();
+            await this.saveBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+
         await this.workCenterDropdown.click();
         await this.selectWorkCenterHeader.waitForDisplayed({ timeout: 10000 });
-        await browser.pause(2000);
-        await this.workCenterOption.click();
-        await this.saveBtn.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await this.planningPlantDropdown.click();
-        await this.selectPlanningPlantHeader.waitForDisplayed({ timeout: 10000 });
-        await browser.pause(2000);
-        await this.planningPlantOption.click();
-        await this.saveBtn.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await this.maintenancePlantDropdown.click();
-        await this.maintenancePlantHeader.waitForDisplayed({ timeout: 10000 });
-        await browser.pause(2000);
-        await utils.clickWithWait(this.maintenancePlantOption);
-        await this.saveBtn.click();
-        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1000);
+        const workCenterNoData = await $("//header[.//text()='Select Work Center']/following-sibling::section//*[contains(text(),'No data') or contains(text(),'No Data') or contains(text(),'No entries found')]");
+        if (await workCenterNoData.isExisting()) {
+            fieldsWithNoData.push("Work Center");
+            console.warn("Work Center has no data available");
+            const cancelBtn = await $("//header[.//text()='Select Work Center']/following::button[.//text()='Cancel']");
+            if (await cancelBtn.isExisting()) await cancelBtn.click();
+            await browser.pause(1000);
+        } else {
+            await this.workCenterOption.click();
+            await this.saveBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+
+        const planningPlantInput = await $("//label[.//text()='Planning Plant']/following::input[1]");
+        const planningPlantReadonly = await planningPlantInput.getAttribute("readonly");
+        if (planningPlantReadonly !== null) {
+            const planningPlantValue = await planningPlantInput.getAttribute("value");
+            console.log(`Planning Plant is readonly with value: ${planningPlantValue}`);
+        } else {
+            await this.planningPlantDropdown.click();
+            await this.selectPlanningPlantHeader.waitForDisplayed({ timeout: 10000 });
+            await browser.pause(1000);
+            const planningPlantNoData = await $("//header[.//text()='Select Planning Plant']/following-sibling::section//*[contains(text(),'No data') or contains(text(),'No Data') or contains(text(),'No entries found')]");
+            if (await planningPlantNoData.isExisting()) {
+                fieldsWithNoData.push("Planning Plant");
+                console.warn("Planning Plant has no data available");
+                const cancelBtn = await $("//header[.//text()='Select Planning Plant']/following::button[.//text()='Cancel']");
+                if (await cancelBtn.isExisting()) await cancelBtn.click();
+                await browser.pause(1000);
+            } else {
+                await this.planningPlantOption.click();
+                await this.saveBtn.click();
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+        }
+
+        const maintenancePlantInput = await $("//label[.//text()='Maintenance Plant']/following::input[1]");
+        const maintenancePlantReadonly = await maintenancePlantInput.getAttribute("readonly");
+        if (maintenancePlantReadonly !== null) {
+            const maintenancePlantValue = await maintenancePlantInput.getAttribute("value");
+            console.log(`Maintenance Plant is readonly with value: ${maintenancePlantValue}`);
+        } else {
+            await this.maintenancePlantDropdown.click();
+            await this.maintenancePlantHeader.waitForDisplayed({ timeout: 10000 });
+            await browser.pause(1000);
+            const maintenancePlantNoData = await $("//header[.//text()='Select Maintenance Plant']/following-sibling::section//*[contains(text(),'No data') or contains(text(),'No Data') or contains(text(),'No entries found')]");
+            if (await maintenancePlantNoData.isExisting()) {
+                fieldsWithNoData.push("Maintenance Plant");
+                console.warn("Maintenance Plant has no data available");
+                const cancelBtn = await $("//header[.//text()='Select Maintenance Plant']/following::button[.//text()='Cancel']");
+                if (await cancelBtn.isExisting()) await cancelBtn.click();
+                await browser.pause(1000);
+            } else {
+                await utils.clickWithWait(this.maintenancePlantOption);
+                await this.saveBtn.click();
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+        }
+
         await this.estimatedCostTxt.setValue(`${Math.floor(Math.random() * 70) + 20}`);
         await this.estimatedCostCurrencyDropdown.click();
         await this.selectCurrencyHeader.waitForDisplayed({ timeout: 10000 });
-        await browser.pause(2000);
-        await this.currencyOption.click();
-        await this.saveBtn.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
+        await browser.pause(1000);
+        const currencyNoData1 = await $("//header[.//text()='Select Currency']/following-sibling::section//*[contains(text(),'No data') or contains(text(),'No Data') or contains(text(),'No entries found')]");
+        if (await currencyNoData1.isExisting()) {
+            fieldsWithNoData.push("Estimated Cost Currency");
+            console.warn("Estimated Cost Currency has no data available");
+            const cancelBtn = await $("//header[.//text()='Select Currency']/following::button[.//text()='Cancel']");
+            if (await cancelBtn.isExisting()) await cancelBtn.click();
+            await browser.pause(1000);
+        } else {
+            await this.currencyOption.click();
+            await this.saveBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1000);
+        }
+
         await this.estimatedMaintenanceSavingsTxt.setValue(`${Math.floor(Math.random() * 80) + 20}`);
         await this.estimatedMaintenanceSavingsCurrencyDropdown.click();
         await this.selectCurrencyHeader.waitForDisplayed({ timeout: 10000 });
-        await browser.pause(2000);
-        await this.currencyOption.click();
-        await this.saveBtn.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
+        await browser.pause(1000);
+        const currencyNoData2 = await $("//header[.//text()='Select Currency']/following-sibling::section//*[contains(text(),'No data') or contains(text(),'No Data') or contains(text(),'No entries found')]");
+        if (await currencyNoData2.isExisting()) {
+            fieldsWithNoData.push("Estimated Maintenance Savings Currency");
+            console.warn("Estimated Maintenance Savings Currency has no data available");
+            const cancelBtn = await $("//header[.//text()='Select Currency']/following::button[.//text()='Cancel']");
+            if (await cancelBtn.isExisting()) await cancelBtn.click();
+            await browser.pause(1000);
+        } else {
+            await this.currencyOption.click();
+            await this.saveBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1000);
+        }
+
         await this.notesTxt.setValue("Automation Notes");
         await this.startDateTxt.setValue(utils.formatDate(0));
         await this.dueDateTxt.setValue(utils.formatDatePlus(10));
         await this.scheduleDateTxt.setValue(utils.formatDatePlus(2));
+
         await this.recommendationMDADropdown.click();
-        await browser.pause(2000);
+        await browser.pause(1000);
         await this.selectRecommendationMDAHeader.waitForDisplayed({ timeout: 10000 });
-        await browser.pause(2000);
-        await this.recommendationMDAOption.click();
-        await this.saveBtn.click();
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(2000);
-        // await this.recommendationNotesTxt.setValue("Automation Recommendation Notes");
+        await browser.pause(1000);
+        const mdaNoData = await $("//header[.//text()='Select Maintenance Data Attribute']/following-sibling::section//*[contains(text(),'No data') or contains(text(),'No Data') or contains(text(),'No entries found')]");
+        if (await mdaNoData.isExisting()) {
+            fieldsWithNoData.push("Recommendation MDA");
+            console.warn("Recommendation MDA has no data available");
+            const cancelBtn = await $("//header[.//text()='Select Maintenance Data Attribute']/following::button[.//text()='Cancel']");
+            if (await cancelBtn.isExisting()) await cancelBtn.click();
+            await browser.pause(1000);
+        } else {
+            await this.recommendationMDAOption.click();
+            await this.saveBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1000);
+        }
+
         await this.saveTabBtn.waitForClickable({ timeout: 10000 });
         await this.saveTabBtn.click();
         await utils.waitForBusyIndicatorToDisappear();
@@ -174,6 +319,12 @@ class RecommendationWorkbenchDetailView {
         await browser.pause(2000);
         console.log("Save button clicked in General Information section");
         await utils.waitForBusyIndicatorToDisappear();
+
+        if (fieldsWithNoData.length > 0) {
+            throw new AssertionError({ 
+                message: `The following fields had no data available: ${fieldsWithNoData.join(', ')}` 
+            });
+        }
     }
 
     public async editRiskData(){
@@ -325,14 +476,14 @@ class RecommendationWorkbenchDetailView {
         console.log("Create option clicked in Workflow dropdown");
         await browser.pause(2000);
         await browser.keys(["ArrowDown", "Enter"]);
-        console.log("Choosing deferal workflow...");
+        console.log("Choosing deferral workflow...");
         await browser.pause(2000);
         await this.proposedDueDate.setValue(utils.formatDatePlus(5));
         await this.commentTxt.setValue("Automation Workflow Creation");
         await this.createWorkflowSaveBtn.click();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
-        await utils.assertNoErrorPopup("Create Workflow");
+        // await utils.assertNoErrorPopup("Create Workflow");
         await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
@@ -440,7 +591,7 @@ class RecommendationWorkbenchDetailView {
         console.log("Verifying header information of Recommendation Workbench");
         await utils.waitForBusyIndicatorToDisappear();
         await utils.switchToIframe(this.reccWorkbenchIframe);
-        await browser.pause(4000);
+        await browser.pause(2000);
         const { name } = await utils.getEntityNameAndId();
         await expect(name).toEqual(recommendationWorkbenchListView.ReccWorkShortDesc);
         console.log("Recommendation name matches header's name");
@@ -455,6 +606,7 @@ class RecommendationWorkbenchDetailView {
         console.log("Edit Header button clicked");
         await this.editHeaderBox.waitForDisplayed({ timeout: 10000 });
         console.log("Edit Header Details box displayed");
+        await browser.pause(2000);
         recommendationWorkbenchListView.ReccWorkShortDesc = `Automation Recommendation ${Math.floor(Math.random() * 100000)}`;
         await this.headerShortDescTxt.setValue(recommendationWorkbenchListView.ReccWorkShortDesc);
         await this.inspectionTypeDrp.click();

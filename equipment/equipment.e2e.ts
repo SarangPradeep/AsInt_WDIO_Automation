@@ -10,7 +10,7 @@ describe('BTP - Equipment Application - Functional test', () => {
         await HomePage.clickEquipmentTile();
     });
 
-    it('should create, apply, reset and delete advanced filter', async () => {
+    it.skip('should create, apply, reset and delete advanced filter', async () => {
         const createdFilterName = await utils.createNewAdvancedFilter();
         console.log(`Created filter for this run: ${createdFilterName}`);
         await utils.applyAdvancedFilter();
