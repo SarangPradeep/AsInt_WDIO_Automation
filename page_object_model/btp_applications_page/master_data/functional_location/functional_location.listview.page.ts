@@ -19,7 +19,7 @@ class functionalLocationListView {
     private get oKbtn2() { return $("//bdi[text()='OK']"); }
     private get search() { return $("//input[@type='search' and not(@title) and not(@aria-haspopup) and not(@aria-labelledby)]"); }
     private funcLocSearched() { return $("(//tr[@role='row']//span[@title='Navigation'])[1]"); }
-    private get funLocGeneralInfoTab() { return $("//bdi[text()='General Information']/ancestor::button"); }
+    private get funLocGeneralInfoTab() { return $("//span[text()='General Information']"); }
     private get funLocIframe() { return $('iframe[data-help-id="application-functionallocation-manage"]'); }
     public functionalLocName!: string;
     public functionalLocDescName!: string;
@@ -124,7 +124,7 @@ class functionalLocationListView {
 
                 const search = await $("//input[@type='search']");
                 if (await search.isExisting()) {
-                    return true; // correct frame
+                    return true;
                 }
                 await browser.switchFrame(null);
             } catch (e) {
@@ -134,8 +134,8 @@ class functionalLocationListView {
         return false;
         }, { timeout: 30000 });
 
-        const getVisibleSearch = async () => {
-            const elements = await $$("//input[@type='search']");
+        const getVisibleElement = async (selector: string) => {
+            const elements = await $$(selector);
             for (const el of elements) {
                 if (await el.isDisplayed()) {
                     return el;
@@ -144,41 +144,49 @@ class functionalLocationListView {
             return null;
         };
 
-        let searchBox;
-        await browser.waitUntil(async () => {
-            searchBox = await getVisibleSearch();
-            return searchBox !== null;
-        }, { timeout: 30000 });
-
-        if (!searchBox) {
-            throw new AssertionError({ message: "Visible search box not found" });
+        console.log("Opening Adapt Filter");
+        let adaptFilterBtn = await getVisibleElement("//bdi[text()='Adapt Filters']");
+        if (!adaptFilterBtn) {
+            throw new AssertionError({ message: "Adapt Filters button not found" });
         }
-        console.log("Visible search box found, searching for deleted Functional Location");
+        await adaptFilterBtn.waitForClickable({ timeout: 10000 });
+        await adaptFilterBtn.click();
+        await browser.pause(2000);
+
+        console.log("searching for Display ID field in Adapt Filter");
+        const searchInput = await getVisibleElement("//input[@placeholder='Search for Filters']");
+        if (!searchInput) {
+            throw new AssertionError({ message: "Search input in Adapt Filter not found" });
+        }
+        await searchInput.waitForDisplayed({ timeout: 10000 });
+        await searchInput.setValue("Display Id");
+        await browser.pause(2000);
+
+        console.log("Adding Display ID field to filter");
+        const displayIDOption = await $("//bdi[text()='Display Id']/ancestor::td[1]/preceding-sibling::td[1]");
+        await displayIDOption.waitForDisplayed({ timeout: 10000 });
+        await displayIDOption.click();
+        await browser.pause(1000);
+
+        const okFilterBtn = await getVisibleElement("//button[.//text()='OK']");
+        if (okFilterBtn) {
+            await okFilterBtn.click();
+            await browser.pause(2000);
+        }
+        await browser.pause(2000);
+        console.log("Entering Display ID in filter field");
+        const displayIDInput = await getVisibleElement("//label[.//text()='Display Id']/following::input[1]");
+        if (!displayIDInput) {
+            throw new AssertionError({ message: "Display ID input field not found" });
+        }
         await browser.execute((el, value) => {
             const input = el as unknown as HTMLInputElement;
             input.value = value as string;
             input.dispatchEvent(new Event('input', { bubbles: true }));
-        }, searchBox, functionalLocationDetailView.displayID);
+        }, displayIDInput, functionalLocationDetailView.displayID);
         console.log(`Searched for Functional Location with Display ID: ${functionalLocationDetailView.displayID}`);
-        const getVisibleGo = async () => {
-            const buttons = await $$("//bdi[text()='Go']");
-            for (const btn of buttons) {
-                if (await btn.isDisplayed()) {
-                    return btn;
-                }
-            }
-            return null;
-        };
 
-        let goBtn: any;
-        await browser.waitUntil(async () => {
-            goBtn = await getVisibleGo();   // should return Element | null
-            return goBtn !== null;
-        }, {
-            timeout: 20000,
-            interval: 500,
-            timeoutMsg: "Go button not found"
-        });
+        let goBtn = await getVisibleElement("//bdi[text()='Go']");
         if (!goBtn) {
             throw new AssertionError({ message: "Go button not found" });
         }

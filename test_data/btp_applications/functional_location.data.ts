@@ -49,9 +49,9 @@ export const funcLocTestData = {
         noOfCharacteristics: 2
     },
     searchFunLoc: {
-        functionallocation1: 'ASIN-DNST-P001-COMP-ACLE',
+        functionallocation1: 'ASPM-REFI-P001-CDPU',
         functionallocation2: 'ASIN-1001-PROD-RECT-RUPR-LP3',
-        displayId1: 'FLOC.640',
+        displayId1: 'FLOC.7304',
         displayId2: 'FLOC.2211'
     }
 } as const;

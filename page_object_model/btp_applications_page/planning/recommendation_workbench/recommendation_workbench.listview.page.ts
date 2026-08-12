@@ -36,6 +36,8 @@ class RecommendationWorkbenchListView {
     public ReccWorkLongDesc!: string;
     public MSPItemShortDesc!: string;
     public MSPItemLongDesc!: string;
+    public MaintenanceEvent!: string;
+    public BusinessImpact!: string;
 
     public async navigateRecommendationWorkbenchListView(){
         console.log("Navigating to Recommendation Workbench - start");
@@ -53,49 +55,46 @@ class RecommendationWorkbenchListView {
         await browser.pause(4000);
 
         let lastError: string | undefined;
-        for (let attempt = 1; attempt <= 2; attempt++) {
-            console.log(`Create Recommendation attempt #${attempt}`);
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            const equipmentRowIndex = attempt + 1;
+            console.log(`Create Recommendation attempt #${attempt} (using equipment row ${equipmentRowIndex})`);
             await utils.clickWithWait(this.createBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
             await browser.keys(["Enter"]);
             await this.createRecommendationHeader.waitForDisplayed({ timeout: 10000 });
-            await this.fillCreateRecommendationForm();
+            await this.fillCreateRecommendationForm(equipmentRowIndex);
             await utils.clickWithWait(this.createReccWorkbenchBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
 
-            // Check for the error popup ("Failed to create APM recommendation.")
             if (await this.errorDialog.isDisplayed().catch(() => false)) {
-                lastError = "Create Recommendation returned 'Failed to create APM recommendation.' error popup";
+                lastError = `Create Recommendation returned 'Failed to create APM recommendation.' error popup (equipment row ${equipmentRowIndex})`;
                 console.log(`${lastError} — attempt #${attempt}`);
-                // Click OK on the error popup
                 if (await this.errorOkBtn.isDisplayed().catch(() => false)) {
                     await utils.clickWithWait(this.errorOkBtn);
                     await utils.waitForBusyIndicatorToDisappear();
                     await browser.pause(1000);
                 }
-                // Cancel the open Create Recommendation dialog before retrying
                 if (await this.cancelCreateBtn.isDisplayed().catch(() => false)) {
                     await utils.clickWithWait(this.cancelCreateBtn);
                     await utils.waitForBusyIndicatorToDisappear();
                     await browser.pause(1500);
                 }
-                if (attempt === 2) {
+                if (attempt === 3) {
                     throw new AssertionError({ message: 
-                        `AssertionError: Recommendation creation failed twice. Last error: ${lastError}. Aborting recommendation_workbench spec.`
+                        `AssertionError: Recommendation creation failed with all 3 equipment rows. Last error: ${lastError}. Aborting recommendation_workbench spec.`
                      });
                 }
-                console.log("Retrying recommendation creation...");
+                console.log("Retrying recommendation creation with next equipment row...");
                 continue;
             }
 
-            // Success path — handle optional success OK
             if (await this.okBtn.isDisplayed().catch(() => false)) {
                 await this.okBtn.click();
             }
-            if (attempt === 2) {
-                console.log("TRIED TWICE TO CREATE RECOMMENDATION - SUCCEEDED ON 2ND ATTEMPT");
+            if (attempt > 1) {
+                console.log(`CREATE RECOMMENDATION SUCCEEDED ON ATTEMPT #${attempt} (equipment row ${equipmentRowIndex})`);
             }
             console.log("Recommendation workbench created successfully.");
             break;
@@ -107,18 +106,19 @@ class RecommendationWorkbenchListView {
         const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
         await utils.clickWithWait(el);
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(10000);
+        await browser.pause(4000);
         console.log("Navigated to detail view page of newly created Recommendation item");
     }
 
-    private async fillCreateRecommendationForm() {
+    private async fillCreateRecommendationForm(equipmentRowIndex: number = 3) {
         await utils.clickWithWait(this.objectTypeDropdown);
         await browser.keys(["ArrowDown", "Enter"]);
         await utils.clickWithWait(this.equipmentValueHelpBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
         await this.equipmentPopupHeader.waitForDisplayed();
-        await utils.clickWithWait(this.equipmentSecondCheckbox);
+        const equipmentCheckbox = await $(`(//tr[@role='row'])[${equipmentRowIndex}]//td[@aria-colindex='1']`);
+        await utils.clickWithWait(equipmentCheckbox);
         await utils.clickWithWait(this.confirmBtn);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(2000);
@@ -428,6 +428,67 @@ class RecommendationWorkbenchListView {
             throw new AssertionError({ message: "Recommendation still exists after deletion" });
         } else {
             console.log("Recommendation deletion verified successfully");
+        }
+    }
+
+    public async searchWithStoredValues(){
+        console.log("Searching for Recommendation with stored values...");
+        console.log(`RWB Name: ${this.ReccWorkShortDesc}`);
+        console.log(`Maintenance Event: ${this.MaintenanceEvent}`);
+        console.log(`Business Impact: ${this.BusinessImpact}`);
+
+        await this.searchNewlyCreated(this.ReccWorkShortDesc);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        await utils.addAdaptFilter("Maintenance Event", "Business Impact");
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        const maintenanceEventInputs = await $$("//bdi[normalize-space()='Maintenance Event']/ancestor::label/following::input[1]");
+        let maintenanceEventInput;
+        for (const el of maintenanceEventInputs) {
+            if (await el.isDisplayed() && await el.isClickable()) {
+                maintenanceEventInput = el;
+                break;
+            }
+        }
+        if (!maintenanceEventInput) {
+            throw new AssertionError({ message: "Maintenance Event input not found or not visible/clickable" });
+        }
+        await maintenanceEventInput.click();
+        await maintenanceEventInput.clearValue();
+        await maintenanceEventInput.addValue(this.MaintenanceEvent);
+        console.log(`Set Maintenance Event filter to: ${this.MaintenanceEvent}`);
+
+        const businessImpactInputs = await $$("//bdi[normalize-space()='Business Impact']/ancestor::label/following::input[1]");
+        let businessImpactInput;
+        for (const el of businessImpactInputs) {
+            if (await el.isDisplayed() && await el.isClickable()) {
+                businessImpactInput = el;
+                break;
+            }
+        }
+        if (!businessImpactInput) {
+            throw new AssertionError({ message: "Business Impact input not found or not visible/clickable" });
+        }
+        await businessImpactInput.click();
+        await businessImpactInput.clearValue();
+        await businessImpactInput.addValue(this.BusinessImpact);
+        console.log(`Set Business Impact filter to: ${this.BusinessImpact}`);
+
+        await browser.pause(1000);
+        await utils.clickWithWait($('//button//bdi[text()="Go"]'));
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        const recordRow = await $(`//table//tr[.//span[contains(text(),'${this.ReccWorkShortDesc}')]]`);
+        if (await recordRow.isExisting()) {
+            console.log(`Successfully found Recommendation: ${this.ReccWorkShortDesc}`);
+        } else {
+            throw new AssertionError({ 
+                message: `Recommendation '${this.ReccWorkShortDesc}' with Maintenance Event '${this.MaintenanceEvent}' and Business Impact '${this.BusinessImpact}' not found in search results` 
+            });
         }
     }
 

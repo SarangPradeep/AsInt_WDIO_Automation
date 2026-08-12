@@ -25,9 +25,10 @@ class Utils {
     private get mspIframe() { return $('iframe[data-help-id="application-msp-manage"]'); }
     private get reccWorkbenchIframe() { return $('iframe[data-help-id="application-recommendationworkbenchplus-manage"]'); }
     private get attachSuccMsg() { return $("//span[text()='Success']"); }
-    private get attachmentsSection() { return $('//button[.//bdi[text()="Attachments"]] | //button[.//bdi[text()="Attachment"]]'); }
+    private get attachmentsSection() { return $('//button[.//span[text()="Attachments"]] | //button[.//span[text()="Attachment"]]'); }
     private get homeBtn() { return $('//li[@role="menuitem"]'); }
     private get navigationBtn() { return $('//div[@title="Navigation menu"]'); }
+    private get tabOptions() { return $$("//span[@aria-label='slim-arrow-down']/ancestor::div[@role='button']"); }
 
     async switchToIframe(frameElement: any): Promise<void> {
         console.log("---- Switching to iframe ----");
@@ -681,6 +682,83 @@ async addAllAdaptFilter(): Promise<void> {
         }
     }
 
+    async addAdaptFilter(...filterNames: string[]): Promise<void> {
+        if (!filterNames || filterNames.length === 0) {
+            throw new Error("At least one filter name must be provided");
+        }
+
+        console.log(`Adding specific adapt filters: ${filterNames.join(', ')}`);
+        await this.switchToFrame();
+        await this.adaptFilter.waitForClickable({ timeout: 200000 });
+        await this.adaptFilter.click();
+        await browser.pause(3000);
+        console.log("Adapt filter dialog opened");
+
+        const normalizedFilterNames = filterNames.map(name => name.toLowerCase().trim());
+        const addedFilters: string[] = [];
+        const notFoundFilters: string[] = [];
+
+        for (const filterName of filterNames) {
+            const normalizedName = filterName.toLowerCase().trim();
+            const checkboxXPath = `//div[contains(@class,'sapMDialog') and not(@aria-hidden='true')]//tr[@role='row'][.//bdi[translate(normalize-space(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='${normalizedName}']]//div[@role='checkbox']`;
+            
+            const checkbox = await $(checkboxXPath);
+            
+            if (await checkbox.isExisting()) {
+                const isChecked = await checkbox.getAttribute('aria-checked');
+                
+                if (isChecked === 'false') {
+                    try {
+                        await checkbox.scrollIntoView({ block: 'center' });
+                        await browser.pause(500);
+                        await checkbox.click();
+                        console.log(`Checked filter: ${filterName}`);
+                    } catch {
+                        await browser.execute((el) => el.click(), checkbox);
+                        console.log(`Checked filter via JS: ${filterName}`);
+                    }
+                    addedFilters.push(filterName);
+                } else {
+                    console.log(`Filter already checked: ${filterName}`);
+                    addedFilters.push(filterName);
+                }
+            } else {
+                console.warn(`Filter not found: ${filterName}`);
+                notFoundFilters.push(filterName);
+            }
+            
+            await browser.pause(500);
+        }
+
+        await this.clickWithWait($('//button//bdi[text()="OK"]'));
+        await browser.pause(3000);
+
+        const actualFiltersElements = await $$('//label//bdi');
+        const actualFilters: string[] = [];
+
+        for (const el of actualFiltersElements) {
+            const text = (await el.getText()) || (await el.getAttribute("innerText")) || "";
+            if (text.trim()) actualFilters.push(text.trim().toLowerCase());
+        }
+
+        const missingFilters: string[] = [];
+        for (const expected of normalizedFilterNames) {
+            if (!actualFilters.includes(expected)) {
+                missingFilters.push(expected);
+            }
+        }
+
+        if (notFoundFilters.length > 0) {
+            console.warn(`Filters not found in dialog: ${notFoundFilters.join(', ')}`);
+        }
+
+        if (missingFilters.length > 0 && notFoundFilters.length === 0) {
+            throw new Error(`Failed to add filters: ${missingFilters.join(', ')}`);
+        }
+
+        console.log(`Successfully added filters: ${addedFilters.join(', ')}`);
+    }
+
     async resetAllAdaptFilter(): Promise<void> {
         await this.clickWithWait(this.adaptFilter);
         await browser.pause(3000);
@@ -1098,6 +1176,11 @@ async addAllAdaptFilter(): Promise<void> {
 
         await this.clickWithWait(advancedFilterBtn, 5000);
         await browser.pause(1000);
+        const addNewAdvanceFilterBtn = await $('//span[contains(text(),"Advanced Filters")]//following::button[@aria-label="Create Advanced Filter"]');
+        if (await addNewAdvanceFilterBtn.isDisplayed()) {
+            await addNewAdvanceFilterBtn.click();
+            await browser.pause(1000);
+        }
         const filterInput = await $('//label[.//bdi[text()="Filter Name"]]/following::input[1]');
         await filterInput.waitForDisplayed();
         await filterInput.click();
@@ -1629,11 +1712,11 @@ async addAllAdaptFilter(): Promise<void> {
 
     public async addDocument() {
         await this.switchToFrame();
-        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
-        await this.attachmentsSection.click();
+        await this.selectTabFromDropdown("Attachments");
         await this.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
+        await browser.pause(3000);
         const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+        await addLinkBtn.waitForClickable({ timeout: 30000 });
         await this.clickWithWait(addLinkBtn,1000);
         await browser.pause(2000);
         const documentOption = await $('//li[contains(.,"Add Document")]');
@@ -1720,18 +1803,18 @@ async addAllAdaptFilter(): Promise<void> {
 
     async addLink() {
         await this.switchToFrame();
-        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
-        await this.attachmentsSection.click();
+        await this.selectTabFromDropdown("Attachments");
         await this.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
+        await browser.pause(3000);
         const addLinkBtn = await $('//button[.//bdi[text()="Add"]]');
+        await addLinkBtn.waitForClickable({ timeout: 30000 });
         await this.clickWithWait(addLinkBtn);
         await browser.pause(2000);
         const link = await $('//li[contains(.,"Add Link")]');
         await this.clickWithWait(link);
         await browser.pause(2000);
         console.log("Filling the details to assign link");
-        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::input[1]`);
+        const displayNameInput = await $(`//label[.//bdi[text()='Display Name']]//following::textarea[1]`);
         await displayNameInput.waitForDisplayed({ timeout: 10000 });
         await displayNameInput.setValue("Test Link");
         console.log("Display Name entered");
@@ -1751,26 +1834,90 @@ async addAllAdaptFilter(): Promise<void> {
         await browser.pause(2000);
     }
 
+    public async selectTabFromDropdown(tabName: string): Promise<void> {
+        await this.switchToFrame();
+        console.log(`Looking for tab: ${tabName}`);
+        
+        const directTab = await $(`//*[self::span or self::bdi][text()='${tabName}']`);
+        try {
+            if (await directTab.isDisplayed() && await directTab.isClickable()) {
+                console.log(`${tabName} tab found in normal tab bar, clicking directly`);
+                await this.clickWithWait(directTab, 1000);
+                await this.waitForBusyIndicatorToDisappear();
+                return;
+            }
+        } catch (e) {
+            console.log(`${tabName} tab not found in normal tab bar, checking dropdown`);
+        }
+        
+        const tabDropdownButtons = await $$("//span[@aria-label='slim-arrow-down']/ancestor::div[@role='button']");
+        let dropdownClicked = false;
+        
+        for (const btn of tabDropdownButtons) {
+            try {
+                if (await btn.isDisplayed() && await btn.isClickable()) {
+                    console.log("Tab dropdown button found, clicking to open menu");
+                    await this.clickWithWait(btn, 1000);
+                    dropdownClicked = true;
+                    break;
+                }
+            } catch { /* continue */ }
+        }
+        
+        if (dropdownClicked) {
+            await browser.pause(1000);
+            const dropdownOption = await $(`//li[.//span[text()="${tabName}"]] | //button[.//span[text()="${tabName}"]]`);
+            await this.clickWithWait(dropdownOption, 1000);
+            console.log(`Selected ${tabName} from dropdown`);
+        } else {
+            throw new Error(`Tab '${tabName}' not found in normal tabs or dropdown`);
+        }
+        await this.waitForBusyIndicatorToDisappear();
+    }
+
     public async gotoAttachmentsTabAndAssignAttachment() {
         console.log("Navigating to Attachment tab to assign attachment");
         await browser.pause(4000);
         await this.switchToFrame();
-        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
-        await this.attachmentsSection.click();
+        await this.selectTabFromDropdown("Attachments");
         await this.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
-        const addAttachmentBtn = await $('//section[.//bdi[text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Assign"]');
-        const addAttachmentBtn2 = await $('//header[.//bdi[text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Assign"]');
+        await browser.pause(3000);
+        
+        const existingRows = await $$('//section[.//*[self::span or self::bdi][text()="Attachments" or text()="Attachment"]]//table//tbody//tr[@role="row"]');
+        if (await existingRows.length > 0) {
+            console.log(`Found ${existingRows.length} existing attachments, skipping assignment`);
+            return;
+        }
+        
+        const addAttachmentBtn = await $('//section[.//*[self::span or self::bdi][text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Assign"]');
+        const addAttachmentBtn2 = await $('//header[.//*[self::span or self::bdi][text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Assign"]');
         if(await addAttachmentBtn.isExisting()){
             await this.clickWithWait(addAttachmentBtn,2000);
         }
         else if(await addAttachmentBtn2.isExisting()){
             await this.clickWithWait(addAttachmentBtn2,2000);
         }
-        await browser.pause(2000);
+        
+        await this.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        
+        await this.switchToFrame();
+        
+        const dialogHeader = await $('//h1[.//text()= "Assign Attachments"]');
+        await dialogHeader.waitForDisplayed({ timeout: 20000 });
+        console.log("Assignment dialog opened");
+        
+        const firstCheckbox = await $('(//tr[@role="row"])[2]//div[@role="checkbox"]');
+        await firstCheckbox.waitForDisplayed({ timeout: 30000 });
+        await firstCheckbox.waitForClickable({ timeout: 30000 });
+        console.log("First checkbox is ready");
+        
         await this.selectCheckboxes(2);
+        await browser.pause(1000);
+        
         await this.clickWithWait($('//footer//button[.//bdi[text()="Assign"]]'),1000);
-
+        await this.waitForBusyIndicatorToDisappear();
+        
         await this.attachSuccMsg.waitForDisplayed({
             timeout: 20000,
             timeoutMsg: 'Document assign success message not displayed'
@@ -1784,14 +1931,13 @@ async addAllAdaptFilter(): Promise<void> {
     public async deleteAttachmentAndVerify() {
         console.log("Deleting assigned attachment and verifying");
         await this.switchToFrame();
-        await this.attachmentsSection.waitForDisplayed({ timeout: 50000 });
-        await this.attachmentsSection.click();
+        await this.selectTabFromDropdown("Attachments");
         await this.waitForBusyIndicatorToDisappear();
-        await browser.pause(4000);
+        await browser.pause(3000);
         let selectAllCheckbox: any = null;
         try {
             await browser.waitUntil(async () => {
-                const candidates = await $$(`//div[@role='checkbox' and @aria-label='Select all rows']`);
+                const candidates = await $$(`//div[@role='checkbox' and @title='Select All']`);
                 for (const el of candidates) {
                     try {
                         if (await el.isDisplayed()) {
@@ -1813,7 +1959,7 @@ async addAllAdaptFilter(): Promise<void> {
             return;
         }
         console.log("All attachments selected for deletion");
-        await this.clickWithWait($('//section[.//bdi[text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Delete"]/ancestor::button'),1000);
+        await this.clickWithWait($('//section[.//*[self::span or self::bdi][text()="Attachments" or text()="Attachment"]]/following::bdi[text()="Delete"]/ancestor::button'),1000);
         await this.waitForBusyIndicatorToDisappear();
         await this.clickWithWait($('//button[.//bdi[text()="Yes"]]'),1000);
         await this.waitForBusyIndicatorToDisappear();
@@ -1830,19 +1976,28 @@ async addAllAdaptFilter(): Promise<void> {
             { name: "deleteAttachmentAndVerify", fn: () => this.deleteAttachmentAndVerify() }
         ];
         const errors: string[] = [];
+        let shouldContinue = true;
+        
         for (const step of steps) {
+            if (!shouldContinue) {
+                console.log(`\x1b[33mSkipping step '${step.name}' due to previous critical failure\x1b[0m`);
+                continue;
+            }
+            
             try {
                 console.log(`Running attachment step: ${step.name}`);
                 await step.fn();
+                console.log(`\x1b[32m✓ Step '${step.name}' completed successfully\x1b[0m`);
             } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
-                console.error(`\x1b[31mAttachment step '${step.name}' failed: ${msg}\x1b[0m`);
+                console.error(`\x1b[31m✗ Attachment step '${step.name}' failed: ${msg}\x1b[0m`);
                 errors.push(`[${step.name}] ${msg}`);
+                
                 if (step.name === "gotoAttachmentsTabAndAssignAttachment") {
                     console.error(
-                        "\x1b[31mSkipping remaining attachment steps because the Attachments tab could not be opened.\x1b[0m"
+                        "\x1b[31mCritical failure: Cannot assign attachments. Skipping remaining attachment steps.\x1b[0m"
                     );
-                    break;
+                    shouldContinue = false;
                 }
             }
         }

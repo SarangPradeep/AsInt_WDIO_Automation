@@ -78,8 +78,10 @@ class RNCAListViewPage {
 	}
 
 	public async fillDescription(description: string, longDescription: string): Promise<void> {
+		await browser.pause(1500); 
 		await this.descriptionField.waitForDisplayed({ timeout: 60000 });
 		await utils.setValueWithWait(this.descriptionField, description);
+		await browser.pause(1500); 
 		await this.longDescriptionField.waitForDisplayed({ timeout: 60000 });
 		await utils.setValueWithWait(this.longDescriptionField, longDescription);
 	}
@@ -120,6 +122,31 @@ class RNCAListViewPage {
 		await utils.clickWithWait(currencyRow);
 		await this.currencyDialogSaveButton.waitForClickable({ timeout: 60000 });
 		await utils.clickWithWait(this.currencyDialogSaveButton);
+	}
+
+	public async selectCurrencyByValue(currencyValue: string): Promise<void> {
+		await this.currencyValueHelp.waitForClickable({ timeout: 60000 });
+		await utils.clickWithWait(this.currencyValueHelp);
+		await this.currencyDialog.waitForDisplayed({ timeout: 60000 });
+		await browser.pause(1500);
+		await this.searchAndSelectCurrency(currencyValue);
+		await this.currencyDialogSaveButton.waitForClickable({ timeout: 60000 });
+		await utils.clickWithWait(this.currencyDialogSaveButton);
+	}
+
+	public async searchAndSelectCurrency(currencyValue: string): Promise<void> {
+		const searchInput = this.currencyDialog.$(".//input[@placeholder='Search by Code or Description']");
+		await searchInput.waitForDisplayed({ timeout: 60000 });
+		await searchInput.setValue(currencyValue);
+		await browser.pause(1500);
+		const searchBtn = this.currencyDialog.$(".//input[@placeholder='Search by Code or Description']/following::div[2]");
+		await searchBtn.click();
+		await browser.pause(1500);
+		const currencyRow = this.currencyDialog.$(
+			`//tr[@role='row']//div[@role='radio']/following::span[normalize-space()='${currencyValue}'][1]/preceding::td[1]`
+		);
+		await currencyRow.waitForClickable({ timeout: 60000 });
+		await utils.clickWithWait(currencyRow);
 	}
 
 	public async getSelectedCurrencyValue(): Promise<string> {

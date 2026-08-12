@@ -3,7 +3,7 @@ import rncaDetailpage from '../../page_object_model/btp_applications_page/reliab
 import { browser, expect } from '@wdio/globals';
 import utils from '../../utils/utils';
 
-describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Functional Test', () => {
+describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Regression Test', () => {
 
 	it('should click on asset risk and criticality analysis application', async () => {
 		await rncaListViewPage.navigateToRNCAListView();
@@ -51,25 +51,21 @@ describe('BTP - (RNC)-Asset Risk and Criticality Analysis Application - Function
 		await rncaDetailpage.assignEquipmentByName();
 	});
 
-	it('should assign Technical Object and Assessment Template for AlphaNumeric Risk type', async () => {
-		await rncaDetailpage.assignTemplateByAlphaNumericRisk();
+	it('should assign Assessment Template to the technical object', async () => {
+		await rncaDetailpage.assignTemplateByName();
 	});
 
-	it('should remove Assessment Template from the technical object', async () => {
-		await rncaDetailpage.removeTemplate();
+	it('should enable impact for calculation', async () => {
+		await rncaDetailpage.enableImpactForCalculation();
 	});
 
-	it('should assign equipment again to the assessment and verify', async () => {
-		await rncaDetailpage.assignEquipmentAgainForNumericRisk();
+	it('should calculate risk Details on Assessment section and verify risk details', async () => {
+		await rncaDetailpage.assignAndCalculateAssessment();
 	});
 
-	it('should assign Technical Object and Assessment Template for Numeric Risk type', async () => {
-		await rncaDetailpage.assignTemplateByNumericRisk();
-	});
+	it('should publish assessment', async () => {
+		await rncaDetailpage.publishAssessment();
 
-	it('should remove Assessment Template from the technical object', async () => {
-		await rncaDetailpage.removeTemplate();
 	});
-
 
 });
