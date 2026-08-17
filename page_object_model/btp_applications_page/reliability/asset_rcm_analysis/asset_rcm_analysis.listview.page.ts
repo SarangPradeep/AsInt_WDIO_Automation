@@ -14,7 +14,7 @@ class assetRCMListView {
     private get longDescriptionTxtArea() { return $("//bdi[text()='Long Description']/ancestor::div[1]/following::textarea[1]"); }
     private get saveBtn() { return $("//button[.//bdi[text()='Save']]"); }
     private get okBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
-    private get infoTab() { return $("//bdi[text()='Information']"); }
+    private get infoTab() { return $("//span[text()='Information']"); }
     public assetRCMDisplayID!: string;
     public assetRCMDesc!: string;
 
@@ -77,7 +77,7 @@ class assetRCMListView {
         await utils.switchToIframe(this.rcmIframe);
         await utils.clickWithWait(this.createBtn);
          await utils.waitForBusyIndicatorToDisappear();
-        this.assetRCMDesc = `Automation_RCM_${Date.now()}`;
+        this.assetRCMDesc = `Automation_Baseline_RCM_${Date.now()}`;
         console.log(`Generated RCM Description: ${this.assetRCMDesc}`);
         await utils.setValueWithWait(this.descInput, this.assetRCMDesc);
         await this.templateDropdown.click();
