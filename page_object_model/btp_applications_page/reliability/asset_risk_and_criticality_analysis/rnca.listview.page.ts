@@ -58,10 +58,8 @@ class RNCAListViewPage {
 
 	public async navigateToRNCAListView(): Promise<void> {
 		await HomePage.waitForHomePageToLoad();
-		await utils.waitForSAPPopupAndClose();
 		await HomePage.clickTile('Asset Risk and Criticality Analysis');
 		await utils.waitForBusyIndicatorToDisappear();
-		await utils.waitForSAPPopupAndClose();
 		await utils.switchToIframe(this.applicationFrame);
 	}
 
