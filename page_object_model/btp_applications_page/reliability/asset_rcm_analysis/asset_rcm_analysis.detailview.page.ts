@@ -11,14 +11,14 @@ class assetRCMDetailView {
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
     private get assessmentTab() { return $("//div[@role='tab']//span[text()='Assessment']"); }
     private get attachmentTab() { return $("//span[text()='Attachment']"); }
-    private get editGenInfo() { return $("//div[text()='General Information']/ancestor::div[1]/following-sibling::div//button[.//text()='Edit']"); }
+    private get editGenInfo() { return $("//span[text()='General Information']/following::button[.//text()='Edit'][1]"); }
     private get descTextArea() { return $("//bdi[.='Description']/ancestor::div[1]/following::textarea[1]"); }
     private get longDescTextArea() { return $("//bdi[.='Long Description']/ancestor::div[1]/following::textarea[1]"); }
     private get systemBoundaryDescTextArea() { return $("//bdi[.='System Boundary Description']/ancestor::div[1]/following::textarea[1]"); }
     private get operatingContextTextArea() { return $("//bdi[.='Operating Context']/ancestor::div[1]/following::textarea[1]"); }
     private get saveGeneralInfoBtn() { return $("//div[.='General Information']/ancestor::div[1]/following-sibling::div//button[.//text()='Save']"); }
     private get okBtn() { return $("//header[.//text()='Success']/following::bdi[text()='OK']"); }
-    private get editPlanData() { return $("//div[text()='Planning Data']/ancestor::div[1]/following-sibling::div//button[.//text()='Edit']"); }
+    private get editPlanData() { return $("//span[text()='Planning Data']/following::button[.//text()='Edit'][1]"); }
     private get nextReviewDateInput() { return $("//bdi[.='Next Review Date']/ancestor::div[2]/following::input[1]"); }
     private get lastReviewDateInput() { return $("//bdi[.='Last Review Date']/ancestor::div[2]/following::input[1]"); }
     private get plannedReviewDateInput() { return $("//bdi[.='Planned Review Date (Next Refresh)']/ancestor::div[2]/following::input[1]"); }
@@ -29,15 +29,15 @@ class assetRCMDetailView {
     private get addRoleDialog() { return $("//header[.//text()='Add Role']/following-sibling::section"); }
     private get secondRoleCheckbox() { return $("//ul[@role='list']//li[@aria-posinset='2']//div[@role='checkbox']"); }
     private get addRoleOkBtn() { return $("//header[.//text()='Add Role']/following::button[.//text()='Ok']"); }
-    private get maintenanceTechnicianRoleBtn() { return $("//bdi[.='Maintenance Technician']/ancestor::div[2]/following-sibling::div//span[@role='button']"); }
+    private get maintenanceTechnicianRoleBtn() { return $("//span[.='Maintenance Technician']/ancestor::div[2]/following-sibling::div//span[@role='button' and @aria-label='Show Value Help']"); }
     private get selectUsersSearchInput() { return $("//header[.='Select Users']/following-sibling::section//input[@type='search']"); }
     private get qaAutomationUserCheckbox() { return $("//tr[.//span[.='qa automation']]//div[@role='checkbox']"); }
     private get selectUsersOkBtn() { return $("//header[.='Select Users']/following::button[.//text()='Ok']"); }
     private get saveBtnFooter() { return $("//bdi[text()='Save']"); }
     private get startAssessmentBtn() { return $("//button[.='Start Assessment']"); }
     private get technicalObjectsHeader() { return $("//h3[.//text()[contains(.,'Technical Objects')]]"); }
-    private get equipmentValueBtn() { return $("//bdi[.='Equipment']/ancestor::div[2]/following::span[@role='button'][1]"); }
-    private get funcLocValueBtn() { return $("//bdi[.='Functional Location']/ancestor::div[2]/following::span[@role='button'][1]"); }
+    private get equipmentValueBtn() { return $("//span[.='Equipment']/ancestor::div[2]/following::span[@role='button' and @aria-label='Show Value Help'][1]"); }
+    private get funcLocValueBtn() { return $("//span[.='Functional Location']/ancestor::div[2]/following::span[@role='button' and @aria-label='Show Value Help'][1]"); }
     private get confirmBtn() { return $("//footer//button[.='Confirm']"); }
     private get nextBtn() { return $("//button[.='Next']"); }
     private get createBtnFooter() { return $("//footer//button[.//bdi[.='Create']]"); }
@@ -126,10 +126,10 @@ class assetRCMDetailView {
     private get pfIntervalInput() { return $("//bdi[contains(text(),'P-F Interval')]/ancestor::div[2]/following::input[@type='text'][1]"); }
     private get consequenceSaveBtn() { return $("//bdi[contains(text(),'Safe Life')]/following::button[.//text()='Save']"); }
     private get consequenceNotesBtn() { return $("//div[@role='toolbar'][.//*[normalize-space()='Consequence Evaluation']]//button[@aria-label='No Notes' or @aria-label='Notes']"); }
-    private get failureModeNotesBtn() { return $("//div[@aria-roledescription='Overflow Toolbar']//button[@aria-label='Notes Present' or @aria-label='No Notes']"); }
-    private get notesTextarea() { return $("(//div[.//textarea and .//div[@aria-roledescription='Overflow Toolbar'][.//button[.//bdi[normalize-space()='Save']] and .//button[.//bdi[normalize-space()='Close']]]])[last()]//textarea"); }
-    private get notesSaveBtn() { return $("(//div[@aria-roledescription='Overflow Toolbar'][.//button[.//bdi[normalize-space()='Save']] and .//button[.//bdi[normalize-space()='Close']]])[last()]//button[.//bdi[normalize-space()='Save']]"); }
-    private get notesCloseBtn() { return $("(//div[@aria-roledescription='Overflow Toolbar'][.//button[.//bdi[normalize-space()='Save']] and .//button[.//bdi[normalize-space()='Close']]])[last()]//button[.//bdi[normalize-space()='Close']]"); }
+    private get failureModeNotesBtn() { return $("//div[.//textarea]/following::button[@title='No Notes'][1]"); }
+    private get notesTextarea() { return $("//div[@role='dialog']/following::textarea[1]"); }
+    private get notesSaveBtn() { return $("//div[@role='dialog']/following::textarea[1]/following::button[.//text()='Save']"); }
+    private get notesCloseBtn() { return $("//div[@role='dialog']/following::textarea[1]/following::button[.//text()='Close']"); }
     private get errorDialogHeader() { return $("//header[.//text()='Error']"); }
     private get errorDialogOkBtn() { return $("//header[.//text()='Error']/following::button[.//bdi[normalize-space()='OK']]"); }
     private get causesText() { return $("(//div[@role='heading']//following::span[contains(text(),'Causes')])[1]"); }
@@ -146,7 +146,7 @@ class assetRCMDetailView {
     private get strategyTypeDropdown() { return $("//bdi[text()='Type']/following::span[@role='button'][1]"); }
     private get strategyInspTypDrp() { return $("//bdi[text()='Inspection Type ']/following::span[@role='button'][1]"); }
     private get strategyInspStageDrp() { return $("//bdi[text()='Inspection Stage']/following::span[@role='button'][1]"); }
-    private get MDAwindowBtn() { return $("//bdi[text()='MDA']/following::span[@role='button'][1]"); }
+    private get MDAwindowBtn() { return $("//bdi[text()='MDA']/following::span[@role='button' and @aria-label='Show Value Help']"); }
     private get MDAheader() { return $("//h1[normalize-space()='Select Maintenance Data Attribution']"); }
     private get MDAcheckbox() { return $("//h1[normalize-space()='Select Maintenance Data Attribution']/following::tr[3]//div[@role='checkbox']"); }
     private get saveMDABtn() { return $("//h1[normalize-space()='Select Maintenance Data Attribution']/following::button[.//text()='Save']"); }
@@ -284,7 +284,7 @@ class assetRCMDetailView {
         console.log("Editing infomation...");
         await utils.clickWithWait(this.editGenInfo);
         await utils.waitForBusyIndicatorToDisappear();
-        assetRCMListView.assetRCMDesc = `Automation_RCM_${Date.now()}`;
+        assetRCMListView.assetRCMDesc = `Automation_Baseline_RCM_${Date.now()}`;
         console.log(`Generated RCM Description for infomration verification: ${assetRCMListView.assetRCMDesc}`);
         await utils.setValueWithWait(this.descTextArea,assetRCMListView.assetRCMDesc);
         console.log("New description value is "+assetRCMListView.assetRCMDesc);
@@ -3296,7 +3296,7 @@ class assetRCMDetailView {
         console.log(`Verifying Technical Object '${equipmentName} (${equipmentId})' is present on System detail page...`);
         let sysIdShown = false;
         await browser.waitUntil(async () => {
-            const idEls = await $$(`//tr[@role='row']//span[@dir='auto' and normalize-space()="${equipmentId}"]`);
+            const idEls = await $$(`//tr[@role='row']//span[normalize-space()="${equipmentId}"]`);
             for (const el of idEls) {
                 if (await el.isDisplayed().catch(() => false)) {
                     sysIdShown = true;
@@ -3472,7 +3472,7 @@ class assetRCMDetailView {
         console.log(`Verifying Technical Object '${equipmentName} (${equipmentId})' is present on Sub-System detail page...`);
         let subSysIdShown = false;
         await browser.waitUntil(async () => {
-            const idEls = await $$(`//tr[@role='row']//span[@dir='auto' and normalize-space()="${equipmentId}"]`);
+            const idEls = await $$(`//tr[@role='row']//span[normalize-space()="${equipmentId}"]`);
             for (const el of idEls) {
                 if (await el.isDisplayed().catch(() => false)) {
                     subSysIdShown = true;
