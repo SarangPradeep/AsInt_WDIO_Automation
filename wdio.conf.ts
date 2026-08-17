@@ -36,6 +36,8 @@ export const config: WebdriverIO.Config = {
         './integrity/cmls/*.e2e.ts',
         './sit3_test_cases/recommendation_workbench/052.ts',
         './sit3_test_cases/asset_risk_and_criticality_analysis/008.ts',
+        './sit3_test_cases/asset_risk_and_criticality_analysis/010.ts',
+        './sit3_test_cases/asset_rcm_analysis/031_1.ts',
         // './safety_group/safety.e2e.ts',
     ],
     exclude: [],

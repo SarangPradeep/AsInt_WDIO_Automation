@@ -7,10 +7,10 @@ import console from 'console';
 import { strict as assert, AssertionError } from 'node:assert';
 class assetRCMDetailView {
 
-    private get infoTab() { return $("//bdi[text()='Information']"); }
+    private get infoTab() { return $("//span[text()='Information']"); }
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
-    private get assessmentTab() { return $("//bdi[text()='Assessment']"); }
-    private get attachmentTab() { return $("//bdi[text()='Attachment']"); }
+    private get assessmentTab() { return $("//div[@role='tab']//span[text()='Assessment']"); }
+    private get attachmentTab() { return $("//span[text()='Attachment']"); }
     private get editGenInfo() { return $("//div[text()='General Information']/ancestor::div[1]/following-sibling::div//button[.//text()='Edit']"); }
     private get descTextArea() { return $("//bdi[.='Description']/ancestor::div[1]/following::textarea[1]"); }
     private get longDescTextArea() { return $("//bdi[.='Long Description']/ancestor::div[1]/following::textarea[1]"); }
@@ -240,6 +240,8 @@ class assetRCMDetailView {
     private get systemNameInput() { return $("//bdi[normalize-space()='System Name']/following::textarea[1]"); }
     private get systemDescInput() { return $("//bdi[normalize-space()='System Description']/following::textarea[1]"); }
     private get genericCloseBtn() { return $("//button[.//text()='Close']"); }
+    private get publishBtn() { return $("//button[.//text()='Publish']"); }
+    private get workflowBtn() { return $("//header//button[.//text()='Workflow']"); }
 
     public selectedEquipmentData:any = {};
     public selectedFunctionalLocation:any ={};
@@ -1057,7 +1059,7 @@ class assetRCMDetailView {
             { name: "Consequence Evaluation", run: () => this.performConsequenceEvaluation() },
             { name: "Consequence Notes", run: () => this.addConsequenceNote() },
             { name: "Causes", run: () => this.assignCauses() },
-            { name: "Strategies", run: () => this.createEditStrategy() }
+            { name: "Strategies", run: () => this.createEditDeleteStrategy() }
         ];
 
         for (const step of steps) {
@@ -1634,10 +1636,11 @@ class assetRCMDetailView {
         console.log("Causes after: " + await utils.getAssignedValue(txt));
     }
 
-    public async createEditStrategy()
+    public async createEditDeleteStrategy()
     {
         await this.createStrategy();
         await this.editStrategies();
+        await this.deleteStrategy();
     }
 
     public async createStrategy()
@@ -1767,6 +1770,67 @@ class assetRCMDetailView {
     {
         await this.editStrategy();
         await this.editAllStrategies();
+    }
+
+    public async deleteStrategy()
+    {
+        console.log("Delete Strategy: checking strategy count...");
+
+        const allStrategyRows = await this.strategiesRows;
+        let visibleCount = 0;
+        for (const row of allStrategyRows) {
+            if (await row.isDisplayed().catch(() => false)) {
+                visibleCount++;
+            }
+        }
+        console.log(`Strategies present before delete: ${visibleCount}`);
+
+        if (visibleCount < 2) {
+            console.log(`Only ${visibleCount} strategy present. Need at least 2 to delete. Skipping.`);
+            return;
+        }
+
+        const selectDivs = await $$("//div[@role='form' and .//*[contains(text(),'Strategies')]]//tr[@role='row' and @aria-rowindex>'1']//div[@title='Click to Select']");
+        let clicked = false;
+        for (let i = await selectDivs.length - 1; i >= 0; i--) {
+            if ((await selectDivs[i].isDisplayed().catch(() => false)) && (await selectDivs[i].isClickable().catch(() => false))) {
+                await utils.clickWithWait(selectDivs[i], 1500);
+                clicked = true;
+                break;
+            }
+        }
+        if (!clicked) {
+            throw new AssertionError({ message: "AssertionError: No visible/clickable 'Click to Select' div found in Strategies table for last row" });
+        }
+        await browser.pause(1500);
+
+        const deleteBtn = $("//span[contains(text(),'Strategies')]/following::button[.//text()='Delete']");
+        await deleteBtn.waitForClickable({ timeout: 30000, timeoutMsg: "Delete button not clickable in Strategies section" });
+        await utils.clickWithWait(deleteBtn, 1500);
+        await browser.pause(1500);
+
+        await this.confirmationYesBtn.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.confirmationYesBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(2000);
+
+        if (await this.okBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.okBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+        }
+        await browser.pause(2000);
+
+        const remainingRows = await this.strategiesRows;
+        let remainingCount = 0;
+        for (const row of remainingRows) {
+            if (await row.isDisplayed().catch(() => false)) {
+                remainingCount++;
+                console.log(`Remaining strategy: '${(await row.getText()).trim()}'`);
+            }
+        }
+        console.log(`Strategies remaining after delete: ${remainingCount}`);
+        await expect(remainingCount).toBe(visibleCount - 1);
+        console.log("Strategy deleted and verified successfully");
     }
 
     public async editStrategy()
@@ -4451,6 +4515,22 @@ class assetRCMDetailView {
             throw new AssertionError({ message: `AssertionError: Create-System PDF Summary Report Validation Failed:\n\n${failures.join("\n")}` });
         }
         console.log("Create-System PDF Summary report verification completed");
+    }
+
+    public async verifyCannotPublishRCMBaseline() {
+        console.log("Verifying that 'Publish RCM Baseline' and 'Workflow' buttons are not available on the header action bar...");
+        console.log("Verifying that 'Publish RCM Baseline' is not available on the header action bar...");
+        const publishBtn = await this.publishBtn;    
+        if (await publishBtn.isDisplayed().catch(() => false) && await publishBtn.isClickable().catch(() => false)) {
+            throw new AssertionError({ message: "AssertionError: 'Publish RCM Baseline' button is available but should not be" });
+        }
+        console.log("'Publish RCM Baseline' button is not available as expected");
+        const workflowBtn = await this.workflowBtn;
+        if (await workflowBtn.isDisplayed().catch(() => false) && await workflowBtn.isClickable().catch(() => false)) {
+            throw new AssertionError({ message: "AssertionError: 'Workflow' button is available but should not be" });
+        }
+        console.log("'Workflow' button is not available as expected");
+        console.log("Verified that 'Publish RCM Baseline' and 'Workflow' buttons are not available on the header action bar");
     }
 }
 export default new assetRCMDetailView();

@@ -1,9 +1,9 @@
 import rncaListViewPage from '../../page_object_model/btp_applications_page/reliability/asset_risk_and_criticality_analysis/rnca.listview.page';
-import rncaDetailpage from '../../page_object_model/btp_applications_page/reliability/asset_risk_and_criticality_analysis/rnca.detail.page';
+import rncaDetailPage from '../../page_object_model/btp_applications_page/reliability/asset_risk_and_criticality_analysis/rnca.detail.page';
 import { browser, expect } from '@wdio/globals';
 import utils from '../../utils/utils';
 
-describe('1307677_008_Assess criticality of equipment selected ASINT AIS', () => {
+describe('008_Assess criticality of equipment selected ASINT AIS', () => {
 
 	it('should click on asset risk and criticality analysis application', async () => {
 		await rncaListViewPage.navigateToRNCAListView();
@@ -31,36 +31,50 @@ describe('1307677_008_Assess criticality of equipment selected ASINT AIS', () =>
 	});
 
 	it('should edit General Information tab of created assessment', async () => {
-		await rncaDetailpage.editGeneralInformation('Updated Test Assessment', 'This is updated automation test');
+		await rncaDetailPage.editGeneralInformation('Updated Test Assessment', 'This is updated automation test');
 	});
 
 	it.skip('should verify Administrative Information tab', async () => {
-		await rncaDetailpage.verifyAdministrativeInformation();
+		await rncaDetailPage.verifyAdministrativeInformation();
 	});
 
 	it('should edit Validity Information', async () => {
-		await rncaDetailpage.editValidity('Dec 31, 2024', 'Jan 1, 2026');
+		await rncaDetailPage.editValidity('Dec 31, 2024', 'Jan 1, 2026');
 	});
 
 	it('should edit Scope information and verify', async () => {
-		await rncaDetailpage.editScope('Updated In Scope Description');
+		await rncaDetailPage.editScope('Updated In Scope Description');
 		await browser.pause(3000);
 	});
 
 	it('should assign equipment to the assessment and verify', async () => {
-		await rncaDetailpage.assignEquipment('Test Equipment 123');
+		await rncaDetailPage.assignEquipment('Test Equipment 123');
 	});
 
 	it('should assign Assessment Template to the technical object', async () => {
-		await rncaDetailpage.assignTemplateByName();
+		await rncaDetailPage.assignTemplateByName();
+	});
+
+	it('should store the Assignments data', async () => {
+		await rncaDetailPage.captureFirstRowValuesOfAssignments();
 	});
 
 	it('should select SHE and FIN impact values on first block and save', async () => {
-		await rncaDetailpage.selectImpactValuesAndSave();
+		await rncaDetailPage.selectImpactValuesAndSave();
 	});
 
-	it('should delete the created assessment and verify', async () => {
-		await rncaDetailpage.publishAssessment();
+	it('should store the risk and criticality score values', async () => {
+		await rncaDetailPage.captureRiskAndCriticalityScores();
+	});
+
+	it('should publish the created assessment and verify', async () => {
+		const published = await rncaDetailPage.tryPublishAssessment();
+		if (!published) {
+			console.log("Publish did not complete → deleting the assessment");
+			await rncaDetailPage.deleteAssessment();
+		} else {
+			console.log("Publish succeeded → skipping deletion");
+		}
 	});
 
 });

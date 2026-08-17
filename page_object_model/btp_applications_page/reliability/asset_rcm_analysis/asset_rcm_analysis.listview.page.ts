@@ -72,6 +72,37 @@ class assetRCMListView {
 
     }
 
+    public async createAssetRCMForBaseline(){
+        console.log("Creating Asset RCM for Baseline Assessment - start");
+        await utils.switchToIframe(this.rcmIframe);
+        await utils.clickWithWait(this.createBtn);
+         await utils.waitForBusyIndicatorToDisappear();
+        this.assetRCMDesc = `Automation_RCM_${Date.now()}`;
+        console.log(`Generated RCM Description: ${this.assetRCMDesc}`);
+        await utils.setValueWithWait(this.descInput, this.assetRCMDesc);
+        await this.templateDropdown.click();
+        await browser.waitUntil(async()=> await this.templateFirstOption.isDisplayed(),{timeout:20000});
+        await this.templateFirstOption.click();
+        await utils.waitForBusyIndicatorToDisappear();
+        await this.createAsBaselineCheckbox.click();
+        await this.longDescriptionTxtArea.setValue(assetRcmData.description);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait(this.saveBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await utils.clickWithWait(this.okBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log("Creating Asset RCM is done");
+        console.log("Navigating to detail page of RCM...");
+        await this.infoTab.waitForEnabled({timeout:100000});
+        console.log("Navigated to detail view page of new ly created RCM");
+        const { name, id } = await utils.getEntityNameAndId();
+        this.assetRCMDisplayID = id;
+        await expect(name).toEqual(this.assetRCMDesc);
+        console.log("Header verification done");
+        console.log("Capturing all header values");
+        await utils.captureHeaderDetails();
+    }
+
     public async verifyRCMDeletion()
     {
         console.log("Verifying deletion of RCM");

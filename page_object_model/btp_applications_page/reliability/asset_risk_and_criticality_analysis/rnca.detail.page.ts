@@ -3,6 +3,42 @@ import HomePage from '../../home.page';
 import utils from '../../../../utils/utils';
 import { RNCARiskData } from '../../../../test_data/btp_applications/reliability/asset_criticality_analysis.data';
 
+export interface RNCATechnicalObjectRow {
+    technicalObjectId: string;
+    technicalObjectDescription: string;
+    objectType: string;
+    category: string;
+    failureDataProfile: string;
+    assessmentTemplate: string;
+    riskScore: string;
+    criticality: string;
+    action: string;
+    impacts: string;
+    equipmentMDA: string;
+}
+
+export const RNCAFirstRowStore: { firstRow: RNCATechnicalObjectRow | null } = {
+    firstRow: null,
+};
+
+export const RNCAScoreStore: {
+    criticalityOperationValue: string | null;
+    consequenceValue: string | null;
+    riskScoreDisplayed: string | null;
+} = {
+    criticalityOperationValue: null,
+    consequenceValue: null,
+    riskScoreDisplayed: null,
+};
+
+export const RNCAAssessmentStore: {
+    name: string | null;
+    id: string | null;
+} = {
+    name: null,
+    id: null,
+};
+
 class RNCADetailPage {
 
     private get rncaIframe() { return $('iframe[data-help-id="application-rca-manage"]'); }
@@ -35,7 +71,7 @@ class RNCADetailPage {
 
     async editGeneralInformation(description: string, longDescription: string) {
         await console.log("Editing General Information with description:", description, "and longDescription:", longDescription);
-        await browser.pause(3000);
+        await browser.pause(1500);
         await utils.switchToIframe(this.rncaIframe);
 
         const editBtn = await this.generalInfoEditBtn;
@@ -100,7 +136,6 @@ class RNCADetailPage {
         await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await console.log("Scope edited successfully");
-        await browser.pause(3000);
     }
 
     private async getEquipmentTable() {
@@ -150,7 +185,7 @@ class RNCADetailPage {
                 el.scrollTop = el.scrollHeight;
             }, container);
 
-            await browser.pause(3000);
+            await browser.pause(1500);
             const moreBtn = await $("(//div[@role='button' and .//span[normalize-space()='More']])[1]");
             if (await moreBtn.isDisplayed().catch(() => false)) {
                 await moreBtn.click();
@@ -296,8 +331,6 @@ class RNCADetailPage {
             if (selectedCount === 0) {
                 throw new AssertionError({ message: "No selectable items found in batch." });
             }
-
-            // ✅ SINGLE CONFIRM CLICK
             await utils.clickWithWait($(`//bdi[text()='Confirm']`));
             await utils.waitForBusyIndicatorToDisappear();
 
@@ -306,8 +339,6 @@ class RNCADetailPage {
 
             const dialogText = await dialog.getText();
             console.log("Dialog:", dialogText);
-
-            // ⚠️ HANDLE DUPLICATES / PARTIAL FAIL
             if (dialogText.includes("Please select different Technical Objects")) {
                 console.log("Some duplicates found, moving to next batch...");
 
@@ -338,13 +369,6 @@ class RNCADetailPage {
                 break;
             }
 
-            // ✅ SUCCESS
-            // const isSuccess = /Assigned\s*successfully/i.test(dialogText);
-
-            // if (!isSuccess) {
-            //     throw new AssertionError({ message: `Unexpected dialog: ${dialogText}` });
-            // }
-
             const yesBtn = await dialog.$(".//button[.//bdi[normalize-space()='Yes' or normalize-space()='OK']]");
             await yesBtn.click();
 
@@ -352,8 +376,6 @@ class RNCADetailPage {
             await utils.clickSuccessOkButton();
 
             console.log("✅ Batch assigned successfully");
-
-            // 🔁 MOVE TO NEXT BATCH
             batchStart += batchSize;
         }
     }
@@ -424,15 +446,12 @@ class RNCADetailPage {
 
         await utils.clickWithWait($(`//bdi[text()='Confirm']`));
         await utils.waitForBusyIndicatorToDisappear();
-        // Wait for dialog
         const dialog = await $("//div[@role='alertdialog']");
         await dialog.waitForDisplayed({ timeout: 50000 });
 
-        // Get message text
         const message = await dialog.$(".//span[contains(text(),'Few')]").getText();
         console.log("Confirmation Message:", message);
 
-        // Click Yes
         const yesBtn = await dialog.$(".//button[.//bdi[normalize-space()='Yes']]");
         await yesBtn.waitForClickable({ timeout: 10000 });
         await yesBtn.click();
@@ -441,22 +460,19 @@ class RNCADetailPage {
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(5000);
     }
+
     async assignTemplate(TemplateName: string) {
         await console.log("Assigning template:", TemplateName);
-        await browser.pause(3000);
+        await browser.pause(1500);
         await utils.switchToIframe(this.rncaIframe);
         const firstCheckbox = await $("(//tbody//tr[@role='row']//div[@role='checkbox' and @tabindex='0' and not(ancestor::*[@aria-hidden='true'])])[1]");
         await firstCheckbox.scrollIntoView();
         await firstCheckbox.click();
-        //await browser.execute(el => el.click(), firstCheckbox);
 
         const manageTemplateBtn = await $(`//button[.//bdi[normalize-space()='Manage Template'] or .//span[normalize-space()='Manage Template']]`);
         await manageTemplateBtn.waitForClickable({ timeout: 50000 });
         await manageTemplateBtn.click();
         await browser.pause(3000);
-        // const manageTemplateAssignOption = await $(`(//li[@role='menuitem' and .//bdi[normalize-space()='Assign'] and not(ancestor::*[@aria-hidden='true'])])[1]`);
-        // await utils.clickWithWait(manageTemplateAssignOption);
-        //await browser.keys(['ArrowDown']);
         await browser.keys(['Enter']);
         await browser.pause(4000);
         const firstRadio = await $("(//tr[@role='row']//div[@role='radio'])[1]");
@@ -490,7 +506,7 @@ class RNCADetailPage {
         }
         await utils.clickWithWait($(`(//li[@role='listitem']//div[@role='checkbox'])[1]`));
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(3000);
+        await browser.pause(1500);
 
         const expcolBtns = (await $$("//button[@title='Expand/Collapse']")) as unknown as any[];
         const totalPanels = expcolBtns.length;
@@ -644,6 +660,25 @@ class RNCADetailPage {
             "(//bdi[normalize-space()='Risk Score/Criticality:']/following::div[1])[1]"
         ).getText();
         await console.log("Risk Score:", riskScore);
+
+        const listItemCriticality = await $(
+            "(//li[contains(@id,'idAsIntRCAssessmentTabList')]//a[contains(@class,'sapMLnk')]/ancestor::div[contains(@class,'sapMObjectIdentifier')]/following::div[contains(@class,'sapMFT')]//span)[1]"
+        ).getText();
+        await console.log("Assessment List Item Criticality:", listItemCriticality);
+
+        const normalize = (v: string) => (v || "").replace(/\s+/g, " ").trim();
+        const listValue = normalize(listItemCriticality);
+        const topValue = normalize(riskScore);
+
+        if (!listValue) {
+            throw new AssertionError({ message: "Assessment list item criticality is empty." });
+        }
+        if (!topValue.startsWith(listValue)) {
+            throw new AssertionError({
+                message: `Criticality mismatch: list item '${listValue}' not found at start of Risk Score/Criticality '${topValue}'.`,
+            });
+        }
+        await console.log(`Criticality verified: list='${listValue}' matches Risk Score/Criticality='${topValue}'`);
     }
 
     async selectImpactValuesAndSave() {
@@ -784,6 +819,15 @@ class RNCADetailPage {
 
         await utils.clickWithWait($(`//bdi[normalize-space()='Action:']/following::button[.//bdi[normalize-space()='Save']][1]`));
         await utils.waitForBusyIndicatorToDisappear();
+        const successOkBtn = await $(`//header[.//text()='Success']/following::button[.//text()='OK']`);
+        try {
+            await successOkBtn.waitForDisplayed({ timeout: 15000 });
+            await successOkBtn.waitForClickable({ timeout: 15000 });
+        } catch (err) {
+            throw new AssertionError({
+                message: `Success OK button did not appear after Save — expected Success popup to be displayed. Underlying error: ${(err as Error).message}`
+            });
+        }
         await utils.clickSuccessOkButton();
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(3000);
@@ -847,6 +891,39 @@ class RNCADetailPage {
         await utils.clickWithWait($("//div[@role='alertdialog']//bdi[text()='OK']"));
         await utils.waitForBusyIndicatorToDisappear();
         await console.log("Assessment published successfully");
+    }
+
+    async tryPublishAssessment(): Promise<boolean> {
+        await console.log("Publishing assessment (with warning handling)");
+        const publishBtn = await $("//bdi[text()='Publish']");
+        await publishBtn.click();
+        await utils.clickWithWait($("//div[@role='alertdialog']//bdi[text()='Yes']"));
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const warningDialog = await $("//div[@role='alertdialog'][.//text()='Warning']");
+        let warningShown = false;
+        try {
+            await warningDialog.waitForDisplayed({ timeout: 8000 });
+            warningShown = true;
+        } catch {
+            warningShown = false;
+        }
+
+        if (warningShown) {
+            const warningText = await warningDialog.getText().catch(() => "");
+            console.log("Publish blocked by warning:", warningText);
+            const warningOkBtn = await warningDialog.$(".//button[.//bdi[text()='OK']]");
+            await warningOkBtn.waitForClickable({ timeout: 10000 });
+            await warningOkBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+            await console.log("Assessment was NOT published due to warning");
+            return false;
+        }
+
+        await utils.clickWithWait($("//div[@role='alertdialog']//bdi[text()='OK']"));
+        await utils.waitForBusyIndicatorToDisappear();
+        await console.log("Assessment published successfully");
+        return true;
     }
 
     async assignEquipmentByName() {
@@ -1196,6 +1273,374 @@ class RNCADetailPage {
         console.log("Assessment calculation saved successfully");
         await utils.clickWithWait($("//div[@role='alertdialog']//bdi[text()='OK']"));
         await utils.waitForBusyIndicatorToDisappear();
+    }
+
+    public async captureAssessmentNameAndId(): Promise<{ name: string; id: string }> {
+        const { name, id } = await utils.getEntityNameAndId();
+        RNCAAssessmentStore.name = name || null;
+        RNCAAssessmentStore.id = id || null;
+        return { name, id };
+    }
+
+    public async captureFirstRowValuesOfAssignments(): Promise<RNCATechnicalObjectRow> {
+        console.log("Capturing first row values from Technical Objects table");
+        await utils.switchToIframe(this.rncaIframe);
+
+        const firstRow = await $("//tbody[contains(@id,'idTechnicalObjectsTable-tblBody')]//tr[@role='row'][1]");
+        await firstRow.waitForExist({ timeout: 30000 });
+        await firstRow.waitForDisplayed({ timeout: 30000 });
+
+        const getCellText = async (colIndex: number): Promise<string> => {
+            const cell = await firstRow.$(`.//td[@role='gridcell' and @aria-colindex='${colIndex}']`);
+            if (!(await cell.isExisting())) return "";
+            const text = (await cell.getText().catch(() => "")) || "";
+            return text.trim();
+        };
+
+        const technicalObjectCell = await firstRow.$(".//td[@role='gridcell' and @aria-colindex='2']");
+        const technicalObjectId = (await technicalObjectCell.$(".//a//span[contains(@class,'sapMLnkText')]").getText().catch(() => "")).trim();
+        const technicalObjectDescription = (await technicalObjectCell.$(".//div[contains(@class,'sapMObjectIdentifierText')]//span").getText().catch(() => "")).trim();
+
+        const objectType = await getCellText(3);
+        const category = await getCellText(4);
+        const failureDataProfile = await getCellText(5);
+        const assessmentTemplate = await getCellText(6);
+        const riskScore = await getCellText(7);
+        const criticality = await getCellText(8);
+        const action = await getCellText(9);
+        const impacts = await getCellText(10);
+        const equipmentMDA = await getCellText(11);
+
+        const row: RNCATechnicalObjectRow = {
+            technicalObjectId,
+            technicalObjectDescription,
+            objectType,
+            category,
+            failureDataProfile,
+            assessmentTemplate,
+            riskScore,
+            criticality,
+            action,
+            impacts,
+            equipmentMDA,
+        };
+
+        RNCAFirstRowStore.firstRow = row;
+        console.log("Captured first row:", JSON.stringify(row, null, 2));
+        return row;
+    }
+
+    public async captureRiskAndCriticalityScores(): Promise<void> {
+        console.log("Capturing Risk and Criticality Scores");
+        await utils.switchToIframe(this.rncaIframe);
+
+        const getSelectedValue = async (sectionTitle: string): Promise<string> => {
+            const rowXpath = `//span[normalize-space()='${sectionTitle}']/ancestor::div[contains(@class,'sapMPanel')][1]//table[@role='grid']//tbody//tr[@role='row' and .//div[@role='radio' and @aria-checked='true']]`;
+            const row = await $(rowXpath);
+            if (!(await row.isExisting())) {
+                throw new AssertionError({
+                    message: `No selected radio found under section '${sectionTitle}'`,
+                });
+            }
+            const value = (await row.$("./td[3]//span").getText().catch(() => "")).trim();
+            if (!value) {
+                throw new AssertionError({
+                    message: `Selected radio under '${sectionTitle}' has empty Value column`,
+                });
+            }
+            console.log(`Selected Value under '${sectionTitle}': '${value}'`);
+            return value;
+        };
+
+        const criticalityValue = await getSelectedValue("Criticality : Operation");
+        const consequenceValue = await getSelectedValue("Consequence");
+
+        RNCAScoreStore.criticalityOperationValue = criticalityValue;
+        RNCAScoreStore.consequenceValue = consequenceValue;
+
+        const expectedCombined = `${criticalityValue}${consequenceValue}`;
+        console.log(`Expected combined Risk Score prefix: '${expectedCombined}'`);
+
+        const riskScoreEl = await $("//bdi[normalize-space()='Risk Score/Criticality:']/following::div[1]");
+        await riskScoreEl.waitForDisplayed({ timeout: 30000 });
+        const displayedRiskScore = (await riskScoreEl.getText().catch(() => "")).trim();
+        RNCAScoreStore.riskScoreDisplayed = displayedRiskScore;
+        console.log(`Displayed Risk Score/Criticality: '${displayedRiskScore}'`);
+
+        const normalize = (s: string) => s.replace(/\s+/g, "").toLowerCase();
+        if (!normalize(displayedRiskScore).includes(normalize(expectedCombined))) {
+            throw new AssertionError({
+                message: `Risk Score/Criticality mismatch. Expected displayed value to contain '${expectedCombined}' (from '${criticalityValue}' + '${consequenceValue}') but got '${displayedRiskScore}'`,
+            });
+        }
+        console.log(`✓ Risk Score/Criticality contains expected combined value '${expectedCombined}'`);
+    }
+
+    public async verifyCriticalityValueInSAP(): Promise<void> {
+        console.log("Verifying Criticality value in SAP");
+        await utils.switchToIframe(this.rncaIframe);
+        await utils.clickWithWait($("//span[normalize-space()='Assignments']"));
+        await utils.waitForBusyIndicatorToDisappear();
+        const capturedRow = await this.captureFirstRowValuesOfAssignments();
+
+        const storedRiskScoreDisplayed = RNCAScoreStore.riskScoreDisplayed;
+
+        if (!storedRiskScoreDisplayed) {
+            throw new AssertionError({
+                message: `Global RNCAScoreStore.riskScoreDisplayed is empty. Call captureRiskAndCriticalityScores() before verifyCriticalityValueInSAP().`,
+            });
+        }
+
+        const capturedRiskScore = capturedRow.riskScore;
+        const capturedCriticality = capturedRow.criticality;
+
+        console.log(`Stored Risk Score/Criticality (global): '${storedRiskScoreDisplayed}'`);
+        console.log(`Captured from Assignments -> Risk Score: '${capturedRiskScore}', Criticality: '${capturedCriticality}'`);
+
+        if (!capturedRiskScore) {
+            throw new AssertionError({ message: `Assignments table 'Risk Score' cell is empty.` });
+        }
+        if (!capturedCriticality) {
+            throw new AssertionError({ message: `Assignments table 'Criticality' cell is empty.` });
+        }
+
+        const normalize = (s: string) => (s || "").replace(/\s+/g, "").toLowerCase();
+        const normalizedStored = normalize(storedRiskScoreDisplayed);
+
+        if (!normalizedStored.includes(normalize(capturedRiskScore))) {
+            throw new AssertionError({
+                message: `Risk Score mismatch: Assignments row Risk Score '${capturedRiskScore}' not present in stored Risk Score/Criticality '${storedRiskScoreDisplayed}'.`,
+            });
+        }
+
+        if (!normalizedStored.includes(normalize(capturedCriticality))) {
+            throw new AssertionError({
+                message: `Criticality mismatch: Assignments row Criticality '${capturedCriticality}' not present in stored Risk Score/Criticality '${storedRiskScoreDisplayed}'.`,
+            });
+        }
+
+        console.log(
+            `✓ Assignments row Risk Score '${capturedRiskScore}' and Criticality '${capturedCriticality}' match stored '${storedRiskScoreDisplayed}'`
+        );
+    }
+
+    public async createWorkflow(): Promise<void> {
+        console.log("Creating workflow for the assessment");
+        await utils.switchToIframe(this.rncaIframe);
+        await utils.clickWithWait($("//header//button[normalize-space()='Workflow']"));
+        await utils.waitForBusyIndicatorToDisappear();
+        const createWorkflowBtn = await $("//div[@role='toolbar']//button//bdi[normalize-space()='Create']");
+        await createWorkflowBtn.waitForClickable({ timeout: 50000 });
+        await createWorkflowBtn.click();
+        const approvalWorkflowTypeDrp = await $("//div[@role='dialog']//bdi[normalize-space()='Approval Workflow']/following::div[1]//span");
+        await approvalWorkflowTypeDrp.waitForClickable({ timeout: 30000 });
+        await approvalWorkflowTypeDrp.click();
+        const workflowHeader = await $("//header[.//text()='Create Workflow']");
+        await workflowHeader.waitForDisplayed({ timeout: 30000 });
+        const assessmentInput = await $("//label[.//text()='Assessment']/following::input[1]");
+        const assessmentValue = await assessmentInput.getAttribute("value");
+        if(!assessmentValue || !assessmentValue.includes(RNCAAssessmentStore.name || "")) {
+            throw new AssertionError({
+                message: `Assessment input value '${assessmentValue}' does not contain expected assessment name '${RNCAAssessmentStore.name}'`,
+            });
+        }
+
+        const assessmnetId = await $("//label[.//text()='Assessment ID']/following::input[1]");
+        const assessmentIdValue = await assessmnetId.getAttribute("value");
+        if(!assessmentIdValue || !assessmentIdValue.includes(RNCAAssessmentStore.id || "")) {
+            throw new AssertionError({
+                message: `Assessment ID input value '${assessmentIdValue}' does not contain expected assessment ID '${RNCAAssessmentStore.id}'`,
+            });
+        }
+
+        const noOfLevelsInput = await $("//label[.//text()='No. of Levels']/following::input[1]");
+        await noOfLevelsInput.waitForDisplayed({ timeout: 30000 });
+        const incrementBtn = await $("//label[.//text()='No. of Levels']/following::span[contains(@id,'incrementBtn')][1]");
+        const decrementBtn = await $("//label[.//text()='No. of Levels']/following::span[contains(@id,'decrementBtn')][1]");
+        const maxValueError = await $("//*[contains(normalize-space(.),'maximum value of 99')]");
+
+        const generatedLevels = Math.floor(Math.random() * 121);
+        console.log(`Generated No. of Levels: ${generatedLevels}`);
+
+        await noOfLevelsInput.click();
+        await noOfLevelsInput.clearValue();
+        await noOfLevelsInput.setValue(String(generatedLevels));
+        await browser.keys(["Tab"]);
+        await utils.waitForBusyIndicatorToDisappear();
+
+        let currentValueAfterInputRaw = await noOfLevelsInput.getAttribute("value");
+        let currentValueAfterInput = Number(currentValueAfterInputRaw || "0");
+        const hasMaxValueError = await maxValueError.isDisplayed().catch(() => false);
+
+        if (generatedLevels > 99) {
+            if (currentValueAfterInput === 99) {
+                console.log("No. of Levels auto-adjusted to 99 by UI");
+            } else {
+                if (!hasMaxValueError) {
+                    throw new AssertionError({
+                        message: `Generated '${generatedLevels}' is greater than 99, but no validation error was shown and value was '${currentValueAfterInput}'.`,
+                    });
+                }
+                await noOfLevelsInput.click();
+                await noOfLevelsInput.clearValue();
+                await noOfLevelsInput.setValue("99");
+                await browser.keys(["Tab"]);
+                await utils.waitForBusyIndicatorToDisappear();
+                currentValueAfterInputRaw = await noOfLevelsInput.getAttribute("value");
+                currentValueAfterInput = Number(currentValueAfterInputRaw || "0");
+            }
+        }
+
+        const levelsToApply = generatedLevels > 99 ? 99 : generatedLevels;
+
+        if (currentValueAfterInput !== levelsToApply) {
+            const diff = Math.abs(levelsToApply - currentValueAfterInput);
+            const btn = levelsToApply > currentValueAfterInput ? incrementBtn : decrementBtn;
+            for (let i = 0; i < diff; i++) {
+                await btn.click();
+            }
+        }
+
+        await utils.waitForBusyIndicatorToDisappear();
+        const appliedValueRaw = await noOfLevelsInput.getAttribute("value");
+        const appliedLevels = Number(appliedValueRaw || "0");
+        if (appliedLevels !== levelsToApply) {
+            throw new AssertionError({
+                message: `No. of Levels mismatch. Expected '${levelsToApply}', but found '${appliedLevels}'.`,
+            });
+        }
+
+        await browser.pause(1000);
+        const workflowRows = await $$("//tr[@role='row'][.//input[@placeholder='Email']]");
+        const workflowRowCount = await workflowRows.length;
+
+        if (levelsToApply === 0 && workflowRowCount !== 0) {
+            throw new AssertionError({
+                message: `Expected no workflow rows for 0 levels, but found '${workflowRowCount}'.`,
+            });
+        }
+
+        if (levelsToApply > 0 && workflowRowCount !== levelsToApply) {
+            throw new AssertionError({
+                message: `Workflow rows mismatch. Expected '${levelsToApply}' rows, but found '${workflowRowCount}'.`,
+            });
+        }
+
+        const endorserRoleEls = await $$("//tr[@role='row'][.//input[@placeholder='Email']]//bdi[normalize-space()='Endorser']");
+        const approverRoleEls = await $$("//tr[@role='row'][.//input[@placeholder='Email']]//bdi[normalize-space()='Approver']");
+        const endorserCount = await endorserRoleEls.length;
+        const approverRoleCount = await approverRoleEls.length;
+
+        if (levelsToApply === 99) {
+            if (endorserCount !== 98 || approverRoleCount !== 1) {
+                throw new AssertionError({
+                    message: `For 99 levels expected 98 Endorser and 1 Approver, but found Endorser='${endorserCount}', Approver='${approverRoleCount}'.`,
+                });
+            }
+        }
+
+        if (levelsToApply > 0 && levelsToApply < 99) {
+            if (endorserCount !== levelsToApply - 1 || approverRoleCount !== 1) {
+                throw new AssertionError({
+                    message: `For ${levelsToApply} levels expected ${levelsToApply - 1} Endorser and 1 Approver, but found Endorser='${endorserCount}', Approver='${approverRoleCount}'.`,
+                });
+            }
+        }
+
+        if (levelsToApply > 0) {
+            const requestedUserEmail = "qa.autoamtion@asint.net";
+            const fallbackUserEmail = "qa.automation@asint.net";
+
+            for (let i = 1; i <= levelsToApply; i++) {
+                const vhiBtn = await $(`(//tr[@role='row'][.//input[@placeholder='Email']]//span[contains(@id,'-vhi')])[${i}]`);
+                await vhiBtn.waitForClickable({ timeout: 30000 });
+                await vhiBtn.click();
+
+                const userDialog = await $("//div[@role='dialog'][.//span[normalize-space()='Select User']]");
+                await userDialog.waitForDisplayed({ timeout: 30000 });
+
+                const searchInput = await userDialog.$(".//input[contains(@placeholder,'Search Email or Name')]");
+                await searchInput.waitForDisplayed({ timeout: 30000 });
+                await searchInput.click();
+                await searchInput.clearValue();
+                await searchInput.setValue(requestedUserEmail);
+
+                const searchBtn = await userDialog.$(".//input[contains(@placeholder,'Search Email or Name')]/ancestor::form//*[contains(@id,'search')]");
+                await searchBtn.waitForClickable({ timeout: 30000 });
+                await searchBtn.click();
+                await utils.waitForBusyIndicatorToDisappear();
+
+                let emailRow = await userDialog.$(`.//tr[@role='row'][.//span[normalize-space()='${requestedUserEmail}']]`);
+                if (!(await emailRow.isExisting())) {
+                    await searchInput.click();
+                    await searchInput.clearValue();
+                    await searchInput.setValue(fallbackUserEmail);
+                    await searchBtn.click();
+                    await utils.waitForBusyIndicatorToDisappear();
+                    emailRow = await userDialog.$(`.//tr[@role='row'][.//span[normalize-space()='${fallbackUserEmail}']]`);
+                }
+
+                if (!(await emailRow.isExisting())) {
+                    throw new AssertionError({
+                        message: `No user row found for '${requestedUserEmail}' or '${fallbackUserEmail}' in Select User dialog for workflow row ${i}.`,
+                    });
+                }
+
+                await emailRow.scrollIntoView();
+                await emailRow.click();
+                const confirmBtn = await userDialog.$(".//bdi[normalize-space()='Confirm']");
+                await confirmBtn.waitForClickable({ timeout: 30000 });
+                await confirmBtn.click();
+                await utils.waitForBusyIndicatorToDisappear();
+
+                const rowInput = await $(`(//tr[@role='row'][.//input[@placeholder='Email']]//input[@placeholder='Email'])[${i}]`);
+                await rowInput.waitForDisplayed({ timeout: 30000 });
+                const assignedEmail = ((await rowInput.getAttribute("value")) || "").trim().toLowerCase();
+                const isAssigned = assignedEmail === requestedUserEmail || assignedEmail === fallbackUserEmail;
+                if (!isAssigned) {
+                    throw new AssertionError({
+                        message: `Workflow row ${i} was not assigned expected email. Found '${assignedEmail}'.`,
+                    });
+                }
+            }
+        }
+
+        const commentsTextArea = await $("//label[.//text()='Comments']/following::textarea[1]");
+        await commentsTextArea.waitForDisplayed({ timeout: 30000 });
+        await commentsTextArea.click();
+        await commentsTextArea.clearValue();
+        const longComment = "A".repeat(5200);
+        await commentsTextArea.setValue(longComment);
+        await browser.keys(["Tab"]);
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const savedComments = await browser.execute((el: any) => el.value, commentsTextArea) as string;
+        const savedCommentsLength = (savedComments || "").length;
+        if (savedCommentsLength !== 5000) {
+            throw new AssertionError({
+                message: `Comments truncation failed. Expected exactly 5000 characters, but found '${savedCommentsLength}'.`,
+            });
+        }
+
+        const createBtnInDialog = await $("//footer//button[.//text()='Create']");
+        await createBtnInDialog.waitForClickable({ timeout: 30000 });
+        await createBtnInDialog.click();
+        await browser.pause(3000);
+        
+        await utils.waitForBusyIndicatorToDisappear();
+        const workflowCreatedDialog = await $("//div[@role='alertdialog']//span[contains(text(),'Workflow created successfully')]");
+        await workflowCreatedDialog.waitForDisplayed({ timeout: 30000 });
+        const okBtn = await $("//div[@role='alertdialog']//button[.//bdi[normalize-space()='OK'] or .//text()='OK']");
+        try {
+            await okBtn.waitForDisplayed({ timeout: 30000 });
+        } catch {
+            throw new AssertionError({
+                message: "Success OK button did not appear after clicking Create.",
+            });
+        }
+        await utils.clickSuccessOkButton();
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log("Workflow created successfully");
     }
 
 }
