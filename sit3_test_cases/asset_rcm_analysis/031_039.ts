@@ -2,7 +2,7 @@ import assetRCMList from '../../page_object_model/btp_applications_page/reliabil
 import assetRCMDetailView from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.detailview.page';
 import utils from '../../utils/utils';
 
-describe('1307682_031-1_Create RCM Assessment in ASINT AIS (Baseline Assessment)', () => {
+describe('031-1_Create RCM Assessment in ASINT AIS (Baseline Assessment) and 039_Assign Mitigated SHE and Financial Risk with associated mitigating strategy', () => {
 
     it('should navigate to Asset RCM list view', async () => {
         await assetRCMList.navigateToAssetRCM();

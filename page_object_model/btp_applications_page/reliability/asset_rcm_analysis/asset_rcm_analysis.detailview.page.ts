@@ -7,6 +7,14 @@ import console from 'console';
 import { strict as assert, AssertionError } from 'node:assert';
 class assetRCMDetailView {
 
+    private collapseSpaces(value: string): string {
+        return `${value || ""}`.replace(/\s+/g, " ").trim();
+    }
+
+    private removeAllSpaces(value: string): string {
+        return this.collapseSpaces(value).replace(/\s+/g, "");
+    }
+
     private get infoTab() { return $("//span[text()='Information']"); }
     private get rcmIframe() { return $('iframe[data-help-id="application-rcm-manage"]'); }
     private get assessmentTab() { return $("//div[@role='tab']//span[text()='Assessment']"); }
@@ -42,28 +50,31 @@ class assetRCMDetailView {
     private get nextBtn() { return $("//button[.='Next']"); }
     private get createBtnFooter() { return $("//footer//button[.//bdi[.='Create']]"); }
     private get warningMsg() { return $("//span[text()='All of the selected Technical Objects are already assigned to other ongoing assessments. Please select different Technical Objects.']"); }
+    private get incompleteFailureDataWarning() { return $("//span[normalize-space()='Technical Objects with Missing or Incomplete Failure Data Profile Status Were Skipped']"); }
     private get warningOkBtn() { return $("//button[.='OK']"); }
     private get previousBtn() { return $("//button[.='Previous']"); }
     private get removeSelectedToken() { return $("(//div[@role='listbox']//span[@aria-label='Remove'])[1]"); }
     private getRowByIndex(i:number){ return $(`(//tr[@role='row' and .//div[@role='checkbox']])[${i}]`); }
-    private technicalObjectRowTxt = (techObj: string) => $(`//span[@dir='auto'][contains(text(),"${techObj}")]`);
-    private technicalObjectRowClick = (techObj: string) => $(`//span[@dir='auto'][contains(text(),'${techObj}')]/ancestor::div[4]`);
+    private technicalObjectRowTxt = (techObj: string) => $(`//span[@dir='auto'][contains(translate(normalize-space(), ' ', ''),"${this.removeAllSpaces(techObj)}")]`);
+    private technicalObjectRowClick = (techObj: string) => $(`//span[@dir='auto'][contains(translate(normalize-space(), ' ', ''),'${this.removeAllSpaces(techObj)}')]/ancestor::div[4]`);
     private get riskInformationSection() { return $("//bdi[normalize-space()='Risk Information']"); }
     private headerTechnicalObjectId = (id: string) => $$(`(//header[@role='banner']//div[@role='heading']//span[@dir='auto'])[normalize-space()='${id}']`);
-    private headerTechnicalObjectName = (name: string) => $$(`//header[@role='banner']//span[@dir='auto'][normalize-space()='${name}']`);
+    private headerTechnicalObjectName = (name: string) => $$(`//header[@role='banner']//span[@dir='auto'][translate(normalize-space(), ' ', '')='${this.removeAllSpaces(name)}']`);
     private get criticalityLabel() { return $("//bdi[normalize-space()='Criticality:']"); }
     private criticalityValue = (crit: string) => $(`//bdi[normalize-space()='Criticality:']/ancestor::div[1]/following::span[1][normalize-space()='${crit}']`);
     private get riskInformationHeader() { return $("//div[@role='heading']//span[contains(text(),'Risk Information')]"); }
     private get riskInformationExpandBtn() { return $("//span[contains(text(),'Risk Information')]/preceding::button[1]"); }
     private riskRowValue = (i:number) => $(`//td[@aria-colindex='1']//bdi/following::tbody//tr[@aria-rowindex='${i}']//td[@aria-colindex='1']//bdi`);
-    private get maintenanceServiceSections() {return $$("//bdi[normalize-space()='Maintenance and Service']");}
-    private get maintenanceNotifText() { return $("//div[contains(text(),'Maintenance Notifications')]"); }
-    private get maintenanceNotifAssignBtn() { return $("//div[contains(text(),'Maintenance Notifications')]/following::button[.//text()='Assign'][1]"); }
+    private get maintenanceServiceSections() {return $$("//span[normalize-space()='Maintenance and Service']");}
+    private get maintenanceNotifText() { return $("//span[contains(text(),'Maintenance Notifications')]"); }
+    private get maintenanceNotifAssignBtn() { return $("//span[contains(text(),'Maintenance Notifications')]/following::button[.//text()='Assign'][1]"); }
     private get maintenanceNotifHeader() { return $("//header//span[contains(text(),'Maintenance Notifications')]"); }
-    private get maintenanceOrdersText() { return $("//div[contains(text(),'Maintenance Orders')]"); }
-    private get maintenanceOrdersAssignBtn() { return $("//div[contains(text(),'Maintenance Orders')]/following::button[.//text()='Assign'][1]"); }
-    private get maintenanceOrdersHeader() { return $("//header//span[contains(text(),'Orders')]"); }
-    private get maintenancePlansText() { return $("//div[contains(text(),'Maintenance Plans')]"); }
+    private get maintenanceNotifAddOption() { return $("//span[contains(text(),'Maintenance Notifications')]/following::button[@aria-label='Additional Options'][1]"); }
+    private get maintenanceOrdersText() { return $("//span[contains(text(),'Maintenance Orders')]"); }
+    private get maintenanceOrdersAssignBtn() { return $("//span[contains(text(),'Maintenance Orders')]/following::button[.//text()='Assign'][1]"); }
+    private get maintenanceOrdersHeader() { return $("//header//span[contains(text(),'Maintenance Orders')]"); }
+    private get maintenanceOrdersAddOption() { return $("//span[contains(text(),'Maintenance Orders')]/following::button[@aria-label='Additional Options'][1]"); }
+    private get maintenancePlansText() { return $("//span[contains(text(),'Maintenance Plans')]"); }
     private get footerCancelBtn() { return $("//footer//button[.//text()='Cancel']"); }
     private get strategiesHeader() { return $$("//div[@role='heading']//span[contains(text(),'Strategies')]"); }
     private get strategiesExpandBtn() { return $("//span[contains(text(),'Strategies')]/preceding::button[1]"); }
@@ -72,7 +83,7 @@ class assetRCMDetailView {
     private get recommendationExpandBtn() { return $("//span[contains(text(),'Recommendation')]/preceding::button[1][@aria-label]"); }
     private get recommendationRCMValues() { return $$("//tbody//tr[@role='row']//td[.//span[contains(text(),'RCM')]]//span[contains(text(),'RCM')]"); }
     private get assessmentDetailCloseBtn() { return $("//header[@role='banner']//button[@aria-label='Decline']"); }
-    private addMaintainableBtn = (techObj: string) => $(`//span[@dir='auto'][contains(text(),"${techObj}")]/ancestor::div[3]/following-sibling::div//button[@title='Add']`);
+    private addMaintainableBtn = (techObj: string) => $(`//span[@dir='auto'][translate(normalize-space(), ' ', '')='${this.removeAllSpaces(techObj)}']/ancestor::div[3]/following-sibling::div//button[@title='Add']`);
     private get assignMaintainableItemsBtns() { return $$("//button[@title='Assign Maintainable Items']"); }
     private get assignMaintainableItemsHeader() { return $("//h1[normalize-space()='Assign Maintainable Items']"); }
     private get maintainableItemsText() {return $("//header[.//text()='Assign Maintainable Items']/following-sibling::section//span[contains(text(),'Maintainable Items')]"); }
@@ -161,7 +172,7 @@ class assetRCMDetailView {
     private get strategyFirstRow() { return (description: string) => $$(`//tr[@role='row']//span[contains(text(),'${description}')]/following::div[@title="Click to Select"][1]`); }
     private get strategyEditBtn() { return $("(//div[@role='heading']//following::span[contains(text(),'Causes')])[1]/following::button[.='Edit & Update']"); }
     private get selectAllStrategyCheckbox() { return $$("//div[@role='form' and .//*[contains(text(),'Strategies')]]//div[@title='Select All']"); }
-    private get riskInformationSections() { return $$("//bdi[normalize-space()='Risk Information']"); }
+    private get riskInformationSections() { return $$("//header//div[normalize-space()='Risk Information']"); }
     private get riskSearchInput() { return $("//input[@placeholder='Search by Transition , Last transition date , FIN Risk , SHE Risk   ']"); }
     private get editRiskBtn() { return $("//button[@title='Edit']"); }
     private get transitionTextRow1() { return $("(//th[@aria-colindex='2']//span[text()='Transition']/following::td[@aria-colindex='2']//span)[1]"); }
@@ -195,7 +206,7 @@ class assetRCMDetailView {
     private get finConsequenceRow5() { return $("(//th[@aria-colindex='6']//span[text()='FIN Consequence ($K)']/following::tr[@aria-rowindex='5']/following::td[@aria-colindex='6']//input)[1]"); }
     private get finPofRow5() { return $$("(//span[text()='FIN POF']/following::td[@colspan='6']//input)[5]"); }
     private get saveRiskBtn() { return $("//button[.//text()='Save']"); }
-    private get riskMatrixSections() { return $$("//bdi[normalize-space()='Risk Matrix']"); }
+    private get riskMatrixSections() { return $$("//header//span[normalize-space()='Risk Matrix']"); }
     private get riskMatrixTitle() { return $("//div[text()='Exxon 4x5 FIN Risk Matrix']"); }
     private get finTodayText() { return $("//span[text()=\"FIN At Today's Date\"]"); }
     private get finPofValue() { return $("//div[contains(.,'FIN PoF')]/b"); }
@@ -242,6 +253,7 @@ class assetRCMDetailView {
     private get genericCloseBtn() { return $("//button[.//text()='Close']"); }
     private get publishBtn() { return $("//button[.//text()='Publish']"); }
     private get workflowBtn() { return $("//header//button[.//text()='Workflow']"); }
+    private get useBaseLineBtn() { return $("//button[.//text()='Use Baseline']"); }
 
     public selectedEquipmentData:any = {};
     public selectedFunctionalLocation:any ={};
@@ -273,7 +285,7 @@ class assetRCMDetailView {
 
     public async verifyAndEditGenInfo(){
         console.log("Navigating to Information Tab");
-        utils.switchToIframe(this.rcmIframe);
+        await utils.switchToIframe(this.rcmIframe);
         await utils.clickWithWait(this.infoTab);
         console.log("Navigated to information tab");
         const infoDesc = await $("//bdi[.='Description']/ancestor::div[1]/following::div[.//span][1]//span");
@@ -284,7 +296,14 @@ class assetRCMDetailView {
         console.log("Editing infomation...");
         await utils.clickWithWait(this.editGenInfo);
         await utils.waitForBusyIndicatorToDisappear();
-        assetRCMListView.assetRCMDesc = `Automation_Baseline_RCM_${Date.now()}`;
+        if(assetRCMListView.baseline == true)
+        {
+            assetRCMListView.assetRCMDesc = `Automation_Baseline_RCM_${Date.now()}`;
+        }
+        else
+        {
+            assetRCMListView.assetRCMDesc = `Automation_RCM_${Date.now()}`;
+        }
         console.log(`Generated RCM Description for infomration verification: ${assetRCMListView.assetRCMDesc}`);
         await utils.setValueWithWait(this.descTextArea,assetRCMListView.assetRCMDesc);
         console.log("New description value is "+assetRCMListView.assetRCMDesc);
@@ -409,8 +428,21 @@ class assetRCMDetailView {
             await checkBox.waitForDisplayed({ timeout: 50000 });
             await checkBox.waitForClickable({ timeout: 50000 });
             await utils.clickWithWait(checkBox);
-            await this.selectEquipmentAndStore(i);
+            const equipmentStored = await this.selectEquipmentAndStore(i);
+            if (!equipmentStored) {
+                lastFailureReason = "Equipment name element not present – skipping row";
+                await browser.pause(1000);
+                continue;
+            }
             await utils.clickWithWait(this.confirmBtn);
+            await browser.pause(2000);
+            if (await this.incompleteFailureDataWarning.isDisplayed().catch(() => false)) {
+                lastFailureReason = "Incomplete Failure Data Profile warning – selected object was skipped";
+                console.log("Incomplete Failure Data Profile warning appeared, clicking OK and retrying with next checkbox");
+                await utils.clickWithWait(this.warningOkBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                continue;
+            }
             await utils.clickWithWait(this.nextBtn);
             await utils.clickWithWait(this.createBtnFooter);
             await utils.waitForBusyIndicatorToDisappear();
@@ -493,12 +525,22 @@ class assetRCMDetailView {
         console.log(`ensureCheckboxLoaded: exhausted ${maxScrollAttempts} scroll attempts trying to reach index ${targetIndex}.`);
     }
 
-    public async selectEquipmentAndStore(i:number){
+    public async selectEquipmentAndStore(i:number): Promise<boolean>{
         console.log("Store equipment data start");
         const row = await this.getRowByIndex(i);
         const equipmentId = await row.$(".//td[@aria-colindex='2']//span[contains(@id,'txt')]").getText();
         console.log("Equipment ID selected: "+equipmentId);
-        const equipmentName = await row.$(".//td[@aria-colindex='2']//div[contains(@class,'Text')]/span[last()]").getText();
+        const nameEl = row.$(".//td[@aria-colindex='2']//div[contains(@class,'Text')]/span[last()]");
+        const nameElExists = await nameEl.isExisting().catch(() => false);
+        if (!nameElExists) {
+            console.log(`Equipment name element not present for row index ${i}, skipping to next row`);
+            const technicalCloseBtn = $("//button[.//text()='Close']");
+            if (await technicalCloseBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(technicalCloseBtn);
+            }
+            return false;
+        }
+        const equipmentName = await nameEl.getText();
         console.log("Equipment Name selected: "+equipmentName);
         const category = await row.$(".//td[@aria-colindex='3']//span").getText();
         console.log("Category selected: "+category);
@@ -509,6 +551,7 @@ class assetRCMDetailView {
         //const criticality = await row.nextElement().$(".//span[text()='Criticality']/ancestor::div[1]/following::span[1]").getText();
         this.selectedEquipmentData = {equipmentId,equipmentName,category,objectType,catalogProfile};
         console.log("Store equipment data end");
+        return true;
     }
     
     public async verifyAssessment(){
@@ -1836,15 +1879,33 @@ class assetRCMDetailView {
     public async editStrategy()
     {
         console.log("Editing the first strategy...");
-        for (const btn of await this.strategyFirstRow(this.createdStrategies[0].description))
-        {
-            if (await btn.isDisplayed() && await btn.isClickable())
-            {
-                await utils.clickWithWait(btn,1500);
-                await browser.pause(2500);
-                break;
-            }
+        const targetDescription = (this.createdStrategies[0]?.description || "").trim();
+        const strategyRow = $(`//table[contains(@id,'table-fixed')]//tr[@role='row' and .//span[normalize-space()="${targetDescription}"]]`);
+        await strategyRow.waitForDisplayed({ timeout: 30000, timeoutMsg: `Strategy row not found for description '${targetDescription}'` });
+
+        const rowIdx = await strategyRow.getAttribute("data-sap-ui-rowindex");
+        if (rowIdx === null || rowIdx === "") {
+            throw new AssertionError({ message: `AssertionError: Unable to resolve data-sap-ui-rowindex for strategy '${targetDescription}'` });
         }
+
+        const rowSelectorCell = $(`//div[@role='presentation'][div[@role='row'][@data-sap-ui-rowindex]]//div[@role='row'][@data-sap-ui-rowindex='${rowIdx}']//div[@role='gridcell'][@aria-colindex='1']`);
+        await rowSelectorCell.waitForDisplayed({ timeout: 30000, timeoutMsg: `Strategy row selector not found for '${targetDescription}'` });
+
+        let selected = (await rowSelectorCell.getAttribute("aria-selected")) === "true";
+        if (!selected) {
+            await utils.clickWithWait(rowSelectorCell, 1500);
+            await browser.waitUntil(async () => (await rowSelectorCell.getAttribute("aria-selected")) === "true", {
+                timeout: 10000,
+                interval: 300,
+                timeoutMsg: `Strategy checkbox not selected for '${targetDescription}'`
+            });
+            selected = true;
+        }
+        if (!selected) {
+            throw new AssertionError({ message: `AssertionError: Failed to select strategy '${targetDescription}' before editing` });
+        }
+        await browser.pause(1200);
+
         await utils.clickWithWait(this.strategyEditBtn,1500);
         await browser.pause(3000);
         const newDescription = `${this.createdStrategies[0].description} - Edited`;
@@ -2084,14 +2145,23 @@ class assetRCMDetailView {
     }
 
     private async closeTopMostDetailPanel(panelTitle?: string): Promise<boolean> {
-        const anchoredToolbar = "//div[@role='toolbar' and @aria-roledescription='Overflow Toolbar'][.//button[@aria-label='Enter Full Screen Mode' or @aria-label='Exit Full Screen Mode']]";
+        const anchoredToolbars = [
+            "//div[@role='toolbar' and @aria-roledescription='Overflow Toolbar'][.//button[@aria-label='Enter Full Screen Mode' or @aria-label='Exit Full Screen Mode']]",
+            "//div[@role='toolbar'][.//button[@aria-label='Enter Full Screen Mode' or @aria-label='Exit Full Screen Mode']]",
+            "//div[contains(@class,'sapFDynamicPageTitleActionsBar')][.//button[@aria-label='Enter Full Screen Mode' or @aria-label='Exit Full Screen Mode']]"
+        ];
         const candidateSelectors: string[] = [];
         if (panelTitle) {
-            candidateSelectors.push(
-                `//*[self::span or self::bdi or self::div or self::h1 or self::h2][normalize-space()="${panelTitle}"]/ancestor::*[.//div[@role='toolbar' and @aria-roledescription='Overflow Toolbar'][.//button[@aria-label='Enter Full Screen Mode' or @aria-label='Exit Full Screen Mode']]][1]${anchoredToolbar}//button[@aria-label='Decline']`
-            );
+            candidateSelectors.push(`//*[self::span or self::bdi or self::div or self::h1 or self::h2][normalize-space()="${panelTitle}"]/ancestor::div[contains(@class,'sapFDynamicPageTitle')][1]//button[@aria-label='Decline']`);
+            for (const anchoredToolbar of anchoredToolbars) {
+                candidateSelectors.push(
+                    `//*[self::span or self::bdi or self::div or self::h1 or self::h2][normalize-space()="${panelTitle}"]/ancestor::*[.${anchoredToolbar}][1]${anchoredToolbar}//button[@aria-label='Decline']`
+                );
+            }
         }
-        candidateSelectors.push(`${anchoredToolbar}//button[@aria-label='Decline']`);
+        for (const anchoredToolbar of anchoredToolbars) {
+            candidateSelectors.push(`${anchoredToolbar}//button[@aria-label='Decline']`);
+        }
 
         for (const sel of candidateSelectors) {
             const cands = Array.from(await $$(sel));
@@ -3179,8 +3249,21 @@ class assetRCMDetailView {
             await checkBox.waitForDisplayed({ timeout: 50000 });
             await checkBox.waitForClickable({ timeout: 50000 });
             await utils.clickWithWait(checkBox);
-            await this.selectEquipmentAndStore(i);
+            const equipmentStoredCs = await this.selectEquipmentAndStore(i);
+            if (!equipmentStoredCs) {
+                lastFailureReason = "Equipment name element not present – skipping row";
+                await browser.pause(1000);
+                continue;
+            }
             await utils.clickWithWait(this.confirmBtn);
+            await browser.pause(2000);
+            if (await this.incompleteFailureDataWarning.isDisplayed().catch(() => false)) {
+                lastFailureReason = "Incomplete Failure Data Profile warning – selected object was skipped";
+                console.log("Incomplete Failure Data Profile warning appeared, clicking OK and retrying with next checkbox");
+                await utils.clickWithWait(this.warningOkBtn);
+                await utils.waitForBusyIndicatorToDisappear();
+                continue;
+            }
             await utils.clickWithWait(this.nextBtn);
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(2000);
@@ -3293,6 +3376,7 @@ class assetRCMDetailView {
 
         const equipmentId = this.selectedEquipmentData.equipmentId;
         const equipmentName = this.selectedEquipmentData.equipmentName;
+        const equipmentNameNoSpaces = this.removeAllSpaces(equipmentName);
         console.log(`Verifying Technical Object '${equipmentName} (${equipmentId})' is present on System detail page...`);
         let sysIdShown = false;
         await browser.waitUntil(async () => {
@@ -3310,7 +3394,7 @@ class assetRCMDetailView {
         }
         let sysNameShown = false;
         await browser.waitUntil(async () => {
-            const nameEls = await $$(`//tr[@role='row']//span[@dir='auto' and normalize-space()="${equipmentName}"]`);
+            const nameEls = await $$(`//tr[@role='row']//span[@dir='auto' and (normalize-space()="${this.collapseSpaces(equipmentName)}" or translate(normalize-space(), ' ', '')="${equipmentNameNoSpaces}")]`);
             for (const el of nameEls) {
                 if (await el.isDisplayed().catch(() => false)) {
                     sysNameShown = true;
@@ -3344,6 +3428,7 @@ class assetRCMDetailView {
     public async addSubSystem() {
         const equipmentId = this.selectedEquipmentData.equipmentId;
         const equipmentName = this.selectedEquipmentData.equipmentName;
+        const equipmentNameNoSpaces = this.removeAllSpaces(equipmentName);
         if (!this.systemName) {
             throw new AssertionError({ message: "AssertionError: systemName not set - createAssessmentFlowWithCreateSystem must run first" });
         }
@@ -3372,7 +3457,7 @@ class assetRCMDetailView {
         console.log(`Sub-System Name='${subSystemName}', Desc='${subSystemDesc}'`);
         console.log(`Verifying same Technical Object ('${equipmentName} (${equipmentId})') is reflected in sub-system dialog...`);
         const techObjIdSpan = $(`//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//tr[@role='row' and @aria-rowindex>1]//span[normalize-space()="${equipmentId}"]`);
-        const techObjNameSpan = $(`//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//tr[@role='row' and @aria-rowindex>1]//span[normalize-space()="${equipmentName}"]`);
+        const techObjNameSpan = $(`//div[@role='dialog' and .//h1[normalize-space()='Create Sub-System']]//tr[@role='row' and @aria-rowindex>1]//span[normalize-space()="${this.collapseSpaces(equipmentName)}" or translate(normalize-space(), ' ', '')="${equipmentNameNoSpaces}"]`);
         await techObjIdSpan.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: Equipment ID '${equipmentId}' not shown in sub-system dialog` });
         await techObjNameSpan.waitForDisplayed({ timeout: 30000, timeoutMsg: `AssertionError: Equipment Name '${equipmentName}' not shown in sub-system dialog` });
         console.log("Technical Object matches the equipment used earlier");
@@ -3486,7 +3571,7 @@ class assetRCMDetailView {
         }
         let subSysNameShown = false;
         await browser.waitUntil(async () => {
-            const nameEls = await $$(`//tr[@role='row']//span[@dir='auto' and normalize-space()="${equipmentName}"]`);
+            const nameEls = await $$(`//tr[@role='row']//span[@dir='auto' and (normalize-space()="${this.collapseSpaces(equipmentName)}" or translate(normalize-space(), ' ', '')="${equipmentNameNoSpaces}")]`);
             for (const el of nameEls) {
                 if (await el.isDisplayed().catch(() => false)) {
                     subSysNameShown = true;
@@ -3823,7 +3908,8 @@ class assetRCMDetailView {
         console.log(`Equipment '${equipmentName} (${equipmentId})' assigned to Functional Failure '${baseName}'`);
 
         console.log(`Verifying equipment row '${equipmentName} (${equipmentId})' is now listed under Technical Objects on Functional Failure detail page...`);
-        const assignedRow = $(`//span[@dir='auto'][normalize-space()="${equipmentName} (${equipmentId})"]`);
+        const expectedEquipmentTextNoSpaces = `${equipmentName}(${equipmentId})`.replace(/\s+/g, "");
+        const assignedRow = $(`//span[@dir='auto'][translate(normalize-space(), ' ', '')="${expectedEquipmentTextNoSpaces}"]`);
         await assignedRow.waitForDisplayed({ timeout: 60000, timeoutMsg: `AssertionError: Equipment '${equipmentName} (${equipmentId})' not reflected under Technical Objects on Functional Failure detail page after Confirm` });
         console.log(`Equipment '${equipmentName} (${equipmentId})' verified under Technical Objects on Functional Failure detail page`);
     }
@@ -3916,13 +4002,15 @@ class assetRCMDetailView {
         const equipmentId = this.selectedEquipmentData.equipmentId;
         const equipmentName = this.selectedEquipmentData.equipmentName;
         const equipmentDisplayText = `${equipmentName} (${equipmentId})`;
+        const equipmentDisplayTextNoSpaces = this.removeAllSpaces(equipmentDisplayText);
+        const maintainableItemValueNoSpaces = this.removeAllSpaces(this.maintainableItemValueFunLoc);
 
         console.log(`Expanding equipment row '${equipmentDisplayText}' in hierarchy to verify Maintainable Item '${this.maintainableItemValueFunLoc}'...`);
-        const miSpanXpath = `//span[@dir='auto'][normalize-space()="${this.maintainableItemValueFunLoc}"]`;
+        const miSpanXpath = `//span[@dir='auto'][translate(normalize-space(), ' ', '')="${maintainableItemValueNoSpaces}"]`;
         const miSpanFirst = $(miSpanXpath);
         if (!(await miSpanFirst.isDisplayed().catch(() => false))) {
             const chevronXpath =
-                `//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]` +
+            `//span[@dir='auto'][translate(normalize-space(), ' ', '')="${equipmentDisplayTextNoSpaces}"]` +
                 `/ancestor::div[span[@role='button' and @title='Expand/Collapse Node']][1]` +
                 `/span[@role='button' and @title='Expand/Collapse Node']`;
             const chevron = await $(chevronXpath);
@@ -3954,7 +4042,7 @@ class assetRCMDetailView {
                     console.log("Equipment row already expanded (aria-expanded='true')");
                 }
             } else {
-                const nodeIcon = await $(`//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]/ancestor::div[.//span[@aria-label='Node']][1]//span[@aria-label='Node']`);
+                const nodeIcon = await $(`//span[@dir='auto'][translate(normalize-space(), ' ', '')="${equipmentDisplayTextNoSpaces}"]/ancestor::div[.//span[@aria-label='Node']][1]//span[@aria-label='Node']`);
                 if (await nodeIcon.isExisting().catch(() => false)) {
                     try { await utils.clickWithWait(nodeIcon); }
                     catch { await browser.execute((el: HTMLElement) => el.click(), await nodeIcon); }
@@ -4065,14 +4153,18 @@ class assetRCMDetailView {
         const equipmentId = this.selectedEquipmentData.equipmentId;
         const equipmentName = this.selectedEquipmentData.equipmentName;
         const equipmentDisplayText = `${equipmentName} (${equipmentId})`;
+        const equipmentDisplayTextNoSpaces = this.removeAllSpaces(equipmentDisplayText);
+        const equipmentNameNoSpaces = this.removeAllSpaces(equipmentName);
         const ffBaseName = this.functionalFailureValue.split(' (')[0].trim();
+        const technicalObjectHeaderRoot = "(//header[@role='banner' and @aria-roledescription='Object page header'])[last()]";
+        const technicalObjectPanelRoot = "((//header[@role='banner' and @aria-roledescription='Object page header'])[last()]/ancestor::section[@role='region'][1] | (//header[@role='banner' and @aria-roledescription='Object page header'])[last()]/ancestor::div[@role='region'][1] | (//header[@role='banner' and @aria-roledescription='Object page header'])[last()]/ancestor::div[1])[1]";
 
         console.log(`Opening Technical Object detail page for '${equipmentDisplayText}' from Functional Failure detail...`);
         const openTechObjSelectors = [
-            `//tr[@role='row'][.//span[@dir='auto' and normalize-space()="${equipmentDisplayText}"]]//a[normalize-space()="${equipmentDisplayText}" or contains(normalize-space(),"${equipmentId}")]`,
-            `//tr[@role='row'][.//span[@dir='auto' and normalize-space()="${equipmentDisplayText}"]]//span[@role='link']`,
-            `//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]/ancestor::tr[@role='row'][1]//span[@role='link' or @role='button']`,
-            `//span[@dir='auto'][normalize-space()="${equipmentDisplayText}"]/ancestor::div[4]`
+            `//tr[@role='row'][.//span[@dir='auto' and translate(normalize-space(), ' ', '')="${equipmentDisplayTextNoSpaces}"]]//a[translate(normalize-space(), ' ', '')="${equipmentDisplayTextNoSpaces}" or contains(normalize-space(),"${equipmentId}")]`,
+            `//tr[@role='row'][.//span[@dir='auto' and translate(normalize-space(), ' ', '')="${equipmentDisplayTextNoSpaces}"]]//span[@role='link']`,
+            `//span[@dir='auto'][translate(normalize-space(), ' ', '')="${equipmentDisplayTextNoSpaces}"]/ancestor::tr[@role='row'][1]//span[@role='link' or @role='button']`,
+            `//span[@dir='auto'][translate(normalize-space(), ' ', '')="${equipmentDisplayTextNoSpaces}"]/ancestor::div[4]`
         ];
         let toOpened = false;
         for (const sel of openTechObjSelectors) {
@@ -4090,7 +4182,8 @@ class assetRCMDetailView {
                 await utils.waitForBusyIndicatorToDisappear();
                 await browser.pause(2500);
                 const headerVisible = await browser.waitUntil(async () => {
-                    for (const el of await this.headerTechnicalObjectName(equipmentName)) {
+                    const headerNameEls = await $$(`${technicalObjectHeaderRoot}//span[@dir='auto'][normalize-space()="${this.collapseSpaces(equipmentName)}" or translate(normalize-space(), ' ', '')="${equipmentNameNoSpaces}"] | ${technicalObjectHeaderRoot}//a[normalize-space()="${this.collapseSpaces(equipmentName)}" or translate(normalize-space(), ' ', '')="${equipmentNameNoSpaces}"]`);
+                    for (const el of headerNameEls) {
                         if (await el.isDisplayed().catch(() => false)) return true;
                     }
                     return false;
@@ -4111,7 +4204,8 @@ class assetRCMDetailView {
 
         console.log(`Verifying Technical Object detail page header shows '${equipmentName}'...`);
         let nameFound = false;
-        for (const el of await this.headerTechnicalObjectName(equipmentName)) {
+        const headerNameEls = await $$(`${technicalObjectHeaderRoot}//span[@dir='auto'][normalize-space()="${this.collapseSpaces(equipmentName)}" or translate(normalize-space(), ' ', '')="${equipmentNameNoSpaces}"] | ${technicalObjectHeaderRoot}//a[normalize-space()="${this.collapseSpaces(equipmentName)}" or translate(normalize-space(), ' ', '')="${equipmentNameNoSpaces}"]`);
+        for (const el of headerNameEls) {
             if (await el.isDisplayed().catch(() => false)) {
                 nameFound = true;
                 break;
@@ -4123,7 +4217,8 @@ class assetRCMDetailView {
         console.log(`Header name verified: '${equipmentName}'`);
 
         let idFound = false;
-        for (const el of await this.headerTechnicalObjectId(equipmentId)) {
+        const detailIdEls = await $$(`${technicalObjectHeaderRoot}//span[@dir='auto'][normalize-space()="${equipmentId}"] | ${technicalObjectHeaderRoot}//a[normalize-space()="${equipmentId}"] | ${technicalObjectPanelRoot}//span[@dir='auto'][normalize-space()="${equipmentId}"] | ${technicalObjectPanelRoot}//a[normalize-space()="${equipmentId}"]`);
+        for (const el of detailIdEls) {
             if (await el.isDisplayed().catch(() => false)) {
                 idFound = true;
                 break;
@@ -4442,7 +4537,6 @@ class assetRCMDetailView {
         };
 
         verifyValue("systemName", this.systemName);
-        verifyValue("subSystemName", this.subSystemName);
         if (this.selectedEquipmentData && this.selectedEquipmentData.equipmentId && this.selectedEquipmentData.equipmentName) {
             const equipmentDisplayText = `${this.selectedEquipmentData.equipmentName} (${this.selectedEquipmentData.equipmentId})`;
             verifyValue("equipmentAssignedToSubSystem", equipmentDisplayText);
@@ -4531,6 +4625,249 @@ class assetRCMDetailView {
         }
         console.log("'Workflow' button is not available as expected");
         console.log("Verified that 'Publish RCM Baseline' and 'Workflow' buttons are not available on the header action bar");
+    }
+
+    public async useBaselineAssessmentFlowWithCreateSystem() {
+        console.log("Using Baseline Assessment flow with Create-System RCM flow...");
+        console.log(`Opening System '${this.systemName}' detail page by clicking the row...`);
+        const rowClick = $(`//span[@dir='auto'][normalize-space()="${this.systemName}"]/ancestor::div[4]`);
+        await utils.clickWithWait(rowClick);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+
+        const useBaseLineBtn = await this.useBaseLineBtn;
+        if (!(await useBaseLineBtn.isDisplayed().catch(() => false)) || !(await useBaseLineBtn.isClickable().catch(() => false))) {
+            throw new AssertionError({ message: "AssertionError: 'Use Baseline' button not available on System detail page" });
+        }
+        await utils.clickWithWait(useBaseLineBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        console.log("'Use Baseline' button is available and clickable");
+        const useBaseLineHeader = await $("//header[.//text()='Select Baseline']");
+        await useBaseLineHeader.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: 'Select Baseline' header not displayed after clicking 'Use Baseline'" });
+        console.log("'Select Baseline' header is displayed");
+
+        const recommendedBaselineCount = await $("//h3//span[contains(text(),'Recommended Baselines')]");
+        const recommendedCountText = await recommendedBaselineCount.getText();
+        const recommendedCount = await utils.getAssignedValue(recommendedCountText);
+        console.log(`Recommended Baselines count: ${recommendedCount}`);
+        if(recommendedCount === 0) {
+            throw new AssertionError({ message: "AssertionError: No Recommended Baselines available to select" });
+        }
+
+        const baselineTable = await $("//header[.//text()='Select Baseline']/following-sibling::section//table[@role='grid'][1]");
+        await baselineTable.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: Baseline selection table is not displayed" });
+
+        const headerCells = await baselineTable.$$(".//thead//th[@role='columnheader' and @aria-colindex]");
+        const columnMeta: Array<{ name: string; ariaColIndex: string }> = [];
+        for (const headerCell of headerCells) {
+            const columnName = (await headerCell.getText()).replace(/\s+/g, " ").trim();
+            const ariaColIndex = (await headerCell.getAttribute("aria-colindex")) || "";
+            if (!columnName || !ariaColIndex || columnName.toLowerCase() === "selection") {
+                continue;
+            }
+            columnMeta.push({ name: columnName, ariaColIndex });
+        }
+
+        const bodyRows = await baselineTable.$$(".//tbody/tr[@role='row']");
+        const columnValues: Record<string, string[]> = {};
+        for (const column of columnMeta) {
+            columnValues[column.name] = [];
+        }
+
+        for (const row of bodyRows) {
+            for (const column of columnMeta) {
+                const cell = await row.$(`.//td[@role='gridcell' and @aria-colindex='${column.ariaColIndex}']`);
+                let value = "";
+                if (await cell.isExisting()) {
+                    value = (await cell.getText()).replace(/\s+/g, " ").trim();
+                }
+                columnValues[column.name].push(value);
+            }
+        }
+
+        console.log("Baseline table extracted data:");
+        for (const column of columnMeta) {
+            console.log(`${column.name}: ${JSON.stringify(columnValues[column.name])}`);
+        }
+
+        const selectAllCheckbox = await baselineTable.$(".//thead//div[@role='checkbox'][1]");
+        await selectAllCheckbox.waitForDisplayed({ timeout: 10000, timeoutMsg: "AssertionError: Select All checkbox is not displayed" });
+        const isSelectAllChecked = (await selectAllCheckbox.getAttribute("aria-checked")) === "true";
+        if (!isSelectAllChecked) {
+            await utils.clickWithWait(selectAllCheckbox);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1000);
+        }
+
+        const reviewBtn = await $("//header[.//text()='Select Baseline']/following::footer//button[.//bdi[normalize-space()='Review']][1]");
+        await reviewBtn.waitForClickable({ timeout: 15000, timeoutMsg: "AssertionError: Review button is not clickable after selecting baselines" });
+        await utils.clickWithWait(reviewBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        const reviewHeader = await $("//header[.//text()='Review Baseline']");
+        await reviewHeader.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: 'Review Baseline Selection' header not displayed after clicking 'Review'" });
+        console.log("'Review Baseline Selection' header is displayed");
+
+        const reviewMappingTable = await $("//header[.//text()='Review Baseline']/following-sibling::section//table[@role='grid'][1]");
+        await reviewMappingTable.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: Review baseline mapping table is not displayed" });
+
+        const mappingRows = await reviewMappingTable.$$(".//tbody/tr[@role='row']");
+        const mappingRowCount = await mappingRows.length;
+        if (mappingRowCount === 0) {
+            throw new AssertionError({ message: "AssertionError: No rows available in Review Baseline mapping table" });
+        }
+
+        let expectedTechnicalObjectId = "";
+        let expectedTechnicalObjectName = "";
+        if (this.selectedEquipmentData && this.selectedEquipmentData.equipmentId && this.selectedEquipmentData.equipmentName) {
+            expectedTechnicalObjectId = `${this.selectedEquipmentData.equipmentId}`.trim();
+            expectedTechnicalObjectName = `${this.selectedEquipmentData.equipmentName}`.trim();
+        } else if (this.selectedFunctionalLocation && this.selectedFunctionalLocation.locationId && this.selectedFunctionalLocation.locationName) {
+            expectedTechnicalObjectId = `${this.selectedFunctionalLocation.locationId}`.trim();
+            expectedTechnicalObjectName = `${this.selectedFunctionalLocation.locationName}`.trim();
+        }
+
+        if (!expectedTechnicalObjectId || !expectedTechnicalObjectName) {
+            throw new AssertionError({ message: "AssertionError: Expected technical object data is not available for validation" });
+        }
+        console.log(`Expected Technical Object -> ID: ${expectedTechnicalObjectId}, Name: ${expectedTechnicalObjectName}`);
+
+        const selectFirstDropdownValue = async (cell: any, label: string, rowIndex: number): Promise<string> => {
+            const arrow = await cell.$(".//span[@role='button' and @aria-label='Select Options']");
+            const input = await cell.$(".//input[@role='combobox']");
+            if (!(await arrow.isExisting().catch(() => false)) && !(await input.isExisting().catch(() => false))) {
+                throw new AssertionError({ message: `AssertionError: ${label} dropdown control not found at row ${rowIndex}` });
+            }
+
+            if (await arrow.isExisting().catch(() => false)) {
+                await utils.clickWithWait(arrow);
+            } else {
+                await utils.clickWithWait(input);
+            }
+
+            await browser.pause(700);
+            const listboxes = await $$("//ul[@role='listbox']");
+            let activeListbox: WebdriverIO.Element | undefined;
+            for (const listbox of listboxes) {
+                const isDisplayed = await listbox.isDisplayed().catch(() => false);
+                if (!isDisplayed) {
+                    continue;
+                }
+                const options = await listbox.$$(".//li[@role='option']");
+                const optionCount = await options.length;
+                if (optionCount > 0) {
+                    activeListbox = listbox;
+                    break;
+                }
+            }
+
+            if (!activeListbox) {
+                throw new AssertionError({ message: `AssertionError: ${label} dropdown has no visible options container at row ${rowIndex}` });
+            }
+
+            const options = await activeListbox.$$(".//li[@role='option']");
+            const optionCount = await options.length;
+            if (optionCount === 0) {
+                throw new AssertionError({ message: `AssertionError: ${label} dropdown has no values to select at row ${rowIndex}` });
+            }
+
+            let selectedText = "";
+            for (const option of options) {
+                const optionText = (await option.getText()).replace(/\s+/g, " ").trim();
+                if (!optionText) {
+                    continue;
+                }
+                await utils.clickWithWait(option);
+                selectedText = optionText;
+                break;
+            }
+
+            if (!selectedText) {
+                throw new AssertionError({ message: `AssertionError: ${label} dropdown has no non-empty values to select at row ${rowIndex}` });
+            }
+
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(700);
+            const valueFromInput = (await input.getValue().catch(() => "")).replace(/\s+/g, " ").trim();
+            const finalValue = valueFromInput || selectedText;
+            if (!finalValue) {
+                throw new AssertionError({ message: `AssertionError: ${label} dropdown value not set after selection at row ${rowIndex}` });
+            }
+            return finalValue;
+        };
+
+        const reviewMappedData: Array<{ technicalObject: string; baselineAssessment: string; dummyTag: string }> = [];
+        for (let i = 0; i < mappingRowCount; i++) {
+            const row = mappingRows[i];
+            const rowNumber = i + 1;
+
+            const technicalObjectCell = await row.$(".//td[@role='gridcell' and @aria-colindex='2']");
+            const technicalObjectText = (await technicalObjectCell.getText()).replace(/\s+/g, " ").trim();
+            if (!technicalObjectText) {
+                throw new AssertionError({ message: `AssertionError: Technical Object is empty at row ${rowNumber}` });
+            }
+
+            if (!technicalObjectText.includes(expectedTechnicalObjectId) || !technicalObjectText.includes(expectedTechnicalObjectName)) {
+                throw new AssertionError({ message: `AssertionError: Technical Object mismatch at row ${rowNumber}. Found '${technicalObjectText}', expected ID '${expectedTechnicalObjectId}' and Name '${expectedTechnicalObjectName}'` });
+            }
+
+            const baselineAssessmentCell = await row.$(".//td[@role='gridcell' and @aria-colindex='3']");
+            const dummyTagCell = await row.$(".//td[@role='gridcell' and @aria-colindex='4']");
+
+            const baselineAssessmentValue = await selectFirstDropdownValue(baselineAssessmentCell, "Baseline Assessment", rowNumber);
+            const dummyTagValue = await selectFirstDropdownValue(dummyTagCell, "Dummy Tag", rowNumber);
+
+            console.log(`Row ${rowNumber} -> Technical Object: ${technicalObjectText}`);
+            console.log(`Row ${rowNumber} -> Baseline Assessment: ${baselineAssessmentValue}`);
+            console.log(`Row ${rowNumber} -> Dummy Tag: ${dummyTagValue}`);
+
+            reviewMappedData.push({
+                technicalObject: technicalObjectText,
+                baselineAssessment: baselineAssessmentValue,
+                dummyTag: dummyTagValue
+            });
+        }
+
+        console.log(`Review Baseline mapping selected data: ${JSON.stringify(reviewMappedData)}`);
+
+        const applyBtn = await $("//header[.//text()='Review Baseline Selection']/following::footer//button[.//bdi[normalize-space()='Apply']][1]");
+        await applyBtn.waitForClickable({ timeout: 15000, timeoutMsg: "AssertionError: Apply button is not clickable in Review Baseline Selection" });
+        await utils.clickWithWait(applyBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(10000);
+
+        if (await (await this.confirmationYesBtn).isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.confirmationYesBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(1500);
+        }
+
+        const successHeader = await $("//header[.//text()='Success']");
+        await successHeader.waitForDisplayed({ timeout: 30000, timeoutMsg: "AssertionError: Success popup not displayed after applying review baseline mapping" });
+        const successOkBtn = await $("//header[.//text()='Success']/following::button[.//bdi[normalize-space()='OK']][1]");
+        await successOkBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: OK button not clickable on Success popup" });
+        await utils.clickWithWait(successOkBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+
+        console.log("Baseline Assessment flow with Create-System RCM flow completed");
+
+        console.log("Closing System detail page...");
+        let closed = false;
+        for (const btn of await this.closeBtn) {
+            if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                await utils.clickWithWait(btn);
+                await browser.pause(2000);
+                closed = true;
+                break;
+            }
+        }
+        if (!closed) {
+            console.log("No visible Decline button found to close System detail page");
+        } else {
+            console.log("System detail page closed");
+        }
     }
 }
 export default new assetRCMDetailView();
