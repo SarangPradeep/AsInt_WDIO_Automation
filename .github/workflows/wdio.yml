@@ -2,8 +2,6 @@ name: Run WDIO Tests
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '30 22 * * 0-4'
 
 jobs:
   wdio:
