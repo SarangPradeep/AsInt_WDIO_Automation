@@ -1,0 +1,71 @@
+import assetRCMList from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.listview.page';
+import assetRCMDetailView from '../../page_object_model/btp_applications_page/reliability/asset_rcm_analysis/asset_rcm_analysis.detailview.page';
+import utils from '../../utils/utils';
+describe('037_Perform consequence evaluation & 038_Assign Unmitigated SHE and Financial Risk', () => {
+
+    it('should navigate to Asset RCM list view', async () => {
+        await assetRCMList.navigateToAssetRCM();
+    });
+    
+    it('Create new Asset RCM Assessment', async () => {
+        await assetRCMList.createAssetRCM();
+    });
+
+    it('should verify and edit information tab' , async () => {
+        await assetRCMDetailView.verifyAndEditGenInfo();
+        await assetRCMDetailView.verifyAndEditPlanningData();
+        await assetRCMDetailView.addRoles();
+    });
+
+    it('should verify assessment tab and add technical objects' , async () => {
+        await assetRCMDetailView.createAssessmentFlow();
+        await assetRCMDetailView.verifyAssessment();
+        await assetRCMDetailView.verifyAssessmentSections();
+    });
+
+    it('should add maintainable items for technical objects' , async () => {
+        await assetRCMDetailView.addMaintanableItemsOrFunctions();
+        await assetRCMDetailView.verifyMaintainableOrFunctionsDetails();
+    });
+
+    it('should add failure modes for added maintainable items of technical objects' , async () => {
+        await assetRCMDetailView.addFailureModes();
+        await assetRCMDetailView.verifyFailureModesDetails();
+    });
+
+    it('should add functional location as technical objects', async () => {
+        await assetRCMDetailView.addFunLocTechObj();
+        await assetRCMDetailView.verifyDetailPageFunLoc();
+    });
+
+    it('should add functions for functional location technical objects', async () => {
+        await assetRCMDetailView.assignFunctions();
+    });
+
+    it('should add functional failure for assigned functions', async () => {
+        await assetRCMDetailView.assignFunctionalFailure();
+    });
+
+    it('should add maintainable items for functional location technical objects' , async () => {
+        await assetRCMDetailView.addMaintainableItemsForFunction();
+    });
+
+    it('should add failure modes for added maintainable items of functional location technical objects and add/edit Consequence Evaluation from analysis section and risk information' , async () => {
+        await assetRCMDetailView.addFailureModesForFunction();
+        await assetRCMDetailView.verifyFailureModesDetails();
+    });
+
+    it('should verify attachment section' , async () => {
+        await utils.verifyAttachmentSection();
+    });
+
+    it('should be able to download and verify summary report', async () => {
+        await assetRCMDetailView.downloadSummaryReport();
+    });
+
+    it('should be able to delete newly created RCM', async () => {
+        await assetRCMDetailView.deleteRCM();
+        await assetRCMList.verifyRCMDeletion();
+    });
+    
+});
