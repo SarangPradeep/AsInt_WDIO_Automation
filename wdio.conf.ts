@@ -38,13 +38,9 @@ export const config: WebdriverIO.Config = {
         // './safety_group/safety.e2e.ts',
 
         //SIT3 test cases
-        './sit3_test_cases/recommendation_workbench/052.ts',
-        './sit3_test_cases/asset_risk_and_criticality_analysis/008.ts',
-        './sit3_test_cases/asset_risk_and_criticality_analysis/010.ts',
-        './sit3_test_cases/asset_risk_and_criticality_analysis/014.ts',
-        './sit3_test_cases/asset_rcm_analysis/031_039.ts',
-        './sit3_test_cases/asset_rcm_analysis/034.ts',
-        './sit3_test_cases/asset_rcm_analysis/037_038.ts',
+        './sit3_test_cases/recommendation_workbench/*.ts',
+        './sit3_test_cases/asset_risk_and_criticality_analysis/*.ts',
+        './sit3_test_cases/asset_rcm_analysis/*.ts',
     ],
     exclude: [],
     maxInstances: 1,
