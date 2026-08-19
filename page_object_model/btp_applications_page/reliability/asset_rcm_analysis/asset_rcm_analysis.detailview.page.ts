@@ -2076,6 +2076,45 @@ class assetRCMDetailView {
         console.log("Verification done for all the edited startegies");
     }
 
+    private getConsequenceRangeForFinRisk(finRisk: string): { validMin: number, validMax: number | null, invalidValue: number } {
+        const suffix = (finRisk || "").split('-').pop()?.toUpperCase() || "";
+        switch (suffix) {
+            case 'I':   return { validMin: 30000, validMax: null,  invalidValue: 100 };
+            case 'II':  return { validMin: 3000,  validMax: 29999, invalidValue: 100 };
+            case 'III': return { validMin: 300,   validMax: 2999,  invalidValue: 50 };
+            case 'IV':  return { validMin: 1,     validMax: 299,   invalidValue: 5000 };
+            default:    return { validMin: 500000, validMax: null, invalidValue: 0 };
+        }
+    }
+
+    private getValidConsequenceValue(finRisk: string): number {
+        const suffix = (finRisk || "").split('-').pop()?.toUpperCase() || "";
+        switch (suffix) {
+            case 'I':   return Math.floor(Math.random() * (99999 - 30000 + 1)) + 30000;
+            case 'II':  return Math.floor(Math.random() * (29999 - 3000 + 1)) + 3000;
+            case 'III': return Math.floor(Math.random() * (2999 - 300 + 1)) + 300;
+            case 'IV':  return Math.floor(Math.random() * (299 - 1 + 1)) + 1;
+            default:    return Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000;
+        }
+    }
+
+    private async isConsequenceErrorVisible(): Promise<boolean> {
+        await browser.pause(500);
+        const errorSelectors = [
+            "//span[contains(normalize-space(),'Value must be greater')]",
+            "//span[contains(normalize-space(),'Value must be less')]",
+            "//span[contains(normalize-space(),'must be greater than')]",
+            "//span[contains(normalize-space(),'must be less than')]",
+        ];
+        for (const sel of errorSelectors) {
+            const els = await $$(sel);
+            for (const el of els) {
+                if (await el.isDisplayed().catch(() => false)) return true;
+            }
+        }
+        return false;
+    }
+
     private extractBaseFromTransition(transitionText: string): string {
         const t = (transitionText || "").trim();
         if (!t) return "";
@@ -2275,17 +2314,31 @@ class assetRCMDetailView {
         await browser.pause(2000);
         const format = (d: Date): string => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
         const today = new Date();
+        const riskInfoFailures: string[] = [];
 
         const t1 = await this.transitionTextRow1.getText();
         const base1 = this.extractBaseFromTransition(t1);
         console.log(`Editing Transition '${t1}' (Base '${base1}')`);
         await utils.setValueWithWait(this.lastTransitionDateRow1, format(today));
-        const getRandomRisk1 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        await utils.setValueWithWait(this.sheRiskDropdownRow1, getRandomRisk1());
+        const sheRisk1 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        const finRisk1 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        await utils.setValueWithWait(this.sheRiskDropdownRow1, sheRisk1);
         await browser.pause(2000);
-        await utils.setValueWithWait(this.finRiskDropdownRow1, getRandomRisk1());
+        await utils.setValueWithWait(this.finRiskDropdownRow1, finRisk1);
         await browser.pause(2000);
-        await this.setFinConsequenceForRow(base1, (Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000).toString(), this.finConsequenceRow1);
+        const range1 = this.getConsequenceRangeForFinRisk(finRisk1);
+        console.log(`Row 1: FIN risk='${finRisk1}', testing invalid consequence=${range1.invalidValue}`);
+        await this.setFinConsequenceForRow(base1, range1.invalidValue.toString(), this.finConsequenceRow1);
+        await browser.pause(1500);
+        const errorShown1 = await this.isConsequenceErrorVisible();
+        if (!errorShown1) {
+            riskInfoFailures.push(`Row 1: No validation error shown for FIN risk '${finRisk1}' with out-of-range consequence ${range1.invalidValue}`);
+        } else {
+            console.log(`Row 1: Validation error correctly shown for FIN risk '${finRisk1}' with invalid value ${range1.invalidValue}`);
+        }
+        const validConsequence1 = this.getValidConsequenceValue(finRisk1);
+        console.log(`Row 1: Entering valid consequence=${validConsequence1}`);
+        await this.setFinConsequenceForRow(base1, validConsequence1.toString(), this.finConsequenceRow1);
         await browser.pause(2000);
         await this.setFinPofForRow(base1, (Math.random()).toFixed(2), this.finPofRow1);
         await browser.pause(2000);
@@ -2295,12 +2348,25 @@ class assetRCMDetailView {
         console.log(`Editing Transition '${t2}' (Base '${base2}')`);
         await utils.setValueWithWait(this.lastTransitionDateRow2, format(today));
         await browser.pause(2000);
-        const getRandomRisk2 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        await utils.setValueWithWait(this.sheRiskDropdownRow2, getRandomRisk2());
+        const sheRisk2 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        const finRisk2 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        await utils.setValueWithWait(this.sheRiskDropdownRow2, sheRisk2);
         await browser.pause(2000);
-        await utils.setValueWithWait(this.finRiskDropdownRow2, getRandomRisk2());
+        await utils.setValueWithWait(this.finRiskDropdownRow2, finRisk2);
         await browser.pause(2000);
-        await this.setFinConsequenceForRow(base2, (Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000).toString(), this.finConsequenceRow2);
+        const range2 = this.getConsequenceRangeForFinRisk(finRisk2);
+        console.log(`Row 2: FIN risk='${finRisk2}', testing invalid consequence=${range2.invalidValue}`);
+        await this.setFinConsequenceForRow(base2, range2.invalidValue.toString(), this.finConsequenceRow2);
+        await browser.pause(1500);
+        const errorShown2 = await this.isConsequenceErrorVisible();
+        if (!errorShown2) {
+            riskInfoFailures.push(`Row 2: No validation error shown for FIN risk '${finRisk2}' with out-of-range consequence ${range2.invalidValue}`);
+        } else {
+            console.log(`Row 2: Validation error correctly shown for FIN risk '${finRisk2}' with invalid value ${range2.invalidValue}`);
+        }
+        const validConsequence2 = this.getValidConsequenceValue(finRisk2);
+        console.log(`Row 2: Entering valid consequence=${validConsequence2}`);
+        await this.setFinConsequenceForRow(base2, validConsequence2.toString(), this.finConsequenceRow2);
         await browser.pause(2000);
         await this.setFinPofForRow(base2, (Math.random()).toFixed(2), this.finPofRow2);
 
@@ -2309,12 +2375,25 @@ class assetRCMDetailView {
         console.log(`Editing Transition '${t3}' (Base '${base3}')`);
         await utils.setValueWithWait(this.lastTransitionDateRow3, format(today));
         await browser.pause(2000);
-        const getRandomRisk3 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        await utils.setValueWithWait(this.sheRiskDropdownRow3, getRandomRisk3());
+        const sheRisk3 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        const finRisk3 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        await utils.setValueWithWait(this.sheRiskDropdownRow3, sheRisk3);
         await browser.pause(2000);
-        await utils.setValueWithWait(this.finRiskDropdownRow3, getRandomRisk3());
+        await utils.setValueWithWait(this.finRiskDropdownRow3, finRisk3);
         await browser.pause(2000);
-        await this.setFinConsequenceForRow(base3, (Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000).toString(), this.finConsequenceRow3);
+        const range3 = this.getConsequenceRangeForFinRisk(finRisk3);
+        console.log(`Row 3: FIN risk='${finRisk3}', testing invalid consequence=${range3.invalidValue}`);
+        await this.setFinConsequenceForRow(base3, range3.invalidValue.toString(), this.finConsequenceRow3);
+        await browser.pause(1500);
+        const errorShown3 = await this.isConsequenceErrorVisible();
+        if (!errorShown3) {
+            riskInfoFailures.push(`Row 3: No validation error shown for FIN risk '${finRisk3}' with out-of-range consequence ${range3.invalidValue}`);
+        } else {
+            console.log(`Row 3: Validation error correctly shown for FIN risk '${finRisk3}' with invalid value ${range3.invalidValue}`);
+        }
+        const validConsequence3 = this.getValidConsequenceValue(finRisk3);
+        console.log(`Row 3: Entering valid consequence=${validConsequence3}`);
+        await this.setFinConsequenceForRow(base3, validConsequence3.toString(), this.finConsequenceRow3);
         await browser.pause(2000);
         await this.setFinPofForRow(base3, (Math.random()).toFixed(2), this.finPofRow3);
 
@@ -2323,12 +2402,25 @@ class assetRCMDetailView {
         console.log(`Editing Transition '${t4}' (Base '${base4}')`);
         await utils.setValueWithWait(this.lastTransitionDateRow4, format(today));
         await browser.pause(2000);
-        const getRandomRisk4 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        await utils.setValueWithWait(this.sheRiskDropdownRow4, getRandomRisk4());
+        const sheRisk4 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        const finRisk4 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+        await utils.setValueWithWait(this.sheRiskDropdownRow4, sheRisk4);
         await browser.pause(2000);
-        await utils.setValueWithWait(this.finRiskDropdownRow4, getRandomRisk4());
+        await utils.setValueWithWait(this.finRiskDropdownRow4, finRisk4);
         await browser.pause(2000);
-        await this.setFinConsequenceForRow(base4, (Math.floor(Math.random() * (9999999 - 500000 + 1)) + 500000).toString(), this.finConsequenceRow4);
+        const range4 = this.getConsequenceRangeForFinRisk(finRisk4);
+        console.log(`Row 4: FIN risk='${finRisk4}', testing invalid consequence=${range4.invalidValue}`);
+        await this.setFinConsequenceForRow(base4, range4.invalidValue.toString(), this.finConsequenceRow4);
+        await browser.pause(1500);
+        const errorShown4 = await this.isConsequenceErrorVisible();
+        if (!errorShown4) {
+            riskInfoFailures.push(`Row 4: No validation error shown for FIN risk '${finRisk4}' with out-of-range consequence ${range4.invalidValue}`);
+        } else {
+            console.log(`Row 4: Validation error correctly shown for FIN risk '${finRisk4}' with invalid value ${range4.invalidValue}`);
+        }
+        const validConsequence4 = this.getValidConsequenceValue(finRisk4);
+        console.log(`Row 4: Entering valid consequence=${validConsequence4}`);
+        await this.setFinConsequenceForRow(base4, validConsequence4.toString(), this.finConsequenceRow4);
         await browser.pause(2000);
         await this.setFinPofForRow(base4, (Math.random()).toFixed(2), this.finPofRow4);
 
@@ -2381,6 +2473,9 @@ class assetRCMDetailView {
             await utils.clickWithWait(this.saveRiskBtn);
         }
         await browser.pause(1500);
+        if (riskInfoFailures.length > 0) {
+            throw new AssertionError({ message: `Risk Information consequence validation failures:\n${riskInfoFailures.join('\n')}` });
+        }
         console.log("Handle Risk Information ends");
     }
 
@@ -2518,6 +2613,15 @@ class assetRCMDetailView {
 
         console.log("Assigning Functional Location as technical object");
 
+        if( await this.startAssessmentBtn.isDisplayed().catch(() => false)){
+            console.log("Start Assessment button is displayed");
+            await utils.clickWithWait(this.startAssessmentBtn);
+            await browser.pause(3000);
+        }
+        if(await this.technicalObjectsHeader.isDisplayed().catch(() => false)){
+            await this.technicalObjectsHeader.waitForDisplayed();
+        }
+
         let assigned = false;
         let i = 2;
 
@@ -2525,16 +2629,28 @@ class assetRCMDetailView {
 
             console.log(`Trying checkbox index: ${i}`);
 
+            if( await this.startAssessmentBtn.isDisplayed().catch(() => false)){
+            console.log("Start Assessment button is displayed");
+            await utils.clickWithWait(this.startAssessmentBtn);
+            await browser.pause(3000);
+            }
+
+            if(await this.technicalObjectsHeader.isDisplayed().catch(() => false)){
+                await this.technicalObjectsHeader.waitForDisplayed();
+            }
+
             if (await this.hierarchyMoreBtn.isDisplayed().catch(() => false)) {
                 await utils.clickWithWait(this.hierarchyMoreBtn);
                 await browser.pause(1000);
             }
 
-            await utils.clickWithWait(this.assignTechObjBtn);
-            await browser.pause(1000);
-            await browser.keys("ArrowDown");
-            await browser.keys("ArrowDown");
-            await browser.keys("Enter");
+            if (await this.assignTechObjBtn.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(this.assignTechObjBtn);
+                await browser.pause(1000);
+                await browser.keys("ArrowDown");
+                await browser.keys("ArrowDown");
+                await browser.keys("Enter");
+            }
 
             await browser.pause(3000);
             await expect(this.functionalLocationHeader).toBeDisplayed();
@@ -2543,7 +2659,6 @@ class assetRCMDetailView {
             await checkBox.waitForClickable({ timeout: 60000 });
             await utils.clickWithWait(checkBox);
 
-            // await this.selectFunctionalLocationAndStore(i);
             const isValidLocation=await this.selectFunctionalLocationAndStore(i);
 
             if(!isValidLocation){
@@ -2590,15 +2705,6 @@ class assetRCMDetailView {
         console.log("Functional location is added");
         console.log("Functional Location assigned");
     }
-
-    // public async selectFunctionalLocationAndStore(i: number) {
-    //     console.log("Store functional location data start");
-    //     const row = await this.getRowByIndex(i);
-    //     const locationId = await row.$(".//td[@aria-colindex='2']//span").getText();
-    //     const locationName = await row.$("(.//td[@aria-colindex='2']//span/following::span[1])[1]").getText();
-    //     this.selectedFunctionalLocation = { locationId, locationName };
-    //     console.log("Store functional location data end");
-    // }
 
     public async selectFunctionalLocationAndStore(i:number){
         console.log("Store functional location data start");
@@ -4868,6 +4974,71 @@ class assetRCMDetailView {
         } else {
             console.log("System detail page closed");
         }
+    }
+
+    public async selectCreateWorkflowMenuOption(labelText: string): Promise<void> {
+        const optionSelectors = [
+            `//li[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][.//bdi[normalize-space()="${labelText}"]]`,
+            `//li[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][normalize-space()="${labelText}"]`,
+            `//div[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][normalize-space()="${labelText}"]`,
+            `//*[@role='menuitem' or @role='menuitemradio' or @role='menuitemcheckbox'][.//span[normalize-space()="${labelText}"]]`,
+            `//li[.//bdi[normalize-space()="${labelText}"]]`,
+            `//bdi[normalize-space()="${labelText}"]/ancestor::li[1]`
+        ];
+        for (const sel of optionSelectors) {
+            const option = await $(sel);
+            if (await option.isDisplayed().catch(() => false)) {
+                await utils.clickWithWait(option);
+                await utils.waitForBusyIndicatorToDisappear();
+                return;
+            }
+        }
+        throw new AssertionError({ message: `AssertionError: '${labelText}' option not found in Create Workflow menu` });
+    }
+
+    public async createWorkflowForAssessmentWithoutTechObj() {
+        console.log("Creating workflow for assessment without technical objects and functional location technical objects...");
+        const workflowBtn = await this.workflowBtn;
+        const workflowCloseBtn = await $("//header//span[contains(text(),'Workflow Inbox')]/following::button[.//text()='Close']");
+        if (!(await workflowBtn.isDisplayed().catch(() => false)) || !(await workflowBtn.isClickable().catch(() => false))) {
+            throw new AssertionError({ message: "AssertionError: 'Workflow' button not available on Asset RCM detail page" });
+        }
+        await utils.clickWithWait(workflowBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(3000);
+        console.log("'Workflow' button is available and clickable");
+        const workflowHeader = await $("//header//span[contains(text(),'Workflow Inbox')]");
+        await workflowHeader.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: 'Workflow' header not displayed after clicking 'Workflow'" });
+        console.log("'Workflow' header is displayed");
+        const createWorkflowBtn = await $("//header//button[.//bdi[normalize-space()='Create']]");
+        await createWorkflowBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Create' button not clickable on Workflow header" });
+        const warningMsg = await $("//span[normalize-space()='Cannot initiate approval workflow because technical objects or hierarchy are missing. Please assign at least one technical object before initiating a workflow.']");
+        const warningOkBtn = await $("//header[.//text()='Information']/following::button[.//text()='OK']");
+        console.log("Selecting 'Technical Review Workflow' option...");
+        await utils.clickWithWait(createWorkflowBtn);
+        await browser.pause(1500);
+        await this.selectCreateWorkflowMenuOption("Technical Review Workflow");
+        await utils.waitForBusyIndicatorToDisappear();
+        if (!(await warningMsg.isDisplayed().catch(() => false))) {
+            throw new AssertionError({ message: "Warning message not displayed when selecting 'Technical Review Workflow' option." });
+        }
+        await utils.clickWithWait(warningOkBtn);
+
+        console.log("Selecting 'Approval Workflow' option...");
+        await createWorkflowBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Create' button not clickable on Workflow header" });
+        await utils.clickWithWait(createWorkflowBtn);
+        await browser.pause(1500);
+        await this.selectCreateWorkflowMenuOption("Approval Workflow");
+        if (!(await warningMsg.isDisplayed().catch(() => false))) {
+            throw new AssertionError({ message: "Warning message not displayed when selecting 'Approval Workflow' option." });
+        }
+        await utils.clickWithWait(warningOkBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await workflowCloseBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Close' button not clickable on Workflow header" });
+        await utils.clickWithWait(workflowCloseBtn);
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(1500);
+        console.log("Workflow creation attempts completed for assessment without technical objects and functional location technical objects");
     }
 }
 export default new assetRCMDetailView();

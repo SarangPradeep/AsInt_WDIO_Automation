@@ -1,6 +1,7 @@
 import { AssertionError } from 'node:assert';
 import utils from '../../../../utils/utils';
 import assetRcmData from "../../../../test_data/btp_applications/reliability/asset_rcm.data";
+import assetRCMDetailView from './asset_rcm_analysis.detailview.page';
 import { browser } from '@wdio/globals';
 class assetRCMListView {
 
@@ -18,6 +19,11 @@ class assetRCMListView {
     public assetRCMDisplayID!: string;
     public assetRCMDesc!: string;
     public baseline: boolean = false;
+    public firstRCMId!: string;
+    public firstRCMDesc!: string;
+    public secondRCMId!: string;
+    public secondRCMDesc!: string;
+    public selectedCount!: number;
 
     public async verifyHeader(){
         console.log("Verifying header description value...");
@@ -66,10 +72,13 @@ class assetRCMListView {
         console.log("Header verification done");
         console.log("Capturing all header values");
         await utils.captureHeaderDetails();
-
-        // const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
-        // await utils.clickWithWait(el);
-        // await browser.pause(10000);
+        if (!this.firstRCMDesc) {
+            this.firstRCMId = id;
+            this.firstRCMDesc = this.assetRCMDesc;
+        } else {
+            this.secondRCMId = id;
+            this.secondRCMDesc = this.assetRCMDesc;
+        }
 
     }
 
@@ -208,6 +217,167 @@ class assetRCMListView {
             throw new AssertionError({ message: "RCM still exists after deletion" });
         } else {
             console.log("RCM deletion verified successfully");
+        }
+    }
+
+    private getAssetRCMCheckboxByRCMId(rcmId: string) {
+        return $(`//span[@dir="auto"][normalize-space()="${rcmId}"]/ancestor::tr[@role="row"][1]//div[@role="checkbox"]`);
+    }
+
+    public async selectAssetRCMAssessment() {
+        console.log("Selecting the 1st and 2nd RCM assessment from list view");
+        if (!this.firstRCMId || !this.secondRCMId) {
+            throw new AssertionError({ message: "AssertionError: 1st and 2nd RCM ID values are not available to select the assessments" });
+        }
+        console.log(`1st RCM -> ID: ${this.firstRCMId}`);
+        console.log(`2nd RCM -> ID: ${this.secondRCMId}`);
+        const firstCheckbox = this.getAssetRCMCheckboxByRCMId(this.firstRCMId);
+        const secondCheckbox = this.getAssetRCMCheckboxByRCMId(this.secondRCMId);
+        await firstCheckbox.waitForDisplayed({ timeout: 15000, timeoutMsg: `AssertionError: 1st RCM assessment '${this.firstRCMId}' not found in list view` });
+        await firstCheckbox.click();
+        await secondCheckbox.waitForDisplayed({ timeout: 15000, timeoutMsg: `AssertionError: 2nd RCM assessment '${this.secondRCMId}' not found in list view` });
+        await secondCheckbox.click();
+        const noOfSelectedAssessmentsText = await $("//div[@data-sap-ui-fastnavgroup='true']//span[1][contains(text(),'records selected')]");
+        console.log(`Number of selected assessments: ${await noOfSelectedAssessmentsText.getText()}`);
+        const selectedCount = Number((await noOfSelectedAssessmentsText.getText()).match(/^(\d+)/)?.[1] ?? 0);
+        expect(selectedCount).toBe(2);
+        this.selectedCount = selectedCount;
+        console.log("Successfully selected the 1st and 2nd RCM assessments from list view");
+    }
+
+    public async createBulkWorkflowForSelectedAssessments() {
+        console.log("Creating bulk workflow for the selected assessments");
+        const bulkWorkflowBtn = $$("//button[.//bdi[text()='Workflow']]");
+        for (const el of await bulkWorkflowBtn) {
+            if (await el.isDisplayed() && await el.isClickable()) {
+                await utils.clickWithWait(el);
+                break;
+            }
+        };
+        await utils.waitForBusyIndicatorToDisappear();
+        const workflowHeader = await $("//header//span[contains(text(),'Workflow Inbox')]");
+        await workflowHeader.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: 'Workflow' header not displayed after clicking 'Workflow'" });
+        console.log("'Workflow' header is displayed");
+        const createWorkflowBtn = await $("//header//button[.//bdi[normalize-space()='Create']]");
+        await createWorkflowBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Create' button not clickable on Workflow header" });
+        await assetRCMDetailView.selectCreateWorkflowMenuOption("Bulk Approval Workflow");
+        await utils.waitForBusyIndicatorToDisappear();
+        const bulkWorkflowHeader = await $("//header//span[contains(text(),'Confirmation')]");
+        await bulkWorkflowHeader.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: 'Confirmation' header not displayed after selecting 'Bulk Approval Workflow'" });
+        const messageText = await $("//header//span[contains(text(),'Confirmation')]/following::span[contains(text(),'Workflow will be created')]");
+        await messageText.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: Confirmation message not displayed after selecting 'Bulk Approval Workflow'" });
+        console.log("Confirmation message is displayed");
+        const messageTextValue = await messageText.getText();
+        console.log(`Confirmation message: ${messageTextValue}`);
+        const assessmentToBeSkipped = await $("//header//span[contains(text(),'Confirmation')]/following::span[contains(text(),'Assessments to be Skipped')]");
+        const getAssessmentsToBeSkippedValue = await utils.getAssignedValue(await assessmentToBeSkipped.getText());
+        console.log(`Assessments to be skipped: ${getAssessmentsToBeSkippedValue}`);
+        const cancelBtn = await $("//header//span[contains(text(),'Confirmation')]/following::button[.//text()='Cancel']");
+        if (getAssessmentsToBeSkippedValue === this.selectedCount) {
+            console.log("All the selected assessments are to be skipped for workflow creation");
+            const skippedRows = await $$("//span[contains(text(),'Assessments to be Skipped')]/following::tr[@role='row']");
+            let printedCount = 0;
+            for (const row of skippedRows) {
+                const cells = await row.$$(".//td[@role='gridcell']");
+                const cellCount = await cells.length;
+                if (cellCount < 3) continue;
+                const assessmentText = (await cells[0].getText()).trim();
+                if (!assessmentText) continue;
+                const descriptionText = (await cells[1].getText()).trim();
+                const reasonDiv = await cells[2].$(".//div[@title]");
+                const reasonText = (await reasonDiv.isExisting()) ? ((await reasonDiv.getAttribute("title")) ?? "") : (await cells[2].getText()).trim();
+                printedCount++;
+                console.log(`Skipped Assessment ${printedCount} -> Assessment: ${assessmentText}, Description: ${descriptionText}, Reason: ${reasonText}`);
+            }
+            console.log(`Total skipped assessments printed: ${printedCount}`);
+            await cancelBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Cancel' button not clickable on Confirmation message" });
+            await cancelBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+            console.log("Bulk workflow creation cancelled as all selected assessments are to be skipped");
+        }
+        else
+        {
+            console.log("Some of the selected assessments are to be skipped for workflow creation");
+            const skippedRows = await $$("//span[contains(text(),'Assessments to be Skipped')]/following::tr[@role='row']");
+            let printedCount = 0;
+            for (const row of skippedRows) {
+                const cells = await row.$$(".//td[@role='gridcell']");
+                const cellCount = await cells.length;
+                if (cellCount < 3) continue;
+                const assessmentText = (await cells[0].getText()).trim();
+                if (!assessmentText) continue;
+                const descriptionText = (await cells[1].getText()).trim();
+                const reasonDiv = await cells[2].$(".//div[@title]");
+                const reasonText = (await reasonDiv.isExisting()) ? ((await reasonDiv.getAttribute("title")) ?? "") : (await cells[2].getText()).trim();
+                printedCount++;
+                console.log(`Skipped Assessment ${printedCount} -> Assessment: ${assessmentText}, Description: ${descriptionText}, Reason: ${reasonText}`);
+            }
+            console.log(`Total skipped assessments printed: ${printedCount}`);
+            console.log("Continuing with workflow creation for the selected assessments that are not skipped");
+            const continueWithRemainingBtn = await $("//header//span[contains(text(),'Confirmation')]/following::button[.//text()='Continue with Remaining']");
+            await continueWithRemainingBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Continue with Remaining' button not clickable on Confirmation message" });
+            await continueWithRemainingBtn.click();
+            await utils.waitForBusyIndicatorToDisappear();
+            const rcmBulkWorkflowHeader = await $("//h5[.//text()='RCM Bulk Approval Request']");
+            await rcmBulkWorkflowHeader.waitForDisplayed({ timeout: 15000, timeoutMsg: "AssertionError: 'RCM Bulk Approval Request' header not displayed after clicking 'Continue with Remaining'" });
+            const bulkWorkFlowName = await $("//h5[.//text()='RCM Bulk Approval Request']//following::input[1]");
+            const workflowName = await bulkWorkFlowName.getAttribute("value");
+            console.log(`Workflow Name: ${workflowName}`);
+            
+            const noOfRCMForBulkWorkflow = await $("//h5[.//text()='RCM Bulk Approval Request']//following::label//bdi[contains(text(),'RCM')]");
+            const noOfRCMForBulkWorkflowValue = await utils.getAssignedValue(await noOfRCMForBulkWorkflow.getText());
+            console.log(`Number of RCMs for Bulk Workflow: ${noOfRCMForBulkWorkflowValue}`);
+            await expect(Number(noOfRCMForBulkWorkflowValue)).toEqual(this.selectedCount - getAssessmentsToBeSkippedValue);
+            console.log("Bulk workflow creation for the selected assessments that are not skipped is successful");
+
+            console.log("Assessment details for the selected assessments that are not skipped:");
+            const rcmRows = await $$("//h5[.//text()='RCM Bulk Approval Request']//following::tr[@role='row']");
+            let printCount = 0;
+            for (const row of rcmRows) {
+                const cells = await row.$$(".//td[@role='gridcell']");
+                const cellCount = await cells.length;
+                if (cellCount < 1) continue;
+                const assessmentText = (await cells[0].getText()).trim();
+                if (!assessmentText) continue;
+                printCount++;
+                console.log(`Assessment ${printCount} -> ${assessmentText}`);
+            }
+            console.log(`Total assessments printed: ${printCount}`);
+            const day = new Date().getDate();
+            const startegyAs = await $("//h5[.//text()='RCM Bulk Approval Request']//following::label//bdi[contains(text(),'Create Strategies As')]/following::input[1]");
+            const staregyAsValue = await startegyAs.getAttribute("value");
+            console.log(`Create Strategies As value: ${staregyAsValue}`);
+            if(day % 2 === 0) {
+                console.log(`Create Strategies As value: ${staregyAsValue}`);
+                if(staregyAsValue !== "Recommendation") {
+                    const strategyDropdown = await $("//label//bdi[contains(text(),'Create Strategies As')]/following::span[5]");
+                    await strategyDropdown.click();
+                    const recommendationOption = await $("//ul//li[.//text()='Recommendation' and @aria-selected='false']");
+                    await recommendationOption.waitForDisplayed({ timeout: 10000, timeoutMsg: "AssertionError: 'Recommendation' option not displayed in 'Create Strategies As' dropdown" });
+                    await recommendationOption.click();
+                    console.log("Selected 'Recommendation' option in 'Create Strategies As' dropdown");
+                }
+                await utils.selectNoOfLevelsForWorkflowApproval();
+                await utils.commentsInWorkflow();
+                await utils.createWorflow();
+                console.log("Bulk workflow creation for the selected assessments that are not skipped is successful with 'Recommendation' strategy");
+            }
+            else
+            {
+                console.log(`Create Strategies As value: ${staregyAsValue}`);
+                if(staregyAsValue !== "Notification") {
+                    const strategyDropdown = await $("//label//bdi[contains(text(),'Create Strategies As')]/following::span[5]");
+                    await strategyDropdown.click();
+                    const notificationOption = await $("//ul//li[.//text()='Notification' and @aria-selected='false']");
+                    await notificationOption.waitForDisplayed({ timeout: 10000, timeoutMsg: "AssertionError: 'Notification' option not displayed in 'Create Strategies As' dropdown" });
+                    await notificationOption.click();
+                    console.log("Selected 'Notification' option in 'Create Strategies As' dropdown");
+                }
+                await utils.selectNoOfLevelsForWorkflowApproval();
+                await utils.commentsInWorkflow();
+                await utils.createWorflow();
+                console.log("Bulk workflow creation for the selected assessments that are not skipped is successful with 'Notification' strategy");
+            }
         }
     }
 }

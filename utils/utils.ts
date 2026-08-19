@@ -2,6 +2,7 @@ import { $$, browser } from '@wdio/globals';
 import * as console from 'console';
 import * as path from 'path';
 import * as fs from 'fs';
+import { AssertionError } from 'assert/strict';
 class Utils {
     downloadDir = path.resolve(process.cwd(), 'downloads');
 
@@ -2060,8 +2061,207 @@ async addAllAdaptFilter(): Promise<void> {
         console.log("Returned to previous list view");
     }
 
+    public async selectNoOfLevelsForWorkflowApproval()
+    {
+        const noOfLevelsInput = await $("//label[.//text()='No. of Levels']/following::input[1]");
+        await noOfLevelsInput.waitForDisplayed({ timeout: 30000 });
+        const incrementBtn = await $("//label[.//text()='No. of Levels']/following::span[contains(@id,'incrementBtn')][1]");
+        const decrementBtn = await $("//label[.//text()='No. of Levels']/following::span[contains(@id,'decrementBtn')][1]");
+        const maxValueError = await $("//*[contains(normalize-space(.),'maximum value of 99')]");
 
+        const generatedLevels = Math.floor(Math.random() * 121);
+        console.log(`Generated No. of Levels: ${generatedLevels}`);
 
+        await noOfLevelsInput.click();
+        await noOfLevelsInput.clearValue();
+        await noOfLevelsInput.setValue(String(generatedLevels));
+        await browser.keys(["Tab"]);
+        await this.waitForBusyIndicatorToDisappear();
+
+        let currentValueAfterInputRaw = await noOfLevelsInput.getAttribute("value");
+        let currentValueAfterInput = Number(currentValueAfterInputRaw || "0");
+        const hasMaxValueError = await maxValueError.isDisplayed().catch(() => false);
+
+        if (generatedLevels > 99) {
+            if (currentValueAfterInput === 99) {
+                console.log("No. of Levels auto-adjusted to 99 by UI");
+            } else {
+                if (!hasMaxValueError) {
+                    throw new AssertionError({
+                        message: `Generated '${generatedLevels}' is greater than 99, but no validation error was shown and value was '${currentValueAfterInput}'.`,
+                    });
+                }
+                await noOfLevelsInput.click();
+                await noOfLevelsInput.clearValue();
+                await noOfLevelsInput.setValue("99");
+                await browser.keys(["Tab"]);
+                await this.waitForBusyIndicatorToDisappear();
+                currentValueAfterInputRaw = await noOfLevelsInput.getAttribute("value");
+                currentValueAfterInput = Number(currentValueAfterInputRaw || "0");
+            }
+        }
+
+        const levelsToApply = generatedLevels > 99 ? 99 : generatedLevels;
+
+        if (currentValueAfterInput !== levelsToApply) {
+            const diff = Math.abs(levelsToApply - currentValueAfterInput);
+            const btn = levelsToApply > currentValueAfterInput ? incrementBtn : decrementBtn;
+            for (let i = 0; i < diff; i++) {
+                await btn.click();
+            }
+        }
+
+        await this.waitForBusyIndicatorToDisappear();
+        const appliedValueRaw = await noOfLevelsInput.getAttribute("value");
+        const appliedLevels = Number(appliedValueRaw || "0");
+        if (appliedLevels !== levelsToApply) {
+            throw new AssertionError({
+                message: `No. of Levels mismatch. Expected '${levelsToApply}', but found '${appliedLevels}'.`,
+            });
+        }
+
+        await browser.pause(1000);
+        const workflowRows = await $$("//tr[@role='row'][.//input[@placeholder='Email']]");
+        const workflowRowCount = await workflowRows.length;
+
+        if (levelsToApply === 0 && workflowRowCount !== 0) {
+            throw new AssertionError({
+                message: `Expected no workflow rows for 0 levels, but found '${workflowRowCount}'.`,
+            });
+        }
+
+        if (levelsToApply > 0 && workflowRowCount !== levelsToApply) {
+            throw new AssertionError({
+                message: `Workflow rows mismatch. Expected '${levelsToApply}' rows, but found '${workflowRowCount}'.`,
+            });
+        }
+
+        const endorserRoleEls = await $$("//tr[@role='row'][.//input[@placeholder='Email']]//bdi[normalize-space()='Endorser']");
+        const approverRoleEls = await $$("//tr[@role='row'][.//input[@placeholder='Email']]//bdi[normalize-space()='Approver']");
+        const endorserCount = await endorserRoleEls.length;
+        const approverRoleCount = await approverRoleEls.length;
+
+        if (levelsToApply === 99) {
+            if (endorserCount !== 98 || approverRoleCount !== 1) {
+                throw new AssertionError({
+                    message: `For 99 levels expected 98 Endorser and 1 Approver, but found Endorser='${endorserCount}', Approver='${approverRoleCount}'.`,
+                });
+            }
+        }
+
+        if (levelsToApply > 0 && levelsToApply < 99) {
+            if (endorserCount !== levelsToApply - 1 || approverRoleCount !== 1) {
+                throw new AssertionError({
+                    message: `For ${levelsToApply} levels expected ${levelsToApply - 1} Endorser and 1 Approver, but found Endorser='${endorserCount}', Approver='${approverRoleCount}'.`,
+                });
+            }
+        }
+
+        if (levelsToApply > 0) {
+            const requestedUserEmail = "qa.autoamtion@asint.net";
+            const fallbackUserEmail = "qa.automation@asint.net";
+
+            for (let i = 1; i <= levelsToApply; i++) {
+                const vhiBtn = await $(`(//tr[@role='row'][.//input[@placeholder='Email']]//span[contains(@id,'-vhi')])[${i}]`);
+                await vhiBtn.waitForClickable({ timeout: 30000 });
+                await vhiBtn.click();
+
+                const userDialog = await $("//div[@role='dialog'][.//span[normalize-space()='Select User']]");
+                await userDialog.waitForDisplayed({ timeout: 30000 });
+
+                const searchInput = await userDialog.$(".//input[contains(@placeholder,'Search Email or Name')]");
+                await searchInput.waitForDisplayed({ timeout: 30000 });
+                await searchInput.click();
+                await searchInput.clearValue();
+                await searchInput.setValue(requestedUserEmail);
+
+                const searchBtn = await userDialog.$(".//input[contains(@placeholder,'Search Email or Name')]/ancestor::form//*[contains(@id,'search')]");
+                await searchBtn.waitForClickable({ timeout: 30000 });
+                await searchBtn.click();
+                await this.waitForBusyIndicatorToDisappear();
+
+                let emailRow = await userDialog.$(`.//tr[@role='row'][.//span[normalize-space()='${requestedUserEmail}']]`);
+                if (!(await emailRow.isExisting())) {
+                    await searchInput.click();
+                    await searchInput.clearValue();
+                    await searchInput.setValue(fallbackUserEmail);
+                    await searchBtn.click();
+                    await this.waitForBusyIndicatorToDisappear();
+                    emailRow = await userDialog.$(`.//tr[@role='row'][.//span[normalize-space()='${fallbackUserEmail}']]`);
+                }
+
+                if (!(await emailRow.isExisting())) {
+                    throw new AssertionError({
+                        message: `No user row found for '${requestedUserEmail}' or '${fallbackUserEmail}' in Select User dialog for workflow row ${i}.`,
+                    });
+                }
+
+                await emailRow.scrollIntoView();
+                await emailRow.click();
+                const confirmBtn = await userDialog.$(".//bdi[normalize-space()='Confirm']");
+                await confirmBtn.waitForClickable({ timeout: 30000 });
+                await confirmBtn.click();
+                await this.waitForBusyIndicatorToDisappear();
+
+                const rowInput = await $(`(//tr[@role='row'][.//input[@placeholder='Email']]//input[@placeholder='Email'])[${i}]`);
+                await rowInput.waitForDisplayed({ timeout: 30000 });
+                const assignedEmail = ((await rowInput.getAttribute("value")) || "").trim().toLowerCase();
+                const isAssigned = assignedEmail === requestedUserEmail || assignedEmail === fallbackUserEmail;
+                if (!isAssigned) {
+                    throw new AssertionError({
+                        message: `Workflow row ${i} was not assigned expected email. Found '${assignedEmail}'.`,
+                    });
+                }
+            }
+        }
+        console.log(`No. of Levels set to ${levelsToApply} and workflow rows verified successfully`);
+    }
+
+    public async commentsInWorkflow()
+    {
+        console.log("Testing comments truncation in workflow");
+        const commentsTextArea = await $("//label[.//text()='Comments']/following::textarea[1]");
+        await commentsTextArea.waitForDisplayed({ timeout: 30000 });
+        await commentsTextArea.click();
+        await commentsTextArea.clearValue();
+        const longComment = "A".repeat(5200);
+        await commentsTextArea.setValue(longComment);
+        await browser.keys(["Tab"]);
+        await this.waitForBusyIndicatorToDisappear();
+
+        const savedComments = await browser.execute((el: any) => el.value, commentsTextArea) as string;
+        const savedCommentsLength = (savedComments || "").length;
+        if (savedCommentsLength !== 5000) {
+            throw new AssertionError({
+                message: `Comments truncation failed. Expected exactly 5000 characters, but found '${savedCommentsLength}'.`,
+            });
+        }
+        console.log("Comments truncation verified successfully");
+    }
+
+    public async createWorflow()
+    {
+        console.log("Creating workflow");
+        const createBtnInDialog = await $("//footer//button[.//text()='Create']");
+        await createBtnInDialog.waitForClickable({ timeout: 30000 });
+        await createBtnInDialog.click();
+        await browser.pause(3000);
+        
+        await this.waitForBusyIndicatorToDisappear();
+        const workflowCreatedDialog = await $("//div[@role='alertdialog']//span[contains(text(),'Workflow created successfully')]");
+        await workflowCreatedDialog.waitForDisplayed({ timeout: 30000 });
+        const okBtn = await $("//div[@role='alertdialog']//button[.//bdi[normalize-space()='OK'] or .//text()='OK']");
+        try {
+            await okBtn.waitForDisplayed({ timeout: 30000 });
+        } catch {
+            throw new AssertionError({
+                message: "Success OK button did not appear after clicking Create.",
+            });
+        }
+        await this.clickSuccessOkButton();
+        await this.waitForBusyIndicatorToDisappear();
+        console.log("Workflow created successfully");
+    }
 }
 
 export default new Utils();
