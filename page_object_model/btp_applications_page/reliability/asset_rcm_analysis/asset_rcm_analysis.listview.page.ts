@@ -260,6 +260,8 @@ class assetRCMListView {
         console.log("'Workflow' header is displayed");
         const createWorkflowBtn = await $("//header//button[.//bdi[normalize-space()='Create']]");
         await createWorkflowBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Create' button not clickable on Workflow header" });
+        await utils.clickWithWait(createWorkflowBtn);
+        await utils.waitForBusyIndicatorToDisappear();
         await assetRCMDetailView.selectCreateWorkflowMenuOption("Bulk Approval Workflow");
         await utils.waitForBusyIndicatorToDisappear();
         const bulkWorkflowHeader = await $("//header//span[contains(text(),'Confirmation')]");

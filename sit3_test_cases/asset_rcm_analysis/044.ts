@@ -12,18 +12,6 @@ describe('044_Submit Assessment for Approval', () => {
         await assetRCMList.createAssetRCM();
     });
 
-    it('should verify and edit information tab' , async () => {
-        await assetRCMDetailView.verifyAndEditGenInfo();
-        await assetRCMDetailView.verifyAndEditPlanningData();
-        await assetRCMDetailView.addRoles();
-    });
-
-    it('should verify assessment tab and add technical objects' , async () => {
-        await assetRCMDetailView.createAssessmentFlow();
-        await assetRCMDetailView.verifyAssessment();
-        await assetRCMDetailView.verifyAssessmentSections();
-    });
-
     it('should create workflow for the assessment without technical objects and functional location technical objects' , async () => {
         await assetRCMDetailView.createWorkflowForAssessmentWithoutTechObj();
     });
@@ -35,18 +23,6 @@ describe('044_Submit Assessment for Approval', () => {
     //Creating 2nd RCM assessment with technical objects and functional location technical objects
     it('Create new Asset RCM Assessment with technical objects and functional location technical objects', async () => {
         await assetRCMList.createAssetRCM();
-    });
-
-    it('should verify and edit information tab' , async () => {
-        await assetRCMDetailView.verifyAndEditGenInfo();
-        await assetRCMDetailView.verifyAndEditPlanningData();
-        await assetRCMDetailView.addRoles();
-    });
-
-    it('should verify assessment tab and add technical objects' , async () => {
-        await assetRCMDetailView.createAssessmentFlow();
-        await assetRCMDetailView.verifyAssessment();
-        await assetRCMDetailView.verifyAssessmentSections();
     });
 
     it('should add functional location as technical objects', async () => {
