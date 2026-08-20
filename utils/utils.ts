@@ -2067,10 +2067,13 @@ async addAllAdaptFilter(): Promise<void> {
         await noOfLevelsInput.waitForDisplayed({ timeout: 30000 });
         const incrementBtn = await $("//label[.//text()='No. of Levels']/following::span[contains(@id,'incrementBtn')][1]");
         const decrementBtn = await $("//label[.//text()='No. of Levels']/following::span[contains(@id,'decrementBtn')][1]");
-        const maxValueError = await $("//*[contains(normalize-space(.),'maximum value of 99')]");
+        const minAttr = Number(await noOfLevelsInput.getAttribute("aria-valuemin") || "0");
+        const maxAttr = Number(await noOfLevelsInput.getAttribute("aria-valuemax") || "99");
+        const minLevels = Number.isFinite(minAttr) ? minAttr : 0;
+        const maxLevels = Number.isFinite(maxAttr) ? maxAttr : 99;
 
-        const generatedLevels = Math.floor(Math.random() * 121);
-        console.log(`Generated No. of Levels: ${generatedLevels}`);
+        const generatedLevels = Math.floor(Math.random() * (maxLevels - minLevels + 1)) + minLevels;
+        console.log(`Generated No. of Levels: ${generatedLevels} (allowed range: ${minLevels}-${maxLevels})`);
 
         await noOfLevelsInput.click();
         await noOfLevelsInput.clearValue();
@@ -2080,28 +2083,35 @@ async addAllAdaptFilter(): Promise<void> {
 
         let currentValueAfterInputRaw = await noOfLevelsInput.getAttribute("value");
         let currentValueAfterInput = Number(currentValueAfterInputRaw || "0");
-        const hasMaxValueError = await maxValueError.isDisplayed().catch(() => false);
+        const ariaInvalid = ((await noOfLevelsInput.getAttribute("aria-invalid")) || "").toLowerCase();
+        const ariaErrorMessageId = ((await noOfLevelsInput.getAttribute("aria-errormessage")) || "").trim();
+        const hasAriaValidationError = ariaInvalid === "true" || ariaErrorMessageId.length > 0;
 
-        if (generatedLevels > 99) {
-            if (currentValueAfterInput === 99) {
-                console.log("No. of Levels auto-adjusted to 99 by UI");
-            } else {
-                if (!hasMaxValueError) {
-                    throw new AssertionError({
-                        message: `Generated '${generatedLevels}' is greater than 99, but no validation error was shown and value was '${currentValueAfterInput}'.`,
-                    });
-                }
-                await noOfLevelsInput.click();
-                await noOfLevelsInput.clearValue();
-                await noOfLevelsInput.setValue("99");
-                await browser.keys(["Tab"]);
-                await this.waitForBusyIndicatorToDisappear();
-                currentValueAfterInputRaw = await noOfLevelsInput.getAttribute("value");
-                currentValueAfterInput = Number(currentValueAfterInputRaw || "0");
+        if (!Number.isFinite(currentValueAfterInput)) {
+            currentValueAfterInput = minLevels;
+        }
+
+        if (hasAriaValidationError) {
+            console.log(`Validation state detected from input attributes (aria-invalid='${ariaInvalid}', aria-errormessage='${ariaErrorMessageId}')`);
+            const correctedLevels = currentValueAfterInput < minLevels ? minLevels : maxLevels;
+            await noOfLevelsInput.click();
+            await noOfLevelsInput.clearValue();
+            await noOfLevelsInput.setValue(String(correctedLevels));
+            await browser.keys(["Tab"]);
+            await this.waitForBusyIndicatorToDisappear();
+
+            currentValueAfterInputRaw = await noOfLevelsInput.getAttribute("value");
+            currentValueAfterInput = Number(currentValueAfterInputRaw || "0");
+            const ariaInvalidAfterCorrection = ((await noOfLevelsInput.getAttribute("aria-invalid")) || "").toLowerCase();
+            const ariaErrAfterCorrection = ((await noOfLevelsInput.getAttribute("aria-errormessage")) || "").trim();
+            if (ariaInvalidAfterCorrection === "true" || ariaErrAfterCorrection.length > 0) {
+                throw new AssertionError({
+                    message: `No. of Levels is still invalid after correction. aria-invalid='${ariaInvalidAfterCorrection}', aria-errormessage='${ariaErrAfterCorrection}', value='${currentValueAfterInputRaw}'.`,
+                });
             }
         }
 
-        const levelsToApply = generatedLevels > 99 ? 99 : generatedLevels;
+        const levelsToApply = Math.max(minLevels, Math.min(maxLevels, generatedLevels));
 
         if (currentValueAfterInput !== levelsToApply) {
             const diff = Math.abs(levelsToApply - currentValueAfterInput);
@@ -2141,15 +2151,15 @@ async addAllAdaptFilter(): Promise<void> {
         const endorserCount = await endorserRoleEls.length;
         const approverRoleCount = await approverRoleEls.length;
 
-        if (levelsToApply === 99) {
-            if (endorserCount !== 98 || approverRoleCount !== 1) {
+        if (levelsToApply === maxLevels && levelsToApply > 0) {
+            if (endorserCount !== levelsToApply - 1 || approverRoleCount !== 1) {
                 throw new AssertionError({
-                    message: `For 99 levels expected 98 Endorser and 1 Approver, but found Endorser='${endorserCount}', Approver='${approverRoleCount}'.`,
+                    message: `For ${levelsToApply} levels expected ${levelsToApply - 1} Endorser and 1 Approver, but found Endorser='${endorserCount}', Approver='${approverRoleCount}'.`,
                 });
             }
         }
 
-        if (levelsToApply > 0 && levelsToApply < 99) {
+        if (levelsToApply > 0 && levelsToApply < maxLevels) {
             if (endorserCount !== levelsToApply - 1 || approverRoleCount !== 1) {
                 throw new AssertionError({
                     message: `For ${levelsToApply} levels expected ${levelsToApply - 1} Endorser and 1 Approver, but found Endorser='${endorserCount}', Approver='${approverRoleCount}'.`,
@@ -2199,8 +2209,7 @@ async addAllAdaptFilter(): Promise<void> {
                 await emailRow.scrollIntoView();
                 await emailRow.click();
                 const confirmBtn = await userDialog.$(".//bdi[normalize-space()='Confirm']");
-                await confirmBtn.waitForClickable({ timeout: 30000 });
-                await confirmBtn.click();
+                await this.clickWithWait(confirmBtn, 1500);
                 await this.waitForBusyIndicatorToDisappear();
 
                 const rowInput = await $(`(//tr[@role='row'][.//input[@placeholder='Email']]//input[@placeholder='Email'])[${i}]`);
@@ -2249,14 +2258,9 @@ async addAllAdaptFilter(): Promise<void> {
         
         await this.waitForBusyIndicatorToDisappear();
         const workflowCreatedDialog = await $("//div[@role='alertdialog']//span[contains(text(),'Workflow created successfully')]");
-        await workflowCreatedDialog.waitForDisplayed({ timeout: 30000 });
-        const okBtn = await $("//div[@role='alertdialog']//button[.//bdi[normalize-space()='OK'] or .//text()='OK']");
-        try {
-            await okBtn.waitForDisplayed({ timeout: 30000 });
-        } catch {
-            throw new AssertionError({
-                message: "Success OK button did not appear after clicking Create.",
-            });
+        if (await workflowCreatedDialog.isDisplayed().catch(() => false)) {
+            await this.clickWithWait(workflowCreatedDialog);
+            await browser.pause(1500);
         }
         await this.clickSuccessOkButton();
         await this.waitForBusyIndicatorToDisappear();

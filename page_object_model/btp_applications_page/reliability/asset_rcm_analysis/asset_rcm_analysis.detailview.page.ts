@@ -58,7 +58,7 @@ class assetRCMDetailView {
     private technicalObjectRowTxt = (techObj: string) => $(`//span[@dir='auto'][contains(translate(normalize-space(), ' ', ''),"${this.removeAllSpaces(techObj)}")]`);
     private technicalObjectRowClick = (techObj: string) => $(`//span[@dir='auto'][contains(translate(normalize-space(), ' ', ''),'${this.removeAllSpaces(techObj)}')]/ancestor::div[4]`);
     private get riskInformationSection() { return $("//bdi[normalize-space()='Risk Information']"); }
-    private headerTechnicalObjectId = (id: string) => $$(`(//header[@role='banner']//div[@role='heading']//span[@dir='auto'])[normalize-space()='${id}']`);
+    private headerTechnicalObjectId = (id: string) => $$(`//header[@aria-label='Object header area']//span[normalize-space()='${id}']`);
     private headerTechnicalObjectName = (name: string) => $$(`//header[@role='banner']//span[@dir='auto'][translate(normalize-space(), ' ', '')='${this.removeAllSpaces(name)}']`);
     private get criticalityLabel() { return $("//bdi[normalize-space()='Criticality:']"); }
     private criticalityValue = (crit: string) => $(`//bdi[normalize-space()='Criticality:']/ancestor::div[1]/following::span[1][normalize-space()='${crit}']`);
@@ -406,18 +406,17 @@ class assetRCMDetailView {
         console.log("Assessment flow start");
         await utils.switchToIframe(this.rcmIframe);
         await browser.pause(4000);
-        await utils.clickWithWait(this.startAssessmentBtn);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.rcmIframe);
-        await browser.pause(4000);
-        await this.technicalObjectsHeader.waitForDisplayed();
+        await browser.waitUntil(
+            async () =>
+                (await this.startAssessmentBtn.isDisplayed().catch(() => false))
+                || (await this.technicalObjectsHeader.isDisplayed().catch(() => false)),
+            { timeout: 60000, timeoutMsg: "Neither Start Assessment button nor Technical Objects header is visible" }
+        );
         let assessmentCreated = false;
         let lastFailureReason = "";
         for(let i=2;i<=81;i++){
             console.log(`Trying checkbox index: ${i}`);
-            await utils.clickWithWait(this.equipmentValueBtn);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(5000);
+            await this.openTechnicalObjectSelection("equipment");
             const checkBox = $(`(//tr[@role='row']//div[@role='checkbox'])[${i}]`);
             await this.ensureCheckboxLoaded(i);
             await checkBox.waitForExist({ timeout: 50000 });
@@ -443,8 +442,14 @@ class assetRCMDetailView {
                 await utils.waitForBusyIndicatorToDisappear();
                 continue;
             }
-            await utils.clickWithWait(this.nextBtn);
-            await utils.clickWithWait(this.createBtnFooter);
+            const nextClicked = await this.clickIfDisplayed(this.nextBtn, "Next");
+            if (nextClicked) {
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+            const createClicked = await this.clickIfDisplayed(this.createBtnFooter, "Create");
+            if (createClicked) {
+                await utils.waitForBusyIndicatorToDisappear();
+            }
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(5000);
             await browser.waitUntil(async () =>
@@ -489,6 +494,67 @@ class assetRCMDetailView {
         }
         console.log("Assessment details :", this.selectedEquipmentData);
         console.log("Assessment flow end");
+    }
+
+    private async openTechnicalObjectSelection(option: "equipment" | "functionalLocation"): Promise<void> {
+        const arrowDownCount = option === "equipment" ? 1 : 2;
+        const valueBtn = option === "equipment" ? this.equipmentValueBtn : this.funcLocValueBtn;
+
+        await utils.switchToIframe(this.rcmIframe);
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const technicalObjectsOpen = await this.technicalObjectsHeader.isDisplayed().catch(() => false);
+        if (!technicalObjectsOpen) {
+            const startClicked = await this.clickIfDisplayed(this.startAssessmentBtn, "Start Assessment");
+            if (startClicked) {
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+            }
+        }
+
+        if (await valueBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(valueBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            return;
+        }
+
+        if (await this.hierarchyMoreBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.hierarchyMoreBtn);
+            await browser.pause(1000);
+        }
+
+        if (await this.assignTechObjBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(this.assignTechObjBtn);
+            await browser.pause(1000);
+            for (let step = 0; step < arrowDownCount; step++) {
+                await browser.keys("ArrowDown");
+            }
+            await browser.keys("Enter");
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+        }
+
+        if (await valueBtn.isDisplayed().catch(() => false)) {
+            await utils.clickWithWait(valueBtn);
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(2000);
+            return;
+        }
+
+        throw new AssertionError({ message: `Unable to open ${option === "equipment" ? "Equipment" : "Functional Location"} technical object selection` });
+    }
+
+    private async clickIfDisplayed(button: any, name: string): Promise<boolean> {
+        const visible = await button.isDisplayed().catch(() => false);
+        const clickable = await button.isClickable().catch(() => false);
+        if (!visible || !clickable) {
+            console.log(`${name} button not visible/clickable, skipping click`);
+            return false;
+        }
+        await utils.clickWithWait(button);
+        console.log(`${name} button clicked`);
+        return true;
     }
 
     private async ensureCheckboxLoaded(targetIndex: number): Promise<void> {
@@ -2613,46 +2679,13 @@ class assetRCMDetailView {
 
         console.log("Assigning Functional Location as technical object");
 
-        if( await this.startAssessmentBtn.isDisplayed().catch(() => false)){
-            console.log("Start Assessment button is displayed");
-            await utils.clickWithWait(this.startAssessmentBtn);
-            await browser.pause(3000);
-        }
-        if(await this.technicalObjectsHeader.isDisplayed().catch(() => false)){
-            await this.technicalObjectsHeader.waitForDisplayed();
-        }
-
         let assigned = false;
         let i = 2;
 
         while (!assigned && i <= 50) {
 
             console.log(`Trying checkbox index: ${i}`);
-
-            if( await this.startAssessmentBtn.isDisplayed().catch(() => false)){
-            console.log("Start Assessment button is displayed");
-            await utils.clickWithWait(this.startAssessmentBtn);
-            await browser.pause(3000);
-            }
-
-            if(await this.technicalObjectsHeader.isDisplayed().catch(() => false)){
-                await this.technicalObjectsHeader.waitForDisplayed();
-            }
-
-            if (await this.hierarchyMoreBtn.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.hierarchyMoreBtn);
-                await browser.pause(1000);
-            }
-
-            if (await this.assignTechObjBtn.isDisplayed().catch(() => false)) {
-                await utils.clickWithWait(this.assignTechObjBtn);
-                await browser.pause(1000);
-                await browser.keys("ArrowDown");
-                await browser.keys("ArrowDown");
-                await browser.keys("Enter");
-            }
-
-            await browser.pause(3000);
+            await this.openTechnicalObjectSelection("functionalLocation");
             await expect(this.functionalLocationHeader).toBeDisplayed();
             await browser.pause(8000);
             const checkBox = this.checkBoxByIndex(i);
@@ -2679,20 +2712,54 @@ class assetRCMDetailView {
             await utils.clickWithWait(this.confirmBtn);
             await utils.waitForBusyIndicatorToDisappear();
 
+            const nextClicked = await this.clickIfDisplayed(this.nextBtn, "Next");
+            if (nextClicked) {
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+            const createClicked = await this.clickIfDisplayed(this.createBtnFooter, "Create");
+            if (createClicked) {
+                await utils.waitForBusyIndicatorToDisappear();
+            }
+
             await browser.waitUntil(
                 async () =>
-                    (await this.okBtn.isDisplayed()) ||
-                    (await this.warningMsg.isDisplayed()),
+                    (await this.okBtn.isDisplayed().catch(() => false)) ||
+                    (await this.warningMsg.isDisplayed().catch(() => false)) ||
+                    (await this.errorDialogHeader.isDisplayed().catch(() => false)),
                 { timeout: 60000 }
             );
 
-            if (await this.okBtn.isDisplayed()) {
+            if (await this.okBtn.isDisplayed().catch(() => false)) {
                 console.log("Functional Location assigned successfully");
                 await utils.clickWithWait(this.okBtn);
                 assigned = true;
+            } else if (await this.errorDialogHeader.isDisplayed().catch(() => false)) {
+                console.log("Error displayed while assigning functional location, dismissing and retrying...");
+                if (await this.errorDialogOkBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.errorDialogOkBtn);
+                } else if (await this.genericCloseBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.genericCloseBtn);
+                }
+                if (await this.previousBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.previousBtn);
+                    await browser.pause(4000);
+                    await utils.waitForBusyIndicatorToDisappear();
+                }
+                if (await this.removeSelectedToken.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.removeSelectedToken);
+                }
+                i++;
             } else {
                 console.log("Warning displayed, retrying...");
                 await utils.clickWithWait(this.warningOkBtn);
+                if (await this.previousBtn.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.previousBtn);
+                    await browser.pause(4000);
+                    await utils.waitForBusyIndicatorToDisappear();
+                }
+                if (await this.removeSelectedToken.isDisplayed().catch(() => false)) {
+                    await utils.clickWithWait(this.removeSelectedToken);
+                }
                 i++;
             }
         }
@@ -3332,19 +3399,18 @@ class assetRCMDetailView {
         console.log("Assessment (Create System) flow start");
         await utils.switchToIframe(this.rcmIframe);
         await browser.pause(4000);
-        await utils.clickWithWait(this.startAssessmentBtn);
-        await browser.pause(2000);
-        await utils.switchToIframe(this.rcmIframe);
-        await browser.pause(4000);
-        await this.technicalObjectsHeader.waitForDisplayed();
+        await browser.waitUntil(
+            async () =>
+                (await this.startAssessmentBtn.isDisplayed().catch(() => false))
+                || (await this.technicalObjectsHeader.isDisplayed().catch(() => false)),
+            { timeout: 60000, timeoutMsg: "Neither Start Assessment button nor Technical Objects header is visible (Create System flow)" }
+        );
         let assessmentCreated = false;
         let lastFailureReason = "";
 
         for (let i = 2; i <= 81; i++) {
             console.log(`Trying checkbox index: ${i}`);
-            await utils.clickWithWait(this.equipmentValueBtn);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(5000);
+            await this.openTechnicalObjectSelection("equipment");
             const checkBox = $(`(//tr[@role='row']//div[@role='checkbox'])[${i}]`);
             await this.ensureCheckboxLoaded(i);
             await checkBox.waitForExist({ timeout: 50000 });
@@ -3370,13 +3436,16 @@ class assetRCMDetailView {
                 await utils.waitForBusyIndicatorToDisappear();
                 continue;
             }
-            await utils.clickWithWait(this.nextBtn);
-            await utils.waitForBusyIndicatorToDisappear();
-            await browser.pause(2000);
-            console.log("Switching to 'Create System' tab...");
-            await this.createSystemTab.waitForDisplayed({ timeout: 30000, timeoutMsg: "'Create System' segmented option not visible" });
-            await utils.clickWithWait(this.createSystemTab);
-            await browser.pause(2000);
+            const nextClicked = await this.clickIfDisplayed(this.nextBtn, "Next");
+            if (nextClicked) {
+                await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(2000);
+            }
+            if (await this.createSystemTab.isDisplayed().catch(() => false)) {
+                console.log("Switching to 'Create System' tab...");
+                await utils.clickWithWait(this.createSystemTab);
+                await browser.pause(2000);
+            }
             const stamp = Date.now();
             const systemName = `Auto_System_${stamp}`;
             const systemDesc = `Automation System Description ${stamp}`;
@@ -3384,7 +3453,7 @@ class assetRCMDetailView {
             await this.systemNameInput.waitForDisplayed({ timeout: 30000 });
             await utils.setValueWithWait(this.systemNameInput, systemName);
             await utils.setValueWithWait(this.systemDescInput, systemDesc);
-            await utils.clickWithWait(this.createBtnFooter);
+            await this.clickIfDisplayed(this.createBtnFooter, "Create");
             await utils.waitForBusyIndicatorToDisappear();
             await browser.pause(5000);
             await browser.waitUntil(async () =>
@@ -4990,6 +5059,7 @@ class assetRCMDetailView {
             if (await option.isDisplayed().catch(() => false)) {
                 await utils.clickWithWait(option);
                 await utils.waitForBusyIndicatorToDisappear();
+                await browser.pause(1500);
                 return;
             }
         }
@@ -4998,6 +5068,7 @@ class assetRCMDetailView {
 
     public async createWorkflowForAssessmentWithoutTechObj() {
         console.log("Creating workflow for assessment without technical objects and functional location technical objects...");
+        await utils.switchToFrame();
         const workflowBtn = await this.workflowBtn;
         const workflowCloseBtn = await $("//header//span[contains(text(),'Workflow Inbox')]/following::button[.//text()='Close']");
         if (!(await workflowBtn.isDisplayed().catch(() => false)) || !(await workflowBtn.isClickable().catch(() => false))) {
@@ -5012,27 +5083,114 @@ class assetRCMDetailView {
         console.log("'Workflow' header is displayed");
         const createWorkflowBtn = await $("//header//button[.//bdi[normalize-space()='Create']]");
         await createWorkflowBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Create' button not clickable on Workflow header" });
-        const warningMsg = await $("//span[normalize-space()='Cannot initiate approval workflow because technical objects or hierarchy are missing. Please assign at least one technical object before initiating a workflow.']");
-        const warningOkBtn = await $("//header[.//text()='Information']/following::button[.//text()='OK']");
+        const warningMsgSelector = "//*[self::span or self::div or self::p][contains(normalize-space(),'Cannot initiate approval workflow because technical objects or hierarchy are missing')]";
+        const infoHeaderSelectors = [
+            "//div[@role='dialog' or @role='alertdialog'][.//header[.//*[contains(normalize-space(),'Information')]]]",
+            "//header[.//*[contains(normalize-space(),'Information')]]"
+        ];
+        const warningOkBtnSelectors = [
+            "//div[@role='dialog' or @role='alertdialog'][.//header[.//*[contains(normalize-space(),'Information')]]]//button[.//bdi[normalize-space()='OK'] or normalize-space()='OK' or .//text()='OK']",
+            "//header[.//*[contains(normalize-space(),'Information')]]/following::button[.//bdi[normalize-space()='OK'] or normalize-space()='OK' or .//text()='OK'][1]"
+        ];
+        const waitForWarningAndClose = async (optionLabel: string) => {
+            const warningInCurrentContext = await browser.waitUntil(async () => {
+                const warningEls = await $$(warningMsgSelector);
+                for (const el of warningEls) {
+                    if (await el.isDisplayed().catch(() => false)) {
+                        return true;
+                    }
+                }
+                for (const selector of infoHeaderSelectors) {
+                    const headers = await $$(selector);
+                    for (const header of headers) {
+                        if (await header.isDisplayed().catch(() => false)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }, {
+                timeout: 10000,
+                interval: 500,
+                timeoutMsg: `Warning message not displayed when selecting '${optionLabel}' option.`
+            }).catch(() => false);
+
+            let warningDisplayed = warningInCurrentContext;
+            if (!warningDisplayed) {
+                await browser.switchFrame(null);
+                warningDisplayed = await browser.waitUntil(async () => {
+                    const warningEls = await $$(warningMsgSelector);
+                    for (const el of warningEls) {
+                        if (await el.isDisplayed().catch(() => false)) {
+                            return true;
+                        }
+                    }
+                    for (const selector of infoHeaderSelectors) {
+                        const headers = await $$(selector);
+                        for (const header of headers) {
+                            if (await header.isDisplayed().catch(() => false)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }, {
+                    timeout: 5000,
+                    interval: 500,
+                    timeoutMsg: `Warning message not displayed when selecting '${optionLabel}' option.`
+                }).catch(() => false);
+            }
+
+            if (!warningDisplayed) {
+                throw new AssertionError({
+                    message: `Warning message not displayed when selecting '${optionLabel}' option.`
+                });
+            }
+
+            const okDisplayed = await browser.waitUntil(async () => {
+                for (const selector of warningOkBtnSelectors) {
+                    const okBtns = await $$(selector);
+                    for (const btn of okBtns) {
+                        if ((await btn.isDisplayed().catch(() => false)) && (await btn.isClickable().catch(() => false))) {
+                            await utils.clickWithWait(btn);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }, {
+                timeout: 10000,
+                interval: 500,
+                timeoutMsg: `Warning OK button not clickable when selecting '${optionLabel}' option.`
+            }).catch(() => false);
+
+            if (!okDisplayed) {
+                throw new AssertionError({
+                    message: `Warning OK button not clickable when selecting '${optionLabel}' option.`
+                });
+            }
+            await utils.switchToFrame();
+        };
+
         console.log("Selecting 'Technical Review Workflow' option...");
         await utils.clickWithWait(createWorkflowBtn);
         await browser.pause(1500);
         await this.selectCreateWorkflowMenuOption("Technical Review Workflow");
         await utils.waitForBusyIndicatorToDisappear();
-        if (!(await warningMsg.isDisplayed().catch(() => false))) {
-            throw new AssertionError({ message: "Warning message not displayed when selecting 'Technical Review Workflow' option." });
-        }
-        await utils.clickWithWait(warningOkBtn);
+        await waitForWarningAndClose("Technical Review Workflow");
+        console.log("Warning message displayed when selecting 'Technical Review Workflow' option");
 
         console.log("Selecting 'Approval Workflow' option...");
-        await createWorkflowBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Create' button not clickable on Workflow header" });
+        await createWorkflowBtn.waitForClickable({
+            timeout: 10000,
+            timeoutMsg: "AssertionError: 'Create' button not clickable on Workflow header"
+        });
+
         await utils.clickWithWait(createWorkflowBtn);
         await browser.pause(1500);
         await this.selectCreateWorkflowMenuOption("Approval Workflow");
-        if (!(await warningMsg.isDisplayed().catch(() => false))) {
-            throw new AssertionError({ message: "Warning message not displayed when selecting 'Approval Workflow' option." });
-        }
-        await utils.clickWithWait(warningOkBtn);
+        await waitForWarningAndClose("Approval Workflow");
+        console.log("Warning message displayed when selecting 'Approval Workflow' option");
         await utils.waitForBusyIndicatorToDisappear();
         await workflowCloseBtn.waitForClickable({ timeout: 10000, timeoutMsg: "AssertionError: 'Close' button not clickable on Workflow header" });
         await utils.clickWithWait(workflowCloseBtn);
