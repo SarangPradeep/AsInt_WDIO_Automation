@@ -1,5 +1,6 @@
 import { AssertionError } from 'node:assert';
 import utils from "utils/utils";  
+import { asset_strategy_development as ASDData } from "test_data/btp_applications/integrity/asset_strategy_development.data";
 class asset_strategy_development_listview_page {
 
     private get assetStrategyDevelopmentApp() { return $("//a[contains(@aria-label, 'Asset Strategy Development')]"); }
@@ -36,7 +37,8 @@ class asset_strategy_development_listview_page {
     public assessmentTemplateName!: string;
     public selectedFuncLocsGlobal: string[] = [];
     public generalSelectionData: boolean = true;
-    public singleCreate: boolean = true;
+    public singleCreate: boolean = false;
+    public singleCreateEDD_XOM: boolean = false;
     public assetEquipmentNumbers: string[] = [];
 
     public async navigateToASDListView() {
@@ -46,10 +48,6 @@ class asset_strategy_development_listview_page {
         await utils.switchToIframe(this.ASDIframe);
         await browser.pause(2000);
         console.log("Navigated to Asset Strategy Development List View");
-
-        // const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
-        // await utils.clickWithWait(el);
-        // await browser.pause(10000);
     }
 
     public async navigateToASD(): Promise<void> {
@@ -79,9 +77,8 @@ class asset_strategy_development_listview_page {
         await utils.clickWithWait(this.equipmentComponentInput);
         await this.selectEquipmentHeader.waitForDisplayed({ timeout: 10000 });
         await utils.waitForBusyIndicatorToDisappear();
-        const equipmentNumber = "10000162";
-        await this.equipmentSearchInput.setValue(equipmentNumber);
-        this.assetEquipmentNumbers = [equipmentNumber];
+        await this.equipmentSearchInput.setValue(ASDData.searchTerms.equipmentSingleCreate);
+        this.assetEquipmentNumbers = [ASDData.searchTerms.equipmentSingleCreate];
         await browser.keys("Enter");
         await browser.pause(2000);
         await utils.waitForBusyIndicatorToDisappear();
@@ -350,6 +347,54 @@ class asset_strategy_development_listview_page {
         const el = await $('(//tr[@role="row"]//span[@title="Navigation"])[1]');
         await utils.clickWithWait(el);
         await browser.pause(10000);
+        await this.verifyASDCreation();
+    }
+
+    public async createASDForEDDs_XOM() {
+        console.log("Starting creation of Asset Strategy Development for EDDs using XOM template");
+        await utils.clickWithWait(this.newASDButton);
+        console.log("Asset Strategy Development creation process initiated for EDDs using XOM template");
+        this.singleCreateEDD_XOM = true;
+        console.log("Starting creation of Asset Strategy Development for single equipment");   
+        await utils.clickWithWait(this.newASDButton);
+        console.log("Asset Strategy Development creation process initiated for single equipment"); 
+        console.log("choosing equiment for ASD")
+        await browser.keys("Enter");
+        console.log("Equipment selected for ASD");
+        await browser.pause(2000);
+        console.log("Choosing Single equipment option");
+        await utils.clickWithWait(this.singleOption);
+        console.log("Single equipment option selected");
+        await this.createASDHeader.waitForDisplayed({ timeout: 10000 });
+        console.log("Filling in ASD details");
+        await browser.pause(4000);
+        this.assetASDDesc = `Automation_ASD_Single_Equipment_${Date.now()}`;
+        console.log(`Generated ASD Description: ${this.assetASDDesc}`);
+        await this.descriptionInput.setValue(this.assetASDDesc);
+        await utils.clickWithWait(this.equipmentComponentInput);
+        await this.selectEquipmentHeader.waitForDisplayed({ timeout: 10000 });
+        await utils.waitForBusyIndicatorToDisappear();
+        const equipmentNumber = ASDData.searchTerms.equipment_EDD_XOM;
+        await this.equipmentSearchInput.setValue(equipmentNumber);
+        this.assetEquipmentNumbers = [equipmentNumber];
+        await browser.keys("Enter");
+        await browser.pause(2000);
+        await utils.waitForBusyIndicatorToDisappear();
+        await this.equipmentRowOption(2).waitForClickable({ timeout: 10000 });
+        await utils.clickWithWait(this.equipmentRowOption(2));
+        console.log("Equipment selected for ASD");
+        await browser.pause(2000);
+        await utils.setValueWithWait(this.assessmentTemplateInput, "RBI+ Fixed Equipment");
+        console.log("Assessment Template set for ASD");
+        await this.longDescriptionInput.setValue("Long description for ASD - Test");
+        console.log("ASD details filled in successfully");
+        await utils.clickWithWait(this.createButton);
+        console.log("Create button clicked, waiting for ASD to be created");
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log("ASD creation process completed");
+        await this.okBtn.waitForClickable({ timeout: 10000 });
+        await this.okBtn.click();
+        console.log("OK button clicked, ASD creation confirmed");
         await this.verifyASDCreation();
     }
 

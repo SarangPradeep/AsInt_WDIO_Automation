@@ -8,7 +8,7 @@ export const fleetAssessmentTestData = {
         createAsBaseline: false
     },
     planningData: {
-        lastReviewDate: 'Dec 31, 2026',
+        lastReviewDate: 'Jan 15, 2026',
         nextReviewDate: 'Jan 31, 2027',
         plannedReviewDate: 'Feb 28, 2027',
         nextTADate: 'Mar 31, 2027',
@@ -26,11 +26,15 @@ export const fleetAssessmentTestData = {
         role: 'Maintenance Supervisor',
         user: 'Krishna Pala'
     },
+    editAssessmentFlow1: {
+        longDescription: 'Long description for the automation-edited assessment.',
+        operatingContext: 'Operating context narrative captured during automation editing.'
+    },
     operatingContextAndCondition: {
         name: 'OCC1',
         characteristics: [
-            { id: 'CENF_IMPELLER', value: 'OPEN' },
-            { id: 'CENF_CASING', value: 'DIFFUSER' }
+            { id: 'CENF_IMPELLER', label: 'Impeller Type', value: 'OPEN' },
+            { id: 'CENF_CASING', label: 'Pump Casing Type', value: 'DIFFUSER' }
         ]
     },
     operatingContextAndConditionFlow2: {
@@ -38,14 +42,16 @@ export const fleetAssessmentTestData = {
         characteristics: [
             // { id: 'CENF_IMPELLER', value: 'OPEN' },
             // { id: 'CENF_CASING', value: 'DIFFUSER' },
-            { id: 'FLUID_CR', valueIndex: 2 }
+            { id: 'FLUID_CR', label: 'Fluid Corrosive/Erosive', valueIndex: 2 }
         ]
     },
     maintainableItemFlow2: {
         searchText: 'Inspection Ports'
     },
     failureModeFlow2: {
-        searchText: 'False alarms'
+        searchText: 'False alarms',
+        additionalSearchText: 'Other',
+        deleteRowText: 'Other'
     },
     occRenameFlow2: {
         newName: 'TestOCC1_Renamed'
@@ -76,7 +82,31 @@ export const fleetAssessmentTestData = {
     },
     strategyEditFlow3: {
         currentDescription: 'Test Strategy - Automation',
-        newDescription: 'Test Strategy - Automation (Edited)'
+        newDescription: 'Test Strategy - Automation (Edited)',
+        longDescription: 'Long description for the automation-created strategy.',
+        type: 'Proactive',
+        subtype: 'Condition',
+        inspectionType: 'Other',
+        inspectionStage: 'Inspector Assigned',
+        startDate: 'Dec 31, 2026',
+        dueDate: 'Jan 31, 2027'
+    },
+    strategyDeleteFlow3: {
+        description: 'Test Strategy - Automation (Delete Me)',
+        longDescription: 'Long description for the automation-created strategy.',
+        type: 'Improvement',
+        inspectionType: 'CUI Inspection',
+        inspectionStage: 'Scoping',
+        startDate: 'Dec 31, 2026',
+        dueDate: 'Jan 31, 2027'
+    },
+    notesFlow3: {
+        operatingContext: 'Automation note for TestOCC1',
+        maintainableItem: 'Automation note for Inspection Ports',
+        failureMode: 'Automation note for False alarms',
+        operatingContextEditedUnsaved: 'Edited TestOCC1 note (should NOT persist)',
+        maintainableItemEditedUnsaved: 'Edited Inspection Ports note (should NOT persist)',
+        failureModeEditedUnsaved: 'Edited False alarms note (should NOT persist)'
     },
     createWithLongDescription: {
         description: 'Test Fleet Assessment with Long Description',

@@ -2490,27 +2490,36 @@ class assetRCMDetailView {
         await browser.pause(2000);
         await this.setFinPofForRow(base4, (Math.random()).toFixed(2), this.finPofRow4);
 
-        // try {
-        //     const t5 = await this.transitionTextRow5.getText();
-        //     console.log("Editing Transition " + t5);
-        //     await utils.setValueWithWait(this.lastTransitionDateRow5, format(today));
-        //     await browser.pause(2000);
-        //     const getRandomRisk5 = () => assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
-        //     await utils.setValueWithWait(this.sheRiskDropdownRow5, getRandomRisk5());
-        //     await browser.pause(2000);
-        //     await utils.setValueWithWait(this.finRiskDropdownRow5, getRandomRisk5());
-        //     await browser.pause(2000);
-        //     await utils.setValueWithWait(this.finConsequenceRow5, (Math.floor(Math.random() * (1000000 - 400000 + 1)) + 400000).toString());
-        //     await browser.pause(2000);
-        //     for (const el of await this.finPofRow5) {
-        //         if (await el.isDisplayed().catch(() => false) && await el.isClickable().catch(() => false)) {
-        //             await utils.setValueWithWait(el, (Math.random()).toFixed(2));
-        //             break;
-        //         }
-        //     }
-        // } catch (e) {
-        //     console.log("Row 5 not present or not editable: " + (e as Error).message);
-        // }
+        try {
+            const t5 = await this.transitionTextRow5.getText();
+            const base5 = this.extractBaseFromTransition(t5);
+            console.log(`Editing Transition '${t5}' (Base '${base5}')`);
+            await utils.setValueWithWait(this.lastTransitionDateRow5, format(today));
+            await browser.pause(2000);
+            const sheRisk5 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+            const finRisk5 = assetRcmData.riskValues[Math.floor(Math.random() * assetRcmData.riskValues.length)];
+            await utils.setValueWithWait(this.sheRiskDropdownRow5, sheRisk5);
+            await browser.pause(2000);
+            await utils.setValueWithWait(this.finRiskDropdownRow5, finRisk5);
+            await browser.pause(2000);
+            const range5 = this.getConsequenceRangeForFinRisk(finRisk5);
+            console.log(`Row 5: FIN risk='${finRisk5}', testing invalid consequence=${range5.invalidValue}`);
+            await this.setFinConsequenceForRow(base5, range5.invalidValue.toString(), this.finConsequenceRow5);
+            await browser.pause(1500);
+            const errorShown5 = await this.isConsequenceErrorVisible();
+            if (!errorShown5) {
+                riskInfoFailures.push(`Row 5: No validation error shown for FIN risk '${finRisk5}' with out-of-range consequence ${range5.invalidValue}`);
+            } else {
+                console.log(`Row 5: Validation error correctly shown for FIN risk '${finRisk5}' with invalid value ${range5.invalidValue}`);
+            }
+            const validConsequence5 = this.getValidConsequenceValue(finRisk5);
+            console.log(`Row 5: Entering valid consequence=${validConsequence5}`);
+            await this.setFinConsequenceForRow(base5, validConsequence5.toString(), this.finConsequenceRow5);
+            await browser.pause(2000);
+            await this.setFinPofForRow(base5, (Math.random()).toFixed(2), this.finPofRow5);
+        } catch (e) {
+            console.log("Row 5 not present or not editable: " + (e as Error).message);
+        }
 
         console.log("Clicking 'Save' on Risk Information panel toolbar after editing all 4 rows...");
         const riskInfoSaveSelectors = [
