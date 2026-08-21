@@ -331,7 +331,7 @@ class asset_strategy_development_detailview_page {
         console.log("General information section of ASD verified and edited successfully");
     }
 
-    public async captureGeneralSelection() {
+    public async captureGeneralSelection(selectAll: boolean) {
         console.log("Capturing general selection details of ASD");
         await utils.switchToIframe(this.ASDIframe);
         await browser.pause(4000);
@@ -355,7 +355,10 @@ class asset_strategy_development_detailview_page {
                 console.log("No items selected → Cancel clicked");
             } else {
                 const isChecked = await this.selectAllToggle.getAttribute("aria-checked");
-                if (isChecked === "false") {
+                if (isChecked === "false" && selectAll === true) {
+                    await this.selectAllToggle.click();
+                }
+                else if (isChecked === "true" && selectAll === false) {
                     await this.selectAllToggle.click();
                 }
                 await this.saveButton.click();
@@ -387,7 +390,10 @@ class asset_strategy_development_detailview_page {
                 }
             }
             const isChecked = await this.selectAllToggle.getAttribute("aria-checked");
-            if (isChecked === "false") {
+            if (isChecked === "false" && selectAll === true) {
+                await this.selectAllToggle.click();
+            }
+            else if (isChecked === "true" && selectAll === false) {
                 await this.selectAllToggle.click();
             }
             await this.saveButton.click();
@@ -1654,7 +1660,7 @@ class asset_strategy_development_detailview_page {
         console.log("Status is Published");
     }
 
-    private async ensureAllRecommendationsSelected(): Promise<void> {
+    public async ensureAllRecommendationsSelected(): Promise<void> {
         const cb = this.selectAllRecc;
         await cb.waitForDisplayed({ timeout: 15000 });
         const checked = await cb.getAttribute("aria-checked");
@@ -1664,7 +1670,7 @@ class asset_strategy_development_detailview_page {
         }
     }
 
-    private async openPublishRecommendationsMenu(): Promise<void> {
+    public async openPublishRecommendationsMenu(): Promise<void> {
         const btn = this.publishBtn;
         await btn.waitForDisplayed({ timeout: 15000 });
         await btn.waitForClickable({ timeout: 15000 });
@@ -1685,6 +1691,80 @@ class asset_strategy_development_detailview_page {
             }
             await menu.waitForDisplayed({ timeout: 10000 });
         }
+    }
+
+    public async selectGeneralSelectionData(...selectionTexts: string[]): Promise<void> {
+        console.log("Selecting general selection data for ASD...");
+        await utils.switchToIframe(this.ASDIframe);
+        const requested = selectionTexts.map(x => (x || "").trim()).filter(x => x.length > 0);
+        if (requested.length === 0) {
+            throw new AssertionError({ message: "At least one general selection text is required" });
+        }
+
+        const isHeaderVisible = await this.generalSelectionHeader.isDisplayed().catch(() => false);
+        const isLinkVisible = await this.generalSelectionLink.isDisplayed().catch(() => false);
+
+        if (!isHeaderVisible && isLinkVisible) {
+            console.log("Header not found -> opening via link");
+            await this.generalSelectionLink.waitForDisplayed({ timeout: 10000 });
+            await this.generalSelectionLink.scrollIntoView();
+            await browser.execute(el => el.click(), await this.generalSelectionLink);
+            await utils.waitForBusyIndicatorToDisappear();
+        } else if (!isHeaderVisible && !isLinkVisible) {
+            throw new AssertionError({ message: "General Selection section is not present on the detail page" });
+        }
+
+        const checkboxes = await $$("//li[@role='treeitem']//div[@role='checkbox']");
+        const checkboxCount = await checkboxes.length;
+        if (checkboxCount === 0) {
+            console.log("No General Sections are present");
+            if (await this.cancelBtn.isDisplayed().catch(() => false)) {
+                await this.cancelBtn.click();
+            }
+            return;
+        }
+
+        const isChecked = await this.selectAllToggle.getAttribute("aria-checked");
+        if (isChecked === "true") {
+            await browser.pause(5000);
+            await this.selectAllToggle.click();
+            await browser.pause(5000);
+        }
+
+        this.selectedItemsGlobal = {} as any;
+        const notFound: string[] = [];
+        for (const txt of requested) {
+            const rows = await $$("//li[@role='treeitem']");
+            let matched = false;
+            for (const row of rows) {
+                const labelEl = await row.$(".//div[@role='checkbox']/following::div[1]");
+                const labelText = ((await labelEl.getText().catch(() => "")) || "").trim();
+                if (labelText !== txt) {
+                    continue;
+                }
+                const checkbox = await row.$(".//div[@role='checkbox']");
+                const displayed = await checkbox.isDisplayed().catch(() => false);
+                const clickable = await checkbox.isClickable().catch(() => false);
+                if (displayed && clickable) {
+                    await utils.clickWithWait(checkbox);
+                    this.selectedItemsGlobal[txt] = true;
+                    console.log("Selected: " + txt);
+                    matched = true;
+                }
+                break;
+            }
+            if (!matched) {
+                notFound.push(txt);
+            }
+        }
+
+        await this.saveButton.click();
+        await utils.waitForBusyIndicatorToDisappear();
+
+        if (notFound.length > 0) {
+            throw new AssertionError({ message: `General Selection item(s) not found: ${notFound.join(", ")}` });
+        }
+        console.log("Selected items are : ", this.selectedItemsGlobal);
     }
 
 }export default new asset_strategy_development_detailview_page();

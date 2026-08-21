@@ -1,11 +1,9 @@
-import { AssertionError } from 'node:assert';
 import { $, browser } from '@wdio/globals';
 import utils from '../../../../utils/utils';
 
 export interface CreateAssessmentInput {
     description: string;
     className: string;
-    /** Optional Failure Data Profile description (e.g. "Pump - Centrifugal V"). If omitted, the first row is selected. */
     failureDataProfile?: string;
 }
 
@@ -23,28 +21,19 @@ export interface OrganizationalDataInput {
 }
 
 export interface RolesAssignmentInput {
-    /** Role names to add (must match the labels in the Add Role dialog list, e.g. "Facilitator", "Reliability Engineer"). */
     roles: readonly string[];
-    /** Display name of the user to assign to each role (e.g. "Krishna Pala"). */
     user: string;
 }
 
 export interface CharacteristicSelection {
-    /** Stable characteristic id as shown in the row label, e.g. "CENF_IMPELLER". */
     id: string;
-    /** Value to pick from the characteristic's multi-combobox dropdown, e.g. "OPEN". */
+    label?: string;
     value?: string;
-    /**
-     * 1-based index of the option to pick from the characteristic's dropdown.
-     * Takes precedence over `value` when supplied.
-     */
     valueIndex?: number;
 }
 
 export interface OperatingContextAndConditionInput {
-    /** Operating Context and Condition Name (the textarea at the top of the dialog). */
     name: string;
-    /** Characteristics to add and assign values for, in the order they should be processed. */
     characteristics: readonly CharacteristicSelection[];
 }
 
@@ -76,14 +65,18 @@ class AssetStrategyAnalysisForClassesPage {
     private listRowByDescription(description: string) { return $(`//tr[@role="row"][.//*[normalize-space()=${utils.xpathString(description)}]]`); }
     private get editButton() { return $('//button[@data-ui5-accesskey="e"][.//bdi[normalize-space()="Edit"]]'); }
     private get editDescriptionInput() { return $('//bdi[normalize-space()="Description"]/ancestor::label/following::textarea[1] | //bdi[normalize-space()="Description"]/ancestor::label/following::input[1]'); }
-    private editButtonByIndex(index: number) { return $(`(//button[@data-ui5-accesskey="e"][.//bdi[normalize-space()="Edit"]])[${index}]`); }
-    private planningDataPickerIcon(label: string) { return $(`//label[.//bdi[normalize-space()=${utils.xpathString(label)}]]/following::span[@aria-label="Open Picker"][1]`); }
-    /**
-     * Selectors for the calendar popover. SAPUI5 keeps previously-opened popovers
-     * in the DOM (hidden via CSS class, not inline style) so we must always pick
-     * the LAST popover that is not aria-hidden, otherwise waitForDisplayed will
-     * latch onto a stale, invisible one and time out.
-     */
+    private get editLongDescriptionInput() { return $('//textarea[@id="application-fleet-manage-component---idFleetAssessmentDetailPage--idAssessmentLongDescTextArea-inner"]'); }
+    private get editOperatingContextInput() { return $('//textarea[@id="application-fleet-manage-component---idFleetAssessmentDetailPage--idAssessmentOperatingContextTextArea-inner"]'); }
+    // New thingy down here
+    private editButtonByIndex(index: number) { return $(`(//button[@data-ui5-accesskey="e"][.//bdi[normalize-space()="Edit"]][not(ancestor::*[@id="sap-ui-preserve"])])[${index}]`); }
+    private sectionEditButtonByFieldLabel(fieldLabel: string) { return $(`//label//bdi[normalize-space()=${utils.xpathString(fieldLabel)}][not(ancestor::*[@id="sap-ui-preserve"])]` + `/ancestor::*[.//button[@data-ui5-accesskey="e"][.//bdi[normalize-space()="Edit"]]][1]` + `//button[@data-ui5-accesskey="e"][.//bdi[normalize-space()="Edit"]][not(ancestor::*[@id="sap-ui-preserve"])]`);}
+    private sectionSaveButtonByFieldLabel(fieldLabel: string) { return $(`//label//bdi[normalize-space()=${utils.xpathString(fieldLabel)}][not(ancestor::*[@id="sap-ui-preserve"])]` +`/ancestor::*[.//button[@data-ui5-accesskey="s"][.//bdi[normalize-space()="Save"]]][1]` +`//button[@data-ui5-accesskey="s"][.//bdi[normalize-space()="Save"]][not(ancestor::*[@id="sap-ui-preserve"])]`);}
+    private objectPageSubSectionByTitle(title: string) { return $(`//div[contains(@class,"sapUxAPObjectPageSubSection")]` + `[.//h4[contains(@class,"sapUxAPObjectPageSubSectionTitle")]//span[normalize-space()=${utils.xpathString(title)}]]` + `[not(ancestor::*[@id="sap-ui-preserve"])]`);}
+    private sectionEditButtonByTitle(title: string) { return $(`//div[contains(@class,"sapUxAPObjectPageSubSection")]` + `[.//h4[contains(@class,"sapUxAPObjectPageSubSectionTitle")]//span[normalize-space()=${utils.xpathString(title)}]]` + `[not(ancestor::*[@id="sap-ui-preserve"])]` + `//button[@data-ui5-accesskey="e"][.//bdi[normalize-space()="Edit"]][not(ancestor::*[@id="sap-ui-preserve"])]`);}
+    private sectionSaveButtonByTitle(title: string) { return $(`//div[contains(@class,"sapUxAPObjectPageSubSection")]` + `[.//h4[contains(@class,"sapUxAPObjectPageSubSectionTitle")]//span[normalize-space()=${utils.xpathString(title)}]]` + `[not(ancestor::*[@id="sap-ui-preserve"])]` + `//button[@data-ui5-accesskey="s"][.//bdi[normalize-space()="Save"]][not(ancestor::*[@id="sap-ui-preserve"])]`);}
+    private planningDataPickerIcon(label: string) { return $(`//input[not(ancestor::*[@id="sap-ui-preserve"]) and @id=//label[.//bdi[normalize-space()=${utils.xpathString(label)}] and not(ancestor::*[@id="sap-ui-preserve"])]/@for]/ancestor::div[contains(@class,"sapMInputBase")][1]//span[@aria-label="Open Picker"]`); }
+    private planningDataInput(label: string) { return $(`//input[not(ancestor::*[@id="sap-ui-preserve"]) and @id=//label[.//bdi[normalize-space()=${utils.xpathString(label)}] and not(ancestor::*[@id="sap-ui-preserve"])]/@for]`); }
+    // Above thingy new thingy
     private static readonly OPEN_POPOVER_XPATH =
         '(//div[contains(@class,"sapMPopover") and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden")) and not(@aria-hidden="true")][.//*[contains(@class,"sapUiCal")]])[last()]';
     private get visibleCalendarPopover() { return $(AssetStrategyAnalysisForClassesPage.OPEN_POPOVER_XPATH); }
@@ -92,7 +85,7 @@ class AssetStrategyAnalysisForClassesPage {
     private get calendarPrevButton() { return $(`${AssetStrategyAnalysisForClassesPage.OPEN_POPOVER_XPATH}//button[contains(@class,"sapUiCalHeadBPrev") or @aria-label="Previous"]`); }
     private get calendarNextButton() { return $(`${AssetStrategyAnalysisForClassesPage.OPEN_POPOVER_XPATH}//button[contains(@class,"sapUiCalHeadBNext") or @aria-label="Next"]`); }
     private calendarDayByDataAttr(yyyymmdd: string) { return $(`${AssetStrategyAnalysisForClassesPage.OPEN_POPOVER_XPATH}//*[(@data-sap-day=${utils.xpathString(yyyymmdd)} or @data-sap-ui-date=${utils.xpathString(yyyymmdd)}) and not(contains(@class,"sapUiCalItemOtherMonth"))]`); }
-    private organizationalDataValueHelpIcon(label: string) { return $(`//label[.//bdi[normalize-space()=${utils.xpathString(label)}]]/following::span[@aria-label="Show Value Help"][1]`); }
+    private organizationalDataValueHelpIcon(label: string) { return $(`//input[not(ancestor::*[@id="sap-ui-preserve"]) and @id=//label[.//bdi[normalize-space()=${utils.xpathString(label)}] and not(ancestor::*[@id="sap-ui-preserve"])]/@for]/ancestor::div[contains(@class,"sapMInputBase")][1]//span[@aria-label="Show Value Help"]`); }
 
     /* --- Roles section --- */
     private get addRoleButton() { return $('//button[@data-ui5-accesskey="a"][.//bdi[normalize-space()="Add Role"]]'); }
@@ -110,7 +103,7 @@ class AssetStrategyAnalysisForClassesPage {
     private roleAssignmentRemoveTokenIcon(roleName: string, userName: string) { return $(`//label[.//bdi[normalize-space()=${utils.xpathString(roleName)}]]/following::div[contains(@class,"sapMToken")][.//*[normalize-space()=${utils.xpathString(userName)}]][1]//span[@aria-label="Remove" or @title="Remove"]`); }
 
     /* --- Assessment section --- */
-    private get assessmentAnchorButton() { return $('//button[@role="tab"][.//bdi[normalize-space()="Assessment"]]'); }
+    private get assessmentAnchorButton() { return $('//*[@role="tab"][.//span[contains(@class,"sapMITHTextContent") and normalize-space()="Assessment"] or .//bdi[normalize-space()="Assessment"]]'); }
     private get createOperatingContextAndConditionButton() { return $('//button[.//bdi[normalize-space()="Create Operating Context and Condition"]]'); }
 
     /* --- "Operating Context and Condition" dialog --- */
@@ -122,9 +115,7 @@ class AssetStrategyAnalysisForClassesPage {
     private get characteristicsAssignButton() { return $('//div[contains(@class,"sapMDialog")]//footer//button[.//bdi[normalize-space()="Assign" or normalize-space()="OK" or normalize-space()="Ok" or normalize-space()="Select"]]'); }
     private characteristicComboboxArrow(charId: string) { return $(`//div[contains(@class,"sapMDialog")][.//h1[normalize-space()="Operating Context and Condition"]]//label[.//bdi[contains(normalize-space(),${utils.xpathString(`(${charId})`)})]]/following::div[contains(@class,"sapMComboBoxBase") or contains(@class,"sapMMultiComboBox")][1]//span[@role="button" and (@aria-label="Select Options" or @aria-label="Open")]`); }
     private comboboxOptionByText(value: string) { return $(`//div[(contains(@class,"sapMPopover") or contains(@class,"sapMSelectList")) and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden"))]//li[@role="option"][normalize-space()=${utils.xpathString(value)} or contains(normalize-space(),${utils.xpathString(`(${value})`)}) or .//bdi[normalize-space()=${utils.xpathString(value)} or contains(normalize-space(),${utils.xpathString(`(${value})`)})] or .//span[normalize-space()=${utils.xpathString(value)} or contains(normalize-space(),${utils.xpathString(`(${value})`)})]]`); }
-    /** Nth selectable checkbox tile inside the currently open MultiComboBox popover (1-based). */
     private comboboxCheckboxByIndex(index: number) { return $(`(//div[(contains(@class,"sapMPopover") or contains(@class,"sapMSelectList") or contains(@class,"sapMComboBoxBasePicker")) and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden"))][.//li[@role="option"]])[last()]//li[@role="option"][${index}]//div[@role="checkbox"]`); }
-    /** Nth option <li> inside the currently open MultiComboBox popover (1-based). */
     private comboboxLiByIndex(index: number) { return $(`(//div[(contains(@class,"sapMPopover") or contains(@class,"sapMSelectList") or contains(@class,"sapMComboBoxBasePicker")) and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden"))][.//li[@role="option"]])[last()]//li[@role="option"][${index}]`); }
     private get useBaselineButton() { return $('//button[@data-ui5-accesskey="u"][.//bdi[normalize-space()="Use Baseline"]]'); }
     private occAddButtonByName(occName: string) { return $(`(//*[normalize-space()=${utils.xpathString(occName)}]/ancestor::*[.//button[@aria-label="Add" or @title="Add"]][1]//button[@aria-label="Add" or @title="Add"])[1]`); }
@@ -139,7 +130,15 @@ class AssetStrategyAnalysisForClassesPage {
     private firstAssignDialogItemCheckboxByText(text: string) { return $(`((//li[.//*[contains(normalize-space(),${utils.xpathString(text)})]] | //tr[@role="row"][.//*[contains(normalize-space(),${utils.xpathString(text)})]])[1]//input[translate(@type,"checkbox","CHECKBOX")="CHECKBOX"]/parent::*)[1] | ((//li[.//*[contains(normalize-space(),${utils.xpathString(text)})]] | //tr[@role="row"][.//*[contains(normalize-space(),${utils.xpathString(text)})]])[1]//*[@role="checkbox"])[1]`); }
     private get assignDialogAssignButton() { return $('//div[contains(@class,"sapMDialog")]//footer//button[.//bdi[normalize-space()="Assign"]]'); }
     private sectionAssignButtonByName(sectionName: string) { return $(`(//*[self::span or self::bdi or self::div][starts-with(normalize-space(),${utils.xpathString(sectionName)})]/ancestor::*[.//*[(self::a or self::button or @role="button") and (.//bdi[normalize-space()="Assign"] or normalize-space()="Assign")]][1]//*[(self::a or self::button or @role="button") and (.//bdi[normalize-space()="Assign"] or normalize-space()="Assign")])[1]`); }
-    private sectionRemoveButtonByName(sectionName: string) { return $(`(//*[self::span or self::bdi or self::div][starts-with(normalize-space(),${utils.xpathString(sectionName)})]/ancestor::*[.//*[(self::a or self::button or @role="button") and (.//bdi[normalize-space()="Remove"] or normalize-space()="Remove")]][1]//*[(self::a or self::button or @role="button") and (.//bdi[normalize-space()="Remove"] or normalize-space()="Remove")])[1]`); }
+    //  New thingy 
+    private sectionRemoveButtonByName(sectionName: string) {
+        if (sectionName.startsWith('Failure Mechanism')) {
+            return $('//button[contains(@id,"idMechanisamEfectRemoveBtn") and @data-ui5-accesskey="u"] | //button[contains(@id,"idMechanisamEfectRemoveBtn")][.//bdi[normalize-space()="Unassign" or normalize-space()="Remove"]]');
+        }
+        if (sectionName.startsWith('Causes')) {
+            return $('//button[contains(@id,"idCauseEfectRemoveBtn") and @data-ui5-accesskey="u"] | //button[contains(@id,"idCauseEfectRemoveBtn")][.//bdi[normalize-space()="Unassign" or normalize-space()="Remove"]]');
+}
+        return $(`(//*[self::span or self::bdi or self::div][starts-with(normalize-space(),${utils.xpathString(sectionName)})]/ancestor::*[.//*[(self::a or self::button or @role="button") and (@data-ui5-accesskey="u" or .//bdi[normalize-space()="Unassign" or normalize-space()="Remove"] or normalize-space()="Unassign" or normalize-space()="Remove")]][1]//*[(self::a or self::button or @role="button") and (@data-ui5-accesskey="u" or .//bdi[normalize-space()="Unassign" or normalize-space()="Remove"] or normalize-space()="Unassign" or normalize-space()="Remove")])[1]`);}   
     private sectionExpandIconByName(sectionName: string) { return $(`(//*[self::span or self::bdi or self::div][starts-with(normalize-space(),${utils.xpathString(sectionName)})]/ancestor::*[.//button[@aria-label="Expand/Collapse" or @title="Expand/Collapse"]][1]//button[@aria-label="Expand/Collapse" or @title="Expand/Collapse"])[1]`); }
     private sectionRowCheckboxByText(itemText: string) { return $(`(//tr[@role="row"][.//*[normalize-space()=${utils.xpathString(itemText)} or starts-with(normalize-space(),${utils.xpathString(itemText)})]]//td[contains(@class,"sapMListTblSelCol")]//div[@role="checkbox" or contains(@class,"sapMCb")])[1]`); }
     private sectionCreateButtonByName(sectionName: string) { return $(`(//*[self::span or self::bdi or self::div][starts-with(normalize-space(),${utils.xpathString(sectionName)})]/ancestor::*[.//*[(self::a or self::button or @role="button") and (.//bdi[normalize-space()="Create"] or normalize-space()="Create")]][1]//*[(self::a or self::button or @role="button") and (.//bdi[normalize-space()="Create"] or normalize-space()="Create")])[1]`); }
@@ -148,17 +147,19 @@ class AssetStrategyAnalysisForClassesPage {
     private get createStrategyDialog() { return $('//div[contains(@class,"sapMDialog") and not(contains(@style,"display: none"))][.//*[normalize-space()="Create Strategy"]]'); }
     private createStrategyDialogField(label: string) { return $(`//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Create Strategy"]]//label[.//bdi[starts-with(normalize-space(),${utils.xpathString(label)})] or starts-with(normalize-space(),${utils.xpathString(label)})]/following::*[self::input or self::textarea][1]`); }
     private createStrategyDialogSelectArrow(label: string) { return $(`//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Create Strategy"]]//label[.//bdi[starts-with(normalize-space(),${utils.xpathString(label)})] or starts-with(normalize-space(),${utils.xpathString(label)})]/following::*[(@role="button") and (.//span[normalize-space()="Select Options" or normalize-space()="Open"] or @aria-label="Select Options" or @aria-label="Open")][1]`); }
-    private createStrategyDialogPickerIcon(label: string) { return $(`//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Create Strategy"]]//label[.//bdi[starts-with(normalize-space(),${utils.xpathString(label)})] or starts-with(normalize-space(),${utils.xpathString(label)})]/following::span[@aria-label="Open Picker"][1]`); }
     private get createStrategyDialogCreateButton() { return $('//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Create Strategy"]]//footer//button[.//bdi[normalize-space()="Create"]]'); }
 
     /* --- Edit Strategy dialog --- */
     private get editStrategyDialog() { return $('//div[contains(@class,"sapMDialog") and not(contains(@style,"display: none"))][.//*[normalize-space()="Edit Strategy"]]'); }
     private editStrategyDialogField(label: string) { return $(`//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Edit Strategy"]]//label[.//bdi[starts-with(normalize-space(),${utils.xpathString(label)})] or starts-with(normalize-space(),${utils.xpathString(label)})]/following::*[self::input or self::textarea][1]`); }
+    private editStrategyDialogSelectArrow(label: string) { return $(`//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Edit Strategy"]]//label[.//bdi[starts-with(normalize-space(),${utils.xpathString(label)})] or starts-with(normalize-space(),${utils.xpathString(label)})]/following::*[(@role="button") and (.//span[normalize-space()="Select Options" or normalize-space()="Open"] or @aria-label="Select Options" or @aria-label="Open")][1]`); }
     private get editStrategyDialogSaveButton() { return $('//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Edit Strategy"]]//footer//button[.//bdi[normalize-space()="Save"]]'); }
     private strategyRowCheckboxByText(itemText: string) { return $(`(//tr[@role="row"][.//*[normalize-space()=${utils.xpathString(itemText)} or starts-with(normalize-space(),${utils.xpathString(itemText)})]]//td[contains(@class,"sapMListTblSelCol")]//div[@role="checkbox" or contains(@class,"sapMCb")])[1]`); }
     private sectionToolbarButtonByName(sectionName: string, buttonText: string) { return $(`(//*[self::span or self::bdi or self::div][starts-with(normalize-space(),${utils.xpathString(sectionName)})]/ancestor::*[.//*[(self::a or self::button or @role="button") and (.//bdi[normalize-space()=${utils.xpathString(buttonText)}] or normalize-space()=${utils.xpathString(buttonText)})]][1]//*[(self::a or self::button or @role="button") and (.//bdi[normalize-space()=${utils.xpathString(buttonText)}] or normalize-space()=${utils.xpathString(buttonText)})])[1]`); }
-    private operatingContextLabelByName(occName: string) { return $(`(//span[contains(@class,"sapMText")][normalize-space()=${utils.xpathString(occName)}])[1]`); }
-
+    private operatingContextLabelByName(occName: string) { return $(`(//div[contains(@class,"sapMFlexBox") and contains(@class,"sapMHBox")][.//span[contains(@class,"sapMText")][normalize-space()=${utils.xpathString(occName)}]][.//button[@aria-label="Add" or @title="Add"]]//div[contains(@class,"sapMFlexBox") and contains(@class,"sapMHBox")][.//span[contains(@class,"sapMText")][normalize-space()=${utils.xpathString(occName)}]])[1]`); }
+    private operatingContextTextByName(occName: string) { return $(`(//span[contains(@class,"sapMText")][normalize-space()=${utils.xpathString(occName)}])[last()]`); }
+    private operatingContextRowByName(occName: string) { return $(`((//span[contains(@class,"sapMText")][normalize-space()=${utils.xpathString(occName)}]` + `/ancestor::div[contains(@class,"sapMFlexBox") and contains(@class,"sapMHBox")][1]` + `/ancestor::div[contains(@class,"sapMFlexBox") and contains(@class,"sapMHBox")][1])[1])`);}
+    
     /* --- Assign/Unassign Technical Object --- */
     private get assignUnassignTechnicalObjectButton() { return $('//button[@data-ui5-accesskey="a" and @aria-haspopup="menu"][.//bdi[normalize-space()="Assign/Unassign Technical Object"]]'); }
     private unifiedMenuItemByText(text: string) { return $(`(//ul[@role="menu"]//li[@role="menuitem"][.//div[contains(@class,"sapUiMnuItmTxt") and normalize-space()=${utils.xpathString(text)}] or .//*[normalize-space()=${utils.xpathString(text)}]])[last()]`); }
@@ -170,16 +171,28 @@ class AssetStrategyAnalysisForClassesPage {
     private get equipmentDialogConfirmButton() { return $('//button[.//bdi[normalize-space()="Confirm"]]'); }
     private get closeColumnButton() { return $('//button[@aria-label="Close column" or @title="Close column"]'); }
 
-    /** Tree icon for an Assessment Hierarchy row (default row0 = newly-created OCC). */
+    /* --- Notes (header button on a detail panel) --- */
+    private get notesHeaderButton() { return $('//button[(contains(@aria-label,"Note") or contains(@title,"Note")) and not(contains(@aria-label,"Notification")) and not(contains(@title,"Notification"))]'); }
+    private get notesContainer() { return $('(//div[(contains(@class,"sapMDialog") or contains(@class,"sapMPopover")) and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden"))][.//*[normalize-space()="Notes"]])[last()]'); }
+    private get notesContainerTextarea() { return $('(//div[(contains(@class,"sapMDialog") or contains(@class,"sapMPopover")) and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden"))][.//*[normalize-space()="Notes"]]//textarea)[last()]'); }
+    private get notesContainerSaveButton() { return $('(//div[(contains(@class,"sapMDialog") or contains(@class,"sapMPopover")) and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden"))][.//*[normalize-space()="Notes"]]//button[.//bdi[normalize-space()="Save"]])[last()]'); }
+    private get notesContainerCloseButton() { return $('(//div[(contains(@class,"sapMDialog") or contains(@class,"sapMPopover")) and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden"))][.//*[normalize-space()="Notes"]]//button[.//bdi[normalize-space()="Close"]])[last()]'); }
+
     private assessmentHierarchyTreeIcon(rowIndex: number = 0) { return $(`//span[contains(@id,"idAssessmentHierarchy-rows-row${rowIndex}-treeicon") and @role="button"]`); }
-    /** sapUiTable splits a logical row into multiple <tr> siblings sharing the same -rows-rowN- id segment. */
     private assessmentHierarchyAddButtonByRowIndex(rowIndex: number) { return $(`//tr[contains(@id,"idAssessmentHierarchy-rows-row${rowIndex}-") or substring-after(@id,"idAssessmentHierarchy-rows-row")="${rowIndex}"]//button[@aria-label="Add" or @title="Add"]`); }
     private assessmentHierarchyAddButtonByRowText(rowText: string) { return $(`//*[contains(@id,"idAssessmentHierarchy-rows-row") and .//*[normalize-space()=${utils.xpathString(rowText)} or contains(normalize-space(),${utils.xpathString(rowText)})]][not(.//*[contains(@id,"idAssessmentHierarchy-rows-row") and not(.//*[normalize-space()=${utils.xpathString(rowText)} or contains(normalize-space(),${utils.xpathString(rowText)})])])]//button[@aria-label="Add" or @title="Add"]`); }
+    private assessmentHierarchyDeclineButtonByRowText(rowText: string) {
+        const t = utils.xpathString(rowText);
+        return $(
+            `//*[contains(@id,"idAssessmentHierarchy-rows-row") and .//*[normalize-space()=${t} or contains(normalize-space(),${t})]][not(.//*[contains(@id,"idAssessmentHierarchy-rows-row") and not(.//*[normalize-space()=${t} or contains(normalize-space(),${t})])])]//button[@aria-label="Decline" or @title="Decline"]`
+            + ` | `
+            + `(//span[contains(@class,"sapMText")][normalize-space()=${t} or starts-with(normalize-space(),${t})]/ancestor::div[contains(@class,"sapMFlexBox") and contains(@class,"sapMHBox")][.//button[@aria-label="Decline" or @title="Decline"]][1]//button[@aria-label="Decline" or @title="Decline"])[1]`
+        );
+    }
     private assessmentHierarchyRowByText(rowText: string) { return $(`(//tr[@role="row"]//span[contains(@class,"sapMText")][normalize-space()=${utils.xpathString(rowText)} or starts-with(normalize-space(),${utils.xpathString(rowText)})])[1]`); }
 
     /* --- Select Baselines dialog --- */
     private get selectBaselinesDialog() { return $('//div[contains(@class,"sapMDialog") and not(contains(@style,"display: none"))][.//*[normalize-space()="Select Baselines"]]'); }
-    /** Radio button in the first data row of the Recommended Baselines table. */
     private get firstBaselineRadioButton() { return $('(//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Select Baselines"]]//tr[@role="row"][.//td]//*[@role="radio" or contains(@class,"sapMRb")])[1]'); }
     private get selectBaselinesApplyButton() { return $('//div[contains(@class,"sapMDialog")][.//*[normalize-space()="Select Baselines"]]//footer//button[.//bdi[normalize-space()="Apply"]]'); }
 
@@ -201,10 +214,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Navigated to Asset Strategy Analysis for Classes app');
     }
 
-    /**
-     * Refresh the browser page and re-enter the app iframe so subsequent
-     * steps can continue interacting with the app.
-     */
     async refreshApp(): Promise<void> {
         await browser.switchToParentFrame();
         await browser.refresh();
@@ -251,10 +260,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Failure Data Profile — first row selected');
     }
 
-    /**
-     * Open the Failure Data Profile value-help dialog and select the row whose
-     * Description matches the supplied text (e.g. "Pump - Centrifugal V").
-     */
     async selectFailureDataProfileByDescription(description: string): Promise<void> {
         await utils.clickWithWait(this.failureDataProfileValueHelpIcon);
         await utils.waitForBusyIndicatorToDisappear();
@@ -274,11 +279,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Template — first option selected');
     }
 
-    /**
-     * Tick the "Create as Baseline" checkbox in the Create Assessment dialog.
-     * The underlying SAPUI5 checkbox uses dynamic IDs, so we locate it by its
-     * adjacent "Baseline" label.
-     */
     async checkCreateAsBaselineCheckbox(): Promise<void> {
         const checkbox = await this.createAsBaselineCheckbox;
         await checkbox.waitForDisplayed({ timeout: 30000 });
@@ -310,10 +310,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Edit button clicked');
     }
 
-    /**
-     * Click the Nth Edit button on the page (1-based index).
-     * 1 → General Information, 2 → Planning Data, 3 → Organizational Data, 4 → Roles, ...
-     */
     async clickEditButtonByIndex(index: number): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.editButtonByIndex(index);
@@ -324,11 +320,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] Edit button #${index} clicked`);
     }
 
-    /**
-     * Click the Edit button inside a specific section panel
-     * (e.g. "Planning Data", "Organizational Data").
-     * @deprecated Prefer clickEditButtonByIndex for stability.
-     */
     async clickSectionEditButton(sectionTitle: string): Promise<void> {
         const indexMap: Record<string, number> = {
             'General Information': 1,
@@ -342,56 +333,34 @@ class AssetStrategyAnalysisForClassesPage {
     }
 
     /**
-     * Pick a date in a Planning Data field by opening its calendar picker and
-     * clicking the day cell — no typing into the readonly input. Accepts dates
-     * formatted like "Dec 31, 2026" / "Jan 31, 2027".
+     * Type a date directly into a Planning Data input (format matches placeholder,
+     * e.g. "Dec 31, 2026"). Avoids the fragile calendar-popover navigation which
+     * fails when a MessageBox / overlay is intercepting clicks.
      */
     private async fillPlanningDataField(label: string, value: string): Promise<void> {
-        const target = this.parseDate(value);
-        const targetYmd = this.toYyyymmdd(target);
-
-        // 0. Make sure no previous calendar popover is still on screen.
+        await this.dismissAnyMessageBox();
         await this.dismissAnyOpenCalendarPopover();
 
-        // 1. Open the picker for this field.
-        const icon = await this.planningDataPickerIcon(label);
-        await icon.scrollIntoView({ block: 'center' });
-        await icon.waitForExist({ timeout: 30000 });
-        await icon.waitForDisplayed({ timeout: 30000 });
-        await utils.clickWithWait(this.planningDataPickerIcon(label));
+        const input = await this.planningDataInput(label);
+        await input.waitForExist({ timeout: 30000 });
+        await input.scrollIntoView({ block: 'center' });
+        await input.waitForDisplayed({ timeout: 30000 });
 
-        // 2. Wait for the calendar popover.
-        const popover = await this.visibleCalendarPopover;
-        await popover.waitForDisplayed({ timeout: 30000 });
-        await browser.pause(300);
-
-        // 3. Navigate the calendar header to the target month/year.
-        await this.navigateCalendarToMonth(target);
-
-        // 4. Click the day cell for the exact date.
-        const day = await this.calendarDayByDataAttr(targetYmd);
-        await day.waitForExist({ timeout: 30000 });
-        await day.waitForDisplayed({ timeout: 30000 });
-        await utils.clickWithWait(this.calendarDayByDataAttr(targetYmd));
-
-        // 5. Wait for the popover to close before the caller opens the next one.
+        // Focus + clear + type. clickWithWait handles overlay retries.
+        await utils.clickWithWait(this.planningDataInput(label));
+        try { await input.clearValue(); } catch { /* some SAP inputs disallow clearValue */ }
+        // Fallback clear: Ctrl+A / Delete in case clearValue was a no-op.
         try {
-            await browser.waitUntil(
-                async () => {
-                    const p = await this.visibleCalendarPopover;
-                    return !(await p.isExisting()) || !(await p.isDisplayed());
-                },
-                { timeout: 5000, interval: 200, timeoutMsg: 'Calendar popover did not close' }
-            );
-        } catch {
-            await this.dismissAnyOpenCalendarPopover();
-        }
+            await browser.keys(['Control', 'a']);
+            await browser.keys('Delete');
+        } catch { /* ignore */ }
+        await input.setValue(value);
+        await browser.keys('Enter');
+        await browser.keys('Tab');
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(300);
         console.log(`[ACTION] Planning Data — ${label}: ${value}`);
     }
 
-    /** If a calendar popover is still visible from a prior interaction, close it. */
     private async dismissAnyOpenCalendarPopover(): Promise<void> {
         for (let attempt = 0; attempt < 3; attempt++) {
             const popover = await this.visibleCalendarPopover;
@@ -410,16 +379,32 @@ class AssetStrategyAnalysisForClassesPage {
         }
     }
 
-    /** Parse strings like "Dec 31, 2026" into a Date (local time, day precision). */
+    /** Close any open success / warning / error MessageBox that could be intercepting clicks. */
+    private async dismissAnyMessageBox(): Promise<void> {
+        const boxOk = $(
+            '//div[(contains(@class,"sapMMessageBox") or @role="alertdialog") and not(contains(@style,"display: none")) and not(contains(@style,"visibility: hidden"))]' +
+            '//button[.//bdi[normalize-space()="OK" or normalize-space()="Ok" or normalize-space()="Close" or normalize-space()="Yes"]]'
+        );
+        for (let attempt = 0; attempt < 4; attempt++) {
+            if (!(await boxOk.isExisting())) return;
+            if (!(await boxOk.isDisplayed().catch(() => false))) return;
+            try {
+                await boxOk.click();
+            } catch {
+                try { await browser.execute((el: HTMLButtonElement) => el.click(), boxOk as unknown as HTMLButtonElement); } catch { /* ignore */ }
+            }
+            await browser.pause(400);
+        }
+    }
+
     private parseDate(value: string): Date {
         const d = new Date(value);
         if (isNaN(d.getTime())) {
-            throw new AssertionError({ message: `Unrecognized date format: "${value}". Expected e.g. "Dec 31, 2026".` });
+            throw new Error(`Unrecognized date format: "${value}". Expected e.g. "Dec 31, 2026".`);
         }
         return new Date(d.getFullYear(), d.getMonth(), d.getDate());
     }
 
-    /** Convert a Date to the SAP `data-sap-day` format (YYYYMMDD). */
     private toYyyymmdd(d: Date): string {
         const y = d.getFullYear().toString().padStart(4, '0');
         const m = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -427,14 +412,9 @@ class AssetStrategyAnalysisForClassesPage {
         return `${y}${m}${day}`;
     }
 
-    /**
-     * Step the calendar header forward/backward until the displayed month/year
-     * matches the target date's month/year. The SAP header has two separate
-     * buttons (month, year) so we read them individually each iteration.
-     */
     private async navigateCalendarToMonth(target: Date): Promise<void> {
         const targetYear = target.getFullYear();
-        const targetMonth = target.getMonth(); // 0-11
+        const targetMonth = target.getMonth();
 
         for (let i = 0; i < 600; i++) {
             const monthEl = await this.calendarHeaderMonthButton;
@@ -446,7 +426,6 @@ class AssetStrategyAnalysisForClassesPage {
             const yearText = (await yearEl.getText()).trim();
 
             const currentYear = parseInt(yearText, 10);
-            // Parse "May" / "September" via a fixed reference year so locale doesn't bite us.
             const parsedMonth = new Date(`${monthText} 1, 2000`);
             const currentMonth = isNaN(parsedMonth.getTime()) ? NaN : parsedMonth.getMonth();
 
@@ -463,13 +442,9 @@ class AssetStrategyAnalysisForClassesPage {
             await utils.clickWithWait(goForward ? this.calendarNextButton : this.calendarPrevButton);
             await browser.pause(120);
         }
-        throw new AssertionError({ message: `Could not navigate calendar to ${target.toDateString()}` });
+        throw new Error(`Could not navigate calendar to ${target.toDateString()}`);
     }
 
-    /**
-     * Fill the Planning Data form with the provided date values
-     * (only fields that are supplied will be written).
-     */
     async fillPlanningDataForm(data: PlanningDataInput): Promise<void> {
         if (data.lastReviewDate)    await this.fillPlanningDataField('Last Review Date', data.lastReviewDate);
         if (data.nextReviewDate)    await this.fillPlanningDataField('Next Review Date', data.nextReviewDate);
@@ -479,9 +454,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Planning Data form filled');
     }
 
-    /**
-     * Save the Planning Data section after editing.
-     */
     async clickPlanningDataSave(): Promise<void> {
         await this.clickSaveButton();
         await this.confirmSuccessPopup();
@@ -489,26 +461,53 @@ class AssetStrategyAnalysisForClassesPage {
     }
 
     /**
-     * High-level helper: Edit Planning Data → fill date fields → Save.
+     * Click the Edit button of the section that contains the given field label, and wait until
+     * the same section's Save button is visible (i.e. edit mode has actually engaged).
      */
+    private async clickSectionEditByFieldLabel(fieldLabel: string): Promise<void> {
+        await utils.waitForBusyIndicatorToDisappear();
+        const btn = await this.sectionEditButtonByFieldLabel(fieldLabel);
+        await btn.waitForExist({ timeout: 30000 });
+        await btn.scrollIntoView({ block: 'center' });
+        await btn.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.sectionEditButtonByFieldLabel(fieldLabel));
+        await utils.waitForBusyIndicatorToDisappear();
+        const save = await this.sectionSaveButtonByFieldLabel(fieldLabel);
+        await save.waitForDisplayed({ timeout: 30000 });
+        console.log(`[ACTION] Edit clicked for section containing "${fieldLabel}"`);
+    }
+
+    private async clickSectionEditByTitle(title: string): Promise<void> {
+        await utils.waitForBusyIndicatorToDisappear();
+        await this.dismissAnyMessageBox();
+
+        const section = await this.objectPageSubSectionByTitle(title);
+        await section.waitForExist({ timeout: 30000 });
+        await section.scrollIntoView({ block: 'center' });
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const btn = await this.sectionEditButtonByTitle(title);
+        await btn.waitForExist({ timeout: 30000 });
+        await btn.scrollIntoView({ block: 'center' });
+        await btn.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.sectionEditButtonByTitle(title));
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const save = await this.sectionSaveButtonByTitle(title);
+        await save.waitForDisplayed({ timeout: 30000 });
+        console.log(`[ACTION] Edit clicked for section "${title}"`);
+    }
+
     async editPlanningData(data: PlanningDataInput): Promise<void> {
-        await this.clickEditButtonByIndex(2);
+        await this.clickSectionEditByTitle('Planning Data');
         await this.fillPlanningDataForm(data);
         await this.clickPlanningDataSave();
     }
 
-    /**
-     * Pick an Organizational Data value via the value-help (F4) dialog.
-     * Opens the value-help dialog, clicks the radio button in the row matching `value`,
-     * then clicks the dialog's Save button to confirm the selection.
-     * If no exact match is found, falls back to the first row.
-     */
     async selectOrganizationalDataViaValueHelp(label: string, value: string): Promise<void> {
         await utils.clickWithWait(this.organizationalDataValueHelpIcon(label));
         await utils.waitForBusyIndicatorToDisappear();
 
-        // The dialog row's radio button (sapMRbB) is what actually marks a selection;
-        // simply clicking the row text doesn't toggle the radio.
         const rowRadio = $(
             `(//div[contains(@class,"sapMDialog")]//tr[@role="row"][.//*[normalize-space()=${utils.xpathString(value)}]]//div[contains(@class,"sapMRbB")])[1]`
         );
@@ -525,7 +524,6 @@ class AssetStrategyAnalysisForClassesPage {
         }
         await utils.waitForBusyIndicatorToDisappear();
 
-        // Confirm the dialog with its Save button (the dialog footer's Save).
         const dialogSave = $(
             `(//div[contains(@class,"sapMDialog")]//button[.//bdi[normalize-space()="Save"]])[1]`
         );
@@ -535,42 +533,31 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] Organizational Data — ${label} selected via value help: ${value}`);
     }
 
-    /**
-     * Fill the Organizational Data form by opening each field's value-help (F4)
-     * dialog and selecting the row matching the supplied value.
-     */
     async fillOrganizationalDataForm(data: OrganizationalDataInput): Promise<void> {
         if (data.planningPlant)    await this.selectOrganizationalDataViaValueHelp('Planning Plant', data.planningPlant);
         if (data.maintenancePlant) await this.selectOrganizationalDataViaValueHelp('Maintenance Plant', data.maintenancePlant);
         console.log('[ACTION] Organizational Data form filled via value help');
     }
 
-    /**
-     * Save the Organizational Data section after editing.
-     */
     async clickOrganizationalDataSave(): Promise<void> {
         await this.clickSaveButton();
         await this.confirmSuccessPopup();
         console.log('[ACTION] Organizational Data Save clicked');
     }
 
-    /**
-     * High-level helper: Edit Organizational Data → fill fields → Save.
-     */
     async editOrganizationalData(data: OrganizationalDataInput): Promise<void> {
-        await this.clickEditButtonByIndex(3);
+        await this.clickSectionEditByTitle('Organizational Data');
         await this.fillOrganizationalDataForm(data);
         await this.clickOrganizationalDataSave();
     }
 
-    /**
-     * High-level helper: edit Planning Data and Organizational Data sections back-to-back.
-     */
     async editPlanningAndOrganizationalData(
         planning: PlanningDataInput,
         organizational: OrganizationalDataInput
     ): Promise<void> {
+        await this.dismissAnyMessageBox();
         await this.editPlanningData(planning);
+        await this.dismissAnyMessageBox();
         await this.editOrganizationalData(organizational);
     }
 
@@ -584,13 +571,36 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] Description edited to: ${newDescription}`);
     }
 
+    async editLongDescription(value: string): Promise<void> {
+        const el = await this.editLongDescriptionInput;
+        await el.waitForExist({ timeout: 30000 });
+        await el.scrollIntoView({ block: 'center' });
+        await el.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.editLongDescriptionInput);
+        await el.clearValue();
+        await el.setValue(value);
+        await browser.keys('Tab');
+        console.log(`[ACTION] Long Description edited to: ${value}`);
+    }
+
+    async editOperatingContext(value: string): Promise<void> {
+        const el = await this.editOperatingContextInput;
+        await el.waitForExist({ timeout: 30000 });
+        await el.scrollIntoView({ block: 'center' });
+        await el.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.editOperatingContextInput);
+        await el.clearValue();
+        await el.setValue(value);
+        await browser.keys('Tab');
+        console.log(`[ACTION] Operating Context edited to: ${value}`);
+    }
+
     async clickSaveButton(): Promise<void> {
-        // Make sure no value-help / suggestion dialog is still open and intercepting clicks.
         const openDialog = $('//div[contains(@class,"sapMDialog") and not(contains(@style,"display: none"))]');
         try {
             await openDialog.waitForDisplayed({ timeout: 3000, reverse: true });
         } catch {
-            // dialog still around — continue, the click fallback below will handle overlay
+            /* dialog still around */
         }
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(500);
@@ -600,7 +610,6 @@ class AssetStrategyAnalysisForClassesPage {
         await btn.scrollIntoView({ block: 'center' });
         await btn.waitForDisplayed({ timeout: 30000 });
 
-        // Try a normal click; fall back to a JS click if an overlay intercepts the event.
         try {
             await btn.waitForClickable({ timeout: 10000 });
             await btn.click();
@@ -611,9 +620,18 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Save button clicked');
     }
 
-    async editAssessmentDescription(newDescription: string): Promise<void> {
+    async editAssessmentDescription(newDescription: string, extra?: {
+        longDescription?: string;
+        operatingContext?: string;
+    }): Promise<void> {
         await this.clickEditButton();
         await this.editDescription(newDescription);
+        if (extra?.longDescription !== undefined) {
+            await this.editLongDescription(extra.longDescription);
+        }
+        if (extra?.operatingContext !== undefined) {
+            await this.editOperatingContext(extra.operatingContext);
+        }
         await this.clickSaveButton();
         await this.confirmSuccessPopup();
     }
@@ -644,7 +662,6 @@ class AssetStrategyAnalysisForClassesPage {
         await this.clickManageButton();
         await this.clickDeleteMenuItem();
         await this.confirmDelete();
-        // second popup: "successfully deleted" — click OK again
         await this.confirmDelete();
     }
 
@@ -667,7 +684,7 @@ class AssetStrategyAnalysisForClassesPage {
         if (exists) {
             const displayed = await row.isDisplayed();
             if (displayed) {
-                throw new AssertionError({ message: `Assessment "${description}" is still present after deletion` });
+                throw new Error(`Assessment "${description}" is still present after deletion`);
             }
         }
         console.log(`[VERIFY] Assessment "${description}" is deleted`);
@@ -688,9 +705,6 @@ class AssetStrategyAnalysisForClassesPage {
 
     /* ---------- Roles section actions ---------- */
 
-    /**
-     * Click the "Add Role" button inside the Roles toolbar.
-     */
     async clickAddRoleButton(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.addRoleButton;
@@ -701,9 +715,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Add Role button clicked, role-selection dialog displayed');
     }
 
-    /**
-     * Tick the checkbox for a single role in the role-selection dialog (no-op if already checked).
-     */
     private async toggleRoleCheckbox(roleName: string): Promise<void> {
         const cb = await this.roleSelectionCheckbox(roleName);
         await cb.waitForExist({ timeout: 30000 });
@@ -717,9 +728,6 @@ class AssetStrategyAnalysisForClassesPage {
         }
     }
 
-    /**
-     * Select the supplied roles in the role-selection dialog and confirm with OK.
-     */
     async selectRolesInDialog(roles: readonly string[]): Promise<void> {
         for (const r of roles) await this.toggleRoleCheckbox(r);
         await utils.clickWithWait(this.okButton);
@@ -728,27 +736,16 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] Roles selected and confirmed: ${roles.join(', ')}`);
     }
 
-    /**
-     * Assign a user (by display name) to a single role by:
-     *   1. clicking the role row's "Show Value Help" (F4) icon
-     *   2. waiting for the user-selection dialog
-     *   3. searching for the user by name
-     *   4. ticking the matching row's checkbox
-     *   5. clicking the dialog's "Ok" button
-     */
     private async assignUserToRole(roleName: string, userName: string): Promise<void> {
-        // 1. Open user-selection dialog via the role row's value-help icon.
         const vhi = await this.roleAssignmentValueHelpIcon(roleName);
         await vhi.scrollIntoView({ block: 'center' });
         await vhi.waitForExist({ timeout: 30000 });
         await vhi.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.roleAssignmentValueHelpIcon(roleName));
 
-        // 2. Wait for the user-selection dialog to appear.
         const dialog = await this.userSelectionDialog;
         await dialog.waitForDisplayed({ timeout: 30000 });
 
-        // 3. Search for the user by display name.
         const search = await this.userSelectionSearchInput;
         await search.waitForDisplayed({ timeout: 30000 });
         await search.clearValue();
@@ -757,7 +754,6 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(800);
 
-        // 4. Tick the matching row's checkbox (no-op if already checked).
         const row = await this.userSelectionRow(userName);
         await row.waitForExist({ timeout: 30000 });
         await row.scrollIntoView({ block: 'center' });
@@ -768,18 +764,12 @@ class AssetStrategyAnalysisForClassesPage {
             await utils.clickWithWait(this.userSelectionRowCheckbox(userName));
         }
 
-        // 5. Confirm with Ok.
         await utils.clickWithWait(this.userSelectionOkButton);
         await utils.waitForBusyIndicatorToDisappear();
         await browser.pause(500);
         console.log(`[ACTION] User "${userName}" assigned to role "${roleName}" via user-selection dialog`);
     }
 
-    /**
-     * High-level helper: open Add Role dialog, pick the supplied roles, confirm,
-     * then assign the supplied user to each newly added role and click Save.
-     * Finally dismisses any post-save success popup.
-     */
     async addRolesAndAssignUser(data: RolesAssignmentInput): Promise<void> {
         await this.clickAddRoleButton();
         await this.selectRolesInDialog(data.roles);
@@ -789,9 +779,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Roles added, user assigned, and saved');
     }
 
-    /**
-     * Click the Edit button inside the Roles toolbar.
-     */
     async clickRolesEditButton(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.rolesEditButton;
@@ -802,9 +789,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Roles section Edit button clicked');
     }
 
-    /**
-     * Remove a user assignment from a specific role row by clicking the token's "Remove" icon.
-     */
     private async removeUserFromRole(roleName: string, userName: string): Promise<void> {
         const icon = await this.roleAssignmentRemoveTokenIcon(roleName, userName);
         await icon.scrollIntoView({ block: 'center' });
@@ -814,9 +798,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] User "${userName}" removed from role "${roleName}"`);
     }
 
-    /**
-     * High-level helper: enter Roles edit mode, unassign the user from the given role, and Save.
-     */
     async unassignUserFromRoleAndSave(roleName: string, userName: string): Promise<void> {
         await this.clickRolesEditButton();
         await this.removeUserFromRole(roleName, userName);
@@ -827,10 +808,6 @@ class AssetStrategyAnalysisForClassesPage {
 
     /* ---------- Assessment section actions ---------- */
 
-    /**
-     * Click the "Assessment" tab in the object-page anchor bar to scroll/navigate
-     * to the Assessment section.
-     */
     async navigateToAssessmentSection(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.assessmentAnchorButton;
@@ -842,10 +819,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Navigated to Assessment section');
     }
 
-    /**
-     * Click the "Create Operating Context and Condition" button inside the
-     * Assessment section.
-     */
     async clickCreateOperatingContextAndCondition(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.createOperatingContextAndConditionButton;
@@ -856,10 +829,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] "Create Operating Context and Condition" button clicked');
     }
 
-    /**
-     * High-level helper: open the Assessment section and click the
-     * "Create Operating Context and Condition" button.
-     */
     async openAssessmentAndCreateOperatingContextAndCondition(): Promise<void> {
         await this.navigateToAssessmentSection();
         await this.clickCreateOperatingContextAndCondition();
@@ -867,9 +836,6 @@ class AssetStrategyAnalysisForClassesPage {
 
     /* ---------- Operating Context and Condition dialog actions ---------- */
 
-    /**
-     * Type the OCC name into the required textarea at the top of the dialog.
-     */
     async fillOccName(name: string): Promise<void> {
         await this.occDialog.waitForDisplayed({ timeout: 30000 });
         const ta = await this.occNameTextarea;
@@ -881,9 +847,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] OCC name entered: ${name}`);
     }
 
-    /**
-     * Click the "Add Characterstics" button inside the OCC dialog.
-     */
     async clickAddCharacteristicsButton(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.addCharacteristicsButton;
@@ -894,10 +857,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] "Add Characterstics" button clicked');
     }
 
-    /**
-     * Tick the row checkbox for each characteristic id in the Add Characterstics
-     * sub-dialog, then confirm with the dialog's Assign/OK button.
-     */
     async selectCharacteristicsAndAssign(charIds: readonly string[]): Promise<void> {
         for (const id of charIds) {
             const cb = await this.characteristicsRowCheckbox(id);
@@ -918,51 +877,34 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] Characteristics assigned: ${charIds.join(', ')}`);
     }
 
-    /**
-     * Open the multi-combobox dropdown for a specific characteristic row
-     * (identified by its id, e.g. "CENF_IMPELLER") by clicking the row's
-     * "Select Options" arrow icon, then pick the supplied value from the popover.
-     * Does NOT type into the input — selection is made entirely via the dropdown.
-     */
     async selectCharacteristicValue(charId: string, value: string): Promise<void> {
-        // 1. Click the row's dropdown arrow.
         const arrow = await this.characteristicComboboxArrow(charId);
         await arrow.scrollIntoView({ block: 'center' });
         await arrow.waitForExist({ timeout: 30000 });
         await arrow.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.characteristicComboboxArrow(charId));
 
-        // 2. Wait for the popover to render the options.
         await browser.pause(800);
 
-        // 3. Pick the matching option from the open popover.
         const opt = await this.comboboxOptionByText(value);
         await opt.waitForExist({ timeout: 30000 });
         await opt.scrollIntoView({ block: 'center' });
         await opt.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.comboboxOptionByText(value));
 
-        // 4. Some MultiComboBox popovers stay open after selection — close it
-        //    by clicking the arrow again (toggles closed). Guarded so we don't
-        //    fail the test if the popover already auto-closed.
         try {
             const stillOpen = await opt.isDisplayed();
             if (stillOpen) {
                 await utils.clickWithWait(this.characteristicComboboxArrow(charId));
             }
         } catch {
-            /* popover already closed — nothing to do */
+            /* popover already closed */
         }
 
         await utils.waitForBusyIndicatorToDisappear();
         console.log(`[ACTION] Characteristic "${charId}" set to "${value}"`);
     }
 
-    /**
-     * Same as selectCharacteristicValue but picks the Nth option (1-based)
-     * from the open popover instead of matching by visible text. Useful when
-     * option labels are unstable but row order is.
-     */
     async selectCharacteristicValueByIndex(charId: string, index: number): Promise<void> {
         const arrow = await this.characteristicComboboxArrow(charId);
         await arrow.scrollIntoView({ block: 'center' });
@@ -972,9 +914,6 @@ class AssetStrategyAnalysisForClassesPage {
 
         await browser.pause(800);
 
-        // MultiComboBox popovers render each option as <li role="option"> with
-        // a role="checkbox" tile inside. Try the checkbox tile first; if it's
-        // not in the DOM, fall back to clicking the <li> itself.
         const checkbox = await this.comboboxCheckboxByIndex(index);
         const li = await this.comboboxLiByIndex(index);
 
@@ -991,7 +930,6 @@ class AssetStrategyAnalysisForClassesPage {
             console.log(`[ACTION] Characteristic "${charId}" — option #${index} <li> clicked`);
         }
 
-        // Close the popover by clicking outside (on the OCC dialog title area).
         try {
             const occTitle = await $('//div[contains(@class,"sapMDialog")]//h1[normalize-space()="Operating Context and Condition"]');
             if (await occTitle.isExisting()) {
@@ -1007,9 +945,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] Characteristic "${charId}" set to option #${index}`);
     }
 
-    /**
-     * Click the OCC dialog's footer "Create" button.
-     */
     async clickOccCreateButton(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.occCreateButton;
@@ -1020,10 +955,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] OCC dialog Create button clicked');
     }
 
-    /**
-     * Click the "Use Baseline" button (appears after OCC creation in the
-     * Assessment section).
-     */
     async clickUseBaselineButton(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.useBaselineButton;
@@ -1034,10 +965,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] "Use Baseline" button clicked');
     }
 
-    /**
-     * In the "Select Baselines" dialog, pick the first recommended baseline
-     * (its row radio button) and click Apply.
-     */
     async selectFirstBaselineAndApply(): Promise<void> {
         const dialog = await this.selectBaselinesDialog;
         await dialog.waitForDisplayed({ timeout: 30000 });
@@ -1062,42 +989,30 @@ class AssetStrategyAnalysisForClassesPage {
         await this.confirmSuccessPopup();
     }
 
-    /**
-     * High-level helper: with the OCC dialog open, add the supplied characteristics,
-     * assign each one's value, fill the OCC name, click Create, dismiss the
-     * success popup, then click "Use Baseline".
-     */
     async createOperatingContextAndConditionFlow(
         data: OperatingContextAndConditionInput,
         options: { useBaseline?: boolean } = {}
     ): Promise<void> {
         const { useBaseline = true } = options;
 
-        // 1. Open the Add Characterstics sub-dialog and tick the requested ids.
         await this.clickAddCharacteristicsButton();
         await this.selectCharacteristicsAndAssign(data.characteristics.map(c => c.id));
 
-        // 2. For each characteristic row, pick its dropdown value (by index when
-        //    supplied, otherwise by visible text).
         for (const c of data.characteristics) {
             if (typeof c.valueIndex === 'number') {
                 await this.selectCharacteristicValueByIndex(c.id, c.valueIndex);
             } else if (c.value) {
                 await this.selectCharacteristicValue(c.id, c.value);
             } else {
-                throw new AssertionError({ message: `Characteristic "${c.id}" has neither value nor valueIndex` });
+                throw new Error(`Characteristic "${c.id}" has neither value nor valueIndex`);
             }
         }
 
-        // 3. Fill the required OCC name and submit the dialog.
         await this.fillOccName(data.name);
         await this.clickOccCreateButton();
 
-        // 4. Dismiss the post-create success popup.
         await this.confirmSuccessPopup();
 
-        // 5. Optional: click "Use Baseline" + Apply. Skipped when the parent
-        //    assessment was itself created as a baseline (no Use Baseline button).
         if (useBaseline) {
             await this.clickUseBaselineButton();
             await this.selectFirstBaselineAndApply();
@@ -1107,10 +1022,6 @@ class AssetStrategyAnalysisForClassesPage {
         }
     }
 
-    /**
-     * Click the "+" (Add) button on the Operating Context tile/row identified
-     * by its name (e.g. "TestOCC1").
-     */
     async clickOccAddButton(occName: string): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.occAddButtonByName(occName);
@@ -1122,11 +1033,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] "+" Add button clicked on Operating Context "${occName}"`);
     }
 
-    /**
-     * Click the "edit" (pencil) button on the Operating Context tile/row
-     * identified by its current name (e.g. "TestOCC1") and rename it to the
-     * supplied new name in the OCC dialog's name textarea.
-     */
     async editOccName(currentName: string, newName: string): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const btn = await this.occEditButtonByName(currentName);
@@ -1139,7 +1045,6 @@ class AssetStrategyAnalysisForClassesPage {
 
         await this.fillOccName(newName);
 
-        // Click the dialog footer Save button.
         const save = await this.saveButton;
         await save.waitForExist({ timeout: 30000 });
         await save.scrollIntoView({ block: 'center' });
@@ -1148,7 +1053,6 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log('[ACTION] OCC edit dialog — Save clicked');
 
-        // Confirm the follow-up success popup.
         const ok = await this.okButton;
         await ok.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.okButton);
@@ -1156,10 +1060,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] OCC edit confirmation OK clicked');
     }
 
-    /**
-     * Click the "Assign Maintainable Items" entry in the popover that opens
-     * after clicking an Operating Context's "+" button.
-     */
     async clickAssignMaintainableItemsMenuItem(): Promise<void> {
         const item = await this.assignMaintainableItemsMenuItem;
         await item.waitForExist({ timeout: 30000 });
@@ -1169,15 +1069,7 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log('[ACTION] "Assign Maintainable Items" menu item clicked');
     }
-
-    /**
-     * In the Assign Maintainable Items dialog, tick the row matching the
-     * supplied text (or, if blank, the first selectable multi-select
-     * checkbox), click the footer Assign button, then confirm the follow-up
-     * OK popup. If a dedicated row checkbox isn't found, falls back to
-     * clicking the row itself (which toggles selection on most SAPUI5
-     * selectable lists).
-     */
+    
     async assignMaintainableItem(rowText: string): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
 
@@ -1213,7 +1105,6 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log('[ACTION] Assign Maintainable Items dialog Assign button clicked');
 
-        // Confirm the follow-up OK popup that now appears after Assign.
         const ok = await this.okButton;
         await ok.waitForDisplayed({ timeout: 30000 });
         await utils.clickWithWait(this.okButton);
@@ -1221,11 +1112,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Assign Maintainable Items confirmation OK clicked');
     }
 
-    /**
-     * In the Assign Maintainable Items popover/dialog, type into the search
-     * field, tick the first matching row's checkbox, click Assign, then
-     * confirm the follow-up OK popup.
-     */
     async searchAndAssignFirstMaintainableItem(searchText: string): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
 
@@ -1240,7 +1126,6 @@ class AssetStrategyAnalysisForClassesPage {
         await browser.pause(800);
         console.log(`[ACTION] Assign Maintainable Items — searched: "${searchText}"`);
 
-        // Prefer the row matched by the search text; fall back to "first row" locator.
         let firstCb = await this.firstAssignDialogItemCheckboxByText(searchText);
         if (!(await firstCb.isExisting())) {
             firstCb = await this.firstAssignDialogItemCheckbox;
@@ -1266,10 +1151,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Assign Maintainable Items confirmation OK clicked');
     }
 
-    /**
-     * Click the "Assign Failure Modes" entry in the popover that opens
-     * after clicking an Assessment Hierarchy row's "+" button.
-     */
     async clickAssignFailureModesMenuItem(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const item = await this.assignFailureModesMenuItem;
@@ -1281,33 +1162,33 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] "Assign Failure Modes" menu item clicked');
     }
 
-    /**
-     * In the Assign Failure Modes dialog, type into the search field, tick
-     * the first matching row's checkbox, then click Assign.
-     */
-    async searchAndAssignFailureMode(searchText: string): Promise<void> {
+    async searchAndAssignFailureMode(searchText: string | string[]): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
 
         const search = await this.assignDialogSearchInput;
         await search.waitForExist({ timeout: 30000 });
         await search.waitForDisplayed({ timeout: 30000 });
-        await utils.clickWithWait(this.assignDialogSearchInput);
-        await search.clearValue();
-        await search.setValue(searchText);
-        await browser.keys('Enter');
-        await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(800);
-        console.log(`[ACTION] Assign Failure Modes — searched: "${searchText}"`);
 
-        let firstCb = await this.firstAssignDialogItemCheckboxByText(searchText);
-        if (!(await firstCb.isExisting())) {
-            firstCb = await this.firstAssignDialogItemCheckbox;
+        const items = Array.isArray(searchText) ? searchText : [searchText];
+        for (const item of items) {
+            await utils.clickWithWait(this.assignDialogSearchInput);
+            await search.clearValue();
+            await search.setValue(item);
+            await browser.keys('Enter');
+            await utils.waitForBusyIndicatorToDisappear();
+            await browser.pause(800);
+            console.log(`[ACTION] Assign Failure Modes — searched: "${item}"`);
+
+            let cb = await this.firstAssignDialogItemCheckboxByText(item);
+            if (!(await cb.isExisting())) {
+                cb = await this.firstAssignDialogItemCheckbox;
+            }
+            await cb.waitForExist({ timeout: 30000 });
+            await cb.scrollIntoView({ block: 'center' });
+            await cb.waitForDisplayed({ timeout: 30000 });
+            await cb.click();
+            console.log(`[ACTION] Failure mode checkbox ticked: "${item}"`);
         }
-        await firstCb.waitForExist({ timeout: 30000 });
-        await firstCb.scrollIntoView({ block: 'center' });
-        await firstCb.waitForDisplayed({ timeout: 30000 });
-        await firstCb.click();
-        console.log(`[ACTION] Failure mode checkbox ticked: "${searchText}"`);
 
         const assign = await this.assignDialogAssignButton;
         await assign.waitForExist({ timeout: 30000 });
@@ -1343,7 +1224,7 @@ class AssetStrategyAnalysisForClassesPage {
         } else if (rowText && rowText.trim().length > 0) {
             btn = await this.assessmentHierarchyAddButtonByRowText(rowText);
         } else {
-            throw new AssertionError({ message: 'clickAssessmentHierarchyRowAddButton: provide rowText or rowIndex' });
+            throw new Error('clickAssessmentHierarchyRowAddButton: provide rowText or rowIndex');
         }
 
         await btn.waitForExist({ timeout: 30000 });
@@ -1354,10 +1235,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] "+" Add button clicked on Assessment Hierarchy row (${typeof rowIndex === 'number' ? `row${rowIndex}` : `"${rowText}"`})`);
     }
 
-    /**
-     * Click an Assessment Hierarchy row (e.g. "False alarms") by its visible
-     * text to select/open it.
-     */
     async clickAssessmentHierarchyRowByText(rowText: string): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const row = await this.assessmentHierarchyRowByText(rowText);
@@ -1369,9 +1246,29 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] Assessment Hierarchy row clicked: "${rowText}"`);
     }
 
-    /**
-     * Click the "Assign" 
-     */
+    async deleteAssessmentHierarchyRowByText(rowText: string): Promise<void> {
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const decline = await this.assessmentHierarchyDeclineButtonByRowText(rowText);
+        await decline.waitForExist({ timeout: 30000 });
+        await decline.scrollIntoView({ block: 'center' });
+        await decline.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.assessmentHierarchyDeclineButtonByRowText(rowText));
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log(`[ACTION] Assessment Hierarchy row "X" clicked: "${rowText}"`);
+
+        const yes = await this.yesButton;
+        await yes.waitForExist({ timeout: 30000 });
+        await yes.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.yesButton);
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log('[ACTION] Delete confirmation — Yes clicked');
+
+        await browser.pause(500);
+        try { await this.confirmSuccessPopup(); } catch { /* no popup */ }
+        console.log(`[ACTION] Assessment Hierarchy row deleted: "${rowText}"`);
+    }
+
     async assignSectionItemByText(sectionName: string, itemText: string | string[]): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const sectionAssign = await this.sectionAssignButtonByName(sectionName);
@@ -1407,11 +1304,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] "${sectionName}" assignment confirmation OK clicked`);
     }
 
-    /**
-     * Expand the supplied Failure Mode detail section (e.g. "Failure
-     * Mechanism"), tick the row matching the supplied item text, click the
-     * section's "Remove" button, then confirm the follow-up Yes + OK popups.
-     */
     async removeSectionItemByText(sectionName: string, itemText: string | string[]): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
 
@@ -1448,19 +1340,12 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log(`[ACTION] "${sectionName}" remove confirmation Yes clicked`);
 
-        // Wait for the original confirmation dialog to close before looking
-        // for the follow-up success popup (otherwise the okButton locator
-        // can re-match the Yes button that's still present in the DOM).
         await yes.waitForDisplayed({ reverse: true, timeout: 30000 }).catch(() => { /* may already be gone */ });
         await browser.pause(500);
         await this.confirmSuccessPopup();
         console.log(`[ACTION] "${sectionName}" remove success popup OK clicked`);
     }
 
-    /**
-     * Expand a Failure Mode detail section panel (e.g. "Strategies") via its
-     * header Expand/Collapse button. No-op if already expanded.
-     */
     async expandSection(sectionName: string): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
         const expand = await this.sectionExpandIconByName(sectionName);
@@ -1477,10 +1362,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] "${sectionName}" section expanded`);
     }
 
-    /**
-     * Click the "Create" link on the Strategies section header to open the
-     * Create Strategy dialog, fill its fields, and submit.
-     */
     async createStrategy(data: {
         description: string;
         longDescription?: string;
@@ -1492,7 +1373,6 @@ class AssetStrategyAnalysisForClassesPage {
     }): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
 
-        // 1. Click the section "Create" link.
         const createLink = await this.sectionCreateButtonByName('Strategies');
         await createLink.waitForExist({ timeout: 30000 });
         await createLink.scrollIntoView({ block: 'center' });
@@ -1501,19 +1381,16 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log('[ACTION] Strategies — Create link clicked');
 
-        // 2. Wait for the dialog.
         const dialog = await this.createStrategyDialog;
         await dialog.waitForExist({ timeout: 30000 });
         await dialog.waitForDisplayed({ timeout: 30000 });
 
-        // 3. Description.
         const descInput = await this.createStrategyDialogField('Description');
         await descInput.waitForDisplayed({ timeout: 30000 });
         await descInput.click();
         await descInput.setValue(data.description);
         console.log(`[ACTION] Create Strategy — Description: "${data.description}"`);
 
-        // 4. Long Description (optional).
         if (data.longDescription && data.longDescription.length > 0) {
             const longInput = await this.createStrategyDialogField('Long Description');
             await longInput.waitForDisplayed({ timeout: 30000 });
@@ -1522,7 +1399,6 @@ class AssetStrategyAnalysisForClassesPage {
             console.log(`[ACTION] Create Strategy — Long Description set`);
         }
 
-        // 5. Type / Inspection Type / Inspection Stage dropdowns.
         await this.selectCreateStrategyDropdown('Type', data.type);
         if (data.inspectionType) {
             await this.selectCreateStrategyDropdown('Inspection Type', data.inspectionType);
@@ -1531,11 +1407,9 @@ class AssetStrategyAnalysisForClassesPage {
             await this.selectCreateStrategyDropdown('Inspection Stage', data.inspectionStage);
         }
 
-        // 6. Dates.
         await this.fillCreateStrategyDate('Start Date', data.startDate);
         await this.fillCreateStrategyDate('Due Date', data.dueDate);
 
-        // 7. Submit.
         const create = await this.createStrategyDialogCreateButton;
         await create.waitForExist({ timeout: 30000 });
         await create.scrollIntoView({ block: 'center' });
@@ -1544,20 +1418,21 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log('[ACTION] Create Strategy — Create clicked');
 
-        // 8. Confirm any success popup if it appears.
         try { await this.confirmSuccessPopup(); } catch { /* no popup */ }
     }
 
-    /**
-     * Tick the checkbox of the strategy row matching `currentDescription`,
-     * click the Strategies section "Edit & Update" toolbar button, change the
-     * Description in the Edit Strategy dialog to `newDescription`, click
-     * Save and confirm the follow-up success popup.
-     */
-    async editStrategyDescription(currentDescription: string, newDescription: string): Promise<void> {
+    async editStrategy(currentDescription: string, data: {
+        newDescription: string;
+        longDescription?: string;
+        type?: string;
+        subtype?: string;
+        inspectionType?: string;
+        inspectionStage?: string;
+        startDate?: string;
+        dueDate?: string;
+    }): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
 
-        // 1. Tick the strategy row checkbox.
         const cb = await this.strategyRowCheckboxByText(currentDescription);
         await cb.waitForExist({ timeout: 30000 });
         await cb.scrollIntoView({ block: 'center' });
@@ -1566,7 +1441,6 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log(`[ACTION] Strategies — row checkbox ticked: "${currentDescription}"`);
 
-        // 2. Click "Edit & Update" toolbar button on Strategies section.
         const editUpdate = await this.sectionToolbarButtonByName('Strategies', 'Edit & Update');
         await editUpdate.waitForExist({ timeout: 30000 });
         await editUpdate.scrollIntoView({ block: 'center' });
@@ -1575,7 +1449,6 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log('[ACTION] Strategies — "Edit & Update" clicked');
 
-        // 3. Wait for Edit Strategy dialog and update Description.
         const dialog = await this.editStrategyDialog;
         await dialog.waitForExist({ timeout: 30000 });
         await dialog.waitForDisplayed({ timeout: 30000 });
@@ -1583,12 +1456,27 @@ class AssetStrategyAnalysisForClassesPage {
         const descInput = await this.editStrategyDialogField('Description');
         await descInput.waitForDisplayed({ timeout: 30000 });
         await descInput.click();
-        // Clear existing value before setting the new one.
         await descInput.setValue('');
-        await descInput.setValue(newDescription);
-        console.log(`[ACTION] Edit Strategy — Description: "${newDescription}"`);
+        await descInput.setValue(data.newDescription);
+        console.log(`[ACTION] Edit Strategy — Description: "${data.newDescription}"`);
 
-        // 4. Click Save.
+        if (data.longDescription && data.longDescription.length > 0) {
+            const longInput = await this.editStrategyDialogField('Long Description');
+            await longInput.waitForDisplayed({ timeout: 30000 });
+            await longInput.click();
+            await longInput.setValue('');
+            await longInput.setValue(data.longDescription);
+            console.log(`[ACTION] Edit Strategy — Long Description set`);
+        }
+
+        if (data.type) await this.selectEditStrategyDropdown('Type', data.type);
+        if (data.subtype) await this.selectEditStrategyDropdown('Subtype', data.subtype);
+        if (data.inspectionType) await this.selectEditStrategyDropdown('Inspection Type', data.inspectionType);
+        if (data.inspectionStage) await this.selectEditStrategyDropdown('Inspection Stage', data.inspectionStage);
+
+        if (data.startDate) await this.fillEditStrategyDate('Start Date', data.startDate);
+        if (data.dueDate) await this.fillEditStrategyDate('Due Date', data.dueDate);
+
         const save = await this.editStrategyDialogSaveButton;
         await save.waitForExist({ timeout: 30000 });
         await save.scrollIntoView({ block: 'center' });
@@ -1597,33 +1485,225 @@ class AssetStrategyAnalysisForClassesPage {
         await utils.waitForBusyIndicatorToDisappear();
         console.log('[ACTION] Edit Strategy — Save clicked');
 
-        // 5. Confirm success popup (OK).
         await dialog.waitForDisplayed({ reverse: true, timeout: 30000 }).catch(() => { /* may already be gone */ });
         await browser.pause(500);
         await this.confirmSuccessPopup();
         console.log('[ACTION] Edit Strategy — success popup OK clicked');
     }
 
-    /**
-     * Click the Operating Context tile/row by its visible name (e.g.
-     * "TestOCC1") to navigate back to its detail view.
-     */
-    async clickOperatingContextByName(occName: string): Promise<void> {
+    async deleteStrategy(description: string): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
-        const label = await this.operatingContextLabelByName(occName);
-        await label.waitForExist({ timeout: 30000 });
-        await label.scrollIntoView({ block: 'center' });
-        await label.waitForDisplayed({ timeout: 30000 });
-        await utils.clickWithWait(this.operatingContextLabelByName(occName));
+
+        const cb = await this.strategyRowCheckboxByText(description);
+        await cb.waitForExist({ timeout: 30000 });
+        await cb.scrollIntoView({ block: 'center' });
+        await cb.waitForDisplayed({ timeout: 30000 });
+        await cb.click();
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log(`[ACTION] Strategies — row checkbox ticked for delete: "${description}"`);
+
+        const del = await this.sectionToolbarButtonByName('Strategies', 'Delete');
+        await del.waitForExist({ timeout: 30000 });
+        await del.scrollIntoView({ block: 'center' });
+        await del.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.sectionToolbarButtonByName('Strategies', 'Delete'));
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log('[ACTION] Strategies — Delete clicked');
+
+        const yes = await this.yesButton;
+        await yes.waitForExist({ timeout: 30000 });
+        await yes.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.yesButton);
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log('[ACTION] Delete confirmation — Yes clicked');
+
+        await browser.pause(500);
+        try { await this.confirmSuccessPopup(); } catch { /* no popup */ }
+        console.log('[ACTION] Delete Strategy — success popup OK clicked (if any)');
+
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(800);
+        const rowLocator = `(//tr[@role="row"][.//*[normalize-space()=${utils.xpathString(description)} or .//span[normalize-space()=${utils.xpathString(description)}]]])[1]`;
+        try {
+            await browser.waitUntil(
+                async () => !(await $(rowLocator).isExisting()),
+                { timeout: 15000, interval: 500, timeoutMsg: 'Strategy row still present after delete' }
+            );
+            console.log(`[VERIFY] Strategy row removed from table: "${description}"`);
+        } catch {
+            throw new Error(`[VERIFY] Strategy "${description}" was NOT removed from the Strategies table after delete.`);
+        }
+    }
+
+    async verifyStrategyRow(description: string, expected: {
+        longDescription?: string;
+        type?: string;
+        subtype?: string;
+        startDate?: string;
+        dueDate?: string;
+        inspectionType?: string;
+    }): Promise<void> {
+        await utils.waitForBusyIndicatorToDisappear();
+        await browser.pause(500);
+
+        const rowLocator = `(//tr[@role="row"][.//*[normalize-space()=${utils.xpathString(description)} or .//span[normalize-space()=${utils.xpathString(description)}]]])[1]`;
+        const row = await $(rowLocator);
+        await row.waitForExist({ timeout: 30000 });
+        await row.scrollIntoView({ block: 'center' });
+        await row.waitForDisplayed({ timeout: 30000 });
+
+        const rowText = (await row.getText()).replace(/\s+/g, ' ').trim();
+        console.log(`[VERIFY] Strategy row text: "${rowText}"`);
+
+        const assertContains = (label: string, value?: string) => {
+            if (!value) return;
+            const normalized = value.replace(/\s+/g, ' ').trim();
+            if (!rowText.toLowerCase().includes(normalized.toLowerCase())) {
+                throw new Error(`[VERIFY] Strategy row is missing expected ${label}: "${value}". Row text was: "${rowText}"`);
+            }
+            console.log(`[VERIFY] Strategy row contains ${label}: "${value}"`);
+        };
+
+        assertContains('Description', description);
+        assertContains('Long Description', expected.longDescription);
+        assertContains('Type', expected.type);
+        assertContains('Subtype', expected.subtype);
+        assertContains('Start Date', expected.startDate);
+        assertContains('Due Date', expected.dueDate);
+        assertContains('Inspection Type', expected.inspectionType);
+    }
+
+    async addNote(text: string): Promise<void> {
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const btn = await this.notesHeaderButton;
+        await btn.waitForExist({ timeout: 30000 });
+        await btn.scrollIntoView({ block: 'center' });
+        await btn.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.notesHeaderButton);
+        console.log('[ACTION] Notes button clicked');
+
+        const container = await this.notesContainer;
+        await container.waitForExist({ timeout: 30000 });
+        await container.waitForDisplayed({ timeout: 30000 });
+        await browser.pause(400);
+
+        const ta = await this.notesContainerTextarea;
+        await ta.waitForExist({ timeout: 30000 });
+        await ta.waitForDisplayed({ timeout: 30000 });
+        await ta.click();
+        await browser.pause(200);
+
+        await browser.keys(['Control', 'a']);
+        await browser.keys('Delete');
+        await browser.keys(text);
+        await browser.pause(200);
+        console.log(`[ACTION] Note text entered: "${text}"`);
+
+        const save = await this.notesContainerSaveButton;
+        await save.waitForExist({ timeout: 30000 });
+        await save.scrollIntoView({ block: 'center' });
+        await save.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.notesContainerSaveButton);
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log('[ACTION] Note — Save clicked');
+
+        await container.waitForDisplayed({ reverse: true, timeout: 30000 }).catch(() => { /* may already be gone */ });
+        await browser.pause(500);
+        try { await this.confirmSuccessPopup(); } catch { /* no popup */ }
+        console.log('[ACTION] Note — success popup OK clicked (if any)');
+    }
+
+    async verifyNoteText(expected: string): Promise<void> {
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const btn = await this.notesHeaderButton;
+        await btn.waitForExist({ timeout: 30000 });
+        await btn.scrollIntoView({ block: 'center' });
+        await btn.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.notesHeaderButton);
+        console.log('[VERIFY] Notes button clicked (reopen for verification)');
+
+        const container = await this.notesContainer;
+        await container.waitForExist({ timeout: 30000 });
+        await container.waitForDisplayed({ timeout: 30000 });
+        await browser.pause(400);
+
+        const ta = await this.notesContainerTextarea;
+        await ta.waitForExist({ timeout: 30000 });
+        await ta.waitForDisplayed({ timeout: 30000 });
+        const actual = (await ta.getValue()) ?? '';
+        console.log(`[VERIFY] Note text actual: "${actual}" | expected: "${expected}"`);
+
+        if (actual.trim() !== expected.trim()) {
+            try {
+                await utils.clickWithWait(this.notesContainerCloseButton);
+            } catch { /* best-effort close */ }
+            throw new Error(`[VERIFY] Note text mismatch. Expected: "${expected}". Got: "${actual}"`);
+        }
+
+        const close = await this.notesContainerCloseButton;
+        await close.waitForExist({ timeout: 30000 });
+        await close.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.notesContainerCloseButton);
+        await container.waitForDisplayed({ reverse: true, timeout: 30000 }).catch(() => { /* may already be gone */ });
+        await browser.pause(300);
+        console.log('[VERIFY] Notes popover closed after verification');
+    }
+
+    async editNoteAndClose(newText: string): Promise<void> {
+        await utils.waitForBusyIndicatorToDisappear();
+
+        const btn = await this.notesHeaderButton;
+        await btn.waitForExist({ timeout: 30000 });
+        await btn.scrollIntoView({ block: 'center' });
+        await btn.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.notesHeaderButton);
+        console.log('[ACTION] Notes button clicked (edit + close)');
+
+        const container = await this.notesContainer;
+        await container.waitForExist({ timeout: 30000 });
+        await container.waitForDisplayed({ timeout: 30000 });
+        await browser.pause(400);
+
+        const ta = await this.notesContainerTextarea;
+        await ta.waitForExist({ timeout: 30000 });
+        await ta.waitForDisplayed({ timeout: 30000 });
+        await ta.click();
+        await browser.pause(200);
+
+        await browser.keys(['Control', 'a']);
+        await browser.keys('Delete');
+        await browser.keys(newText);
+        await browser.pause(200);
+        console.log(`[ACTION] Note text replaced (unsaved): "${newText}"`);
+
+        const close = await this.notesContainerCloseButton;
+        await close.waitForExist({ timeout: 30000 });
+        await close.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.notesContainerCloseButton);
+        await container.waitForDisplayed({ reverse: true, timeout: 30000 }).catch(() => { /* may already be gone */ });
+        await browser.pause(300);
+        console.log('[ACTION] Notes popover closed without saving');
+    }
+
+    async clickOperatingContextByName(occName: string): Promise<void> {
+          await utils.waitForBusyIndicatorToDisappear();
+        const row = await this.operatingContextRowByName(occName);
+        await row.waitForExist({ timeout: 30000 });
+        await row.scrollIntoView({ block: 'center' });
+        await row.waitForDisplayed({ timeout: 30000 });
+        try {
+            await utils.clickWithWait(this.operatingContextRowByName(occName));
+        } catch {
+            const label = await this.operatingContextLabelByName(occName);
+            await label.waitForDisplayed({ timeout: 30000 });
+            await browser.execute((el: HTMLElement) => el.click(), label as unknown as HTMLElement);
+        }
         await utils.waitForBusyIndicatorToDisappear();
         console.log(`[ACTION] Operating Context clicked: "${occName}"`);
     }
 
-    /**
-     * Click "Assign/Unassign Technical Object" → "Assign" → submenu entry
-     * (e.g. "Equipment" or "Functional Location"). Opens the Equipment
-     * selection column on the right.
-     */
     async assignTechnicalObject(type: 'Equipment' | 'Functional Location' = 'Equipment'): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
 
@@ -1650,10 +1730,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] "${type}" submenu item clicked`);
     }
 
-    /**
-     * In the Equipment selection column, tick the first row checkbox, click
-     * Confirm, confirm the success popup OK, then click the Close column "x".
-     */
     async confirmFirstEquipmentAndCloseColumn(): Promise<void> {
         await utils.waitForBusyIndicatorToDisappear();
 
@@ -1689,7 +1765,6 @@ class AssetStrategyAnalysisForClassesPage {
         console.log('[ACTION] Equipment column closed');
     }
 
-    /** Open a dropdown in the Create Strategy dialog and pick the option by visible text. */
     private async selectCreateStrategyDropdown(label: string, value: string): Promise<void> {
         const arrow = await this.createStrategyDialogSelectArrow(label);
         await arrow.waitForExist({ timeout: 30000 });
@@ -1707,44 +1782,63 @@ class AssetStrategyAnalysisForClassesPage {
         console.log(`[ACTION] Create Strategy — ${label}: "${value}"`);
     }
 
-    /** Pick a date in a Create Strategy dialog field via the calendar popover. */
-    private async fillCreateStrategyDate(label: string, value: string): Promise<void> {
-        const target = this.parseDate(value);
-        const targetYmd = this.toYyyymmdd(target);
+    private async selectEditStrategyDropdown(label: string, value: string): Promise<void> {
+        const arrow = await this.editStrategyDialogSelectArrow(label);
+        await arrow.waitForExist({ timeout: 30000 });
+        await arrow.scrollIntoView({ block: 'center' });
+        await arrow.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.editStrategyDialogSelectArrow(label));
+        await browser.pause(400);
 
+        const option = await this.comboboxOptionByText(value);
+        await option.waitForExist({ timeout: 30000 });
+        await option.scrollIntoView({ block: 'center' });
+        await option.waitForDisplayed({ timeout: 30000 });
+        await utils.clickWithWait(this.comboboxOptionByText(value));
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log(`[ACTION] Edit Strategy — ${label}: "${value}"`);
+    }
+
+    private async fillCreateStrategyDate(label: string, value: string): Promise<void> {
         await this.dismissAnyOpenCalendarPopover();
 
-        const icon = await this.createStrategyDialogPickerIcon(label);
-        await icon.scrollIntoView({ block: 'center' });
-        await icon.waitForExist({ timeout: 30000 });
-        await icon.waitForDisplayed({ timeout: 30000 });
-        await utils.clickWithWait(this.createStrategyDialogPickerIcon(label));
+        const input = await this.createStrategyDialogField(label);
+        await input.waitForExist({ timeout: 30000 });
+        await input.scrollIntoView({ block: 'center' });
+        await input.waitForDisplayed({ timeout: 30000 });
 
-        const popover = await this.visibleCalendarPopover;
-        await popover.waitForDisplayed({ timeout: 30000 });
+        await input.click();
+        await browser.pause(200);
+        await browser.keys(['Control', 'a']);
+        await browser.keys('Delete');
+        await input.setValue(value);
+        await browser.keys('Tab');
         await browser.pause(300);
 
-        await this.navigateCalendarToMonth(target);
-
-        const day = await this.calendarDayByDataAttr(targetYmd);
-        await day.waitForExist({ timeout: 30000 });
-        await day.waitForDisplayed({ timeout: 30000 });
-        await utils.clickWithWait(this.calendarDayByDataAttr(targetYmd));
-
-        try {
-            await browser.waitUntil(
-                async () => {
-                    const p = await this.visibleCalendarPopover;
-                    return !(await p.isExisting()) || !(await p.isDisplayed());
-                },
-                { timeout: 5000, interval: 200, timeoutMsg: 'Calendar popover did not close' }
-            );
-        } catch {
-            await this.dismissAnyOpenCalendarPopover();
-        }
+        await this.dismissAnyOpenCalendarPopover();
         await utils.waitForBusyIndicatorToDisappear();
-        await browser.pause(300);
         console.log(`[ACTION] Create Strategy — ${label}: ${value}`);
+    }
+
+    private async fillEditStrategyDate(label: string, value: string): Promise<void> {
+        await this.dismissAnyOpenCalendarPopover();
+
+        const input = await this.editStrategyDialogField(label);
+        await input.waitForExist({ timeout: 30000 });
+        await input.scrollIntoView({ block: 'center' });
+        await input.waitForDisplayed({ timeout: 30000 });
+
+        await input.click();
+        await browser.pause(200);
+        await browser.keys(['Control', 'a']);
+        await browser.keys('Delete');
+        await input.setValue(value);
+        await browser.keys('Tab');
+        await browser.pause(300);
+
+        await this.dismissAnyOpenCalendarPopover();
+        await utils.waitForBusyIndicatorToDisappear();
+        console.log(`[ACTION] Edit Strategy — ${label}: ${value}`);
     }
 
     /**
@@ -1769,6 +1863,194 @@ class AssetStrategyAnalysisForClassesPage {
         // A second popup appears after Yes — dismiss it with OK.
         await this.confirmSuccessPopup();
         console.log('[ACTION] Summary Report final popup — OK clicked');
+    }
+
+    async downloadAndVerifySummaryReport(expected: {
+        present?: string[];
+        absent?: string[];
+        sections?: Array<{
+            name: string;
+            aliases?: string[];
+            mustContain?: string[];
+            mustNotContain?: string[];
+        }>;
+    }): Promise<string> {
+        await utils.cleanDownloads();
+
+        await this.openSummaryReportAndConfirm();
+
+        const filePath = await utils.waitForDownload('.pdf');
+        console.log(`[VERIFY] Summary Report PDF downloaded: ${filePath}`);
+
+        const pdfText = await utils.extractTextFromPDF(filePath);
+        console.log('----- PDF CONTENT START -----');
+        console.log(pdfText);
+        console.log('----- PDF CONTENT END -----');
+
+        const normalize = (val: string) => (val || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const content = normalize(pdfText);
+
+        const looseToken = (val: string) =>
+            ' ' + (val || '').toLowerCase().replace(/[^a-z0-9_]+/g, ' ').trim() + ' ';
+        const looseContent = looseToken(pdfText);
+
+        const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        const defaultKnownSectionHeaders = [
+            'Assessment',
+            'Operating Context and Condition',
+            'Operating Context',
+            'Characteristics',
+            'Maintainable Items',
+            'Maintainable Item',
+            'Failure Modes',
+            'Failure Mode',
+            'Failure Effects',
+            'Failure Effect',
+            'Failure Mechanisms',
+            'Failure Mechanism',
+            'Causes',
+            'Cause',
+            'Strategies',
+            'Strategy',
+            'Recommendations',
+            'Recommendation',
+            'Notes',
+            'Note',
+            'Technical Objects',
+            'Technical Object',
+            'Equipment',
+            'Roles',
+            'Planning Data',
+            'Organizational Data',
+            'Summary'
+        ];
+
+        const allSectionNames = new Set<string>(defaultKnownSectionHeaders);
+        for (const s of (expected.sections ?? [])) {
+            allSectionNames.add(s.name);
+            for (const a of (s.aliases ?? [])) allSectionNames.add(a);
+        }
+        const orderedHeaderNames = Array.from(allSectionNames).sort((a, b) => b.length - a.length);
+
+        const headerPattern = (names: string[]) => {
+            const namesRe = names.map(escapeRegExp).join('|');
+            return new RegExp(
+                `(?:${namesRe})[\\t ]+\\d+\\b`
+                + `|`
+                + `(?:^|[^A-Za-z])(?:${namesRe})[\\t ]*(?::|\\r?\\n|$)`,
+                'gi'
+            );
+        };
+
+        const sliceSection = (name: string, aliases: string[] | undefined): string | null => {
+            const headerNames = [name, ...(aliases ?? [])];
+            const headerRe = headerPattern(headerNames);
+            const headerMatch = headerRe.exec(pdfText);
+            if (!headerMatch) return null;
+
+            const sectionStart = headerMatch.index + headerMatch[0].length;
+
+            const ownNamesLower = new Set(headerNames.map(n => n.toLowerCase().trim()));
+            const otherHeaderNames = orderedHeaderNames.filter(
+                n => !ownNamesLower.has(n.toLowerCase().trim())
+            );
+            let sectionEnd = pdfText.length;
+            if (otherHeaderNames.length > 0) {
+                const nextRe = headerPattern(otherHeaderNames);
+                nextRe.lastIndex = sectionStart;
+                const nextMatch = nextRe.exec(pdfText);
+                if (nextMatch && nextMatch.index >= sectionStart) {
+                    sectionEnd = nextMatch.index;
+                }
+            }
+
+            return pdfText.substring(sectionStart, sectionEnd);
+        };
+
+        const missing: string[] = [];
+        for (const value of (expected.present ?? [])) {
+            if (!value) continue;
+
+            const parenMatch = value.match(/^(.*)\((.*)\)$/);
+            let found = false;
+            if (parenMatch) {
+                const name = normalize(parenMatch[1]);
+                const id = normalize(parenMatch[2]);
+                found = (name.length > 0 && content.includes(name)) || (id.length > 0 && content.includes(id));
+            } else {
+                found = content.includes(normalize(value));
+            }
+
+            if (found) {
+                console.log(`[VERIFY] PDF contains: "${value}"`);
+            } else {
+                console.log(`[VERIFY] PDF MISSING: "${value}"`);
+                missing.push(value);
+            }
+        }
+
+        const unexpected: string[] = [];
+        for (const value of (expected.absent ?? [])) {
+            if (!value) continue;
+            const token = looseToken(value);
+            if (token.trim().length > 0 && looseContent.includes(token)) {
+                console.log(`[VERIFY] PDF UNEXPECTEDLY contains: "${value}"`);
+                unexpected.push(value);
+            } else {
+                console.log(`[VERIFY] PDF correctly excludes: "${value}"`);
+            }
+        }
+
+        const sectionErrors: string[] = [];
+        for (const sec of (expected.sections ?? [])) {
+            const slice = sliceSection(sec.name, sec.aliases);
+            if (slice === null) {
+                const msg = `section "${sec.name}" header not found in PDF` +
+                    (sec.aliases?.length ? ` (aliases tried: ${sec.aliases.map(a => `"${a}"`).join(', ')})` : '');
+                console.log(`[VERIFY] ${msg}`);
+                sectionErrors.push(msg);
+                continue;
+            }
+
+            const sectionContent = normalize(slice);
+            const sectionLoose = looseToken(slice);
+            console.log(`[VERIFY] Section "${sec.name}" slice length=${slice.length}`);
+
+            for (const value of (sec.mustContain ?? [])) {
+                if (!value) continue;
+                if (sectionContent.includes(normalize(value))) {
+                    console.log(`[VERIFY] Section "${sec.name}" contains: "${value}"`);
+                } else {
+                    const msg = `section "${sec.name}" missing value: "${value}"`;
+                    console.log(`[VERIFY] ${msg}`);
+                    sectionErrors.push(msg);
+                }
+            }
+
+            for (const value of (sec.mustNotContain ?? [])) {
+                if (!value) continue;
+                const token = looseToken(value);
+                if (token.trim().length > 0 && sectionLoose.includes(token)) {
+                    const msg = `section "${sec.name}" unexpectedly contains: "${value}"`;
+                    console.log(`[VERIFY] ${msg}`);
+                    sectionErrors.push(msg);
+                } else {
+                    console.log(`[VERIFY] Section "${sec.name}" correctly excludes: "${value}"`);
+                }
+            }
+        }
+
+        if (missing.length > 0 || unexpected.length > 0 || sectionErrors.length > 0) {
+            const parts: string[] = [];
+            if (missing.length > 0) parts.push(`missing values: ${missing.map(v => `"${v}"`).join(', ')}`);
+            if (unexpected.length > 0) parts.push(`unexpected values: ${unexpected.map(v => `"${v}"`).join(', ')}`);
+            if (sectionErrors.length > 0) parts.push(`section issues: ${sectionErrors.join('; ')}`);
+            throw new Error(`[VERIFY] Summary Report PDF verification failed — ${parts.join(' | ')}`);
+        }
+
+        console.log('[VERIFY] Summary Report PDF verification passed');
+        return filePath;
     }
 }
 

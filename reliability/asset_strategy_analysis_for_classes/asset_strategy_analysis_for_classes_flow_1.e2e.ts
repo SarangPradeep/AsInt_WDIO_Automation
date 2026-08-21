@@ -18,7 +18,10 @@ describe('BTP - (Fleet) - Asset Strategy Analysis for Classes App - Flow 1 (Crea
     });
 
     it('should edit the assessment description and save', async () => {
-        await assetStrategyAnalysisForClassesPage.editAssessmentDescription(editedDescription);
+        await assetStrategyAnalysisForClassesPage.editAssessmentDescription(editedDescription, {
+            longDescription: fleetAssessmentTestData.editAssessmentFlow1.longDescription,
+            operatingContext: fleetAssessmentTestData.editAssessmentFlow1.operatingContext
+        });
     });
 
     it('should edit the Planning Data and Organizational Data sections and save', async () => {
@@ -46,8 +49,41 @@ describe('BTP - (Fleet) - Asset Strategy Analysis for Classes App - Flow 1 (Crea
         );
     });
 
-    it('should open the Summary Report and confirm the dialog', async () => {
-        await assetStrategyAnalysisForClassesPage.openSummaryReportAndConfirm();
+    it('should download the Summary Report PDF and verify it contains the assessment data', async () => {
+        const planning = fleetAssessmentTestData.planningData;
+        const occ = fleetAssessmentTestData.operatingContextAndCondition;
+        const toIso = (value: string): string => {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return value;
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        };
+
+        const present: string[] = [
+            editedDescription,
+            fleetAssessmentTestData.editAssessmentFlow1.longDescription,
+            fleetAssessmentTestData.editAssessmentFlow1.operatingContext,
+            fleetAssessmentTestData.createMandatory.className,
+            toIso(planning.lastReviewDate),
+            toIso(planning.nextReviewDate),
+            toIso(planning.plannedReviewDate),
+            toIso(planning.nextTADate),
+            toIso(planning.secondTADate),
+            fleetAssessmentTestData.rolesAssignment.user,
+            ...fleetAssessmentTestData.rolesAssignment.roles.filter(
+                r => r !== fleetAssessmentTestData.rolesUnassignment.role
+            ),
+            occ.name,
+            ...occ.characteristics.flatMap(c => [c.label, c.value])
+        ];
+
+        const absent: string[] = [
+            fleetAssessmentTestData.rolesUnassignment.role
+        ];
+
+        await assetStrategyAnalysisForClassesPage.downloadAndVerifySummaryReport({ present, absent });
     });
 
     it('should delete the edited assessment and verify it is removed', async () => {

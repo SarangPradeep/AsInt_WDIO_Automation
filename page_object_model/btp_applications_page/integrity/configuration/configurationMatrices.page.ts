@@ -4,18 +4,20 @@ import SapUtils from '../../../../utils/utils';
 
 class MatricesPage {
 
-    // ============================================================================
+    private currentMatrixTitle: string = 'AutomationMatrixTest';
+
     // SELECTORS
-    // ============================================================================
 
     // --- Page chrome -----------------------------------------------------------
     private get header()        { return $('//h1[contains(text(),"Configuration")]'); }
     private get matricesTile()  { return $('//div[@role="button"][.//span[normalize-space()="Matrices"]]'); }
-    private get iFrame()        { return $('iframe[title="Application"]'); }
+    private get iFrame()             { return $('iframe[title="Application"]'); }
+    private get matrixConfigIframe() { return $('iframe[data-help-id="application-matrixconfig-manage"]'); }
 
     // --- Matrix create dialog --------------------------------------------------
     private get createButton()         { return $('button[aria-label="Create"]'); }
-    private get matrixTitleInput()     { return $('input[aria-labelledby="__label4"]'); }
+    // Auto-generated aria-labelledby IDs (__label0/1/…) shift between UI5 versions; anchor to the label text instead.
+    private get matrixTitleInput()     { return $('//div[@role="dialog"]//label[.//bdi[normalize-space()="Matrix Title"]]/following::input[1]'); }
     private get categoryValueHelpIcon() { return $('#idCategoryMultiInput-vhi'); }
     private get selectButton()         { return $('//bdi[normalize-space()="Select"]/ancestor::button'); }
     private get rowSizeIncrement()     { return $('#idMatrixStep1-incrementBtn'); }
@@ -28,7 +30,7 @@ class MatricesPage {
     }
 
     // --- Matrix detail / edit --------------------------------------------------
-    private get createdMatrix()        { return $('//span[normalize-space()="AutomationMatrixTest"]'); }
+    private get createdMatrix()        { return $(`//span[normalize-space()="${this.currentMatrixTitle}"]`); }
     private get editButton()           { return $('button[aria-label="Edit"]'); }
     private get descriptionTextarea()  { return $('#idDetailDescTextArea-inner'); }
     private get matrixTitleEditInput() { return $('input.sapMInputBaseInner'); }
@@ -89,17 +91,11 @@ class MatricesPage {
         return $(`//tr[contains(@class,"sapMListTblRow")][.//span[normalize-space()="${title}"]]//td[contains(@data-sap-ui-column,"${columnKey}")]`);
     }
 
-    // Backwards-compatible alias kept in case other specs still reference it.
-    private get createdMatrixCheckbox() { return this.listRowCheckboxByTitle('AutomationMatrixTest_007'); }
-
-    // --- Rendered Risk Matrix SVG (read-only verification) ---------------------
     private get riskMatrixSvg() { return $('div.asintRbiCustomRiskMatrix svg'); }
     private getMatrixCell(x: string, y: string) { return $(`rect[x="${x}"][y="${y}"]`); }
 
 
-    // ============================================================================
     // ACTIONS
-    // ============================================================================
 
     async isAppLoaded(): Promise<boolean> {
         try {
@@ -129,6 +125,11 @@ class MatricesPage {
 
         await SapUtils.waitForBusyIndicatorToDisappear();
         await SapUtils.waitForSAPPopupAndClose(5);
+
+        // Clicking the tile opens the Matrix Configuration app in a sibling iframe at the top document level.
+        await SapUtils.switchToIframe(this.matrixConfigIframe);
+        await SapUtils.waitForBusyIndicatorToDisappear();
+        await SapUtils.waitForSAPPopupAndClose(5);
     }
 
     async clickCreateButton(): Promise<void> {
@@ -141,8 +142,9 @@ class MatricesPage {
     async createMatrix(): Promise<void> {
         await SapUtils.waitForBusyIndicatorToDisappear();
 
-        await SapUtils.setValueWithWait(this.matrixTitleInput, 'AutomationMatrixTest');
-        console.log('[ACTION] Matrix title entered');
+        this.currentMatrixTitle = 'AutomationMatrixTest';
+        await SapUtils.setValueWithWait(this.matrixTitleInput, this.currentMatrixTitle);
+        console.log(`[ACTION] Matrix title entered: ${this.currentMatrixTitle}`);
 
         await SapUtils.clickWithWait(this.categoryValueHelpIcon);
         console.log('[ACTION] Category value help opened');
@@ -193,8 +195,9 @@ class MatricesPage {
         await SapUtils.setValueWithWait(this.descriptionTextarea, 'description');
         console.log('[ACTION] Description entered');
 
-        await SapUtils.setValueWithWait(this.matrixTitleEditInput, 'AutomationMatrixTest_007');
-        console.log('[ACTION] Matrix title updated');
+        this.currentMatrixTitle = 'AutomationMatrixTest_007';
+        await SapUtils.setValueWithWait(this.matrixTitleEditInput, this.currentMatrixTitle);
+        console.log(`[ACTION] Matrix title updated: ${this.currentMatrixTitle}`);
 
         await SapUtils.clickWithWait(this.saveButton);
         console.log('[ACTION] Save button clicked');
@@ -364,7 +367,6 @@ class MatricesPage {
         return $(`${dialogTable}//tr[@aria-rowindex="${rowIndex + 2}"]//td[@aria-colindex="${colIndex}"]//input[@type="${inputType}"]`);
     }
 
-    // SAP cascade: only row 0 has Low and High editable; rows 1-2 have one readonly cell auto-derived from above.
     async enterTextValue(row: number, low: string, text: string, high?: string): Promise<void> {
         await SapUtils.waitForBusyIndicatorToDisappear();
 
@@ -474,9 +476,7 @@ class MatricesPage {
         }
     }
 
-    // ============================================================================
     // RISK LINE ACTION
-    // ============================================================================
 
     async addRiskLine(
         description: string,
@@ -520,11 +520,8 @@ class MatricesPage {
         console.log('[SUCCESS] Risk Line saved');
     }
 
-    // ============================================================================
     // VERIFICATION
-    // ============================================================================
 
-    // Verifies the rendered Risk Matrix SVG shows all configured X/Y labels and at least one risk line before Publish.
     async verifyMatrixDetails(expected: {
         xAxisDescription: string;
         xAxisSubLabels: string[];
@@ -612,12 +609,6 @@ class MatricesPage {
         console.log('[SUCCESS] Matrix details verified before Publish');
     }
 
-    /**
-     * Verifies a row in the Matrices listview against an expected snapshot.
-     * Used after Publish (status=Published) and after New Revision (status=Unpublished)
-     * to make sure ALL configured details survive the lifecycle. Fails if any cell
-     * value (incl. Categories — known to regress empty after a revision) drifts.
-     */
     async verifyMatrixListRow(expected: {
         title: string;
         description: string;
@@ -702,10 +693,6 @@ class MatricesPage {
         await SapUtils.waitForBusyIndicatorToDisappear();
     }
 
-    /**
-     * Selects the matrix row checkbox by title and triggers the delete flow
-     * (the toolbar Settings/trash button), confirming the Yes prompt and OK.
-     */
     async deleteMatrixByTitle(title: string): Promise<void> {
         await SapUtils.waitForBusyIndicatorToDisappear();
 
@@ -720,21 +707,6 @@ class MatricesPage {
 
         await SapUtils.clickWithWait(this.OkButton);
         console.log('[ACTION] Delete success popup acknowledged (OK)');
-
-        await SapUtils.waitForBusyIndicatorToDisappear();
-    }
-
-    async selectMatrixAndOpenSettings(): Promise<void> {
-        await SapUtils.waitForBusyIndicatorToDisappear();
-
-        await SapUtils.clickWithWait(this.createdMatrixCheckbox);
-        console.log('[ACTION] Matrix checkbox selected');
-
-        await SapUtils.clickWithWait(this.matrixSettingsButton);
-        console.log('[ACTION] Settings button clicked');
-
-        await SapUtils.clickWithWait(this.yesConfirmationButton);
-        await SapUtils.clickWithWait(this.OkButton);
 
         await SapUtils.waitForBusyIndicatorToDisappear();
     }

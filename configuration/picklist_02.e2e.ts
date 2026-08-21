@@ -12,7 +12,6 @@ describe('BTP - Configuration (Picklist Publish) - Functional Test', () => {
         await HomePage.waitForHomePageToLoad();
         await HomePage.clickTile('Configurations');
 
-        // Wait for page to stabilize after navigation
         await SapUtils.waitForBusyIndicatorToDisappear();
         await SapUtils.waitForSAPPopupAndClose(10);
 
@@ -58,39 +57,39 @@ describe('BTP - Configuration (Picklist Publish) - Functional Test', () => {
         await ConfigurationAppPage.clickAddButton();
     });
 
-    // it('should edit the Picklist header (description) and Save', async () => {
+    it('should edit the Picklist header (description) and Save', async () => {
 
-    //     const newHeaderName = 'AutomationTestSample1';
+        const newHeaderName = 'AutomationTestSample1';
 
-    //     await ConfigurationAppPage.clickEditDescription();
-    //     await ConfigurationAppPage.editPicklistName(newHeaderName);
-    //     await ConfigurationAppPage.clickSaveButton();
+        await ConfigurationAppPage.clickEditDescription();
+        await ConfigurationAppPage.editPicklistName(newHeaderName);
+        await ConfigurationAppPage.clickSaveButton();
 
-    //     await SapUtils.waitForBusyIndicatorToDisappear();
+        await SapUtils.waitForBusyIndicatorToDisappear();
 
-    //     const updatedHeader = await ConfigurationAppPage.getPicklistHeaderText();
-    //     console.log(`[VERIFY] Header after Save: "${updatedHeader}" (expected: "${newHeaderName}")`);
-    //     expect(updatedHeader).toBe(newHeaderName);
-    //     console.log('[SUCCESS] Picklist header updated successfully after Save');
-    // });
+        const updatedHeader = await ConfigurationAppPage.getPicklistHeaderText();
+        console.log(`[VERIFY] Header after Save: "${updatedHeader}" (expected: "${newHeaderName}")`);
+        expect(updatedHeader).toBe(newHeaderName);
+        console.log('[SUCCESS] Picklist header updated successfully after Save');
+    });
 
-    // it('should edit the Picklist header (description) and Cancel', async () => {
+    it('should edit the Picklist header (description) and Cancel', async () => {
 
-    //     const previousHeaderName = 'AutomationTestSample1';
-    //     const discardedHeaderName = 'AutomationTestSample2';
+        const previousHeaderName = 'AutomationTestSample1';
+        const discardedHeaderName = 'AutomationTestSample2';
 
-    //     await ConfigurationAppPage.clickEditDescription();
-    //     await ConfigurationAppPage.editPicklistName(discardedHeaderName);
-    //     await ConfigurationAppPage.clickCancelButton();
+        await ConfigurationAppPage.clickEditDescription();
+        await ConfigurationAppPage.editPicklistName(discardedHeaderName);
+        await ConfigurationAppPage.clickCancelButton();
 
-    //     await SapUtils.waitForBusyIndicatorToDisappear();
+        await SapUtils.waitForBusyIndicatorToDisappear();
 
-    //     const headerAfterCancel = await ConfigurationAppPage.getPicklistHeaderText();
-    //     console.log(`[VERIFY] Header after Cancel: "${headerAfterCancel}" (expected unchanged: "${previousHeaderName}")`);
-    //     expect(headerAfterCancel).toBe(previousHeaderName);
-    //     expect(headerAfterCancel).not.toBe(discardedHeaderName);
-    //     console.log('[SUCCESS] Picklist header unchanged after Cancel');
-    // });
+        const headerAfterCancel = await ConfigurationAppPage.getPicklistHeaderText();
+        console.log(`[VERIFY] Header after Cancel: "${headerAfterCancel}" (expected unchanged: "${previousHeaderName}")`);
+        expect(headerAfterCancel).toBe(previousHeaderName);
+        expect(headerAfterCancel).not.toBe(discardedHeaderName);
+        console.log('[SUCCESS] Picklist header unchanged after Cancel');
+    });
 
     it('should upload picklist data file', async () => {
 

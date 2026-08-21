@@ -16,7 +16,8 @@ describe('BTP - Asset Strategy Development (ASD) - Functional Test', () => {
     });
 
     it('should be able to capture information from general section', async () => {
-        await ASDDetailView.captureGeneralSelection();
+        await ASDDetailView.captureGeneralSelection(true);  //true if we want to select all general selection data, 
+                                                            //false if we want to select specific data
     });
 
     it('should be able to edit header information', async () => {

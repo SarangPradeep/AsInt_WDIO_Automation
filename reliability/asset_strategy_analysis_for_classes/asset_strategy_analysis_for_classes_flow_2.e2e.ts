@@ -60,6 +60,30 @@ describe('BTP - (Fleet) - Asset Strategy Analysis for Classes App - Flow 2 (Crea
         );
     });
 
+    it('should click the "+" Add button on the assigned maintainable item row again to add another failure mode', async () => {
+        await assetStrategyAnalysisForClassesPage.clickAssessmentHierarchyRowAddButton(
+            fleetAssessmentTestData.maintainableItemFlow2.searchText,
+            1
+        );
+    });
+
+    it('should select "Assign Failure Modes" again, search for "Other", tick and click Assign', async () => {
+        await assetStrategyAnalysisForClassesPage.clickAssignFailureModesMenuItem();
+        await assetStrategyAnalysisForClassesPage.searchAndAssignFailureMode(
+            fleetAssessmentTestData.failureModeFlow2.additionalSearchText
+        );
+    });
+
+    it('should expand the Inspection Ports row to reveal the assigned failure modes', async () => {
+        await assetStrategyAnalysisForClassesPage.expandAssessmentHierarchyRow(1);
+    });
+
+    it('should delete the "Other" failure mode row via its "X" icon and confirm', async () => {
+        await assetStrategyAnalysisForClassesPage.deleteAssessmentHierarchyRowByText(
+            fleetAssessmentTestData.failureModeFlow2.deleteRowText
+        );
+    });
+
     it('should click the edit button on TestOCC1 and rename the Operating Context', async () => {
         await assetStrategyAnalysisForClassesPage.editOccName(
             fleetAssessmentTestData.operatingContextAndConditionFlow2.name,
@@ -67,8 +91,29 @@ describe('BTP - (Fleet) - Asset Strategy Analysis for Classes App - Flow 2 (Crea
         );
     });
 
+    it('should download the Summary Report PDF and verify it reflects the flow_2 assessment data', async () => {
+        const occ = fleetAssessmentTestData.operatingContextAndConditionFlow2;
+
+        const present: string[] = [
+            assessmentDescription,
+            fleetAssessmentTestData.createMandatory.className,
+            fleetAssessmentTestData.occRenameFlow2.newName,
+            fleetAssessmentTestData.maintainableItemFlow2.searchText,
+            fleetAssessmentTestData.failureModeFlow2.searchText,
+            ...occ.characteristics
+                .map(c => c.label as string | undefined)
+                .filter((l): l is string => typeof l === 'string' && l.length > 0)
+        ];
+
+        const absent: string[] = [
+            fleetAssessmentTestData.failureModeFlow2.deleteRowText,
+            fleetAssessmentTestData.operatingContextAndConditionFlow2.name
+        ];
+
+        await assetStrategyAnalysisForClassesPage.downloadAndVerifySummaryReport({ present, absent });
+    });
+
     it('should delete the assessment and verify it is removed', async () => {
-        await assetStrategyAnalysisForClassesPage.refreshApp();
         await assetStrategyAnalysisForClassesPage.deleteAssessment();
         await assetStrategyAnalysisForClassesPage.searchInListView(assessmentDescription);
         await assetStrategyAnalysisForClassesPage.verifyAssessmentDeleted(assessmentDescription);
